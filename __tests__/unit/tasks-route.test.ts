@@ -6,10 +6,19 @@ import type { User, Task } from "@/types";
 
 const mockGetUser = jest.fn<Promise<User | null>, [string]>();
 const mockCreateTask = jest.fn<Promise<Task>, [{ userId: string; originalImageKey: string; priority: string }]>();
+const mockGetToken = jest.fn();
+
+jest.mock("next-auth/jwt", () => ({
+  getToken: (...args: unknown[]) => mockGetToken(...args),
+}));
 
 jest.mock("@/lib/redis", () => ({
   getUser: (...args: unknown[]) => mockGetUser(args[0] as string),
   createTask: (...args: unknown[]) => mockCreateTask(args[0] as { userId: string; originalImageKey: string; priority: string }),
+}));
+
+jest.mock("@/lib/queue", () => ({
+  enqueueTask: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock("@/lib/config", () => ({
@@ -65,9 +74,21 @@ function makeFakeTask(overrides: Partial<Task> = {}): Task {
 beforeEach(() => {
   mockGetUser.mockReset();
   mockCreateTask.mockReset();
+  mockGetToken.mockReset();
+  // Default: authenticated user
+  mockGetToken.mockResolvedValue({ userId: "test-user-001" });
+  // Suppress console.error from error-path tests
+  jest.spyOn(console, "error").mockImplementation(() => {});
 });
 
 describe("POST /api/tasks", () => {
+  it("returns 401 when not authenticated", async () => {
+    mockGetToken.mockResolvedValue(null);
+    const req = createJsonRequest({ imageKey: "uploads/photo.jpg" });
+    const res = await POST(req);
+    expect(res.status).toBe(401);
+  });
+
   it("returns 400 when imageKey is missing", async () => {
     const req = createJsonRequest({});
     const res = await POST(req);
@@ -105,9 +126,10 @@ describe("POST /api/tasks", () => {
   });
 
   it("returns 404 when user is not found", async () => {
+    mockGetToken.mockResolvedValue({ userId: "nonexistent" });
     mockGetUser.mockResolvedValue(null);
 
-    const req = createJsonRequest({ imageKey: "uploads/photo.jpg", userId: "nonexistent" });
+    const req = createJsonRequest({ imageKey: "uploads/photo.jpg" });
     const res = await POST(req);
     const body = await res.json();
 
@@ -121,7 +143,7 @@ describe("POST /api/tasks", () => {
     mockGetUser.mockResolvedValue(user);
     mockCreateTask.mockResolvedValue(task);
 
-    const req = createJsonRequest({ imageKey: "uploads/photo.jpg", userId: "test-user-001" });
+    const req = createJsonRequest({ imageKey: "uploads/photo.jpg" });
     const res = await POST(req);
     const body = await res.json();
 
@@ -135,12 +157,13 @@ describe("POST /api/tasks", () => {
   });
 
   it("creates task with high priority for pay_as_you_go user", async () => {
+    mockGetToken.mockResolvedValue({ userId: "paid-user" });
     const user = makeFakeUser({ id: "paid-user", tier: "pay_as_you_go" });
     const task = makeFakeTask({ id: "task-paid", priority: "high" });
     mockGetUser.mockResolvedValue(user);
     mockCreateTask.mockResolvedValue(task);
 
-    const req = createJsonRequest({ imageKey: "uploads/photo.jpg", userId: "paid-user" });
+    const req = createJsonRequest({ imageKey: "uploads/photo.jpg" });
     const res = await POST(req);
     const body = await res.json();
 
@@ -154,12 +177,13 @@ describe("POST /api/tasks", () => {
   });
 
   it("creates task with high priority for professional user", async () => {
+    mockGetToken.mockResolvedValue({ userId: "pro-user" });
     const user = makeFakeUser({ id: "pro-user", tier: "professional" });
     const task = makeFakeTask({ id: "task-pro", priority: "high" });
     mockGetUser.mockResolvedValue(user);
     mockCreateTask.mockResolvedValue(task);
 
-    const req = createJsonRequest({ imageKey: "uploads/photo.jpg", userId: "pro-user" });
+    const req = createJsonRequest({ imageKey: "uploads/photo.jpg" });
     const res = await POST(req);
     const body = await res.json();
 
@@ -219,7 +243,7 @@ describe("POST /api/tasks", () => {
   it("returns 500 when getUser throws", async () => {
     mockGetUser.mockRejectedValue(new Error("Redis timeout"));
 
-    const req = createJsonRequest({ imageKey: "uploads/photo.jpg", userId: "user-1" });
+    const req = createJsonRequest({ imageKey: "uploads/photo.jpg" });
     const res = await POST(req);
     const body = await res.json();
 

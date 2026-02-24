@@ -79,6 +79,7 @@ const MOCK_TASKS = [
 beforeEach(() => {
   jest.clearAllMocks();
   global.fetch = jest.fn();
+  sessionStorage.clear();
 });
 
 // ── Tests ───────────────────────────────────────────────────────────────────

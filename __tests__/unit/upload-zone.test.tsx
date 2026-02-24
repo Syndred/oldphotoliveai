@@ -50,7 +50,7 @@ function mockXHR(options: {
 }) {
   const {
     status = 200,
-    response = '{"url":"https://cdn.example.com/test.jpg"}',
+    response = '{"key":"uploads/test.jpg"}',
     progressEvents = [],
     error = false,
   } = options;
@@ -196,7 +196,7 @@ describe("UploadZone", () => {
   it("uploads valid file and calls onUpload with URL", async () => {
     const xhrMock = mockXHR({
       status: 200,
-      response: '{"url":"https://cdn.example.com/photo.jpg"}',
+      response: '{"key":"uploads/photo.jpg"}',
     });
 
     render(<UploadZone onUpload={mockOnUpload} />);
@@ -208,7 +208,7 @@ describe("UploadZone", () => {
     fireEvent.drop(zone, { dataTransfer });
 
     await waitFor(() => {
-      expect(mockOnUpload).toHaveBeenCalledWith("https://cdn.example.com/photo.jpg");
+      expect(mockOnUpload).toHaveBeenCalledWith("uploads/photo.jpg");
     });
 
     expect(xhrMock.open).toHaveBeenCalledWith("POST", "/api/upload");
@@ -218,7 +218,7 @@ describe("UploadZone", () => {
   it("shows upload progress", async () => {
     mockXHR({
       status: 200,
-      response: '{"url":"https://cdn.example.com/photo.jpg"}',
+      response: '{"key":"uploads/photo.jpg"}',
       progressEvents: [
         { loaded: 50, total: 100 },
         { loaded: 100, total: 100 },

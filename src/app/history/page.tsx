@@ -18,13 +18,34 @@ export default function HistoryPage() {
   useEffect(() => {
     async function fetchHistory() {
       try {
+        // Client-side cache: avoid re-fetching within 30 seconds
+        const CACHE_KEY = "history_cache";
+        const CACHE_TTL = 30_000; // 30s
+        const cached = sessionStorage.getItem(CACHE_KEY);
+        if (cached) {
+          try {
+            const { data, ts } = JSON.parse(cached);
+            if (Date.now() - ts < CACHE_TTL) {
+              setTasks(data);
+              setLoading(false);
+              return;
+            }
+          } catch { /* ignore corrupt cache */ }
+        }
+
         const res = await fetch("/api/history");
         if (!res.ok) {
           const body = await res.json().catch(() => null);
           throw new Error(body?.error ?? "Failed to load history");
         }
         const data = await res.json();
-        setTasks(data.tasks ?? []);
+        const taskList = data.tasks ?? [];
+        setTasks(taskList);
+
+        // Cache the result
+        try {
+          sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data: taskList, ts: Date.now() }));
+        } catch { /* quota exceeded — ignore */ }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load history");
       } finally {
@@ -62,7 +83,14 @@ export default function HistoryPage() {
       });
       if (res.ok) {
         const deletedSet = new Set(taskIds);
-        setTasks((prev) => prev.filter((t) => !deletedSet.has(t.id)));
+        setTasks((prev) => {
+          const updated = prev.filter((t) => !deletedSet.has(t.id));
+          // Update cache after delete
+          try {
+            sessionStorage.setItem("history_cache", JSON.stringify({ data: updated, ts: Date.now() }));
+          } catch { /* ignore */ }
+          return updated;
+        });
         setSelectedIds((prev) => {
           const next = new Set(prev);
           taskIds.forEach((id) => next.delete(id));
