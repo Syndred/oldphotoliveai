@@ -79,7 +79,7 @@ export async function executePipeline(taskId: string): Promise<void> {
     await updateTaskStatus(taskId, "restoring");
 
     const originalCdnUrl = getR2CdnUrl(task.originalImageKey);
-    const restoredOutputUrl = await runModel("restoration", { image: originalCdnUrl });
+    const restoredOutputUrl = await runModel("restoration", { img: originalCdnUrl });
 
     // Download, apply tier settings, upload
     const restoredBuffer = await downloadBuffer(restoredOutputUrl);
@@ -100,10 +100,10 @@ export async function executePipeline(taskId: string): Promise<void> {
     await uploadToR2(processedColorized, colorizedKey, "image/jpeg");
     const colorizedCdnUrl = getR2CdnUrl(colorizedKey);
 
-    // ── Step 3: Animation ───────────────────────────────────────────────
+    // ── Step 3: Animation (stable-video-diffusion uses input_image) ─────
     await updateTaskStatus(taskId, "animating", { colorizedImageKey: colorizedKey });
 
-    const animationOutputUrl = await runModel("animation", { image: colorizedCdnUrl });
+    const animationOutputUrl = await runModel("animation", { input_image: colorizedCdnUrl });
 
     // Download animation video and upload to R2 (no image tier settings for video)
     const animationBuffer = await downloadBuffer(animationOutputUrl);
@@ -113,8 +113,21 @@ export async function executePipeline(taskId: string): Promise<void> {
     // ── Step 4: Complete ────────────────────────────────────────────────
     await updateTaskStatus(taskId, "completed", { animationVideoKey: animationKey });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`Pipeline failed for task ${taskId}:`, errorMessage);
+    const rawMessage = error instanceof Error ? error.message : String(error);
+    console.error(`Pipeline failed for task ${taskId}:`, rawMessage);
+
+    // Sanitize error message — never expose raw API errors to users
+    let errorMessage = "Processing failed. Please try again.";
+    if (rawMessage.includes("429") || rawMessage.includes("throttled") || rawMessage.includes("rate limit")) {
+      errorMessage = "Service is temporarily busy. Please try again in a moment.";
+    } else if (rawMessage.includes("422") || rawMessage.includes("Invalid version")) {
+      errorMessage = "AI model configuration error. Please contact support.";
+    } else if (rawMessage.includes("Failed to download")) {
+      errorMessage = "Failed to download intermediate result. Please try again.";
+    } else if (rawMessage.includes("Task not found") || rawMessage.includes("User not found")) {
+      errorMessage = rawMessage; // These are safe to show
+    }
+
     await updateTaskStatus(taskId, "failed", { errorMessage });
   }
 }

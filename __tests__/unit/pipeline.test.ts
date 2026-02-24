@@ -199,7 +199,7 @@ describe("executePipeline", () => {
       await executePipeline(TASK_ID);
 
       expect(mockRunModel.mock.calls[2][1]).toEqual({
-        image: `https://cdn.test.com/tasks/${TASK_ID}/colorized.jpg`,
+        input_image: `https://cdn.test.com/tasks/${TASK_ID}/colorized.jpg`,
       });
     });
   });
@@ -253,7 +253,7 @@ describe("executePipeline", () => {
 
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "restoring");
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
-        errorMessage: "GFPGAN model failed",
+        errorMessage: "Processing failed. Please try again.",
       });
       // Only restoration model was called
       expect(mockRunModel).toHaveBeenCalledTimes(1);
@@ -285,7 +285,7 @@ describe("executePipeline", () => {
       // Restoration succeeded, colorization failed
       expect(mockRunModel).toHaveBeenCalledTimes(2);
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
-        errorMessage: "DDColor model failed",
+        errorMessage: "Processing failed. Please try again.",
       });
       // Only restored image was uploaded (1 upload)
       expect(mockUploadToR2).toHaveBeenCalledTimes(1);
@@ -320,7 +320,7 @@ describe("executePipeline", () => {
 
       expect(mockRunModel).toHaveBeenCalledTimes(3);
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
-        errorMessage: "Animation model failed",
+        errorMessage: "Processing failed. Please try again.",
       });
       // Restored + colorized uploaded, but not animation
       expect(mockUploadToR2).toHaveBeenCalledTimes(2);
@@ -361,7 +361,7 @@ describe("executePipeline", () => {
       await executePipeline(TASK_ID);
 
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
-        errorMessage: expect.stringContaining("Failed to download"),
+        errorMessage: "Failed to download intermediate result. Please try again.",
       });
     });
 
@@ -374,7 +374,7 @@ describe("executePipeline", () => {
       await executePipeline(TASK_ID);
 
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
-        errorMessage: "string error",
+        errorMessage: "Processing failed. Please try again.",
       });
     });
   });

@@ -3,20 +3,24 @@
 
 import Replicate from "replicate";
 import { config } from "./config";
+import { withRetry } from "./retry";
 
 // Fixed model versions — readonly, not overridable (Req 16.1)
 export const MODELS = {
-  restoration: "tencentarc/gfpgan:9283608cc6b7",
-  colorization: "piddnad/ddcolor:8ca1066c7138",
-  animation: "anotherframe/animate-diffusion:26d6c9f70b69",
+  restoration: "tencentarc/gfpgan:0fbacf7afc6c144e5be9767cff80f25aff23e52b0708f17e20f9879b2f21516c",
+  colorization: "piddnad/ddcolor:ca494ba129e44e45f661d6ece83c4c98a9a7c774309beca01429b58fce8aa695",
+  animation: "stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
 } as const;
 
 // Fixed animation parameters — readonly, not overridable (Req 16.2)
+// Uses stability-ai/stable-video-diffusion params (input key: input_image)
 export const ANIMATION_PARAMS = {
-  motion_bucket_id: 1,
-  fps: 24,
-  duration: 4,
-  output_format: "mp4",
+  cond_aug: 0.02,
+  decoding_t: 7,
+  video_length: "14_frames_with_svd",
+  sizing_strategy: "maintain_aspect_ratio",
+  motion_bucket_id: 127,
+  frames_per_second: 6,
 } as const;
 
 export type ModelKey = keyof typeof MODELS;
@@ -53,10 +57,14 @@ export async function runModel(
       ? { ...input, ...ANIMATION_PARAMS }
       : { ...input };
 
-  const output = await client.run(modelVersion, { input: finalInput });
+  const output = await withRetry(
+    () => client.run(modelVersion, { input: finalInput }),
+    { maxRetries: 3, baseDelay: 3000, maxDelay: 15000, backoffMultiplier: 2 }
+  );
 
-  // Replicate output can be a string URL, an array of URLs, or an object.
-  // Normalize to a single URL string.
+  // Replicate SDK v1.x returns FileOutput objects (not plain strings).
+  // FileOutput has a toString() that returns the URL, but JSON.stringify gives {}.
+  // Also handle legacy string/array formats for robustness.
   if (typeof output === "string") {
     return output;
   }
@@ -65,14 +73,17 @@ export async function runModel(
     return String(output[0]);
   }
 
-  // Some models return an object with an "output" or "url" field
+  // FileOutput or any object with a meaningful toString()
   if (output && typeof output === "object") {
+    const str = String(output);
+    if (str.startsWith("http")) return str;
+
     const obj = output as Record<string, unknown>;
     if (typeof obj.output === "string") return obj.output;
     if (typeof obj.url === "string") return obj.url;
   }
 
   throw new Error(
-    `Unexpected output format from model "${modelKey}": ${JSON.stringify(output)}`
+    `Unexpected output format from model "${modelKey}": ${String(output)}`
   );
 }

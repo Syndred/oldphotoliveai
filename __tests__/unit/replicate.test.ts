@@ -19,6 +19,11 @@ jest.mock("@/lib/config", () => ({
   },
 }));
 
+// ── Mock retry to avoid real delays in tests ────────────────────────────────
+jest.mock("@/lib/retry", () => ({
+  withRetry: async <T>(fn: () => Promise<T>) => fn(),
+}));
+
 beforeEach(() => {
   runMock.mockReset();
 });
@@ -26,9 +31,9 @@ beforeEach(() => {
 // ── MODELS constant ─────────────────────────────────────────────────────────
 describe("MODELS constant", () => {
   it("contains the three fixed model versions", () => {
-    expect(MODELS.restoration).toBe("tencentarc/gfpgan:9283608cc6b7");
-    expect(MODELS.colorization).toBe("piddnad/ddcolor:8ca1066c7138");
-    expect(MODELS.animation).toBe("anotherframe/animate-diffusion:26d6c9f70b69");
+    expect(MODELS.restoration).toBe("tencentarc/gfpgan:0fbacf7afc6c144e5be9767cff80f25aff23e52b0708f17e20f9879b2f21516c");
+    expect(MODELS.colorization).toBe("piddnad/ddcolor:ca494ba129e44e45f661d6ece83c4c98a9a7c774309beca01429b58fce8aa695");
+    expect(MODELS.animation).toBe("stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438");
   });
 
   it("is readonly (frozen at type level via as const)", () => {
@@ -40,10 +45,12 @@ describe("MODELS constant", () => {
 describe("ANIMATION_PARAMS constant", () => {
   it("has the correct fixed values", () => {
     expect(ANIMATION_PARAMS).toEqual({
-      motion_bucket_id: 1,
-      fps: 24,
-      duration: 4,
-      output_format: "mp4",
+      cond_aug: 0.02,
+      decoding_t: 7,
+      video_length: "14_frames_with_svd",
+      sizing_strategy: "maintain_aspect_ratio",
+      motion_bucket_id: 127,
+      frames_per_second: 6,
     });
   });
 });
@@ -53,12 +60,12 @@ describe("runModel", () => {
   it("calls replicate.run with the correct model version for restoration", async () => {
     runMock.mockResolvedValueOnce("https://output.url/restored.jpg");
 
-    const result = await runModel("restoration", { image: "https://input.url/photo.jpg" });
+    const result = await runModel("restoration", { img: "https://input.url/photo.jpg" });
 
     expect(result).toBe("https://output.url/restored.jpg");
     expect(runMock).toHaveBeenCalledWith(
-      "tencentarc/gfpgan:9283608cc6b7",
-      { input: { image: "https://input.url/photo.jpg" } }
+      "tencentarc/gfpgan:0fbacf7afc6c144e5be9767cff80f25aff23e52b0708f17e20f9879b2f21516c",
+      { input: { img: "https://input.url/photo.jpg" } }
     );
   });
 
@@ -69,7 +76,7 @@ describe("runModel", () => {
 
     expect(result).toBe("https://output.url/colorized.jpg");
     expect(runMock).toHaveBeenCalledWith(
-      "piddnad/ddcolor:8ca1066c7138",
+      "piddnad/ddcolor:ca494ba129e44e45f661d6ece83c4c98a9a7c774309beca01429b58fce8aa695",
       { input: { image: "https://input.url/photo.jpg" } }
     );
   });
@@ -77,25 +84,26 @@ describe("runModel", () => {
   it("merges ANIMATION_PARAMS for animation model with precedence", async () => {
     runMock.mockResolvedValueOnce("https://output.url/animation.mp4");
 
-    // Caller tries to override fps and duration — should be ignored
+    // Caller tries to override frames_per_second and motion_bucket_id — should be ignored
     const result = await runModel("animation", {
-      image: "https://input.url/photo.jpg",
-      fps: 60,
-      duration: 10,
-      output_format: "webm",
+      input_image: "https://input.url/photo.jpg",
+      frames_per_second: 30,
+      motion_bucket_id: 50,
     });
 
     expect(result).toBe("https://output.url/animation.mp4");
     expect(runMock).toHaveBeenCalledWith(
-      "anotherframe/animate-diffusion:26d6c9f70b69",
+      "stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
       {
         input: {
-          image: "https://input.url/photo.jpg",
+          input_image: "https://input.url/photo.jpg",
           // ANIMATION_PARAMS override caller values
-          motion_bucket_id: 1,
-          fps: 24,
-          duration: 4,
-          output_format: "mp4",
+          cond_aug: 0.02,
+          decoding_t: 7,
+          video_length: "14_frames_with_svd",
+          sizing_strategy: "maintain_aspect_ratio",
+          motion_bucket_id: 127,
+          frames_per_second: 6,
         },
       }
     );
@@ -104,19 +112,29 @@ describe("runModel", () => {
   it("does NOT merge ANIMATION_PARAMS for non-animation models", async () => {
     runMock.mockResolvedValueOnce("https://output.url/restored.jpg");
 
-    await runModel("restoration", { image: "https://input.url/photo.jpg" });
+    await runModel("restoration", { img: "https://input.url/photo.jpg" });
 
     const callInput = runMock.mock.calls[0][1].input;
     expect(callInput).not.toHaveProperty("motion_bucket_id");
-    expect(callInput).not.toHaveProperty("fps");
-    expect(callInput).not.toHaveProperty("duration");
-    expect(callInput).not.toHaveProperty("output_format");
+    expect(callInput).not.toHaveProperty("frames_per_second");
+    expect(callInput).not.toHaveProperty("cond_aug");
+    expect(callInput).not.toHaveProperty("video_length");
   });
 
   it("handles array output (returns first element)", async () => {
     runMock.mockResolvedValueOnce(["https://output.url/result.jpg", "https://other.url"]);
 
     const result = await runModel("restoration", { image: "https://input.url/photo.jpg" });
+
+    expect(result).toBe("https://output.url/result.jpg");
+  });
+
+  it("handles FileOutput objects (Replicate SDK v1.x)", async () => {
+    // FileOutput has toString() returning URL but JSON.stringify gives {}
+    const fileOutput = { toString: () => "https://output.url/result.jpg" };
+    runMock.mockResolvedValueOnce(fileOutput);
+
+    const result = await runModel("restoration", { img: "https://input.url/photo.jpg" });
 
     expect(result).toBe("https://output.url/result.jpg");
   });
@@ -142,7 +160,7 @@ describe("runModel", () => {
 
     await expect(
       runModel("restoration", { image: "https://input.url/photo.jpg" })
-    ).rejects.toThrow('Unexpected output format from model "restoration"');
+    ).rejects.toThrow('Unexpected output format from model "restoration": 42');
   });
 
   it("throws on empty array output", async () => {

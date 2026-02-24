@@ -20,6 +20,10 @@ interface TaskResult {
 
 export function buildCdnUrl(key: string): string {
   const domain = process.env.NEXT_PUBLIC_R2_DOMAIN ?? "";
+  // domain may already include https:// prefix
+  if (domain.startsWith("http://") || domain.startsWith("https://")) {
+    return `${domain}/${key}`;
+  }
   return `https://${domain}/${key}`;
 }
 

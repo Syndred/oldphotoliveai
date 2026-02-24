@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { createTask, getUser } from "@/lib/redis";
+import { enqueueTask } from "@/lib/queue";
 import type { TaskPriority } from "@/types";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
@@ -57,7 +58,21 @@ export async function POST(request: NextRequest) {
       priority,
     });
 
-    // 7. Return task ID
+    // 7. Enqueue task for processing
+    await enqueueTask(task.id, priority);
+
+    // 8. Fire-and-forget: trigger worker pipeline
+    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    fetch(`${baseUrl}/api/worker/pipeline`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.WORKER_SECRET}`,
+      },
+    }).catch(() => {
+      // Ignore errors - worker will pick up task on next cron cycle
+    });
+
+    // 9. Return task ID
     return NextResponse.json({ taskId: task.id }, { status: 201 });
   } catch (error) {
     console.error("Create task failed:", error);

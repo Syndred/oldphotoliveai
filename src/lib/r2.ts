@@ -57,7 +57,11 @@ export async function uploadToR2(
  * Format: https://{NEXT_PUBLIC_R2_DOMAIN}/{key}
  */
 export function getR2CdnUrl(key: string): string {
-  return `https://${config.r2.publicDomain}/${key}`;
+  const domain = config.r2.publicDomain;
+  if (domain.startsWith("http://") || domain.startsWith("https://")) {
+    return `${domain}/${key}`;
+  }
+  return `https://${domain}/${key}`;
 }
 
 /**
