@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { SUPPORTED_MIME_TYPES, MAX_FILE_SIZE } from "@/lib/validation";
 
 interface UploadZoneProps {
-  onUpload: (imageUrl: string) => void;
+  onUpload: (imageKey: string) => void;
   disabled?: boolean;
 }
 
@@ -228,7 +228,7 @@ function uploadWithProgress(
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
           const data = JSON.parse(xhr.responseText);
-          resolve(data.url);
+          resolve(data.key);
         } catch {
           reject(new Error("Invalid server response"));
         }

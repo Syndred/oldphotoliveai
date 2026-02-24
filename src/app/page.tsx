@@ -12,7 +12,7 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const t = useTranslations("upload");
 
-  async function handleUpload(imageUrl: string) {
+  async function handleUpload(imageKey: string) {
     setIsCreating(true);
     setError("");
 
@@ -20,7 +20,7 @@ export default function HomePage() {
       const res = await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl }),
+        body: JSON.stringify({ imageKey }),
       });
 
       if (!res.ok) {

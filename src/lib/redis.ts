@@ -49,9 +49,9 @@ export async function createOrGetUser(
   const existingUserId = await redis.get<string>(keys.userGoogle(googleId));
 
   if (existingUserId) {
-    const existing = await redis.get<string>(keys.user(existingUserId));
+    const existing = await redis.get<User>(keys.user(existingUserId));
     if (existing) {
-      return JSON.parse(existing) as User;
+      return existing;
     }
   }
 
@@ -69,7 +69,7 @@ export async function createOrGetUser(
   };
 
   // Store user data and Google ID index
-  await redis.set(keys.user(user.id), JSON.stringify(user));
+  await redis.set(keys.user(user.id), user);
   await redis.set(keys.userGoogle(googleId), user.id);
 
   return user;
@@ -77,9 +77,8 @@ export async function createOrGetUser(
 
 export async function getUser(userId: string): Promise<User | null> {
   const redis = getRedisClient();
-  const data = await redis.get<string>(keys.user(userId));
-  if (!data) return null;
-  return JSON.parse(data) as User;
+  const data = await redis.get<User>(keys.user(userId));
+  return data ?? null;
 }
 
 export async function updateUserTier(
@@ -87,16 +86,15 @@ export async function updateUserTier(
   tier: UserTier
 ): Promise<void> {
   const redis = getRedisClient();
-  const data = await redis.get<string>(keys.user(userId));
-  if (!data) {
+  const user = await redis.get<User>(keys.user(userId));
+  if (!user) {
     throw new Error(`User not found: ${userId}`);
   }
 
-  const user = JSON.parse(data) as User;
   user.tier = tier;
   user.updatedAt = new Date().toISOString();
 
-  await redis.set(keys.user(userId), JSON.stringify(user));
+  await redis.set(keys.user(userId), user);
 }
 
 // ── Task Operations ─────────────────────────────────────────────────────────
@@ -121,7 +119,7 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
   };
 
   // Store task data
-  await redis.set(keys.task(task.id), JSON.stringify(task));
+  await redis.set(keys.task(task.id), task);
 
   // Add to user's task sorted set (score = creation timestamp for ordering)
   await redis.zadd(keys.userTasks(input.userId), {
@@ -138,12 +136,11 @@ export async function updateTaskStatus(
   data?: Partial<Task>
 ): Promise<void> {
   const redis = getRedisClient();
-  const existing = await redis.get<string>(keys.task(taskId));
-  if (!existing) {
+  const task = await redis.get<Task>(keys.task(taskId));
+  if (!task) {
     throw new Error(`Task not found: ${taskId}`);
   }
 
-  const task = JSON.parse(existing) as Task;
   task.status = status;
 
   // Update progress from STATUS_PROGRESS_MAP (failed/cancelled keep current progress)
@@ -162,14 +159,13 @@ export async function updateTaskStatus(
     Object.assign(task, data);
   }
 
-  await redis.set(keys.task(taskId), JSON.stringify(task));
+  await redis.set(keys.task(taskId), task);
 }
 
 export async function getTask(taskId: string): Promise<Task | null> {
   const redis = getRedisClient();
-  const data = await redis.get<string>(keys.task(taskId));
-  if (!data) return null;
-  return JSON.parse(data) as Task;
+  const data = await redis.get<Task>(keys.task(taskId));
+  return data ?? null;
 }
 
 export async function getUserTasks(userId: string): Promise<Task[]> {
@@ -187,9 +183,9 @@ export async function getUserTasks(userId: string): Promise<Task[]> {
   // Fetch each task
   const tasks: Task[] = [];
   for (const taskId of taskIds) {
-    const data = await redis.get<string>(keys.task(taskId));
+    const data = await redis.get<Task>(keys.task(taskId));
     if (data) {
-      tasks.push(JSON.parse(data) as Task);
+      tasks.push(data);
     }
   }
 
@@ -203,10 +199,8 @@ export async function getUserTasks(userId: string): Promise<Task[]> {
 
 export async function cancelTask(taskId: string): Promise<boolean> {
   const redis = getRedisClient();
-  const data = await redis.get<string>(keys.task(taskId));
-  if (!data) return false;
-
-  const task = JSON.parse(data) as Task;
+  const task = await redis.get<Task>(keys.task(taskId));
+  if (!task) return false;
 
   // Only allow cancellation of pending or queued tasks
   if (task.status !== "pending" && task.status !== "queued") {
@@ -215,19 +209,17 @@ export async function cancelTask(taskId: string): Promise<boolean> {
 
   task.status = "cancelled";
   // Keep current progress (cancelled preserves progress)
-  await redis.set(keys.task(taskId), JSON.stringify(task));
+  await redis.set(keys.task(taskId), task);
 
   return true;
 }
 
 export async function retryTask(taskId: string): Promise<Task> {
   const redis = getRedisClient();
-  const data = await redis.get<string>(keys.task(taskId));
-  if (!data) {
+  const task = await redis.get<Task>(keys.task(taskId));
+  if (!task) {
     throw new Error(`Task not found: ${taskId}`);
   }
-
-  const task = JSON.parse(data) as Task;
 
   // Only allow retry of failed tasks
   if (task.status !== "failed") {
@@ -240,7 +232,7 @@ export async function retryTask(taskId: string): Promise<Task> {
   task.errorMessage = null;
   task.completedAt = null;
 
-  await redis.set(keys.task(taskId), JSON.stringify(task));
+  await redis.set(keys.task(taskId), task);
 
   return task;
 }

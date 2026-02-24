@@ -4,7 +4,7 @@
 import type { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { config } from "./config";
-import { createOrGetUser, getUser } from "./redis";
+import { createOrGetUser } from "./redis";
 import { initializeFreeQuota } from "./quota";
 
 export const authOptions: AuthOptions = {
@@ -82,12 +82,15 @@ export const authOptions: AuthOptions = {
 
   cookies: {
     sessionToken: {
-      name: "__Secure-next-auth.session-token",
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-next-auth.session-token"
+          : "next-auth.session-token",
       options: {
         httpOnly: true, // Req 15.4
         sameSite: "lax",
         path: "/",
-        secure: true,
+        secure: process.env.NODE_ENV === "production",
       },
     },
   },
