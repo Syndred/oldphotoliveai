@@ -1,0 +1,7 @@
+{
+  "crons": [
+    { "path": "/api/worker/pipeline", "schedule": "* * * * *" },
+    { "path": "/api/worker/cleanup", "schedule": "0 * * * *" },
+    { "path": "/api/worker/quota-reset", "schedule": "0 0 * * *" }
+  ]
+}

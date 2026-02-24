@@ -1,0 +1,178 @@
+"use client";
+
+import { useParams } from "next/navigation";
+import { useCallback, useState } from "react";
+import Navbar from "@/components/Navbar";
+import ProgressIndicator from "@/components/ProgressIndicator";
+import BeforeAfterCompare from "@/components/BeforeAfterCompare";
+import VideoPlayer from "@/components/VideoPlayer";
+
+// ── Types ───────────────────────────────────────────────────────────────────
+
+interface TaskResult {
+  originalImageKey: string;
+  colorizedImageKey: string;
+  animationVideoKey: string;
+}
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+export function buildCdnUrl(key: string): string {
+  const domain = process.env.NEXT_PUBLIC_R2_DOMAIN ?? "";
+  return `https://${domain}/${key}`;
+}
+
+// ── Component ───────────────────────────────────────────────────────────────
+
+export default function ResultPage() {
+  const { taskId } = useParams<{ taskId: string }>();
+  const [result, setResult] = useState<TaskResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
+
+  const handleComplete = useCallback(
+    (data: { status: string; progress: number; [key: string]: unknown }) => {
+      setResult({
+        originalImageKey: data.originalImageKey as string,
+        colorizedImageKey: data.colorizedImageKey as string,
+        animationVideoKey: data.animationVideoKey as string,
+      });
+      setError(null);
+    },
+    [],
+  );
+
+  const handleError = useCallback((msg: string) => {
+    setError(msg);
+    setResult(null);
+  }, []);
+
+  async function handleRetry() {
+    setRetrying(true);
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/retry`, { method: "POST" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || "Retry failed");
+      }
+      // Reload to reconnect SSE with fresh state
+      window.location.reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Retry failed");
+    } finally {
+      setRetrying(false);
+    }
+  }
+
+  const showProgress = !result && !error;
+
+  return (
+    <div className="min-h-screen bg-[var(--color-primary-bg)]">
+      <Navbar />
+
+      <main className="mx-auto max-w-3xl px-4 py-10 sm:py-16">
+        {/* Progress */}
+        {showProgress && (
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-sm sm:p-10">
+            <h1 className="mb-6 text-center text-2xl font-bold text-[var(--color-text-primary)]">
+              Processing Your Photo
+            </h1>
+            <ProgressIndicator
+              taskId={taskId}
+              onComplete={handleComplete}
+              onError={handleError}
+            />
+          </div>
+        )}
+
+        {/* Error */}
+        {error && !result && (
+          <div
+            className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 text-center sm:p-10"
+            role="alert"
+          >
+            <svg
+              className="mx-auto mb-4 h-12 w-12 text-red-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+              />
+            </svg>
+            <h2 className="mb-2 text-xl font-semibold text-[var(--color-text-primary)]">
+              Processing Failed
+            </h2>
+            <p className="mb-6 text-sm text-[var(--color-text-secondary)]">{error}</p>
+            <button
+              onClick={handleRetry}
+              disabled={retrying}
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {retrying ? "Retrying…" : "Retry"}
+            </button>
+          </div>
+        )}
+
+        {/* Results */}
+        {result && (
+          <div className="space-y-8">
+            {/* Before / After */}
+            <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm sm:p-6">
+              <h2 className="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">
+                Before &amp; After
+              </h2>
+              <BeforeAfterCompare
+                beforeUrl={buildCdnUrl(result.originalImageKey)}
+                afterUrl={buildCdnUrl(result.colorizedImageKey)}
+              />
+            </section>
+
+            {/* Video */}
+            <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm sm:p-6">
+              <h2 className="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">
+                Animation
+              </h2>
+              <VideoPlayer src={buildCdnUrl(result.animationVideoKey)} />
+            </section>
+
+            {/* Download buttons */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <a
+                href={buildCdnUrl(result.colorizedImageKey)}
+                download
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+              >
+                <DownloadIcon />
+                Download Image
+              </a>
+              <a
+                href={buildCdnUrl(result.animationVideoKey)}
+                download
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-accent)] px-6 py-2.5 text-sm font-medium text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent)]/10"
+              >
+                <DownloadIcon />
+                Download Video
+              </a>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+// ── Icons ───────────────────────────────────────────────────────────────────
+
+function DownloadIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+    </svg>
+  );
+}
