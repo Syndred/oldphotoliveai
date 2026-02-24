@@ -125,5 +125,73 @@
     "remaining": "{count} remaining",
     "resetsAt": "Resets at {time}",
     "unlimited": "Unlimited"
+  },
+  "landing": {
+    "hero": {
+      "title": "Bring Your Old Photos Back to Life",
+      "subtitle": "AI-powered restoration, colorization, and animation — transform faded memories into vivid moments",
+      "cta": "Try It Free"
+    },
+    "showcase": {
+      "title": "See the Magic",
+      "subtitle": "Hover to compare before and after results",
+      "items": {
+        "label1": "AI Restoration",
+        "label2": "Smart Colorization",
+        "label3": "Full Enhancement"
+      }
+    },
+    "features": {
+      "title": "Powerful AI Features",
+      "subtitle": "Three steps to bring your memories back",
+      "restoration": {
+        "title": "Photo Restoration",
+        "description": "Remove scratches, fix damage, and enhance clarity with AI-powered restoration"
+      },
+      "colorization": {
+        "title": "Smart Colorization",
+        "description": "Add natural, vibrant colors to black-and-white photos using deep learning"
+      },
+      "animation": {
+        "title": "Photo Animation",
+        "description": "Bring still photos to life with realistic facial expressions and subtle movement"
+      }
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "subtitle": "Three simple steps to transform your photos",
+      "step1": {
+        "title": "Upload",
+        "description": "Upload your old or damaged photo"
+      },
+      "step2": {
+        "title": "AI Processing",
+        "description": "Our AI restores, colorizes, and animates your photo"
+      },
+      "step3": {
+        "title": "Download",
+        "description": "Download your restored photo and animated video"
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "q1": "What types of photos work best?",
+      "a1": "Our AI works best with portrait photos, family photos, and landscape images. The higher the original resolution, the better the results.",
+      "q2": "How long does processing take?",
+      "a2": "Most photos are processed within 1-3 minutes. Complex restorations or animations may take slightly longer.",
+      "q3": "Is my data safe?",
+      "a3": "Yes. Your photos are processed securely and automatically deleted after 24 hours. We never share your data with third parties.",
+      "q4": "Can I use the results commercially?",
+      "a4": "Yes. You own full rights to the restored and animated versions of your photos."
+    },
+    "footer": {
+      "description": "AI-powered photo restoration, colorization, and animation",
+      "links": {
+        "home": "Home",
+        "pricing": "Pricing",
+        "history": "History"
+      },
+      "copyright": "© 2025 OldPhotoLive AI. All rights reserved."
+    }
   }
 }

@@ -33,7 +33,7 @@ describe("MODELS constant", () => {
   it("contains the three fixed model versions", () => {
     expect(MODELS.restoration).toBe("tencentarc/gfpgan:0fbacf7afc6c144e5be9767cff80f25aff23e52b0708f17e20f9879b2f21516c");
     expect(MODELS.colorization).toBe("piddnad/ddcolor:ca494ba129e44e45f661d6ece83c4c98a9a7c774309beca01429b58fce8aa695");
-    expect(MODELS.animation).toBe("stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438");
+    expect(MODELS.animation).toBe("minimax/video-01-live");
   });
 
   it("is readonly (frozen at type level via as const)", () => {
@@ -45,12 +45,7 @@ describe("MODELS constant", () => {
 describe("ANIMATION_PARAMS constant", () => {
   it("has the correct fixed values", () => {
     expect(ANIMATION_PARAMS).toEqual({
-      cond_aug: 0.02,
-      decoding_t: 7,
-      video_length: "14_frames_with_svd",
-      sizing_strategy: "maintain_aspect_ratio",
-      motion_bucket_id: 127,
-      frames_per_second: 6,
+      prompt: "Bring this old photo to life with natural facial expressions and subtle movement",
     });
   });
 });
@@ -84,26 +79,20 @@ describe("runModel", () => {
   it("merges ANIMATION_PARAMS for animation model with precedence", async () => {
     runMock.mockResolvedValueOnce("https://output.url/animation.mp4");
 
-    // Caller tries to override frames_per_second and motion_bucket_id — should be ignored
+    // Caller tries to override prompt — should be ignored
     const result = await runModel("animation", {
-      input_image: "https://input.url/photo.jpg",
-      frames_per_second: 30,
-      motion_bucket_id: 50,
+      first_frame_image: "https://input.url/photo.jpg",
+      prompt: "some other prompt",
     });
 
     expect(result).toBe("https://output.url/animation.mp4");
     expect(runMock).toHaveBeenCalledWith(
-      "stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
+      "minimax/video-01-live",
       {
         input: {
-          input_image: "https://input.url/photo.jpg",
+          first_frame_image: "https://input.url/photo.jpg",
           // ANIMATION_PARAMS override caller values
-          cond_aug: 0.02,
-          decoding_t: 7,
-          video_length: "14_frames_with_svd",
-          sizing_strategy: "maintain_aspect_ratio",
-          motion_bucket_id: 127,
-          frames_per_second: 6,
+          prompt: "Bring this old photo to life with natural facial expressions and subtle movement",
         },
       }
     );
@@ -115,10 +104,7 @@ describe("runModel", () => {
     await runModel("restoration", { img: "https://input.url/photo.jpg" });
 
     const callInput = runMock.mock.calls[0][1].input;
-    expect(callInput).not.toHaveProperty("motion_bucket_id");
-    expect(callInput).not.toHaveProperty("frames_per_second");
-    expect(callInput).not.toHaveProperty("cond_aug");
-    expect(callInput).not.toHaveProperty("video_length");
+    expect(callInput).not.toHaveProperty("prompt");
   });
 
   it("handles array output (returns first element)", async () => {

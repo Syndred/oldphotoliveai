@@ -119,8 +119,9 @@ export default function HistoryPage() {
       <Navbar />
 
       <main className="mx-auto max-w-3xl px-4 py-10 sm:py-16">
+        <section aria-labelledby="history-heading">
         <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
+          <h1 id="history-heading" className="text-2xl font-bold text-[var(--color-text-primary)]">
             {t("title")}
           </h1>
 
@@ -214,6 +215,7 @@ export default function HistoryPage() {
             />
           </div>
         )}
+        </section>
       </main>
     </div>
   );

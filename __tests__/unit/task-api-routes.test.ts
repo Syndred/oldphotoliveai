@@ -19,6 +19,11 @@ jest.mock("@/lib/config", () => ({
   },
 }));
 
+const mockEnqueueTask = jest.fn<Promise<void>, [string, string]>();
+jest.mock("@/lib/queue", () => ({
+  enqueueTask: (...args: unknown[]) => mockEnqueueTask(args[0] as string, args[1] as string),
+}));
+
 // ── Imports (after mocks) ───────────────────────────────────────────────────
 
 import { GET as getStatus } from "@/app/api/tasks/[taskId]/status/route";
@@ -65,6 +70,7 @@ beforeEach(() => {
   mockGetTask.mockReset();
   mockCancelTask.mockReset();
   mockRetryTask.mockReset();
+  mockEnqueueTask.mockReset();
 });
 
 // ============================================================

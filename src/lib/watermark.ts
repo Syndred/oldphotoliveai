@@ -16,7 +16,7 @@ export async function applyImageWatermark(
 
   // Scale font size relative to image width (roughly 2.5% of width, min 16px)
   const fontSize = Math.max(Math.round(width * 0.025), 16);
-  const padding = Math.max(Math.round(width * 0.02), 10);
+  const padding = Math.max(Math.round(width * 0.04), 20);
 
   const watermarkText = "OldPhotoLive AI";
 

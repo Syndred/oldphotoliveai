@@ -19,7 +19,7 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
-/** Calculate slider position (0–100) from a pointer event relative to a container. */
+/** Calculate slider position (0–100) from a clientX relative to a container rect. */
 export function calcPosition(clientX: number, rect: DOMRect): number {
   return clamp(((clientX - rect.left) / rect.width) * 100, 0, 100);
 }
@@ -36,37 +36,24 @@ export default function BeforeAfterCompare({
   const resolvedBeforeLabel = beforeLabel ?? t("before");
   const resolvedAfterLabel = afterLabel ?? t("after");
   const [position, setPosition] = useState(50);
-  const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // ── Pointer handlers ────────────────────────────────────────────────────
+  // ── Mouse handler (hover-follow) ───────────────────────────────────────
 
-  const updatePosition = useCallback((clientX: number) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    setPosition(calcPosition(clientX, rect));
+    setPosition(calcPosition(e.clientX, rect));
   }, []);
 
-  const handlePointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      e.preventDefault();
-      setIsDragging(true);
-      (e.target as HTMLElement).setPointerCapture(e.pointerId);
-      updatePosition(e.clientX);
-    },
-    [updatePosition],
-  );
+  // onMouseLeave: keep last position (no-op)
 
-  const handlePointerMove = useCallback(
-    (e: React.PointerEvent) => {
-      if (!isDragging) return;
-      updatePosition(e.clientX);
-    },
-    [isDragging, updatePosition],
-  );
+  // ── Touch handler ─────────────────────────────────────────────────────
 
-  const handlePointerUp = useCallback(() => {
-    setIsDragging(false);
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect || !e.touches[0]) return;
+    setPosition(calcPosition(e.touches[0].clientX, rect));
   }, []);
 
   // ── Keyboard handler ───────────────────────────────────────────────────
@@ -80,16 +67,18 @@ export default function BeforeAfterCompare({
     }
   }, []);
 
+  // ── Label visibility ──────────────────────────────────────────────────
+
+  const showBefore = position < 100;
+  const showAfter = position > 0;
+
   return (
     <div data-testid="before-after-compare" className="w-full">
-      {/* Comparison container — always visible, images load naturally */}
       <div
         ref={containerRef}
         className="relative aspect-[4/3] w-full select-none overflow-hidden rounded-lg bg-white/5"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
+        onMouseMove={handleMouseMove}
+        onTouchMove={handleTouchMove}
         role="slider"
         aria-label="Before and after comparison slider"
         aria-valuenow={Math.round(position)}
@@ -124,7 +113,7 @@ export default function BeforeAfterCompare({
           className="absolute top-0 bottom-0 w-0.5 bg-white/80 pointer-events-none"
           style={{ left: `${position}%`, transform: "translateX(-50%)" }}
         >
-          {/* Drag handle */}
+          {/* Handle indicator */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full border-2 border-white/80 bg-[var(--color-primary-bg,#0F172A)]/70 backdrop-blur-sm pointer-events-none">
             <svg
               className="h-5 w-5 text-white"
@@ -139,13 +128,23 @@ export default function BeforeAfterCompare({
           </div>
         </div>
 
-        {/* Labels */}
-        <span className="absolute top-3 left-3 rounded bg-black/50 px-2 py-1 text-xs font-medium text-[var(--color-text-primary,#f8fafc)] backdrop-blur-sm">
-          {resolvedBeforeLabel}
-        </span>
-        <span className="absolute top-3 right-3 rounded bg-black/50 px-2 py-1 text-xs font-medium text-[var(--color-text-primary,#f8fafc)] backdrop-blur-sm">
-          {resolvedAfterLabel}
-        </span>
+        {/* Labels — visibility depends on position */}
+        {showBefore && (
+          <span
+            data-testid="label-before"
+            className="absolute top-3 left-3 rounded bg-black/50 px-2 py-1 text-xs font-medium text-[var(--color-text-primary,#f8fafc)] backdrop-blur-sm"
+          >
+            {resolvedBeforeLabel}
+          </span>
+        )}
+        {showAfter && (
+          <span
+            data-testid="label-after"
+            className="absolute top-3 right-3 rounded bg-black/50 px-2 py-1 text-xs font-medium text-[var(--color-text-primary,#f8fafc)] backdrop-blur-sm"
+          >
+            {resolvedAfterLabel}
+          </span>
+        )}
       </div>
     </div>
   );

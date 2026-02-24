@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getTask, retryTask } from "@/lib/redis";
+import { enqueueTask } from "@/lib/queue";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
 export async function POST(
@@ -30,6 +31,9 @@ export async function POST(
     }
 
     const updatedTask = await retryTask(taskId);
+
+    // Re-enqueue the task so the worker picks it up
+    await enqueueTask(taskId, updatedTask.priority);
 
     return NextResponse.json({
       message: "Task queued for retry",

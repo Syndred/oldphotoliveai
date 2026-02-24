@@ -1,76 +1,65 @@
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { Metadata } from "next";
 import Navbar from "@/components/Navbar";
-import UploadZone from "@/components/UploadZone";
+import HeroSection from "./sections/HeroSection";
+import ShowcaseSection from "./sections/ShowcaseSection";
+import FeaturesSection from "./sections/FeaturesSection";
+import HowItWorksSection from "./sections/HowItWorksSection";
+import UploadSection from "./sections/UploadSection";
+import FAQSection from "./sections/FAQSection";
+import FooterSection from "./sections/FooterSection";
 
+export const metadata: Metadata = {
+  title: "AI Photo Restoration & Colorization",
+  description:
+    "Restore, colorize, and animate your old photos with AI — bring faded memories back to life in seconds.",
+  openGraph: {
+    title: "AI Photo Restoration & Colorization",
+    description:
+      "Restore, colorize, and animate your old photos with AI — bring faded memories back to life in seconds.",
+    url: "https://oldphotolive.com",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AI Photo Restoration & Colorization",
+    description:
+      "Restore, colorize, and animate your old photos with AI — bring faded memories back to life in seconds.",
+  },
+};
 export default function HomePage() {
-  const router = useRouter();
-  const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState("");
-  const t = useTranslations("upload");
-
-  async function handleUpload(imageKey: string) {
-    setIsCreating(true);
-    setError("");
-
-    try {
-      const res = await fetch("/api/tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageKey }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(data?.error || `Failed to create task (${res.status})`);
-      }
-
-      const { taskId } = await res.json();
-      router.push(`/result/${taskId}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-      setIsCreating(false);
-    }
-  }
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "OldPhotoLive AI",
+    description:
+      "AI-powered photo restoration, colorization, and animation",
+    url: "https://oldphotolive.com",
+    applicationCategory: "MultimediaApplication",
+    operatingSystem: "Web",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+  };
 
   return (
     <div className="min-h-screen bg-[var(--color-primary-bg)]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Navbar />
 
-      <main className="flex items-center justify-center px-4 py-16 sm:py-24">
-        <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-white/[0.03] p-6 shadow-xl backdrop-blur-sm sm:p-10">
-          {/* Title */}
-          <h1 className="mb-2 bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-accent)] bg-clip-text text-center text-3xl font-bold text-transparent sm:text-4xl">
-            {t("title")}
-          </h1>
-          <p className="mb-8 text-center text-sm text-[var(--color-text-secondary)]">
-            {t("subtitle")}
-          </p>
-
-          {/* Upload */}
-          <UploadZone onUpload={handleUpload} disabled={isCreating} />
-
-          {/* Creating task state */}
-          {isCreating && (
-            <div className="mt-4 flex items-center justify-center gap-2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--color-accent)] border-t-transparent" />
-              <p className="text-sm text-[var(--color-text-secondary)]">
-                {t("creatingTask")}
-              </p>
-            </div>
-          )}
-
-          {/* Error */}
-          {error && (
-            <p className="mt-4 text-center text-sm text-red-400" role="alert">
-              {error}
-            </p>
-          )}
-        </div>
+      <main>
+        <HeroSection />
+        <ShowcaseSection />
+        <FeaturesSection />
+        <HowItWorksSection />
+        <UploadSection />
+        <FAQSection />
       </main>
+
+      <FooterSection />
     </div>
   );
 }

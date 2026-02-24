@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
+import Navbar from "@/components/Navbar";
 
 export default function LoginPage() {
   const t = useTranslations("auth");
@@ -15,8 +16,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--color-primary-bg)] px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/[0.03] p-8 shadow-xl backdrop-blur-sm text-center">
+    <>
+      <Navbar />
+      <main className="flex min-h-screen items-center justify-center bg-[var(--color-primary-bg)] px-4">
+        <section className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/[0.03] p-8 shadow-xl backdrop-blur-sm text-center">
         <h1 className="mb-2 bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-accent)] bg-clip-text text-3xl font-bold text-transparent">
           OldPhotoLive AI
         </h1>
@@ -40,7 +43,8 @@ export default function LoginPage() {
           )}
           {loading ? tCommon("loading") : t("signInWith")}
         </button>
-      </div>
-    </div>
+        </section>
+      </main>
+    </>
   );
 }

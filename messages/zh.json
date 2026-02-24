@@ -125,5 +125,73 @@
     "remaining": "剩余 {count} 次",
     "resetsAt": "将于 {time} 重置",
     "unlimited": "无限制"
+  },
+  "landing": {
+    "hero": {
+      "title": "让老照片重获新生",
+      "subtitle": "AI 驱动的修复、上色与动画 — 将褪色的记忆变为鲜活的瞬间",
+      "cta": "免费试用"
+    },
+    "showcase": {
+      "title": "见证奇迹",
+      "subtitle": "悬停鼠标对比修复前后效果",
+      "items": {
+        "label1": "AI 修复",
+        "label2": "智能上色",
+        "label3": "完整增强"
+      }
+    },
+    "features": {
+      "title": "强大的 AI 功能",
+      "subtitle": "三步唤醒你的珍贵记忆",
+      "restoration": {
+        "title": "照片修复",
+        "description": "AI 智能去除划痕、修复损伤，提升照片清晰度"
+      },
+      "colorization": {
+        "title": "智能上色",
+        "description": "利用深度学习为黑白照片添加自然、鲜艳的色彩"
+      },
+      "animation": {
+        "title": "照片动画",
+        "description": "让静态照片动起来，呈现逼真的面部表情和微妙动作"
+      }
+    },
+    "howItWorks": {
+      "title": "使用流程",
+      "subtitle": "三个简单步骤，变换你的照片",
+      "step1": {
+        "title": "上传照片",
+        "description": "上传你的老照片或受损照片"
+      },
+      "step2": {
+        "title": "AI 处理",
+        "description": "AI 自动修复、上色并生成动画"
+      },
+      "step3": {
+        "title": "下载结果",
+        "description": "下载修复后的照片和动画视频"
+      }
+    },
+    "faq": {
+      "title": "常见问题",
+      "q1": "什么类型的照片效果最好？",
+      "a1": "我们的 AI 对人像照片、家庭合影和风景照片效果最佳。原始分辨率越高，效果越好。",
+      "q2": "处理需要多长时间？",
+      "a2": "大多数照片在 1-3 分钟内处理完成。复杂的修复或动画可能需要稍长时间。",
+      "q3": "我的数据安全吗？",
+      "a3": "是的。您的照片经过安全处理，并在 24 小时后自动删除。我们绝不会与第三方共享您的数据。",
+      "q4": "我可以将结果用于商业用途吗？",
+      "a4": "可以。您拥有修复和动画版本照片的完整权利。"
+    },
+    "footer": {
+      "description": "AI 驱动的照片修复、上色与动画",
+      "links": {
+        "home": "首页",
+        "pricing": "定价",
+        "history": "历史"
+      },
+      "copyright": "© 2025 OldPhotoLive AI. 保留所有权利。"
+    }
   }
 }
