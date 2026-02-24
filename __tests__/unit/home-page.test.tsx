@@ -19,6 +19,18 @@ jest.mock("next-auth/react", () => ({
   signOut: jest.fn(),
 }));
 
+// Mock next-intl (needed by LanguageSwitcher and i18n components)
+jest.mock("next-intl", () => ({
+  useTranslations: (namespace: string) => (key: string) => {
+    const translations: Record<string, Record<string, string>> = {
+      nav: { home: "Home", history: "History", pricing: "Pricing", login: "Sign In", logout: "Sign Out" },
+      upload: { title: "Restore Your Old Photos", subtitle: "AI-powered restoration, colorization, and animation in one click", creatingTask: "Creating task…", dragDrop: "Drag and drop your photo here", browse: "browse files", supportedFormats: "Supports JPEG, PNG, WebP (max 10 MB)" },
+    };
+    return translations[namespace]?.[key] ?? key;
+  },
+  useLocale: () => "en",
+}));
+
 // Mock UploadZone to control onUpload callback
 jest.mock("@/components/UploadZone", () => {
   return function MockUploadZone({

@@ -147,7 +147,7 @@ describe("GET /api/tasks/[taskId]/status", () => {
     const body = await res.json();
 
     expect(res.status).toBe(500);
-    expect(body.error).toBe("Failed to get task status");
+    expect(body.error).toBe("Task not found");
   });
 });
 
@@ -201,7 +201,7 @@ describe("POST /api/tasks/[taskId]/cancel", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toBe("Task cannot be cancelled");
+    expect(body.error).toBe("This task cannot be cancelled");
   });
 
   it("returns 400 when task is completed", async () => {
@@ -213,7 +213,7 @@ describe("POST /api/tasks/[taskId]/cancel", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toBe("Task cannot be cancelled");
+    expect(body.error).toBe("This task cannot be cancelled");
   });
 
   it("returns 400 when task is already failed", async () => {
@@ -225,7 +225,7 @@ describe("POST /api/tasks/[taskId]/cancel", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toBe("Task cannot be cancelled");
+    expect(body.error).toBe("This task cannot be cancelled");
   });
 
   it("returns 500 when cancelTask throws", async () => {
@@ -237,7 +237,7 @@ describe("POST /api/tasks/[taskId]/cancel", () => {
     const body = await res.json();
 
     expect(res.status).toBe(500);
-    expect(body.error).toBe("Failed to cancel task");
+    expect(body.error).toBe("This task cannot be cancelled");
   });
 });
 
@@ -287,7 +287,7 @@ describe("POST /api/tasks/[taskId]/retry", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toBe("Only failed tasks can be retried");
+    expect(body.error).toBe("Retry failed");
   });
 
   it("returns 400 when task is completed", async () => {
@@ -298,7 +298,7 @@ describe("POST /api/tasks/[taskId]/retry", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toBe("Only failed tasks can be retried");
+    expect(body.error).toBe("Retry failed");
   });
 
   it("returns 400 when task is restoring", async () => {
@@ -309,7 +309,7 @@ describe("POST /api/tasks/[taskId]/retry", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toBe("Only failed tasks can be retried");
+    expect(body.error).toBe("Retry failed");
   });
 
   it("returns 400 when task is cancelled", async () => {
@@ -320,7 +320,7 @@ describe("POST /api/tasks/[taskId]/retry", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toBe("Only failed tasks can be retried");
+    expect(body.error).toBe("Retry failed");
   });
 
   it("returns 500 when retryTask throws", async () => {
@@ -332,6 +332,6 @@ describe("POST /api/tasks/[taskId]/retry", () => {
     const body = await res.json();
 
     expect(res.status).toBe(500);
-    expect(body.error).toBe("Failed to retry task");
+    expect(body.error).toBe("Retry failed");
   });
 });

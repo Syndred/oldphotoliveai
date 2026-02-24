@@ -1,19 +1,23 @@
 // Pipeline Worker - Cron-triggered route
-// Requirements: 3.1-3.10, 14.3
-// Triggered by Vercel Cron every minute.
-// Dequeues one task, acquires a distributed lock, executes the pipeline, releases the lock.
+// Requirements: 3.1-3.10, 14.3, 18.5
 
 import { NextResponse } from "next/server";
 import { config } from "@/lib/config";
 import { dequeueTask } from "@/lib/queue";
 import { acquireLock, releaseLock } from "@/lib/lock";
 import { executePipeline } from "@/lib/pipeline";
+import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
 export async function POST(request: Request): Promise<NextResponse> {
+  const locale = getRequestLocale(request);
+
   // Step 1: Verify Worker Secret
   const authHeader = request.headers.get("Authorization");
   if (authHeader !== `Bearer ${config.worker.secret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: getErrorMessage("unauthorized", locale) },
+      { status: 401 }
+    );
   }
 
   // Step 2: Dequeue task from priority queue
@@ -27,7 +31,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   const locked = await acquireLock(lockKey);
   if (!locked) {
     return NextResponse.json(
-      { message: "Task locked by another worker" },
+      { message: getErrorMessage("serviceBusy", locale) },
       { status: 200 }
     );
   }

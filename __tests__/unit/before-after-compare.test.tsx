@@ -7,6 +7,17 @@ import "@testing-library/jest-dom";
 
 // ── Mock next/image ─────────────────────────────────────────────────────────
 
+// Mock next-intl
+jest.mock("next-intl", () => ({
+  useTranslations: (namespace: string) => (key: string) => {
+    const translations: Record<string, Record<string, string>> = {
+      result: { before: "Before", after: "After" },
+    };
+    return translations[namespace]?.[key] ?? key;
+  },
+  useLocale: () => "en",
+}));
+
 jest.mock("next/image", () => {
   const MockImage = (props: Record<string, unknown>) => {
     const { fill, priority, onLoad, ...rest } = props;

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Navbar from "@/components/Navbar";
 import UploadZone from "@/components/UploadZone";
 
@@ -9,6 +10,7 @@ export default function HomePage() {
   const router = useRouter();
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState("");
+  const t = useTranslations("upload");
 
   async function handleUpload(imageUrl: string) {
     setIsCreating(true);
@@ -42,10 +44,10 @@ export default function HomePage() {
         <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-white/[0.03] p-6 shadow-xl backdrop-blur-sm sm:p-10">
           {/* Title */}
           <h1 className="mb-2 bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-accent)] bg-clip-text text-center text-3xl font-bold text-transparent sm:text-4xl">
-            Restore Your Old Photos
+            {t("title")}
           </h1>
           <p className="mb-8 text-center text-sm text-[var(--color-text-secondary)]">
-            AI-powered restoration, colorization, and animation in one click
+            {t("subtitle")}
           </p>
 
           {/* Upload */}
@@ -56,7 +58,7 @@ export default function HomePage() {
             <div className="mt-4 flex items-center justify-center gap-2">
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--color-accent)] border-t-transparent" />
               <p className="text-sm text-[var(--color-text-secondary)]">
-                Creating task…
+                {t("creatingTask")}
               </p>
             </div>
           )}

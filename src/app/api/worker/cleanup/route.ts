@@ -1,21 +1,25 @@
 // Cleanup Worker - Cron-triggered route
-// Requirements: 11.6
-// Triggered by Vercel Cron every hour.
-// Cleans up R2 files for failed tasks older than 7 days.
+// Requirements: 11.6, 18.5
 
 import { NextResponse } from "next/server";
 import { config } from "@/lib/config";
 import { getRedisClient } from "@/lib/redis";
 import { deleteTaskFiles } from "@/lib/r2";
 import type { Task } from "@/types";
+import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function POST(request: Request): Promise<NextResponse> {
+  const locale = getRequestLocale(request);
+
   // Step 1: Verify Worker Secret
   const authHeader = request.headers.get("Authorization");
   if (authHeader !== `Bearer ${config.worker.secret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: getErrorMessage("unauthorized", locale) },
+      { status: 401 }
+    );
   }
 
   try {
@@ -57,7 +61,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   } catch (error) {
     console.error("Cleanup worker failed:", error);
     return NextResponse.json(
-      { error: "Failed to run cleanup" },
+      { error: getErrorMessage("serviceBusy", locale) },
       { status: 500 }
     );
   }

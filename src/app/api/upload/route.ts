@@ -1,11 +1,14 @@
 // Upload API Route
-// Requirements: 2.1, 2.2, 2.3, 2.5, 11.1
+// Requirements: 2.1, 2.2, 2.3, 2.5, 11.1, 18.5
 
 import { NextRequest, NextResponse } from "next/server";
 import { validateFile, generateStorageKey } from "@/lib/validation";
 import { uploadToR2, getR2CdnUrl } from "@/lib/r2";
+import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
 export async function POST(request: NextRequest) {
+  const locale = getRequestLocale(request);
+
   try {
     const formData = await request.formData();
     const file = formData.get("file");
@@ -13,7 +16,7 @@ export async function POST(request: NextRequest) {
     // 1. Check file exists and is a File instance
     if (!file || !(file instanceof File)) {
       return NextResponse.json(
-        { error: "请选择要上传的文件" },
+        { error: getErrorMessage("uploadFailed", locale) },
         { status: 400 }
       );
     }
@@ -22,7 +25,7 @@ export async function POST(request: NextRequest) {
     const validation = validateFile(file);
     if (!validation.valid) {
       return NextResponse.json(
-        { error: validation.error },
+        { error: getErrorMessage(validation.error!, locale) },
         { status: 400 }
       );
     }
@@ -42,7 +45,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Upload failed:", error);
     return NextResponse.json(
-      { error: "上传失败，请稍后重试" },
+      { error: getErrorMessage("uploadFailed", locale) },
       { status: 500 }
     );
   }

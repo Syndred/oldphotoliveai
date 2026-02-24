@@ -1,10 +1,12 @@
 "use client";
 
 import { useSession, signIn, signOut } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 
 export default function AuthButton() {
   const { data: session, status } = useSession();
+  const t = useTranslations("nav");
 
   if (status === "loading") {
     return (
@@ -16,9 +18,9 @@ export default function AuthButton() {
     return (
       <button
         onClick={() => signIn("google")}
-        className="rounded-md bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+        className="rounded-md bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 min-h-[44px]"
       >
-        Sign In
+        {t("login")}
       </button>
     );
   }
@@ -39,9 +41,9 @@ export default function AuthButton() {
       </span>
       <button
         onClick={() => signOut()}
-        className="rounded-md border border-white/20 px-3 py-1.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-white/40 hover:text-white"
+        className="rounded-md border border-white/20 px-3 py-1.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-white/40 hover:text-white min-h-[44px]"
       >
-        Sign Out
+        {t("logout")}
       </button>
     </div>
   );

@@ -1,20 +1,23 @@
 // Task Status Query API Route
-// Requirements: 4.3
+// Requirements: 4.3, 18.5
 
 import { NextRequest, NextResponse } from "next/server";
 import { getTask } from "@/lib/redis";
+import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { taskId: string } }
 ) {
+  const locale = getRequestLocale(request);
+
   try {
     const { taskId } = params;
 
     const task = await getTask(taskId);
     if (!task) {
       return NextResponse.json(
-        { error: "Task not found" },
+        { error: getErrorMessage("taskNotFound", locale) },
         { status: 404 }
       );
     }
@@ -41,7 +44,7 @@ export async function GET(
   } catch (error) {
     console.error("Get task status failed:", error);
     return NextResponse.json(
-      { error: "Failed to get task status" },
+      { error: getErrorMessage("taskNotFound", locale) },
       { status: 500 }
     );
   }

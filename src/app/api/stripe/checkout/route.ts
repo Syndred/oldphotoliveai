@@ -1,11 +1,12 @@
 // Stripe Checkout API
-// Requirements: 6.1, 6.2
+// Requirements: 6.1, 6.2, 18.5
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { getStripeClient } from "@/lib/stripe";
 import { config } from "@/lib/config";
+import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
 const VALID_PLANS = ["pay_as_you_go", "professional"] as const;
 type Plan = (typeof VALID_PLANS)[number];
@@ -15,6 +16,8 @@ function isValidPlan(plan: string): plan is Plan {
 }
 
 export async function POST(request: NextRequest) {
+  const locale = getRequestLocale(request);
+
   try {
     // Auth check (middleware handles this, but double-check)
     const token = await getToken({
@@ -23,7 +26,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (!token?.userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: getErrorMessage("unauthorized", locale) },
+        { status: 401 }
+      );
     }
 
     const body = await request.json();
@@ -31,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     if (!plan || !isValidPlan(plan)) {
       return NextResponse.json(
-        { error: "Invalid plan. Must be 'pay_as_you_go' or 'professional'" },
+        { error: getErrorMessage("checkoutFailed", locale) },
         { status: 400 }
       );
     }
@@ -60,7 +66,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Stripe checkout error:", error);
     return NextResponse.json(
-      { error: "Failed to create checkout session" },
+      { error: getErrorMessage("checkoutFailed", locale) },
       { status: 500 }
     );
   }

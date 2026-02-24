@@ -74,7 +74,7 @@ describe("POST /api/tasks", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toBe("imageKey is required");
+    expect(body.error).toBe("Failed to create task");
   });
 
   it("returns 400 when imageKey is empty string", async () => {
@@ -83,7 +83,7 @@ describe("POST /api/tasks", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toBe("imageKey is required");
+    expect(body.error).toBe("Failed to create task");
   });
 
   it("returns 400 when imageKey is whitespace only", async () => {
@@ -92,7 +92,7 @@ describe("POST /api/tasks", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toBe("imageKey is required");
+    expect(body.error).toBe("Failed to create task");
   });
 
   it("returns 400 when imageKey is not a string", async () => {
@@ -101,7 +101,7 @@ describe("POST /api/tasks", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toBe("imageKey is required");
+    expect(body.error).toBe("Failed to create task");
   });
 
   it("returns 404 when user is not found", async () => {
@@ -112,7 +112,7 @@ describe("POST /api/tasks", () => {
     const body = await res.json();
 
     expect(res.status).toBe(404);
-    expect(body.error).toBe("User not found");
+    expect(body.error).toBe("Please sign in to continue");
   });
 
   it("creates task with normal priority for free user", async () => {

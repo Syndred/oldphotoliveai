@@ -59,7 +59,7 @@ describe("POST /api/upload", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toBe("请选择要上传的文件");
+    expect(body.error).toBe("Upload failed. Please try again later.");
   });
 
   it("returns 400 for unsupported file type", async () => {
@@ -69,7 +69,7 @@ describe("POST /api/upload", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toBe("请上传 JPEG、PNG 或 WebP 格式的图片");
+    expect(body.error).toBe("Please upload a JPEG, PNG, or WebP image");
   });
 
   it("returns 400 for file exceeding 10MB", async () => {
@@ -79,7 +79,7 @@ describe("POST /api/upload", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toBe("文件大小不能超过 10MB");
+    expect(body.error).toBe("File size exceeds the 10MB limit");
   });
 
   it("returns 200 with url and key for valid JPEG upload", async () => {
@@ -134,7 +134,7 @@ describe("POST /api/upload", () => {
     const body = await res.json();
 
     expect(res.status).toBe(500);
-    expect(body.error).toBe("上传失败，请稍后重试");
+    expect(body.error).toBe("Upload failed. Please try again later.");
   });
 
   it("accepts a file exactly at 10MB", async () => {

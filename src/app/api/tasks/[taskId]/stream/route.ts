@@ -1,8 +1,9 @@
 // SSE Task Status Stream API Route
-// Requirements: 4.2, 4.3
+// Requirements: 4.2, 4.3, 18.5
 
 import { NextRequest } from "next/server";
 import { getTask } from "@/lib/redis";
+import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
 const POLL_INTERVAL_MS = 2000;
 
@@ -11,6 +12,7 @@ export async function GET(
   { params }: { params: { taskId: string } }
 ) {
   const { taskId } = params;
+  const locale = getRequestLocale(request);
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -24,7 +26,7 @@ export async function GET(
         try {
           const task = await getTask(taskId);
           if (!task) {
-            sendEvent({ error: "Task not found" });
+            sendEvent({ error: getErrorMessage("taskNotFound", locale) });
             return true; // stop polling
           }
 
@@ -59,7 +61,7 @@ export async function GET(
 
           return false;
         } catch {
-          sendEvent({ error: "Failed to fetch task status" });
+          sendEvent({ error: getErrorMessage("taskNotFound", locale) });
           return true;
         }
       };

@@ -1,11 +1,13 @@
-// Middleware: Authentication + Rate Limiting
-// Requirements: 1.1, 9.1-9.5
+// Middleware: Locale Detection + Authentication + Rate Limiting
+// Requirements: 1.1, 9.1-9.5, 18.1, 18.2
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { checkRateLimit } from "@/lib/rateLimit";
 import type { RateLimitType } from "@/types";
+import { locales, defaultLocale, LOCALE_COOKIE } from "@/i18n/routing";
+import type { Locale } from "@/i18n/routing";
 
 // ── Route Configuration ─────────────────────────────────────────────────────
 
@@ -44,14 +46,64 @@ function isUploadRoute(pathname: string): boolean {
   return UPLOAD_ROUTES.some((route) => pathname.startsWith(route));
 }
 
+// ── Locale Detection ────────────────────────────────────────────────────────
+
+function isValidLocale(value: string): value is Locale {
+  return (locales as readonly string[]).includes(value);
+}
+
+function parseAcceptLanguage(header: string | null): Locale | null {
+  if (!header) return null;
+  const segments = header.split(",");
+  for (const segment of segments) {
+    const lang = segment.split(";")[0].trim().toLowerCase();
+    // Check exact match first (e.g. "en", "zh")
+    if (isValidLocale(lang)) return lang;
+    // Check prefix match (e.g. "en-US" → "en", "zh-CN" → "zh")
+    const prefix = lang.split("-")[0];
+    if (isValidLocale(prefix)) return prefix;
+  }
+  return null;
+}
+
+function detectLocale(request: NextRequest): Locale {
+  // 1. Cookie
+  const cookieLocale = request.cookies.get(LOCALE_COOKIE)?.value;
+  if (cookieLocale && isValidLocale(cookieLocale)) return cookieLocale;
+
+  // 2. Accept-Language header
+  const acceptLang = request.headers.get("Accept-Language");
+  const headerLocale = parseAcceptLanguage(acceptLang);
+  if (headerLocale) return headerLocale;
+
+  // 3. Default
+  return defaultLocale;
+}
+
 // ── Middleware ───────────────────────────────────────────────────────────────
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip public routes entirely
+  // ── Locale Detection & Cookie Persistence ─────────────────────────────
+  const locale = detectLocale(request);
+  const existingCookie = request.cookies.get(LOCALE_COOKIE)?.value;
+  let response: NextResponse | undefined;
+
+  // We'll set the locale cookie on the response if it's not already set
+  const needsCookie = existingCookie !== locale;
+
+  // Skip public routes entirely (but still set locale cookie)
   if (isPublicRoute(pathname)) {
-    return NextResponse.next();
+    response = NextResponse.next();
+    if (needsCookie) {
+      response.cookies.set(LOCALE_COOKIE, locale, {
+        path: "/",
+        maxAge: 365 * 24 * 60 * 60, // 1 year
+        sameSite: "lax",
+      });
+    }
+    return response;
   }
 
   // ── Authentication Check ────────────────────────────────────────────────
@@ -97,7 +149,15 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  response = NextResponse.next();
+  if (needsCookie) {
+    response.cookies.set(LOCALE_COOKIE, locale, {
+      path: "/",
+      maxAge: 365 * 24 * 60 * 60,
+      sameSite: "lax",
+    });
+  }
+  return response;
 }
 
 export const config = {

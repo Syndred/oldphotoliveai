@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import type { TaskStatus } from "@/types";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -12,13 +13,13 @@ interface ProgressIndicatorProps {
 }
 
 interface StepInfo {
-  label: string;
+  key: string;
   status: "done" | "active" | "pending";
 }
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
-const STEP_LABELS = ["Upload", "Restore", "Colorize", "Animate"] as const;
+const STEP_KEYS = ["step1", "step2", "step3", "step4"] as const;
 
 const STATUS_TO_STEP: Record<string, number> = {
   pending: 0,
@@ -44,8 +45,8 @@ function getSteps(status: string): StepInfo[] {
   const activeStep = STATUS_TO_STEP[status] ?? 0;
   const isCompleted = status === "completed";
 
-  return STEP_LABELS.map((label, i) => ({
-    label,
+  return STEP_KEYS.map((key, i) => ({
+    key,
     status: isCompleted || i < activeStep ? "done" : i === activeStep && !isCompleted ? "active" : "pending",
   }));
 }
@@ -64,6 +65,7 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
   const eventSourceRef = useRef<EventSource | null>(null);
   const onCompleteRef = useRef(onComplete);
   const onErrorRef = useRef(onError);
+  const t = useTranslations("processing");
 
   // Keep callback refs fresh without re-triggering effect
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
@@ -123,7 +125,7 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
       {/* Stepper */}
       <div className="flex items-center justify-between mb-4" role="list" aria-label="Processing steps">
         {steps.map((step, i) => (
-          <div key={step.label} className="flex items-center flex-1 last:flex-none" role="listitem">
+          <div key={step.key} className="flex items-center flex-1 last:flex-none" role="listitem">
             {/* Step circle + label */}
             <div className="flex flex-col items-center gap-1.5">
               <div
@@ -148,7 +150,7 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
                 )}
               </div>
               <span
-                className={`text-xs whitespace-nowrap ${
+                className={`text-[10px] sm:text-xs text-center leading-tight ${
                   step.status === "done"
                     ? "text-[var(--color-text-primary)] font-medium"
                     : step.status === "active"
@@ -156,7 +158,7 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
                     : "text-[var(--color-text-secondary)]"
                 }`}
               >
-                {step.label}
+                {t(step.key)}
               </span>
             </div>
 
@@ -194,9 +196,9 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
         {error ? (
           <span className="text-red-400">{error}</span>
         ) : status === "completed" ? (
-          "Processing complete"
+          t("completed")
         ) : (
-          `${progress}% — ${status === "pending" || status === "queued" ? "Waiting in queue…" : `${status.charAt(0).toUpperCase() + status.slice(1)}…`}`
+          `${progress}% — ${status === "pending" || status === "queued" ? t("pending") : `${status.charAt(0).toUpperCase() + status.slice(1)}…`}`
         )}
       </p>
     </div>
@@ -204,5 +206,5 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
 }
 
 // Export helpers for testing
-export { getSteps, getProgress, STEP_LABELS, STATUS_TO_STEP, STATUS_PROGRESS };
+export { getSteps, getProgress, STEP_KEYS, STATUS_TO_STEP, STATUS_PROGRESS };
 export type { ProgressIndicatorProps, StepInfo };

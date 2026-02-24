@@ -7,6 +7,17 @@ import "@testing-library/jest-dom";
 
 // ── EventSource mock ────────────────────────────────────────────────────────
 
+// Mock next-intl
+jest.mock("next-intl", () => ({
+  useTranslations: (namespace: string) => (key: string) => {
+    const translations: Record<string, Record<string, string>> = {
+      processing: { step1: "Upload", step2: "Restore", step3: "Colorize", step4: "Animate", pending: "Waiting in queue…", completed: "Processing complete", connectionLost: "Connection lost", title: "Processing Your Photo" },
+    };
+    return translations[namespace]?.[key] ?? key;
+  },
+  useLocale: () => "en",
+}));
+
 type ESListener = (event: MessageEvent | Event) => void;
 
 let mockESInstance: {
@@ -33,7 +44,7 @@ class MockEventSource {
 import ProgressIndicator, {
   getSteps,
   getProgress,
-  STEP_LABELS,
+  STEP_KEYS,
   STATUS_TO_STEP,
   STATUS_PROGRESS,
 } from "@/components/ProgressIndicator";
@@ -88,9 +99,9 @@ describe("getSteps", () => {
     steps.forEach((s) => expect(s.status).toBe("done"));
   });
 
-  it("returns correct labels", () => {
+  it("returns correct keys", () => {
     const steps = getSteps("pending");
-    expect(steps.map((s) => s.label)).toEqual(["Upload", "Restore", "Colorize", "Animate"]);
+    expect(steps.map((s) => s.key)).toEqual(["step1", "step2", "step3", "step4"]);
   });
 });
 
@@ -114,8 +125,8 @@ describe("getProgress", () => {
 });
 
 describe("constants", () => {
-  it("has 4 step labels", () => {
-    expect(STEP_LABELS).toHaveLength(4);
+  it("has 4 step keys", () => {
+    expect(STEP_KEYS).toHaveLength(4);
   });
 
   it("STATUS_TO_STEP maps completed to step 4 (past all steps)", () => {

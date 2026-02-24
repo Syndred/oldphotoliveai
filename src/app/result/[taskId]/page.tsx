@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useCallback, useState } from "react";
+import { useTranslations } from "next-intl";
 import Navbar from "@/components/Navbar";
 import ProgressIndicator from "@/components/ProgressIndicator";
 import BeforeAfterCompare from "@/components/BeforeAfterCompare";
@@ -29,6 +30,9 @@ export default function ResultPage() {
   const [result, setResult] = useState<TaskResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
+  const tResult = useTranslations("result");
+  const tProcessing = useTranslations("processing");
+  const tCommon = useTranslations("common");
 
   const handleComplete = useCallback(
     (data: { status: string; progress: number; [key: string]: unknown }) => {
@@ -75,7 +79,7 @@ export default function ResultPage() {
         {showProgress && (
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-sm sm:p-10">
             <h1 className="mb-6 text-center text-2xl font-bold text-[var(--color-text-primary)]">
-              Processing Your Photo
+              {tProcessing("title")}
             </h1>
             <ProgressIndicator
               taskId={taskId}
@@ -106,15 +110,15 @@ export default function ResultPage() {
               />
             </svg>
             <h2 className="mb-2 text-xl font-semibold text-[var(--color-text-primary)]">
-              Processing Failed
+              {tResult("failed")}
             </h2>
             <p className="mb-6 text-sm text-[var(--color-text-secondary)]">{error}</p>
             <button
               onClick={handleRetry}
               disabled={retrying}
-              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 min-h-[44px]"
             >
-              {retrying ? "Retrying…" : "Retry"}
+              {retrying ? tResult("retrying") : tCommon("retry")}
             </button>
           </div>
         )}
@@ -125,7 +129,7 @@ export default function ResultPage() {
             {/* Before / After */}
             <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm sm:p-6">
               <h2 className="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">
-                Before &amp; After
+                {tResult("beforeAfter")}
               </h2>
               <BeforeAfterCompare
                 beforeUrl={buildCdnUrl(result.originalImageKey)}
@@ -136,7 +140,7 @@ export default function ResultPage() {
             {/* Video */}
             <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm sm:p-6">
               <h2 className="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">
-                Animation
+                {tResult("animation")}
               </h2>
               <VideoPlayer src={buildCdnUrl(result.animationVideoKey)} />
             </section>
@@ -146,18 +150,18 @@ export default function ResultPage() {
               <a
                 href={buildCdnUrl(result.colorizedImageKey)}
                 download
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 min-h-[44px]"
               >
                 <DownloadIcon />
-                Download Image
+                {tResult("downloadImage")}
               </a>
               <a
                 href={buildCdnUrl(result.animationVideoKey)}
                 download
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-accent)] px-6 py-2.5 text-sm font-medium text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent)]/10"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-accent)] px-6 py-3 text-sm font-medium text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent)]/10 min-h-[44px]"
               >
                 <DownloadIcon />
-                Download Video
+                {tResult("downloadVideo")}
               </a>
             </div>
           </div>

@@ -1,0 +1,121 @@
+{
+  "common": {
+    "appName": "OldPhotoLive AI",
+    "loading": "加载中...",
+    "error": "发生了错误",
+    "retry": "重试",
+    "download": "下载",
+    "cancel": "取消",
+    "tryAgain": "再试一次",
+    "backToHome": "返回首页",
+    "pageNotFound": "页面未找到",
+    "pageNotFoundDesc": "您访问的页面不存在或已被移动。",
+    "somethingWentWrong": "出了点问题",
+    "unexpectedError": "发生了意外错误，请重试。"
+  },
+  "nav": {
+    "home": "首页",
+    "history": "历史记录",
+    "pricing": "定价",
+    "login": "登录",
+    "logout": "退出登录"
+  },
+  "upload": {
+    "title": "让老照片焕发新生",
+    "subtitle": "AI 一键修复、上色、动画",
+    "dragDrop": "将照片拖放到此处",
+    "browse": "浏览文件",
+    "supportedFormats": "支持 JPEG、PNG、WebP（最大 10 MB）",
+    "uploading": "上传中… {progress}%",
+    "creatingTask": "正在创建任务…"
+  },
+  "processing": {
+    "title": "正在处理您的照片",
+    "step1": "上传",
+    "step2": "修复",
+    "step3": "上色",
+    "step4": "动画",
+    "pending": "排队等待中…",
+    "completed": "处理完成",
+    "connectionLost": "连接已断开"
+  },
+  "result": {
+    "beforeAfter": "前后对比",
+    "animation": "动画效果",
+    "before": "修复前",
+    "after": "修复后",
+    "downloadImage": "下载图片",
+    "downloadVideo": "下载视频",
+    "failed": "处理失败",
+    "retryMessage": "出了点问题，请重试。",
+    "retrying": "正在重试…"
+  },
+  "pricing": {
+    "title": "选择您的方案",
+    "subtitle": "解锁 AI 照片修复的全部功能",
+    "free": "免费版",
+    "payAsYouGo": "按次付费",
+    "professional": "专业版",
+    "recommended": "推荐",
+    "currentPlan": "当前方案",
+    "subscribe": "订阅",
+    "buyCredits": "购买积分",
+    "redirecting": "正在跳转…",
+    "freeDesc": "免费体验",
+    "payAsYouGoDesc": "偶尔使用",
+    "professionalDesc": "最佳性价比",
+    "freeFeature1": "每天 1 张照片",
+    "freeFeature2": "低分辨率（800×600）",
+    "freeFeature3": "输出带水印",
+    "payFeature1": "5 次积分",
+    "payFeature2": "高分辨率（1920×1080）",
+    "payFeature3": "无水印",
+    "proFeature1": "无限量照片",
+    "proFeature2": "高分辨率（1920×1080）",
+    "proFeature3": "无水印",
+    "proFeature4": "优先处理"
+  },
+  "history": {
+    "title": "处理历史",
+    "empty": "暂无处理记录",
+    "status": {
+      "pending": "等待中",
+      "queued": "排队中",
+      "restoring": "修复中",
+      "colorizing": "上色中",
+      "animating": "生成动画中",
+      "completed": "已完成",
+      "failed": "失败",
+      "cancelled": "已取消"
+    }
+  },
+  "errors": {
+    "fileTypeNotSupported": "请上传 JPEG、PNG 或 WebP 格式的图片",
+    "fileTooLarge": "文件大小超过 10MB 限制",
+    "uploadFailed": "上传失败，请稍后重试。",
+    "quotaExceeded": "今日免费额度已用完，请升级或明天再试。",
+    "creditsExpired": "积分已过期，请重新购买。",
+    "rateLimited": "请求过于频繁，请稍后再试。",
+    "paymentFailed": "支付失败：{reason}",
+    "taskNotFound": "未找到该任务",
+    "cannotCancel": "该任务无法取消",
+    "unauthorized": "请先登录再继续",
+    "processingTimeout": "处理超时，请点击重试。",
+    "serviceBusy": "服务暂时繁忙，您的任务已加入队列。",
+    "networkError": "网络错误，请检查您的网络连接。",
+    "invalidResponse": "服务器响应无效",
+    "checkoutFailed": "结账失败",
+    "retryFailed": "重试失败",
+    "historyLoadFailed": "加载历史记录失败",
+    "taskCreateFailed": "创建任务失败"
+  },
+  "auth": {
+    "signInWith": "使用 Google 登录",
+    "signInPrompt": "登录后即可开始修复您的老照片"
+  },
+  "quota": {
+    "remaining": "剩余 {count} 次",
+    "resetsAt": "将于 {time} 重置",
+    "unlimited": "无限制"
+  }
+}

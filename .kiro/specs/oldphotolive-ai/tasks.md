@@ -353,13 +353,13 @@
     - 失败时显示错误信息和重试按钮
     - _Requirements: 7.1-7.5, 11.2_
 
-- [ ] 15. 历史记录与定价页面
-  - [-] 15.1 实现历史记录 API (`src/app/api/history/route.ts`)
+- [x] 15. 历史记录与定价页面
+  - [x] 15.1 实现历史记录 API (`src/app/api/history/route.ts`)
     - GET 处理：获取用户所有任务，按创建日期降序排列
     - 返回任务日期、状态、缩略图
     - _Requirements: 8.1, 8.2, 8.4, 8.5_
 
-  - [~] 15.2 实现历史列表组件和页面 (`src/components/TaskHistoryList.tsx`, `src/app/history/page.tsx`)
+  - [x] 15.2 实现历史列表组件和页面 (`src/components/TaskHistoryList.tsx`, `src/app/history/page.tsx`)
     - 显示任务列表：日期、状态、缩略图
     - 点击跳转到结果页
     - 处理中的任务显示当前阶段
@@ -369,43 +369,43 @@
     - **Property 22: 任务历史正确性**
     - **Validates: Requirements 8.1, 8.4**
 
-  - [~] 15.4 实现定价卡片和页面 (`src/components/PricingCards.tsx`, `src/app/pricing/page.tsx`)
+  - [x] 15.4 实现定价卡片和页面 (`src/components/PricingCards.tsx`, `src/app/pricing/page.tsx`)
     - 三列定价卡片：免费版、按次付费、专业版（高亮推荐）
     - 点击购买跳转到 Stripe Checkout
     - _Requirements: 17.9, 6.1, 6.2_
 
-  - [~] 15.5 实现登录页 (`src/app/login/page.tsx`)
+  - [x] 15.5 实现登录页 (`src/app/login/page.tsx`)
     - Google 登录按钮
     - 简洁设计，与整体风格一致
     - _Requirements: 1.2_
 
-- [ ] 16. 响应式设计与错误处理
-  - [~] 16.1 实现响应式布局
+- [x] 16. 响应式设计与错误处理
+  - [x] 16.1 实现响应式布局
     - 桌面端：完整布局，最佳间距
     - 移动端：单列格式
     - 平板端：优化触摸目标
     - 响应式图片和视频
     - _Requirements: 10.1-10.5_
 
-  - [~] 16.2 实现全局错误处理
+  - [x] 16.2 实现全局错误处理
     - 重试机制（withRetry 函数）：指数退避，最多 2 次
     - API 错误日志记录
     - 用户友好的错误提示组件
     - _Requirements: 11.1-11.6_
 
-  - [~] 16.3 实现 Next.js 配置 (`next.config.js`)
+  - [x] 16.3 实现 Next.js 配置 (`next.config.js`)
     - 配置图片域名白名单
     - 配置 API 路由缓存策略（状态查询接口禁用缓存）
     - _Requirements: 13.1_
 
-- [~] 17. 最终 Checkpoint
+- [x] 17. 最终 Checkpoint
   - 确保所有测试通过，如有问题请咨询用户。
   - 验证完整的端到端流程：登录 → 上传 → 处理 → 查看结果 → 下载 → 历史记录 → 支付升级。
   - 验证响应式布局在桌面、平板、移动端的表现。
   - 验证中英文语言切换功能正常。
 
-- [ ] 18. 国际化（i18n）多语言支持
-  - [ ] 18.1 安装 next-intl 并配置 i18n 基础设施
+- [x] 18. 国际化（i18n）多语言支持
+  - [x] 18.1 安装 next-intl 并配置 i18n 基础设施
     - 安装 `next-intl` 依赖
     - 创建 `src/i18n/routing.ts`：定义支持的 locale 列表（en、zh）和默认 locale（en）
     - 创建 `src/i18n/request.ts`：配置 next-intl 的请求级 i18n 加载
@@ -414,12 +414,12 @@
     - 更新 `src/app/layout.tsx`：包裹 NextIntlClientProvider
     - _Requirements: 18.1, 18.2_
 
-  - [ ] 18.2 创建英文翻译文件 (`messages/en.json`)
+  - [x] 18.2 创建英文翻译文件 (`messages/en.json`)
     - 按命名空间组织：common、nav、upload、processing、result、pricing、history、errors、auth、quota
     - 英文文本遵循自然英语表达习惯
     - _Requirements: 18.4, 18.6_
 
-  - [ ] 18.3 创建中文翻译文件 (`messages/zh.json`)
+  - [x] 18.3 创建中文翻译文件 (`messages/zh.json`)
     - 与 en.json 保持完全相同的键结构
     - 使用自然中文表达
     - _Requirements: 18.1, 18.4_
@@ -428,20 +428,20 @@
     - **Property 32: 语言切换完整性**
     - **Validates: Requirements 18.4**
 
-  - [ ] 18.5 实现语言切换器组件 (`src/components/LanguageSwitcher.tsx`)
+  - [x] 18.5 实现语言切换器组件 (`src/components/LanguageSwitcher.tsx`)
     - 下拉式切换器，显示当前语言（EN / 中文）
     - 切换时设置 Cookie 并刷新页面
     - 集成到 Navbar 组件中
     - _Requirements: 18.3, 18.7, 18.8_
 
-  - [ ] 18.6 更新所有现有 UI 组件使用翻译键
+  - [x] 18.6 更新所有现有 UI 组件使用翻译键
     - 更新 UploadZone、ProgressIndicator、BeforeAfterCompare、VideoPlayer 组件
     - 更新 PricingCards、TaskHistoryList、Navbar、AuthButton 组件
     - 更新所有页面组件（首页、登录页、结果页、历史页、定价页）
     - 将所有硬编码文本替换为 `useTranslations()` 调用
     - _Requirements: 18.4_
 
-  - [ ] 18.7 更新 API 错误消息支持 locale
+  - [x] 18.7 更新 API 错误消息支持 locale
     - 实现 `getRequestLocale()` 函数：从 Cookie 或 Accept-Language 头获取 locale
     - 实现 `getErrorMessage()` 函数：根据 locale 返回翻译后的错误消息
     - 更新所有 API 路由的错误响应使用国际化消息
@@ -455,7 +455,7 @@
     - **Property 34: 语言偏好持久化往返一致性**
     - **Validates: Requirements 18.7**
 
-- [ ] 19. 最终 Checkpoint - i18n 验证
+- [x] 19. 最终 Checkpoint - i18n 验证
   - 确保所有 i18n 相关测试通过，如有问题请咨询用户。
   - 验证中英文切换后所有页面文本正确显示。
   - 验证 API 错误消息根据 locale 正确返回。

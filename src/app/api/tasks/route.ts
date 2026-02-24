@@ -1,14 +1,17 @@
 // Create Task API Route
-// Requirements: 4.1, 4.6, 4.7
+// Requirements: 4.1, 4.6, 4.7, 18.5
 
 import { NextRequest, NextResponse } from "next/server";
 import { createTask, getUser } from "@/lib/redis";
 import type { TaskPriority } from "@/types";
+import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
 // Hardcoded test user ID (skip auth for MVP testing)
 const DEFAULT_TEST_USER_ID = "test-user-001";
 
 export async function POST(request: NextRequest) {
+  const locale = getRequestLocale(request);
+
   try {
     // 1. Parse JSON body
     const body = await request.json();
@@ -20,7 +23,7 @@ export async function POST(request: NextRequest) {
     // 2. Validate required fields
     if (!imageKey || typeof imageKey !== "string" || imageKey.trim() === "") {
       return NextResponse.json(
-        { error: "imageKey is required" },
+        { error: getErrorMessage("taskCreateFailed", locale) },
         { status: 400 }
       );
     }
@@ -32,7 +35,7 @@ export async function POST(request: NextRequest) {
     const user = await getUser(resolvedUserId);
     if (!user) {
       return NextResponse.json(
-        { error: "User not found" },
+        { error: getErrorMessage("unauthorized", locale) },
         { status: 404 }
       );
     }
@@ -53,7 +56,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Create task failed:", error);
     return NextResponse.json(
-      { error: "Failed to create task" },
+      { error: getErrorMessage("taskCreateFailed", locale) },
       { status: 500 }
     );
   }

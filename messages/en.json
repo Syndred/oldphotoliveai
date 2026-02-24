@@ -1,0 +1,121 @@
+{
+  "common": {
+    "appName": "OldPhotoLive AI",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "download": "Download",
+    "cancel": "Cancel",
+    "tryAgain": "Try Again",
+    "backToHome": "Back to Home",
+    "pageNotFound": "Page Not Found",
+    "pageNotFoundDesc": "The page you are looking for does not exist or has been moved.",
+    "somethingWentWrong": "Something went wrong",
+    "unexpectedError": "An unexpected error occurred. Please try again."
+  },
+  "nav": {
+    "home": "Home",
+    "history": "History",
+    "pricing": "Pricing",
+    "login": "Sign In",
+    "logout": "Sign Out"
+  },
+  "upload": {
+    "title": "Restore Your Old Photos",
+    "subtitle": "AI-powered restoration, colorization, and animation in one click",
+    "dragDrop": "Drag and drop your photo here",
+    "browse": "browse files",
+    "supportedFormats": "Supports JPEG, PNG, WebP (max 10 MB)",
+    "uploading": "Uploading… {progress}%",
+    "creatingTask": "Creating task…"
+  },
+  "processing": {
+    "title": "Processing Your Photo",
+    "step1": "Upload",
+    "step2": "Restore",
+    "step3": "Colorize",
+    "step4": "Animate",
+    "pending": "Waiting in queue…",
+    "completed": "Processing complete",
+    "connectionLost": "Connection lost"
+  },
+  "result": {
+    "beforeAfter": "Before & After",
+    "animation": "Animation",
+    "before": "Before",
+    "after": "After",
+    "downloadImage": "Download Image",
+    "downloadVideo": "Download Video",
+    "failed": "Processing Failed",
+    "retryMessage": "Something went wrong. Please try again.",
+    "retrying": "Retrying…"
+  },
+  "pricing": {
+    "title": "Choose Your Plan",
+    "subtitle": "Unlock the full power of AI photo restoration",
+    "free": "Free",
+    "payAsYouGo": "Pay As You Go",
+    "professional": "Professional",
+    "recommended": "Recommended",
+    "currentPlan": "Current Plan",
+    "subscribe": "Subscribe",
+    "buyCredits": "Buy Credits",
+    "redirecting": "Redirecting…",
+    "freeDesc": "Try it out",
+    "payAsYouGoDesc": "For occasional use",
+    "professionalDesc": "Best value",
+    "freeFeature1": "1 photo per day",
+    "freeFeature2": "Low resolution (800×600)",
+    "freeFeature3": "Watermark on output",
+    "payFeature1": "5 credits",
+    "payFeature2": "High resolution (1920×1080)",
+    "payFeature3": "No watermark",
+    "proFeature1": "Unlimited photos",
+    "proFeature2": "High resolution (1920×1080)",
+    "proFeature3": "No watermark",
+    "proFeature4": "Priority processing"
+  },
+  "history": {
+    "title": "Processing History",
+    "empty": "No processing history yet",
+    "status": {
+      "pending": "Pending",
+      "queued": "Queued",
+      "restoring": "Restoring",
+      "colorizing": "Colorizing",
+      "animating": "Animating",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    }
+  },
+  "errors": {
+    "fileTypeNotSupported": "Please upload a JPEG, PNG, or WebP image",
+    "fileTooLarge": "File size exceeds the 10MB limit",
+    "uploadFailed": "Upload failed. Please try again later.",
+    "quotaExceeded": "Daily free quota used up. Upgrade or try again tomorrow.",
+    "creditsExpired": "Credits have expired. Please purchase again.",
+    "rateLimited": "Too many requests. Please try again later.",
+    "paymentFailed": "Payment failed: {reason}",
+    "taskNotFound": "Task not found",
+    "cannotCancel": "This task cannot be cancelled",
+    "unauthorized": "Please sign in to continue",
+    "processingTimeout": "Processing timed out. Please click retry.",
+    "serviceBusy": "Service is temporarily busy. Your task has been queued.",
+    "networkError": "Network error. Please check your connection.",
+    "invalidResponse": "Invalid server response",
+    "checkoutFailed": "Checkout failed",
+    "retryFailed": "Retry failed",
+    "historyLoadFailed": "Failed to load history",
+    "taskCreateFailed": "Failed to create task"
+  },
+  "auth": {
+    "signInWith": "Sign in with Google",
+    "signInPrompt": "Sign in to start restoring your photos"
+  },
+  "quota": {
+    "remaining": "{count} remaining",
+    "resetsAt": "Resets at {time}",
+    "unlimited": "Unlimited"
+  }
+}

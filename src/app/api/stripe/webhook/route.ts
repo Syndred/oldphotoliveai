@@ -1,5 +1,5 @@
 // Stripe Webhook Handler
-// Requirements: 6.3, 6.4, 6.5, 6.6, 6.7, 6.8
+// Requirements: 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 18.5
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
@@ -8,15 +8,17 @@ import { getStripeClient } from "@/lib/stripe";
 import { config } from "@/lib/config";
 import { updateUserTier } from "@/lib/redis";
 import { addCredits } from "@/lib/quota";
+import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
 export async function POST(request: NextRequest) {
+  const locale = getRequestLocale(request);
   const stripe = getStripeClient();
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
 
   if (!signature) {
     return NextResponse.json(
-      { error: "Missing stripe-signature header" },
+      { error: getErrorMessage("paymentFailed", locale, { reason: "Missing signature" }) },
       { status: 400 }
     );
   }
@@ -32,7 +34,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error("Webhook signature verification failed:", err);
     return NextResponse.json(
-      { error: "Invalid signature" },
+      { error: getErrorMessage("paymentFailed", locale, { reason: "Invalid signature" }) },
       { status: 401 }
     );
   }
@@ -95,7 +97,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Webhook processing error:", error);
     return NextResponse.json(
-      { error: "Webhook processing failed" },
+      { error: getErrorMessage("paymentFailed", locale, { reason: "Processing failed" }) },
       { status: 500 }
     );
   }

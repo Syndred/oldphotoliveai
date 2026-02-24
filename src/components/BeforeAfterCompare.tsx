@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -29,9 +30,12 @@ export function calcPosition(clientX: number, rect: DOMRect): number {
 export default function BeforeAfterCompare({
   beforeUrl,
   afterUrl,
-  beforeLabel = "Before",
-  afterLabel = "After",
+  beforeLabel,
+  afterLabel,
 }: BeforeAfterCompareProps) {
+  const t = useTranslations("result");
+  const resolvedBeforeLabel = beforeLabel ?? t("before");
+  const resolvedAfterLabel = afterLabel ?? t("after");
   const [position, setPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
   const [beforeLoaded, setBeforeLoaded] = useState(false);
@@ -112,7 +116,7 @@ export default function BeforeAfterCompare({
         {/* After image (full background) */}
         <Image
           src={afterUrl}
-          alt={afterLabel}
+          alt={resolvedAfterLabel}
           fill
           className="object-cover"
           sizes="(max-width: 768px) 100vw, 50vw"
@@ -127,7 +131,7 @@ export default function BeforeAfterCompare({
         >
           <Image
             src={beforeUrl}
-            alt={beforeLabel}
+            alt={resolvedBeforeLabel}
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 50vw"
@@ -142,7 +146,7 @@ export default function BeforeAfterCompare({
           style={{ left: `${position}%`, transform: "translateX(-50%)" }}
         >
           {/* Drag handle */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/80 bg-[var(--color-primary-bg,#0F172A)]/70 backdrop-blur-sm pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full border-2 border-white/80 bg-[var(--color-primary-bg,#0F172A)]/70 backdrop-blur-sm pointer-events-none">
             <svg
               className="h-5 w-5 text-white"
               fill="none"
@@ -158,10 +162,10 @@ export default function BeforeAfterCompare({
 
         {/* Labels */}
         <span className="absolute top-3 left-3 rounded bg-black/50 px-2 py-1 text-xs font-medium text-[var(--color-text-primary,#f8fafc)] backdrop-blur-sm">
-          {beforeLabel}
+          {resolvedBeforeLabel}
         </span>
         <span className="absolute top-3 right-3 rounded bg-black/50 px-2 py-1 text-xs font-medium text-[var(--color-text-primary,#f8fafc)] backdrop-blur-sm">
-          {afterLabel}
+          {resolvedAfterLabel}
         </span>
       </div>
     </div>

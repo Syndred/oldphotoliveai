@@ -11,6 +11,24 @@ jest.mock("@/lib/validation", () => ({
   MAX_FILE_SIZE: 10 * 1024 * 1024,
 }));
 
+// Mock next-intl
+jest.mock("next-intl", () => ({
+  useTranslations: (namespace: string) => (key: string, params?: Record<string, unknown>) => {
+    const translations: Record<string, Record<string, string>> = {
+      upload: { dragDrop: "Drag and drop your photo here", browse: "browse files", supportedFormats: "Supports JPEG, PNG, WebP (max 10 MB)", uploading: "Uploading… {progress}%", creatingTask: "Creating task…" },
+      errors: { fileTypeNotSupported: "Please upload a JPEG, PNG, or WebP image", fileTooLarge: "File size exceeds the 10MB limit" },
+    };
+    let result = translations[namespace]?.[key] ?? key;
+    if (params) {
+      for (const [k, v] of Object.entries(params)) {
+        result = result.replace(`{${k}}`, String(v));
+      }
+    }
+    return result;
+  },
+  useLocale: () => "en",
+}));
+
 import UploadZone from "@/components/UploadZone";
 
 // Helper to create a mock File

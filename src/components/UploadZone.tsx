@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { SUPPORTED_MIME_TYPES, MAX_FILE_SIZE } from "@/lib/validation";
 
 interface UploadZoneProps {
@@ -16,16 +17,16 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function validateClientFile(file: File): string | null {
+function validateClientFile(file: File, tErrors: (key: string) => string): string | null {
   if (
     !SUPPORTED_MIME_TYPES.includes(
       file.type as (typeof SUPPORTED_MIME_TYPES)[number]
     )
   ) {
-    return "Please upload a JPEG, PNG, or WebP image";
+    return tErrors("fileTypeNotSupported");
   }
   if (file.size > MAX_FILE_SIZE) {
-    return `File size (${formatFileSize(file.size)}) exceeds the 10MB limit`;
+    return tErrors("fileTooLarge");
   }
   return null;
 }
@@ -35,13 +36,15 @@ export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
   const [progress, setProgress] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const t = useTranslations("upload");
+  const tErrors = useTranslations("errors");
 
   const handleFile = useCallback(
     async (file: File) => {
       if (disabled) return;
 
       // Client-side pre-validation
-      const validationError = validateClientFile(file);
+      const validationError = validateClientFile(file, tErrors);
       if (validationError) {
         setState("error");
         setErrorMsg(validationError);
@@ -67,7 +70,7 @@ export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
         );
       }
     },
-    [disabled, onUpload]
+    [disabled, onUpload, tErrors]
   );
 
   const onDragOver = useCallback(
@@ -159,7 +162,7 @@ export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
       {isUploading ? (
         <div className="flex w-full max-w-xs flex-col items-center gap-2">
           <p className="text-sm text-[var(--color-text-secondary)]">
-            Uploading… {progress}%
+            {t("uploading", { progress })}
           </p>
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
             <div
@@ -172,17 +175,17 @@ export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
         <>
           <div className="text-center">
             <p className="text-sm font-medium text-[var(--color-text-primary)]">
-              Drag and drop your photo here
+              {t("dragDrop")}
             </p>
             <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
               or{" "}
               <span className="text-[var(--color-accent)] underline underline-offset-2">
-                browse files
+                {t("browse")}
               </span>
             </p>
           </div>
           <p className="text-xs text-[var(--color-text-secondary)]">
-            Supports JPEG, PNG, WebP (max 10 MB)
+            {t("supportedFormats")}
           </p>
         </>
       )}

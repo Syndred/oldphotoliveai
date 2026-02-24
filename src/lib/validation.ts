@@ -29,14 +29,14 @@ export function validateFile(file: File): ValidationResult {
   if (!SUPPORTED_MIME_TYPES.includes(file.type as typeof SUPPORTED_MIME_TYPES[number])) {
     return {
       valid: false,
-      error: "请上传 JPEG、PNG 或 WebP 格式的图片",
+      error: "fileTypeNotSupported",
     };
   }
 
   if (file.size > MAX_FILE_SIZE) {
     return {
       valid: false,
-      error: "文件大小不能超过 10MB",
+      error: "fileTooLarge",
     };
   }
 

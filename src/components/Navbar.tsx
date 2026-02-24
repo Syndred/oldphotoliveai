@@ -2,16 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import AuthButton from "./AuthButton";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 const NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/history", label: "History" },
-  { href: "/pricing", label: "Pricing" },
+  { href: "/", labelKey: "home" },
+  { href: "/history", labelKey: "history" },
+  { href: "/pricing", labelKey: "pricing" },
 ] as const;
 
 export default function Navbar() {
   const pathname = usePathname();
+  const t = useTranslations("nav");
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-[var(--color-primary-bg)]/80 backdrop-blur-md">
@@ -26,27 +29,30 @@ export default function Navbar() {
 
         {/* Navigation Links */}
         <div className="flex items-center gap-1 sm:gap-2">
-          {NAV_LINKS.map(({ href, label }) => {
+          {NAV_LINKS.map(({ href, labelKey }) => {
             const isActive =
               href === "/" ? pathname === "/" : pathname.startsWith(href);
             return (
               <Link
                 key={href}
                 href={href}
-                className={`rounded-md px-3 py-2 text-sm transition-colors ${
+                className={`rounded-md px-2 py-2 text-sm transition-colors min-h-[44px] flex items-center sm:px-3 ${
                   isActive
                     ? "text-white"
                     : "text-[var(--color-text-secondary)] hover:text-white"
                 }`}
               >
-                {label}
+                {t(labelKey)}
               </Link>
             );
           })}
         </div>
 
-        {/* Auth */}
-        <AuthButton />
+        {/* Auth & Language */}
+        <div className="flex items-center gap-2">
+          <LanguageSwitcher />
+          <AuthButton />
+        </div>
       </div>
     </nav>
   );

@@ -47,6 +47,17 @@ jest.mock("next/link", () => ({
   ),
 }));
 
+// Mock next-intl
+jest.mock("next-intl", () => ({
+  useTranslations: (namespace: string) => (key: string) => {
+    const translations: Record<string, Record<string, string>> = {
+      nav: { home: "Home", history: "History", pricing: "Pricing", login: "Sign In", logout: "Sign Out" },
+    };
+    return translations[namespace]?.[key] ?? key;
+  },
+  useLocale: () => "en",
+}));
+
 import AuthButton from "@/components/AuthButton";
 import Navbar from "@/components/Navbar";
 
