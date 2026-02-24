@@ -7,7 +7,7 @@ const nextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**.googleusercontent.com' },
-      { protocol: 'https', hostname: process.env.NEXT_PUBLIC_R2_DOMAIN || 'cdn.oldphotoliveai.com' },
+      { protocol: 'https', hostname: '**.r2.dev' },
     ],
     unoptimized: true,
   },

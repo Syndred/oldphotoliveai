@@ -30,6 +30,9 @@ export async function GET(
     if (task.errorMessage) {
       response.errorMessage = task.errorMessage;
     }
+    if (task.originalImageKey) {
+      response.originalImageKey = task.originalImageKey;
+    }
     if (task.restoredImageKey) {
       response.restoredImageKey = task.restoredImageKey;
     }

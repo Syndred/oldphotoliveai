@@ -236,3 +236,18 @@ export async function retryTask(taskId: string): Promise<Task> {
 
   return task;
 }
+
+export async function deleteTask(taskId: string, userId: string): Promise<boolean> {
+  const redis = getRedisClient();
+  const task = await redis.get<Task>(keys.task(taskId));
+  if (!task) return false;
+
+  // Verify ownership
+  if (task.userId !== userId) return false;
+
+  // Remove task data and from user's sorted set
+  await redis.del(keys.task(taskId));
+  await redis.zrem(keys.userTasks(userId), taskId);
+
+  return true;
+}

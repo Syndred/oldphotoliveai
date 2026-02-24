@@ -2,7 +2,6 @@
 
 import { useCallback, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import Image from "next/image";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -38,11 +37,7 @@ export default function BeforeAfterCompare({
   const resolvedAfterLabel = afterLabel ?? t("after");
   const [position, setPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
-  const [beforeLoaded, setBeforeLoaded] = useState(false);
-  const [afterLoaded, setAfterLoaded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const allLoaded = beforeLoaded && afterLoaded;
 
   // ── Pointer handlers ────────────────────────────────────────────────────
 
@@ -87,20 +82,10 @@ export default function BeforeAfterCompare({
 
   return (
     <div data-testid="before-after-compare" className="w-full">
-      {/* Loading skeleton */}
-      {!allLoaded && (
-        <div
-          data-testid="loading-skeleton"
-          className="aspect-[4/3] w-full animate-pulse rounded-lg bg-white/10"
-        />
-      )}
-
-      {/* Comparison container */}
+      {/* Comparison container — always visible, images load naturally */}
       <div
         ref={containerRef}
-        className={`relative aspect-[4/3] w-full select-none overflow-hidden rounded-lg ${
-          allLoaded ? "" : "sr-only"
-        }`}
+        className="relative aspect-[4/3] w-full select-none overflow-hidden rounded-lg bg-white/5"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -114,14 +99,11 @@ export default function BeforeAfterCompare({
         onKeyDown={handleKeyDown}
       >
         {/* After image (full background) */}
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={afterUrl}
           alt={resolvedAfterLabel}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, 50vw"
-          onLoad={() => setAfterLoaded(true)}
-          priority
+          className="absolute inset-0 h-full w-full object-cover"
         />
 
         {/* Before image (clipped to left portion) */}
@@ -129,14 +111,11 @@ export default function BeforeAfterCompare({
           className="absolute inset-0"
           style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}
         >
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={beforeUrl}
             alt={resolvedBeforeLabel}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 50vw"
-            onLoad={() => setBeforeLoaded(true)}
-            priority
+            className="absolute inset-0 h-full w-full object-cover"
           />
         </div>
 

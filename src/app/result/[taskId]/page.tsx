@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import Navbar from "@/components/Navbar";
 import ProgressIndicator from "@/components/ProgressIndicator";
@@ -34,14 +34,54 @@ export default function ResultPage() {
   const [result, setResult] = useState<TaskResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
+  const [isFreeTier, setIsFreeTier] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [needsPolling, setNeedsPolling] = useState(false);
   const tResult = useTranslations("result");
   const tProcessing = useTranslations("processing");
   const tCommon = useTranslations("common");
 
+  // Fetch user tier for watermark decision
+  useEffect(() => {
+    fetch("/api/quota")
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data?.tier && data.tier !== "free") setIsFreeTier(false);
+      })
+      .catch(() => { /* default to free tier = show watermark */ });
+  }, []);
+
+  // First, fetch task status via REST API to check if already completed
+  useEffect(() => {
+    if (!taskId) return;
+
+    fetch(`/api/tasks/${taskId}/status`)
+      .then((res) => res.ok ? res.json() : Promise.reject(new Error("Failed to load task")))
+      .then((data) => {
+        if (data.status === "completed" && data.colorizedImageKey && data.animationVideoKey) {
+          setResult({
+            originalImageKey: data.originalImageKey ?? "",
+            colorizedImageKey: data.colorizedImageKey,
+            animationVideoKey: data.animationVideoKey,
+          });
+        } else if (data.status === "failed") {
+          setError(data.errorMessage || "Processing failed");
+        } else {
+          // Task is still processing — need SSE polling
+          setNeedsPolling(true);
+        }
+      })
+      .catch(() => {
+        // If status API fails, fall back to SSE
+        setNeedsPolling(true);
+      })
+      .finally(() => setInitialLoading(false));
+  }, [taskId]);
+
   const handleComplete = useCallback(
     (data: { status: string; progress: number; [key: string]: unknown }) => {
       setResult({
-        originalImageKey: data.originalImageKey as string,
+        originalImageKey: (data.originalImageKey as string) ?? "",
         colorizedImageKey: data.colorizedImageKey as string,
         animationVideoKey: data.animationVideoKey as string,
       });
@@ -72,15 +112,22 @@ export default function ResultPage() {
     }
   }
 
-  const showProgress = !result && !error;
+  const showProgress = needsPolling && !result && !error;
 
   return (
     <div className="min-h-screen bg-[var(--color-primary-bg)]">
       <Navbar />
 
       <main className="mx-auto max-w-3xl px-4 py-10 sm:py-16">
-        {/* Progress */}
-        {showProgress && (
+        {/* Initial loading */}
+        {initialLoading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-accent)] border-t-transparent" />
+          </div>
+        )}
+
+        {/* Progress — only for tasks still processing */}
+        {!initialLoading && showProgress && (
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-sm sm:p-10">
             <h1 className="mb-6 text-center text-2xl font-bold text-[var(--color-text-primary)]">
               {tProcessing("title")}
@@ -94,7 +141,7 @@ export default function ResultPage() {
         )}
 
         {/* Error */}
-        {error && !result && (
+        {!initialLoading && error && !result && (
           <div
             className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 text-center sm:p-10"
             role="alert"
@@ -128,7 +175,7 @@ export default function ResultPage() {
         )}
 
         {/* Results */}
-        {result && (
+        {!initialLoading && result && (
           <div className="space-y-8">
             {/* Before / After */}
             <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm sm:p-6">
@@ -146,7 +193,7 @@ export default function ResultPage() {
               <h2 className="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">
                 {tResult("animation")}
               </h2>
-              <VideoPlayer src={buildCdnUrl(result.animationVideoKey)} />
+              <VideoPlayer src={buildCdnUrl(result.animationVideoKey)} showWatermark={isFreeTier} />
             </section>
 
             {/* Download buttons */}

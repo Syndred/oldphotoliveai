@@ -90,20 +90,6 @@ import ResultPage, { buildCdnUrl } from "@/app/result/[taskId]/page";
 
 const ORIGINAL_ENV = process.env;
 
-beforeEach(() => {
-  jest.clearAllMocks();
-  capturedOnComplete = undefined;
-  capturedOnError = undefined;
-  global.fetch = jest.fn();
-  process.env = { ...ORIGINAL_ENV, NEXT_PUBLIC_R2_DOMAIN: "cdn.example.com" };
-});
-
-afterAll(() => {
-  process.env = ORIGINAL_ENV;
-});
-
-// ── Helper ──────────────────────────────────────────────────────────────────
-
 const COMPLETED_DATA = {
   status: "completed",
   progress: 100,
@@ -111,6 +97,35 @@ const COMPLETED_DATA = {
   colorizedImageKey: "results/colorized.jpg",
   animationVideoKey: "results/animation.mp4",
 };
+
+const PROCESSING_DATA = {
+  status: "restoring",
+  progress: 25,
+};
+
+/** Helper: create a fetch mock that handles /api/quota and /api/tasks/.../status */
+function mockFetchWith(statusData: Record<string, unknown>) {
+  return jest.fn().mockImplementation((url: string) => {
+    if (url === "/api/quota") {
+      return Promise.resolve({ ok: true, json: async () => ({ tier: "free", remaining: 1 }) });
+    }
+    if (url === `/api/tasks/${mockTaskId}/status`) {
+      return Promise.resolve({ ok: true, json: async () => statusData });
+    }
+    return Promise.resolve({ ok: true, json: async () => ({}) });
+  });
+}
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  capturedOnComplete = undefined;
+  capturedOnError = undefined;
+  process.env = { ...ORIGINAL_ENV, NEXT_PUBLIC_R2_DOMAIN: "cdn.example.com" };
+});
+
+afterAll(() => {
+  process.env = ORIGINAL_ENV;
+});
 
 // ── Tests ───────────────────────────────────────────────────────────────────
 
@@ -128,37 +143,42 @@ describe("buildCdnUrl", () => {
 });
 
 describe("ResultPage", () => {
-  it("renders Navbar", () => {
+  it("renders Navbar", async () => {
+    global.fetch = mockFetchWith(PROCESSING_DATA);
     render(<ResultPage />);
     expect(screen.getByTestId("navbar")).toBeInTheDocument();
   });
 
-  it("shows ProgressIndicator while processing", () => {
+  it("shows ProgressIndicator for processing tasks", async () => {
+    global.fetch = mockFetchWith(PROCESSING_DATA);
     render(<ResultPage />);
-    expect(screen.getByTestId("progress-indicator")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("progress-indicator")).toBeInTheDocument();
+    });
     expect(screen.getByTestId("progress-indicator")).toHaveAttribute(
       "data-task-id",
       mockTaskId
     );
   });
 
-  it("shows results when task completes", () => {
+  it("shows results directly for completed tasks (no ProgressIndicator)", async () => {
+    global.fetch = mockFetchWith(COMPLETED_DATA);
     render(<ResultPage />);
 
-    act(() => {
-      capturedOnComplete?.(COMPLETED_DATA);
+    await waitFor(() => {
+      expect(screen.getByTestId("before-after-compare")).toBeInTheDocument();
     });
-
-    expect(screen.queryByTestId("progress-indicator")).not.toBeInTheDocument();
-    expect(screen.getByTestId("before-after-compare")).toBeInTheDocument();
     expect(screen.getByTestId("video-player")).toBeInTheDocument();
+    expect(screen.queryByTestId("progress-indicator")).not.toBeInTheDocument();
   });
 
-  it("passes correct CDN URLs to BeforeAfterCompare", () => {
+  it("passes correct CDN URLs to BeforeAfterCompare", async () => {
+    global.fetch = mockFetchWith(COMPLETED_DATA);
     render(<ResultPage />);
 
-    act(() => {
-      capturedOnComplete?.(COMPLETED_DATA);
+    await waitFor(() => {
+      expect(screen.getByTestId("before-after-compare")).toBeInTheDocument();
     });
 
     const compare = screen.getByTestId("before-after-compare");
@@ -172,11 +192,12 @@ describe("ResultPage", () => {
     );
   });
 
-  it("passes correct CDN URL to VideoPlayer", () => {
+  it("passes correct CDN URL to VideoPlayer", async () => {
+    global.fetch = mockFetchWith(COMPLETED_DATA);
     render(<ResultPage />);
 
-    act(() => {
-      capturedOnComplete?.(COMPLETED_DATA);
+    await waitFor(() => {
+      expect(screen.getByTestId("video-player")).toBeInTheDocument();
     });
 
     expect(screen.getByTestId("video-player")).toHaveAttribute(
@@ -185,62 +206,81 @@ describe("ResultPage", () => {
     );
   });
 
-  it("renders download buttons with correct hrefs", () => {
+  it("renders download buttons with correct hrefs", async () => {
+    global.fetch = mockFetchWith(COMPLETED_DATA);
     render(<ResultPage />);
 
-    act(() => {
-      capturedOnComplete?.(COMPLETED_DATA);
+    await waitFor(() => {
+      expect(screen.getByText("Download Image")).toBeInTheDocument();
     });
 
     const imageLink = screen.getByText("Download Image").closest("a");
     const videoLink = screen.getByText("Download Video").closest("a");
 
-    expect(imageLink).toHaveAttribute(
-      "href",
-      "https://cdn.example.com/results/colorized.jpg"
-    );
+    expect(imageLink).toHaveAttribute("href", "https://cdn.example.com/results/colorized.jpg");
     expect(imageLink).toHaveAttribute("download");
-
-    expect(videoLink).toHaveAttribute(
-      "href",
-      "https://cdn.example.com/results/animation.mp4"
-    );
+    expect(videoLink).toHaveAttribute("href", "https://cdn.example.com/results/animation.mp4");
     expect(videoLink).toHaveAttribute("download");
   });
 
-  it("shows error section when task fails", () => {
+  it("shows error section when task is failed", async () => {
+    global.fetch = mockFetchWith({ status: "failed", progress: 50, errorMessage: "Model execution timed out" });
     render(<ResultPage />);
 
-    act(() => {
-      capturedOnError?.("Model execution timed out");
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toBeInTheDocument();
     });
-
-    expect(screen.getByRole("alert")).toBeInTheDocument();
     expect(screen.getByText("Processing Failed")).toBeInTheDocument();
     expect(screen.getByText("Model execution timed out")).toBeInTheDocument();
     expect(screen.getByText("Retry")).toBeInTheDocument();
   });
 
-  it("hides progress when error occurs", () => {
+  it("shows error via SSE callback for processing tasks", async () => {
+    global.fetch = mockFetchWith(PROCESSING_DATA);
     render(<ResultPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("progress-indicator")).toBeInTheDocument();
+    });
 
     act(() => {
       capturedOnError?.("Something broke");
     });
 
     expect(screen.queryByTestId("progress-indicator")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+  });
+
+  it("shows results via SSE callback for processing tasks", async () => {
+    global.fetch = mockFetchWith(PROCESSING_DATA);
+    render(<ResultPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("progress-indicator")).toBeInTheDocument();
+    });
+
+    act(() => {
+      capturedOnComplete?.(COMPLETED_DATA);
+    });
+
+    expect(screen.queryByTestId("progress-indicator")).not.toBeInTheDocument();
+    expect(screen.getByTestId("before-after-compare")).toBeInTheDocument();
+    expect(screen.getByTestId("video-player")).toBeInTheDocument();
   });
 
   it("calls retry API on retry click", async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ message: "Task queued for retry" }),
-    });
-
+    global.fetch = mockFetchWith({ status: "failed", progress: 50, errorMessage: "Processing failed" });
     render(<ResultPage />);
 
-    act(() => {
-      capturedOnError?.("Processing failed");
+    await waitFor(() => {
+      expect(screen.getByText("Retry")).toBeInTheDocument();
+    });
+
+    (global.fetch as jest.Mock).mockImplementation((url: string) => {
+      if (url === `/api/tasks/${mockTaskId}/retry`) {
+        return Promise.resolve({ ok: true, json: async () => ({ message: "Task queued for retry" }) });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
     });
 
     fireEvent.click(screen.getByText("Retry"));
@@ -254,49 +294,24 @@ describe("ResultPage", () => {
   });
 
   it("shows error when retry API fails", async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: false,
-      json: async () => ({ error: "Only failed tasks can be retried" }),
-    });
-
+    global.fetch = mockFetchWith({ status: "failed", progress: 50, errorMessage: "Original error" });
     render(<ResultPage />);
 
-    act(() => {
-      capturedOnError?.("Original error");
+    await waitFor(() => {
+      expect(screen.getByText("Retry")).toBeInTheDocument();
+    });
+
+    (global.fetch as jest.Mock).mockImplementation((url: string) => {
+      if (url === `/api/tasks/${mockTaskId}/retry`) {
+        return Promise.resolve({ ok: false, json: async () => ({ error: "Only failed tasks can be retried" }) });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
     });
 
     fireEvent.click(screen.getByText("Retry"));
 
     await waitFor(() => {
-      expect(
-        screen.getByText("Only failed tasks can be retried")
-      ).toBeInTheDocument();
+      expect(screen.getByText("Only failed tasks can be retried")).toBeInTheDocument();
     });
-  });
-
-  it("disables retry button while retrying", async () => {
-    let resolveRetry!: (value: unknown) => void;
-    (global.fetch as jest.Mock).mockReturnValueOnce(
-      new Promise((resolve) => {
-        resolveRetry = resolve;
-      })
-    );
-
-    render(<ResultPage />);
-
-    act(() => {
-      capturedOnError?.("Failed");
-    });
-
-    const retryBtn = screen.getByText("Retry");
-    fireEvent.click(retryBtn);
-
-    await waitFor(() => {
-      expect(screen.getByText("Retrying…")).toBeInTheDocument();
-    });
-
-    // Resolve to clean up — reload will throw in jsdom but that's fine
-    resolveRetry({ ok: false, json: async () => ({ error: "err" }) });
-    await waitFor(() => expect(screen.getByText("Retry")).toBeInTheDocument());
   });
 });

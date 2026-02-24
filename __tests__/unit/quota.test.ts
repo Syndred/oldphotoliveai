@@ -10,12 +10,12 @@ import type { QuotaInfo } from "@/types";
 
 // ── In-memory Redis mock ────────────────────────────────────────────────────
 
-const store = new Map<string, string>();
+const store = new Map<string, unknown>();
 const sets = new Map<string, Set<string>>();
 
 const redisMock = {
   get: jest.fn(async (key: string) => store.get(key) ?? null),
-  set: jest.fn(async (key: string, value: string) => {
+  set: jest.fn(async (key: string, value: unknown) => {
     store.set(key, value);
   }),
   sadd: jest.fn(async (key: string, ...members: string[]) => {
@@ -54,7 +54,10 @@ function clearStore() {
 
 function getStoredQuota(userId: string): QuotaInfo | null {
   const raw = store.get(`quota:${userId}`);
-  return raw ? (JSON.parse(raw) as QuotaInfo) : null;
+  if (!raw) return null;
+  // Upstash auto-deserializes, so mock stores objects directly
+  if (typeof raw === "string") return JSON.parse(raw) as QuotaInfo;
+  return raw as QuotaInfo;
 }
 
 // ── Tests ───────────────────────────────────────────────────────────────────
@@ -217,7 +220,7 @@ describe("cleanExpiredCredits", () => {
     // Manually set expiration to the past
     const quota = getStoredQuota("u1")!;
     quota.creditsExpireAt = new Date(Date.now() - 1000).toISOString();
-    store.set("quota:u1", JSON.stringify(quota));
+    store.set("quota:u1", quota);
 
     await cleanExpiredCredits("u1");
 
@@ -296,7 +299,7 @@ describe("checkAndDecrementQuota with expired credits", () => {
     // Expire the credits
     const quota = getStoredQuota("u1")!;
     quota.creditsExpireAt = new Date(Date.now() - 1000).toISOString();
-    store.set("quota:u1", JSON.stringify(quota));
+    store.set("quota:u1", quota);
 
     const result = await checkAndDecrementQuota("u1", "pay_as_you_go");
     expect(result.allowed).toBe(false);

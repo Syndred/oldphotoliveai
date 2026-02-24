@@ -78,6 +78,14 @@
   "history": {
     "title": "处理历史",
     "empty": "暂无处理记录",
+    "delete": "删除",
+    "deleteSelected": "删除选中",
+    "selectAll": "全选",
+    "deselectAll": "取消全选",
+    "confirmDelete": "确定要删除选中的 {count} 条记录吗？",
+    "deleting": "删除中...",
+    "deleteSuccess": "删除成功",
+    "deleteFailed": "删除失败",
     "status": {
       "pending": "等待中",
       "queued": "排队中",

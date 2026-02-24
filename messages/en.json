@@ -78,6 +78,14 @@
   "history": {
     "title": "Processing History",
     "empty": "No processing history yet",
+    "delete": "Delete",
+    "deleteSelected": "Delete Selected",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "confirmDelete": "Delete {count} selected task(s)?",
+    "deleting": "Deleting...",
+    "deleteSuccess": "Deleted successfully",
+    "deleteFailed": "Delete failed",
     "status": {
       "pending": "Pending",
       "queued": "Queued",

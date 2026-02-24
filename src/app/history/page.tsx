@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import Navbar from "@/components/Navbar";
 import TaskHistoryList from "@/components/TaskHistoryList";
@@ -10,6 +10,9 @@ export default function HistoryPage() {
   const [tasks, setTasks] = useState<TaskHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectable, setSelectable] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
   const t = useTranslations("history");
 
   useEffect(() => {
@@ -31,14 +34,108 @@ export default function HistoryPage() {
     fetchHistory();
   }, []);
 
+  const handleToggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    if (selectedIds.size === tasks.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(tasks.map((t) => t.id)));
+    }
+  }, [tasks, selectedIds.size]);
+
+  const handleDeleteTasks = useCallback(async (taskIds: string[]) => {
+    if (taskIds.length === 0) return;
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/history", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskIds }),
+      });
+      if (res.ok) {
+        const deletedSet = new Set(taskIds);
+        setTasks((prev) => prev.filter((t) => !deletedSet.has(t.id)));
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          taskIds.forEach((id) => next.delete(id));
+          return next;
+        });
+      }
+    } catch {
+      // silently fail — user can retry
+    } finally {
+      setDeleting(false);
+    }
+  }, []);
+
+  const handleDeleteSingle = useCallback((id: string) => {
+    handleDeleteTasks([id]);
+  }, [handleDeleteTasks]);
+
+  const handleDeleteSelected = useCallback(() => {
+    handleDeleteTasks(Array.from(selectedIds));
+  }, [handleDeleteTasks, selectedIds]);
+
+  const allSelected = tasks.length > 0 && selectedIds.size === tasks.length;
+
   return (
     <div className="min-h-screen bg-[var(--color-primary-bg)]">
       <Navbar />
 
       <main className="mx-auto max-w-3xl px-4 py-10 sm:py-16">
-        <h1 className="mb-8 text-2xl font-bold text-[var(--color-text-primary)]">
-          {t("title")}
-        </h1>
+        <div className="mb-8 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
+            {t("title")}
+          </h1>
+
+          {/* Toolbar — only show when there are tasks */}
+          {!loading && !error && tasks.length > 0 && (
+            <div className="flex items-center gap-2">
+              {selectable ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleSelectAll}
+                    className="rounded-lg px-3 py-1.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-white/10"
+                  >
+                    {allSelected ? t("deselectAll") : t("selectAll")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDeleteSelected}
+                    disabled={selectedIds.size === 0 || deleting}
+                    className="rounded-lg bg-red-500/20 px-3 py-1.5 text-sm text-red-400 transition-colors hover:bg-red-500/30 disabled:opacity-50"
+                  >
+                    {deleting ? t("deleting") : t("deleteSelected")} ({selectedIds.size})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setSelectable(false); setSelectedIds(new Set()); }}
+                    className="rounded-lg px-3 py-1.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-white/10"
+                  >
+                    ✕
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setSelectable(true)}
+                  className="rounded-lg px-3 py-1.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-white/10"
+                >
+                  {t("deleteSelected")}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Loading skeleton */}
         {loading && (
@@ -69,7 +166,26 @@ export default function HistoryPage() {
         )}
 
         {/* Task list */}
-        {!loading && !error && <TaskHistoryList tasks={tasks} />}
+        {!loading && !error && (
+          <div className="relative">
+            {deleting && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-black/30 backdrop-blur-sm">
+                <div className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-bg)] px-4 py-3 shadow-lg border border-white/10">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--color-accent)] border-t-transparent" />
+                  <span className="text-sm text-[var(--color-text-primary)]">{t("deleting")}</span>
+                </div>
+              </div>
+            )}
+            <TaskHistoryList
+              tasks={tasks}
+              selectable={selectable}
+              selectedIds={selectedIds}
+              onToggleSelect={handleToggleSelect}
+              onDelete={handleDeleteSingle}
+              deleting={deleting}
+            />
+          </div>
+        )}
       </main>
     </div>
   );

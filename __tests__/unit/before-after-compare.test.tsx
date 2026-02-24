@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import React from "react";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
 // ── Mock next/image ─────────────────────────────────────────────────────────
@@ -40,15 +40,6 @@ import BeforeAfterCompare, {
 } from "@/components/BeforeAfterCompare";
 
 // ── Helper ──────────────────────────────────────────────────────────────────
-
-function simulateImagesLoaded() {
-  const images = screen.getAllByRole("img");
-  images.forEach((img) => {
-    act(() => {
-      fireEvent.load(img);
-    });
-  });
-}
 
 function getSlider() {
   return screen.getByRole("slider");
@@ -137,20 +128,8 @@ describe("BeforeAfterCompare", () => {
     expect(screen.getByText("Restored")).toBeInTheDocument();
   });
 
-  it("shows loading skeleton before images load", () => {
-    render(<BeforeAfterCompare {...defaultProps} />);
-    expect(screen.getByTestId("loading-skeleton")).toBeInTheDocument();
-  });
-
-  it("hides loading skeleton after both images load", () => {
-    render(<BeforeAfterCompare {...defaultProps} />);
-    simulateImagesLoaded();
-    expect(screen.queryByTestId("loading-skeleton")).not.toBeInTheDocument();
-  });
-
   it("renders slider with correct ARIA attributes", () => {
     render(<BeforeAfterCompare {...defaultProps} />);
-    simulateImagesLoaded();
     const slider = getSlider();
     expect(slider).toHaveAttribute("aria-valuenow", "50");
     expect(slider).toHaveAttribute("aria-valuemin", "0");
@@ -160,7 +139,6 @@ describe("BeforeAfterCompare", () => {
 
   it("responds to ArrowLeft key by decreasing position", () => {
     render(<BeforeAfterCompare {...defaultProps} />);
-    simulateImagesLoaded();
     const slider = getSlider();
 
     fireEvent.keyDown(slider, { key: "ArrowLeft" });
@@ -170,7 +148,6 @@ describe("BeforeAfterCompare", () => {
 
   it("responds to ArrowRight key by increasing position", () => {
     render(<BeforeAfterCompare {...defaultProps} />);
-    simulateImagesLoaded();
     const slider = getSlider();
 
     fireEvent.keyDown(slider, { key: "ArrowRight" });
@@ -180,7 +157,6 @@ describe("BeforeAfterCompare", () => {
 
   it("does not change position for non-arrow keys", () => {
     render(<BeforeAfterCompare {...defaultProps} />);
-    simulateImagesLoaded();
     const slider = getSlider();
 
     fireEvent.keyDown(slider, { key: "Enter" });
@@ -202,7 +178,6 @@ describe("BeforeAfterCompare", () => {
 
   it("is focusable via tabIndex", () => {
     render(<BeforeAfterCompare {...defaultProps} />);
-    simulateImagesLoaded();
     const slider = getSlider();
     expect(slider).toHaveAttribute("tabindex", "0");
   });

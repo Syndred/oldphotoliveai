@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import Providers from "@/components/Providers";
+import RouteProgress from "@/components/RouteProgress";
 import "./globals.css";
 
 const inter = Inter({
@@ -28,7 +29,10 @@ export default async function RootLayout({
     <html lang={locale}>
       <body className={`${inter.variable} font-sans antialiased`}>
         <NextIntlClientProvider messages={messages}>
-          <Providers>{children}</Providers>
+          <Providers>
+            <RouteProgress />
+            {children}
+          </Providers>
         </NextIntlClientProvider>
       </body>
     </html>
