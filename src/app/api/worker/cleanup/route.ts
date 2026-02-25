@@ -26,7 +26,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     const redis = getRedisClient();
     const now = Date.now();
     let cleaned = 0;
-    let cursor = 0;
+    let cursor: string | number = 0;
 
     // Step 2: Scan for task keys and find failed ones older than 7 days
     do {
@@ -34,7 +34,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         match: "task:*",
         count: 100,
       });
-      cursor = nextCursor;
+      cursor = nextCursor as unknown as number;
 
       for (const key of taskKeys) {
         // Skip non-task keys (e.g. user task sorted sets)

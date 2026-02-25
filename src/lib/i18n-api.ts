@@ -10,8 +10,8 @@ import zhMessages from "../../messages/zh.json";
 // ── Message maps ────────────────────────────────────────────────────────────
 
 const messages: Record<Locale, Record<string, Record<string, string>>> = {
-  en: enMessages as Record<string, Record<string, string>>,
-  zh: zhMessages as Record<string, Record<string, string>>,
+  en: enMessages as unknown as Record<string, Record<string, string>>,
+  zh: zhMessages as unknown as Record<string, Record<string, string>>,
 };
 
 // ── Locale detection ────────────────────────────────────────────────────────
