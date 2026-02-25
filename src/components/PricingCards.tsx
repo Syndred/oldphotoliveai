@@ -71,6 +71,10 @@ export default function PricingCards() {
       });
       const data = await res.json();
       if (!res.ok) {
+        // Show friendly message for unavailable payment feature
+        if (res.status === 503) {
+          throw new Error("Payment feature is coming soon. Please check back later!");
+        }
         throw new Error(data.error ?? "Checkout failed");
       }
       if (data.url) {

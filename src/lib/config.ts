@@ -18,16 +18,23 @@ const REQUIRED_ENV_VARS = [
   "R2_BUCKET_NAME",
   "NEXT_PUBLIC_R2_DOMAIN",
   "REPLICATE_API_TOKEN",
+  "WORKER_SECRET",
+] as const;
+
+/**
+ * Optional environment variables (Stripe - can be placeholder values if payment is disabled)
+ */
+const OPTIONAL_ENV_VARS = [
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
   "STRIPE_PRICE_PAY_AS_YOU_GO",
   "STRIPE_PRICE_PROFESSIONAL",
-  "WORKER_SECRET",
 ] as const;
 
 /**
  * Validates that all required environment variables are set.
  * Throws an error listing ALL missing variable names if any are missing.
+ * Optional variables (like Stripe) are checked but only warned if missing.
  */
 export function validateEnvVars(): void {
   const missing = REQUIRED_ENV_VARS.filter(
@@ -37,6 +44,17 @@ export function validateEnvVars(): void {
   if (missing.length > 0) {
     throw new Error(
       `Missing required environment variables: ${missing.join(", ")}`
+    );
+  }
+
+  // Check optional Stripe variables - warn but don't fail
+  const missingOptional = OPTIONAL_ENV_VARS.filter(
+    (name) => !process.env[name] || process.env[name]?.includes("placeholder")
+  );
+
+  if (missingOptional.length > 0) {
+    console.warn(
+      `⚠️  Stripe payment is disabled. Missing or placeholder values for: ${missingOptional.join(", ")}`
     );
   }
 }
@@ -78,13 +96,17 @@ export const config = {
     };
   },
   get stripe() {
+    const secretKey = process.env.STRIPE_SECRET_KEY || "";
+    const isEnabled = secretKey && !secretKey.includes("placeholder");
+    
     return {
-      secretKey: process.env.STRIPE_SECRET_KEY!,
-      webhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
+      secretKey,
+      webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
       priceIds: {
-        payAsYouGo: process.env.STRIPE_PRICE_PAY_AS_YOU_GO!,
-        professional: process.env.STRIPE_PRICE_PROFESSIONAL!,
+        payAsYouGo: process.env.STRIPE_PRICE_PAY_AS_YOU_GO || "",
+        professional: process.env.STRIPE_PRICE_PROFESSIONAL || "",
       },
+      isEnabled, // Helper flag to check if Stripe is configured
     };
   },
   get nextauth() {

@@ -18,6 +18,14 @@ function isValidPlan(plan: string): plan is Plan {
 export async function POST(request: NextRequest) {
   const locale = getRequestLocale(request);
 
+  // Check if Stripe is enabled
+  if (!config.stripe.isEnabled) {
+    return NextResponse.json(
+      { error: "Payment feature is currently unavailable" },
+      { status: 503 }
+    );
+  }
+
   try {
     // Auth check (middleware handles this, but double-check)
     const token = await getToken({

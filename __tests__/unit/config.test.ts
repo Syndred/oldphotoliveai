@@ -1,6 +1,6 @@
 import { validateEnvVars, config } from "@/lib/config";
 
-// All required env var names
+// Required env var names (Stripe is now optional)
 const ALL_REQUIRED_VARS = [
   "GOOGLE_CLIENT_ID",
   "GOOGLE_CLIENT_SECRET",
@@ -14,21 +14,32 @@ const ALL_REQUIRED_VARS = [
   "R2_BUCKET_NAME",
   "NEXT_PUBLIC_R2_DOMAIN",
   "REPLICATE_API_TOKEN",
+  "WORKER_SECRET",
+];
+
+// Optional Stripe vars
+const OPTIONAL_STRIPE_VARS = [
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
   "STRIPE_PRICE_PAY_AS_YOU_GO",
   "STRIPE_PRICE_PROFESSIONAL",
-  "WORKER_SECRET",
 ];
 
 function setAllEnvVars(): void {
   for (const name of ALL_REQUIRED_VARS) {
     process.env[name] = `test-value-${name}`;
   }
+  // Also set Stripe vars to avoid warnings
+  for (const name of OPTIONAL_STRIPE_VARS) {
+    process.env[name] = `test-value-${name}`;
+  }
 }
 
 function clearAllEnvVars(): void {
   for (const name of ALL_REQUIRED_VARS) {
+    delete process.env[name];
+  }
+  for (const name of OPTIONAL_STRIPE_VARS) {
     delete process.env[name];
   }
 }
@@ -81,18 +92,18 @@ describe("validateEnvVars", () => {
 
   it("should list multiple missing variables when several are missing", () => {
     setAllEnvVars();
-    delete process.env.STRIPE_SECRET_KEY;
     delete process.env.WORKER_SECRET;
     delete process.env.NEXTAUTH_SECRET;
+    delete process.env.REPLICATE_API_TOKEN;
 
     try {
       validateEnvVars();
       fail("Expected validateEnvVars to throw");
     } catch (e: unknown) {
       const message = (e as Error).message;
-      expect(message).toContain("STRIPE_SECRET_KEY");
       expect(message).toContain("WORKER_SECRET");
       expect(message).toContain("NEXTAUTH_SECRET");
+      expect(message).toContain("REPLICATE_API_TOKEN");
     }
   });
 

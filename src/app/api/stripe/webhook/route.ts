@@ -12,6 +12,15 @@ import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
 export async function POST(request: NextRequest) {
   const locale = getRequestLocale(request);
+  
+  // Check if Stripe is enabled
+  if (!config.stripe.isEnabled) {
+    return NextResponse.json(
+      { error: "Payment feature is currently unavailable" },
+      { status: 503 }
+    );
+  }
+
   const stripe = getStripeClient();
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
