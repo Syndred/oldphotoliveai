@@ -242,6 +242,7 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
               className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-2"
             >
               {p.type === "image" ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   data-testid={p.testId}
                   src={p.src}

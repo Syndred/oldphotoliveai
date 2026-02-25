@@ -138,6 +138,7 @@ export default function TaskHistoryList({
               {/* Thumbnail */}
               <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-white/5">
                 {task.thumbnailUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={task.thumbnailUrl}
                     alt="Task thumbnail"
