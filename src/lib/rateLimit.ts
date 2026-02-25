@@ -1,9 +1,41 @@
-// Rate Limiting - Sliding Window Algorithm
+// Rate Limiting - Sliding Window Algorithm (Edge Runtime compatible)
 // Requirements: 9.1, 9.2, 9.3, 9.4, 9.5
+//
+// Uses raw fetch against Upstash REST API instead of the @upstash/redis
+// Node.js client, because this module is imported by middleware.ts which
+// runs in the Edge Runtime where Node.js APIs are unavailable.
 
-import { getRedisClient } from "./redis";
 import type { RateLimitResult, RateLimitType } from "@/types";
 import { RATE_LIMITS } from "@/types";
+
+/**
+ * Execute an Upstash Redis command via the REST API.
+ * Works in both Node.js and Edge runtimes.
+ */
+async function redisCommand(command: unknown[]): Promise<unknown> {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!url || !token) {
+    throw new Error("Missing UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN");
+  }
+
+  const res = await fetch(`${url}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(command),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Upstash Redis error: ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data.result;
+}
 
 /**
  * Check rate limit for a given identifier and type using sliding window.
@@ -16,7 +48,6 @@ export async function checkRateLimit(
   identifier: string,
   type: RateLimitType
 ): Promise<RateLimitResult> {
-  const redis = getRedisClient();
   const { maxRequests, windowMs } = RATE_LIMITS[type];
 
   const windowId = Math.floor(Date.now() / windowMs);
@@ -24,11 +55,11 @@ export async function checkRateLimit(
   const expireSeconds = Math.floor(windowMs / 1000) + 1;
 
   // Increment the counter for the current window
-  const count = await redis.incr(key);
+  const count = (await redisCommand(["INCR", key])) as number;
 
   // Set expiration on first request in this window
   if (count === 1) {
-    await redis.expire(key, expireSeconds);
+    await redisCommand(["EXPIRE", key, expireSeconds]);
   }
 
   const allowed = count <= maxRequests;

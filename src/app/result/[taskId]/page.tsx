@@ -9,9 +9,6 @@ import BeforeAfterCompare from "@/components/BeforeAfterCompare";
 import VideoPlayer from "@/components/VideoPlayer";
 import { buildCdnUrl } from "@/lib/url";
 
-// Re-export for backward compatibility (tests import from this file)
-export { buildCdnUrl } from "@/lib/url";
-
 // ── Types ───────────────────────────────────────────────────────────────────
 
 interface TaskResult {

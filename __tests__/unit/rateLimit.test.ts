@@ -1,119 +1,121 @@
-// Unit tests for rate limiting
+// Unit tests for rate limiting (Edge-compatible fetch-based implementation)
 // Tests: src/lib/rateLimit.ts
 
-import { checkRateLimit } from "@/lib/rateLimit";
 import { RATE_LIMITS } from "@/types";
 
-// ── Mock Redis ──────────────────────────────────────────────────────────────
+// Set required env vars before importing
+process.env.UPSTASH_REDIS_REST_URL = "https://test.upstash.io";
+process.env.UPSTASH_REDIS_REST_TOKEN = "test-token";
 
-const mockIncr = jest.fn();
-const mockExpire = jest.fn();
+// ── Mock fetch for Upstash REST API ─────────────────────────────────────────
 
-jest.mock("@/lib/redis", () => ({
-  getRedisClient: () => ({
-    incr: mockIncr,
-    expire: mockExpire,
-  }),
-}));
+let fetchSpy: jest.SpyInstance;
+
+function mockRedisResponses(incrResult: number) {
+  fetchSpy
+    .mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ result: incrResult }),
+    })
+    .mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ result: 1 }),
+    });
+}
+
+beforeEach(() => {
+  fetchSpy = jest.spyOn(global, "fetch").mockImplementation();
+});
+
+afterEach(() => {
+  fetchSpy.mockRestore();
+});
 
 // ── Tests ───────────────────────────────────────────────────────────────────
 
-beforeEach(() => {
-  jest.clearAllMocks();
-});
-
 describe("checkRateLimit", () => {
+  // Re-import each test to avoid module caching issues
+  async function getCheckRateLimit() {
+    const mod = await import("@/lib/rateLimit");
+    return mod.checkRateLimit;
+  }
+
   it("should allow the first request and return correct remaining count", async () => {
-    mockIncr.mockResolvedValue(1);
-    mockExpire.mockResolvedValue(true);
-
+    mockRedisResponses(1);
+    const checkRateLimit = (await import("@/lib/rateLimit")).checkRateLimit;
     const result = await checkRateLimit("user-1", "api");
-
     expect(result.allowed).toBe(true);
     expect(result.remaining).toBe(RATE_LIMITS.api.maxRequests - 1);
     expect(result.resetAt).toBeGreaterThan(Date.now());
   });
 
-  it("should set expiration on first request in a window", async () => {
-    mockIncr.mockResolvedValue(1);
-    mockExpire.mockResolvedValue(true);
-
+  it("should call EXPIRE on first request in a window", async () => {
+    mockRedisResponses(1);
+    const checkRateLimit = (await import("@/lib/rateLimit")).checkRateLimit;
     await checkRateLimit("user-1", "api");
-
-    expect(mockExpire).toHaveBeenCalledTimes(1);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    const expireBody = JSON.parse(fetchSpy.mock.calls[1][1].body);
+    expect(expireBody[0]).toBe("EXPIRE");
     const expireSeconds = Math.floor(RATE_LIMITS.api.windowMs / 1000) + 1;
-    expect(mockExpire).toHaveBeenCalledWith(
-      expect.stringContaining("ratelimit:api:user-1:"),
-      expireSeconds
-    );
+    expect(expireBody[2]).toBe(expireSeconds);
   });
 
-  it("should NOT set expiration on subsequent requests", async () => {
-    mockIncr.mockResolvedValue(5);
-
+  it("should NOT call EXPIRE on subsequent requests", async () => {
+    mockRedisResponses(5);
+    const checkRateLimit = (await import("@/lib/rateLimit")).checkRateLimit;
     await checkRateLimit("user-1", "api");
-
-    expect(mockExpire).not.toHaveBeenCalled();
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
   });
 
   it("should deny request when count exceeds api limit (100)", async () => {
-    mockIncr.mockResolvedValue(101);
-
+    mockRedisResponses(101);
+    const checkRateLimit = (await import("@/lib/rateLimit")).checkRateLimit;
     const result = await checkRateLimit("user-1", "api");
-
     expect(result.allowed).toBe(false);
     expect(result.remaining).toBe(0);
   });
 
   it("should allow request at exactly the api limit (100)", async () => {
-    mockIncr.mockResolvedValue(100);
-
+    mockRedisResponses(100);
+    const checkRateLimit = (await import("@/lib/rateLimit")).checkRateLimit;
     const result = await checkRateLimit("user-1", "api");
-
     expect(result.allowed).toBe(true);
     expect(result.remaining).toBe(0);
   });
 
   it("should deny request when count exceeds upload limit (10)", async () => {
-    mockIncr.mockResolvedValue(11);
-
+    mockRedisResponses(11);
+    const checkRateLimit = (await import("@/lib/rateLimit")).checkRateLimit;
     const result = await checkRateLimit("user-1", "upload");
-
     expect(result.allowed).toBe(false);
     expect(result.remaining).toBe(0);
   });
 
   it("should allow request at exactly the upload limit (10)", async () => {
-    mockIncr.mockResolvedValue(10);
-
+    mockRedisResponses(10);
+    const checkRateLimit = (await import("@/lib/rateLimit")).checkRateLimit;
     const result = await checkRateLimit("user-1", "upload");
-
     expect(result.allowed).toBe(true);
     expect(result.remaining).toBe(0);
   });
 
-  it("should use correct Redis key format", async () => {
-    mockIncr.mockResolvedValue(1);
-    mockExpire.mockResolvedValue(true);
-
+  it("should use correct Redis key format in INCR command", async () => {
+    mockRedisResponses(1);
+    const checkRateLimit = (await import("@/lib/rateLimit")).checkRateLimit;
     await checkRateLimit("user-abc", "upload");
-
-    const calledKey = mockIncr.mock.calls[0][0] as string;
-    expect(calledKey).toMatch(/^ratelimit:upload:user-abc:\d+$/);
+    const incrBody = JSON.parse(fetchSpy.mock.calls[0][1].body);
+    expect(incrBody[0]).toBe("INCR");
+    expect(incrBody[1]).toMatch(/^ratelimit:upload:user-abc:\d+$/);
   });
 
   it("should return resetAt as start of next window", async () => {
-    mockIncr.mockResolvedValue(1);
-    mockExpire.mockResolvedValue(true);
-
+    mockRedisResponses(1);
+    const checkRateLimit = (await import("@/lib/rateLimit")).checkRateLimit;
     const before = Date.now();
     const result = await checkRateLimit("user-1", "api");
-
     const windowMs = RATE_LIMITS.api.windowMs;
     const currentWindowId = Math.floor(before / windowMs);
     const expectedResetAt = (currentWindowId + 1) * windowMs;
-
-    // resetAt should be close to expected (within one window boundary)
     expect(result.resetAt).toBeGreaterThanOrEqual(expectedResetAt);
     expect(result.resetAt).toBeLessThanOrEqual(expectedResetAt + windowMs);
   });

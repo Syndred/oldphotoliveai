@@ -84,7 +84,8 @@ jest.mock("@/components/Navbar", () => {
   };
 });
 
-import ResultPage, { buildCdnUrl } from "@/app/result/[taskId]/page";
+import ResultPage from "@/app/result/[taskId]/page";
+import { buildCdnUrl } from "@/lib/url";
 
 // ── Setup ───────────────────────────────────────────────────────────────────
 
