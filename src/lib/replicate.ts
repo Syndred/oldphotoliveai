@@ -9,13 +9,17 @@ import { withRetry } from "./retry";
 export const MODELS = {
   restoration: "tencentarc/gfpgan:0fbacf7afc6c144e5be9767cff80f25aff23e52b0708f17e20f9879b2f21516c",
   colorization: "piddnad/ddcolor:ca494ba129e44e45f661d6ece83c4c98a9a7c774309beca01429b58fce8aa695",
-  animation: "minimax/video-01-live",
+  animation: "stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
 } as const;
 
 // Fixed animation parameters — readonly, not overridable (Req 16.2)
-// Uses minimax/video-01-live params
+// Uses stability-ai/stable-video-diffusion params
 export const ANIMATION_PARAMS = {
-  prompt: "Bring this old photo to life with natural facial expressions and subtle movement",
+  video_length: "14_frames_with_svd",
+  sizing_strategy: "maintain_aspect_ratio",
+  frames_per_second: 6,
+  motion_bucket_id: 127,
+  cond_aug: 0.02,
 } as const;
 
 export type ModelKey = keyof typeof MODELS;

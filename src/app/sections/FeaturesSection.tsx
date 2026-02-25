@@ -33,7 +33,7 @@ export default function FeaturesSection() {
   const t = useTranslations("landing.features");
 
   return (
-    <section id="features-section" className="px-4 py-16 sm:py-24">
+    <section id="features-section" className="px-4 py-10 sm:py-14">
       <div className="mx-auto max-w-5xl">
         <h2 className="text-center text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">
           {t("title")}
@@ -42,7 +42,7 @@ export default function FeaturesSection() {
           {t("subtitle")}
         </p>
 
-        <div className="mt-12 grid gap-6 sm:grid-cols-3">
+        <div className="mt-8 grid gap-6 sm:grid-cols-3">
           {FEATURES.map((feature) => (
             <div
               key={feature.key}

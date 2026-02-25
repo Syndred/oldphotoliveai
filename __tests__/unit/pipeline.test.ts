@@ -199,7 +199,7 @@ describe("executePipeline", () => {
       await executePipeline(TASK_ID);
 
       expect(mockRunModel.mock.calls[2][1]).toEqual({
-        first_frame_image: `https://cdn.test.com/tasks/${TASK_ID}/colorized.jpg`,
+        input_image: `https://cdn.test.com/tasks/${TASK_ID}/colorized.jpg`,
       });
     });
   });

@@ -100,10 +100,10 @@ export async function executePipeline(taskId: string): Promise<void> {
     await uploadToR2(processedColorized, colorizedKey, "image/jpeg");
     const colorizedCdnUrl = getR2CdnUrl(colorizedKey);
 
-    // ── Step 3: Animation (minimax/video-01-live uses image_url) ────────
+    // ── Step 3: Animation (SVD uses input_image) ────────
     await updateTaskStatus(taskId, "animating", { colorizedImageKey: colorizedKey });
 
-    const animationOutputUrl = await runModel("animation", { first_frame_image: colorizedCdnUrl });
+    const animationOutputUrl = await runModel("animation", { input_image: colorizedCdnUrl });
 
     // Download animation video and upload to R2 (no image tier settings for video)
     const animationBuffer = await downloadBuffer(animationOutputUrl);

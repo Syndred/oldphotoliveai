@@ -37,7 +37,10 @@
     "step4": "Animate",
     "pending": "Waiting in queue…",
     "completed": "Processing complete",
-    "connectionLost": "Connection lost"
+    "connectionLost": "Connection lost",
+    "previewRestored": "Restored",
+    "previewColorized": "Colorized",
+    "previewAnimation": "Animation"
   },
   "result": {
     "beforeAfter": "Before & After",
@@ -140,6 +143,10 @@
         "label2": "Smart Colorization",
         "label3": "Full Enhancement"
       }
+    },
+    "videoShowcase": {
+      "title": "See It in Motion",
+      "subtitle": "Watch how AI brings old photos to life with realistic animation"
     },
     "features": {
       "title": "Powerful AI Features",

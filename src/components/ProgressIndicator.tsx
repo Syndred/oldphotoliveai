@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { TaskStatus } from "@/types";
+import { buildCdnUrl } from "@/lib/url";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -15,6 +16,12 @@ interface ProgressIndicatorProps {
 interface StepInfo {
   key: string;
   status: "done" | "active" | "pending";
+}
+
+interface IntermediateResults {
+  restoredImageKey?: string;
+  colorizedImageKey?: string;
+  animationVideoKey?: string;
 }
 
 // ── Constants ───────────────────────────────────────────────────────────────
@@ -62,6 +69,7 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
   const [status, setStatus] = useState<string>("pending");
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [intermediateResults, setIntermediateResults] = useState<IntermediateResults>({});
   const eventSourceRef = useRef<EventSource | null>(null);
   const onCompleteRef = useRef(onComplete);
   const onErrorRef = useRef(onError);
@@ -92,6 +100,14 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
         setStatus(taskStatus);
         setProgress(getProgress(taskStatus, data.progress));
 
+        // Extract intermediate results
+        setIntermediateResults(prev => ({
+          ...prev,
+          ...(data.restoredImageKey ? { restoredImageKey: data.restoredImageKey } : {}),
+          ...(data.colorizedImageKey ? { colorizedImageKey: data.colorizedImageKey } : {}),
+          ...(data.animationVideoKey ? { animationVideoKey: data.animationVideoKey } : {}),
+        }));
+
         if (taskStatus === "completed") {
           onCompleteRef.current?.(data);
           es.close();
@@ -119,6 +135,21 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
   }, [taskId]);
 
   const steps = getSteps(status);
+
+  // Collect visible previews for the large preview area below progress bar.
+  // A preview is shown when its step is "done" (activeStep past that index) and the key exists.
+  const activeStep = STATUS_TO_STEP[status] ?? 0;
+  const isCompleted = status === "completed";
+  const previews: { key: string; type: "image" | "video"; src: string; label: string; testId: string }[] = [];
+  if (intermediateResults.restoredImageKey && (isCompleted || activeStep > 1)) {
+    previews.push({ key: "restored", type: "image", src: buildCdnUrl(intermediateResults.restoredImageKey), label: t("previewRestored"), testId: "preview-restored" });
+  }
+  if (intermediateResults.colorizedImageKey && (isCompleted || activeStep > 2)) {
+    previews.push({ key: "colorized", type: "image", src: buildCdnUrl(intermediateResults.colorizedImageKey), label: t("previewColorized"), testId: "preview-colorized" });
+  }
+  if (intermediateResults.animationVideoKey && isCompleted) {
+    previews.push({ key: "animation", type: "video", src: buildCdnUrl(intermediateResults.animationVideoKey), label: t("previewAnimation"), testId: "preview-animation" });
+  }
 
   return (
     <div className="w-full" data-testid="progress-indicator">
@@ -164,7 +195,7 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
 
             {/* Connector line */}
             {i < steps.length - 1 && (
-              <div className="flex-1 mx-2 mt-[-1.25rem]">
+              <div className="flex-1 mx-2">
                 <div
                   className={`h-0.5 w-full transition-colors duration-300 ${
                     steps[i + 1].status === "done" || steps[i + 1].status === "active"
@@ -201,10 +232,43 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
           `${progress}% — ${status === "pending" || status === "queued" ? t("pending") : `${status.charAt(0).toUpperCase() + status.slice(1)}…`}`
         )}
       </p>
+
+      {/* Large preview area below progress */}
+      {previews.length > 0 && (
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-testid="preview-gallery">
+          {previews.map((p) => (
+            <div
+              key={p.key}
+              className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-2"
+            >
+              {p.type === "image" ? (
+                <img
+                  data-testid={p.testId}
+                  src={p.src}
+                  alt={p.label}
+                  className="w-full rounded-lg object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+              ) : (
+                <video
+                  data-testid={p.testId}
+                  src={p.src}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="w-full rounded-lg"
+                  aria-label={p.label}
+                />
+              )}
+              <p className="mt-2 text-center text-sm text-[var(--color-text-secondary)]">{p.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 // Export helpers for testing
 export { getSteps, getProgress, STEP_KEYS, STATUS_TO_STEP, STATUS_PROGRESS };
-export type { ProgressIndicatorProps, StepInfo };
+export type { ProgressIndicatorProps, StepInfo, IntermediateResults };

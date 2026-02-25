@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import HeroSection from "./sections/HeroSection";
 import ShowcaseSection from "./sections/ShowcaseSection";
+import VideoShowcaseSection from "./sections/VideoShowcaseSection";
 import FeaturesSection from "./sections/FeaturesSection";
 import HowItWorksSection from "./sections/HowItWorksSection";
 import UploadSection from "./sections/UploadSection";
@@ -53,6 +54,7 @@ export default function HomePage() {
       <main>
         <HeroSection />
         <ShowcaseSection />
+        <VideoShowcaseSection />
         <FeaturesSection />
         <HowItWorksSection />
         <UploadSection />

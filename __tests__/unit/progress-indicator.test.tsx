@@ -11,11 +11,15 @@ import "@testing-library/jest-dom";
 jest.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => {
     const translations: Record<string, Record<string, string>> = {
-      processing: { step1: "Upload", step2: "Restore", step3: "Colorize", step4: "Animate", pending: "Waiting in queue…", completed: "Processing complete", connectionLost: "Connection lost", title: "Processing Your Photo" },
+      processing: { step1: "Upload", step2: "Restore", step3: "Colorize", step4: "Animate", pending: "Waiting in queue…", completed: "Processing complete", connectionLost: "Connection lost", title: "Processing Your Photo", previewRestored: "Restored", previewColorized: "Colorized", previewAnimation: "Animation" },
     };
     return translations[namespace]?.[key] ?? key;
   },
   useLocale: () => "en",
+}));
+
+jest.mock("@/lib/url", () => ({
+  buildCdnUrl: (key: string) => `https://cdn.test.com/${key}`,
 }));
 
 type ESListener = (event: MessageEvent | Event) => void;
@@ -285,5 +289,81 @@ describe("ProgressIndicator", () => {
 
     // Component should still be rendered
     expect(screen.getByTestId("progress-indicator")).toBeInTheDocument();
+  });
+});
+
+// ── Intermediate result preview tests ───────────────────────────────────────
+
+describe("intermediate result previews", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("shows restored image preview when restoredImageKey is received", async () => {
+    render(<ProgressIndicator taskId="task-1" />);
+
+    // Push colorizing status — step 2 (Restore) is now "done"
+    sendSSE({ status: "colorizing", progress: 50, restoredImageKey: "tasks/task-1/restored.jpg" });
+
+    await waitFor(() => {
+      const preview = screen.getByTestId("preview-restored");
+      expect(preview).toBeInTheDocument();
+      expect(preview).toHaveAttribute("src", "https://cdn.test.com/tasks/task-1/restored.jpg");
+    });
+  });
+
+  it("shows colorized image preview when colorizedImageKey is received", async () => {
+    render(<ProgressIndicator taskId="task-1" />);
+
+    // Push animating status — step 3 (Colorize) is now "done"
+    sendSSE({ status: "colorizing", progress: 50, restoredImageKey: "tasks/task-1/restored.jpg" });
+    sendSSE({ status: "animating", progress: 75, colorizedImageKey: "tasks/task-1/colorized.jpg" });
+
+    await waitFor(() => {
+      const preview = screen.getByTestId("preview-colorized");
+      expect(preview).toBeInTheDocument();
+      expect(preview).toHaveAttribute("src", "https://cdn.test.com/tasks/task-1/colorized.jpg");
+    });
+  });
+
+  it("shows animation video preview when animationVideoKey is received", async () => {
+    render(<ProgressIndicator taskId="task-1" />);
+
+    sendSSE({
+      status: "completed",
+      progress: 100,
+      restoredImageKey: "tasks/task-1/restored.jpg",
+      colorizedImageKey: "tasks/task-1/colorized.jpg",
+      animationVideoKey: "tasks/task-1/animation.mp4",
+    });
+
+    await waitFor(() => {
+      const preview = screen.getByTestId("preview-animation");
+      expect(preview).toBeInTheDocument();
+      expect(preview).toHaveAttribute("src", "https://cdn.test.com/tasks/task-1/animation.mp4");
+    });
+  });
+
+  it("does not show previews when no intermediate keys are present", async () => {
+    render(<ProgressIndicator taskId="task-1" />);
+
+    sendSSE({ status: "restoring", progress: 25 });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("preview-restored")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("preview-colorized")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("preview-animation")).not.toBeInTheDocument();
+    });
+  });
+
+  it("does not show preview for step that is not yet done", async () => {
+    render(<ProgressIndicator taskId="task-1" />);
+
+    // Push restoring status — step 2 (Restore) is "active" not "done"
+    sendSSE({ status: "restoring", progress: 25, restoredImageKey: "tasks/task-1/restored.jpg" });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("preview-restored")).not.toBeInTheDocument();
+    });
   });
 });

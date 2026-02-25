@@ -14,13 +14,13 @@ export default function FAQSection() {
   };
 
   return (
-    <section id="faq-section" className="px-4 py-16 sm:py-24">
+    <section id="faq-section" className="px-4 py-10 sm:py-14">
       <div className="mx-auto max-w-3xl">
         <h2 className="text-center text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">
           {t("title")}
         </h2>
 
-        <div className="mt-12 space-y-3">
+        <div className="mt-8 space-y-3">
           {FAQ_KEYS.map((key, index) => {
             const isOpen = openIndex === index;
             return (

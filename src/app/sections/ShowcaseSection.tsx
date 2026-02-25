@@ -27,7 +27,7 @@ export default function ShowcaseSection() {
   const t = useTranslations("landing.showcase");
 
   return (
-    <section id="showcase-section" className="px-4 py-16 sm:py-24">
+    <section id="showcase-section" className="px-4 py-10 sm:py-14">
       <div className="mx-auto max-w-6xl">
         <h2 className="text-center text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">
           {t("title")}
@@ -36,7 +36,7 @@ export default function ShowcaseSection() {
           {t("subtitle")}
         </p>
 
-        <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {SHOWCASE_ITEMS.map((item) => (
             <div
               key={item.labelKey}

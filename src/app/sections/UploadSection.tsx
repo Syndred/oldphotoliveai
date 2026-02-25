@@ -36,7 +36,7 @@ export default function UploadSection() {
   }
 
   return (
-    <section id="upload-section" className="px-4 py-16 sm:py-24">
+    <section id="upload-section" className="px-4 py-10 sm:py-14">
       <div className="mx-auto w-full max-w-lg rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-6 shadow-xl backdrop-blur-sm sm:p-10">
         <h2 className="mb-2 bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-accent)] bg-clip-text text-center text-3xl font-bold text-transparent sm:text-4xl">
           {t("title")}

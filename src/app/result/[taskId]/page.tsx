@@ -7,6 +7,10 @@ import Navbar from "@/components/Navbar";
 import ProgressIndicator from "@/components/ProgressIndicator";
 import BeforeAfterCompare from "@/components/BeforeAfterCompare";
 import VideoPlayer from "@/components/VideoPlayer";
+import { buildCdnUrl } from "@/lib/url";
+
+// Re-export for backward compatibility (tests import from this file)
+export { buildCdnUrl } from "@/lib/url";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -14,17 +18,6 @@ interface TaskResult {
   originalImageKey: string;
   colorizedImageKey: string;
   animationVideoKey: string;
-}
-
-// ── Helpers ─────────────────────────────────────────────────────────────────
-
-export function buildCdnUrl(key: string): string {
-  const domain = process.env.NEXT_PUBLIC_R2_DOMAIN ?? "";
-  // domain may already include https:// prefix
-  if (domain.startsWith("http://") || domain.startsWith("https://")) {
-    return `${domain}/${key}`;
-  }
-  return `https://${domain}/${key}`;
 }
 
 // ── Component ───────────────────────────────────────────────────────────────

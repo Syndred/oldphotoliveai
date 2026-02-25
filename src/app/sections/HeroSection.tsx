@@ -14,7 +14,7 @@ export default function HeroSection() {
   return (
     <section
       id="hero-section"
-      className="flex flex-col items-center justify-center px-4 py-20 text-center sm:py-32"
+      className="flex flex-col items-center justify-center px-4 py-12 text-center sm:py-16"
     >
       <h1 className="max-w-3xl bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-accent)] bg-clip-text text-4xl font-bold leading-tight text-transparent sm:text-5xl md:text-6xl">
         {t("title")}

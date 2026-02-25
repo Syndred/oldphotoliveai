@@ -12,7 +12,7 @@ export default function HowItWorksSection() {
   const t = useTranslations("landing.howItWorks");
 
   return (
-    <section id="how-it-works-section" className="px-4 py-16 sm:py-24">
+    <section id="how-it-works-section" className="px-4 py-10 sm:py-14">
       <div className="mx-auto max-w-5xl">
         <h2 className="text-center text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">
           {t("title")}
@@ -21,7 +21,7 @@ export default function HowItWorksSection() {
           {t("subtitle")}
         </p>
 
-        <div className="mt-12 grid gap-8 sm:grid-cols-3">
+        <div className="mt-8 grid gap-8 sm:grid-cols-3">
           {STEPS.map((step) => (
             <div key={step.key} className="flex flex-col items-center text-center">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] text-xl font-bold text-[var(--color-primary-bg)]">
