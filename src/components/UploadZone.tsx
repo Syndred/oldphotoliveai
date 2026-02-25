@@ -11,12 +11,6 @@ interface UploadZoneProps {
 
 type UploadState = "idle" | "dragging" | "uploading" | "error";
 
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
 function validateClientFile(file: File, tErrors: (key: string) => string): string | null {
   if (
     !SUPPORTED_MIME_TYPES.includes(
