@@ -66,3 +66,56 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
   }
 }
+
+
+/**
+ * GET handler for Vercel Cron Jobs.
+ * Vercel cron sends GET requests. We verify using CRON_SECRET.
+ */
+export async function GET(request: Request): Promise<NextResponse> {
+  const authHeader = request.headers.get("Authorization");
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const redis = getRedisClient();
+    const now = Date.now();
+    let cleaned = 0;
+    let cursor: string | number = 0;
+
+    do {
+      const [nextCursor, taskKeys] = await redis.scan(cursor, {
+        match: "task:*",
+        count: 100,
+      });
+      cursor = nextCursor as unknown as number;
+
+      for (const key of taskKeys) {
+        if (key.includes(":") && key.split(":").length > 2) continue;
+        const raw = await redis.get<string>(key);
+        if (!raw) continue;
+        const task = JSON.parse(raw) as Task;
+        if (task.status !== "failed") continue;
+        const createdAt = new Date(task.createdAt).getTime();
+        if (now - createdAt > SEVEN_DAYS_MS) {
+          await deleteTaskFiles(task.id);
+          cleaned++;
+        }
+      }
+    } while (cursor !== 0);
+
+    return NextResponse.json(
+      { message: `Cleaned ${cleaned} failed task(s)` },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Cleanup worker failed:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

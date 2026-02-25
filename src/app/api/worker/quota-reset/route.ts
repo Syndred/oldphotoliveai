@@ -34,3 +34,30 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
   }
 }
+
+/**
+ * GET handler for Vercel Cron Jobs.
+ * Vercel cron sends GET requests. We verify using CRON_SECRET.
+ */
+export async function GET(request: Request): Promise<NextResponse> {
+  const authHeader = request.headers.get("Authorization");
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    await resetAllDailyQuotas();
+    return NextResponse.json(
+      { message: "Daily quotas reset successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Quota reset failed:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

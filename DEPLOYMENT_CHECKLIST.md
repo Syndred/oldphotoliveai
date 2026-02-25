@@ -96,9 +96,11 @@ https://oldphotoliveai.com/api/auth/callback/google
 
 ## 注意事项
 
-1. **Vercel Cron Jobs 需要 Pro 计划**（$20/月）
-   - 如果使用 Hobby 计划，worker cron 不会自动运行
-   - 可以用外部 cron 服务（如 cron-job.org）定时调用 worker endpoints
+1. **Vercel Cron Jobs（Hobby 计划兼容）**
+   - Hobby 计划只支持每日 cron（`0 0 * * *`）
+   - `quota-reset` 和 `cleanup` 已配置为每日运行（通过 GET handler）
+   - Pipeline worker 不需要 cron — 任务创建时自动触发，处理完后自动链式处理队列中的下一个任务
+   - 如需配置 `CRON_SECRET` 环境变量来保护 cron endpoints（可选）
 
 2. **Stripe 支付功能已禁用**
    - 用户点击付费按钮会看到 "Payment feature is coming soon"

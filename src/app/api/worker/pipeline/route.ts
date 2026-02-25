@@ -40,12 +40,28 @@ export async function POST(request: Request): Promise<NextResponse> {
     // Step 4: Execute pipeline
     await executePipeline(taskId);
 
+    // Step 5: Self-chain — if more tasks remain, trigger another pipeline run
+    // This replaces the per-minute cron that Vercel Hobby doesn't support
+    const { getQueueLength } = await import("@/lib/queue");
+    const queueLen = await getQueueLength();
+    if (queueLen.high + queueLen.normal > 0) {
+      const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+      fetch(`${baseUrl}/api/worker/pipeline`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${config.worker.secret}`,
+        },
+      }).catch(() => {
+        // Ignore — next task creation will trigger pipeline again
+      });
+    }
+
     return NextResponse.json(
       { taskId, status: "processed" },
       { status: 200 }
     );
   } finally {
-    // Step 5: Always release lock
+    // Step 6: Always release lock
     await releaseLock(lockKey);
   }
 }
