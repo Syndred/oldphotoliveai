@@ -2,16 +2,25 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession, signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import UploadZone from "@/components/UploadZone";
 
 export default function UploadSection() {
   const router = useRouter();
+  const { status } = useSession();
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState("");
   const t = useTranslations("upload");
+  const tAuth = useTranslations("auth");
 
   async function handleUpload(imageKey: string) {
+    // If not logged in, redirect to login
+    if (status !== "authenticated") {
+      signIn("google");
+      return;
+    }
+
     setIsCreating(true);
     setError("");
 
@@ -44,6 +53,22 @@ export default function UploadSection() {
         <p className="mb-8 text-center text-sm text-[var(--color-text-secondary)]">
           {t("subtitle")}
         </p>
+
+        {/* Login prompt for unauthenticated users */}
+        {status !== "authenticated" && status !== "loading" && (
+          <div className="mb-4 rounded-xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 p-4 text-center">
+            <p className="text-sm text-[var(--color-text-secondary)]">
+              {tAuth("signInPrompt")}
+            </p>
+            <button
+              type="button"
+              onClick={() => signIn("google")}
+              className="mt-2 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 min-h-[44px]"
+            >
+              {tAuth("signInWith")}
+            </button>
+          </div>
+        )}
 
         <UploadZone onUpload={handleUpload} disabled={isCreating} />
 

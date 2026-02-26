@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSession, signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import Navbar from "@/components/Navbar";
 import TaskHistoryList from "@/components/TaskHistoryList";
 import type { TaskHistoryItem } from "@/components/TaskHistoryList";
 
 export default function HistoryPage() {
+  const { status } = useSession();
   const [tasks, setTasks] = useState<TaskHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -14,13 +16,15 @@ export default function HistoryPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
   const t = useTranslations("history");
+  const tAuth = useTranslations("auth");
 
   useEffect(() => {
+    if (status !== "authenticated") return;
+
     async function fetchHistory() {
       try {
-        // Client-side cache: avoid re-fetching within 30 seconds
         const CACHE_KEY = "history_cache";
-        const CACHE_TTL = 30_000; // 30s
+        const CACHE_TTL = 30_000;
         const cached = sessionStorage.getItem(CACHE_KEY);
         if (cached) {
           try {
@@ -42,7 +46,6 @@ export default function HistoryPage() {
         const taskList = data.tasks ?? [];
         setTasks(taskList);
 
-        // Cache the result
         try {
           sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data: taskList, ts: Date.now() }));
         } catch { /* quota exceeded — ignore */ }
@@ -53,7 +56,7 @@ export default function HistoryPage() {
       }
     }
     fetchHistory();
-  }, []);
+  }, [status]);
 
   const handleToggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -85,7 +88,6 @@ export default function HistoryPage() {
         const deletedSet = new Set(taskIds);
         setTasks((prev) => {
           const updated = prev.filter((t) => !deletedSet.has(t.id));
-          // Update cache after delete
           try {
             sessionStorage.setItem("history_cache", JSON.stringify({ data: updated, ts: Date.now() }));
           } catch { /* ignore */ }
@@ -114,6 +116,30 @@ export default function HistoryPage() {
 
   const allSelected = tasks.length > 0 && selectedIds.size === tasks.length;
 
+  // Unauthenticated: show login prompt
+  if (status === "unauthenticated") {
+    return (
+      <div className="min-h-screen bg-[var(--color-primary-bg)]">
+        <Navbar />
+        <main className="mx-auto max-w-3xl px-4 py-10 sm:py-16">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center backdrop-blur-sm">
+            <svg className="mx-auto mb-4 h-12 w-12 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+            <p className="mb-4 text-[var(--color-text-secondary)]">{tAuth("signInPrompt")}</p>
+            <button
+              type="button"
+              onClick={() => signIn("google")}
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 min-h-[44px]"
+            >
+              {tAuth("signInWith")}
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[var(--color-primary-bg)]">
       <Navbar />
@@ -125,7 +151,6 @@ export default function HistoryPage() {
             {t("title")}
           </h1>
 
-          {/* Toolbar — only show when there are tasks */}
           {!loading && !error && tasks.length > 0 && (
             <div className="flex items-center gap-2">
               {selectable ? (
@@ -166,7 +191,6 @@ export default function HistoryPage() {
           )}
         </div>
 
-        {/* Loading skeleton */}
         {loading && (
           <div className="space-y-3" data-testid="loading-skeleton">
             {[1, 2, 3].map((i) => (
@@ -184,7 +208,6 @@ export default function HistoryPage() {
           </div>
         )}
 
-        {/* Error state */}
         {error && !loading && (
           <div
             className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 text-center"
@@ -194,7 +217,6 @@ export default function HistoryPage() {
           </div>
         )}
 
-        {/* Task list */}
         {!loading && !error && (
           <div className="relative">
             {deleting && (

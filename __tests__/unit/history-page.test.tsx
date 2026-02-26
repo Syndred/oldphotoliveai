@@ -11,13 +11,14 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/history",
 }));
 
+const mockSignIn = jest.fn();
+let mockSessionStatus = "authenticated";
 jest.mock("next-auth/react", () => ({
-  useSession: () => ({ data: null, status: "unauthenticated" }),
-  signIn: jest.fn(),
+  useSession: () => ({ data: { user: { name: "Test" } }, status: mockSessionStatus }),
+  signIn: (...args: unknown[]) => mockSignIn(...args),
   signOut: jest.fn(),
 }));
 
-// Mock next-intl (needed by LanguageSwitcher and i18n components)
 jest.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => {
     const translations: Record<string, Record<string, string>> = {
@@ -29,6 +30,7 @@ jest.mock("next-intl", () => ({
         "status.failed": "Failed", "status.cancelled": "Cancelled",
       },
       nav: { home: "Home", history: "History", pricing: "Pricing", login: "Sign In", logout: "Sign Out" },
+      auth: { signInWith: "Sign in with Google", signInPrompt: "Sign in to start restoring your photos" },
     };
     return translations[namespace]?.[key] ?? key;
   },
@@ -78,6 +80,7 @@ const MOCK_TASKS = [
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSessionStatus = "authenticated";
   global.fetch = jest.fn();
   sessionStorage.clear();
 });
@@ -193,5 +196,13 @@ describe("HistoryPage", () => {
         screen.getByText("No processing history yet")
       ).toBeInTheDocument();
     });
+  });
+
+  it("shows login prompt when unauthenticated", () => {
+    mockSessionStatus = "unauthenticated";
+    render(<HistoryPage />);
+    expect(screen.getByText("Sign in to start restoring your photos")).toBeInTheDocument();
+    expect(screen.getByText("Sign in with Google")).toBeInTheDocument();
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });

@@ -12,19 +12,22 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/",
 }));
 
-// Mock next-auth
+// Mock next-auth — default to authenticated
+const mockSignIn = jest.fn();
+let mockSessionStatus = "authenticated";
 jest.mock("next-auth/react", () => ({
-  useSession: () => ({ data: null, status: "unauthenticated" }),
-  signIn: jest.fn(),
+  useSession: () => ({ data: { user: { name: "Test" } }, status: mockSessionStatus }),
+  signIn: (...args: unknown[]) => mockSignIn(...args),
   signOut: jest.fn(),
 }));
 
-// Mock next-intl (needed by LanguageSwitcher and i18n components)
+// Mock next-intl
 jest.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => {
     const translations: Record<string, Record<string, string>> = {
       nav: { home: "Home", history: "History", pricing: "Pricing", login: "Sign In", logout: "Sign Out" },
       upload: { title: "Restore Your Old Photos", subtitle: "AI-powered restoration, colorization, and animation in one click", creatingTask: "Creating task…", dragDrop: "Drag and drop your photo here", browse: "browse files", supportedFormats: "Supports JPEG, PNG, WebP (max 10 MB)" },
+      auth: { signInWith: "Sign in with Google", signInPrompt: "Sign in to start restoring your photos" },
     };
     return translations[namespace]?.[key] ?? key;
   },
@@ -58,6 +61,7 @@ import HomePage from "@/app/page";
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSessionStatus = "authenticated";
   global.fetch = jest.fn();
 });
 
@@ -112,13 +116,11 @@ describe("HomePage", () => {
       expect(screen.getByText("Creating task…")).toBeInTheDocument();
     });
 
-    // Upload zone should be disabled during task creation
     expect(screen.getByTestId("upload-zone")).toHaveAttribute(
       "data-disabled",
       "true"
     );
 
-    // Resolve to clean up
     resolveTask({ ok: true, json: async () => ({ taskId: "t1" }) });
     await waitFor(() => expect(mockPush).toHaveBeenCalled());
   });
@@ -137,7 +139,6 @@ describe("HomePage", () => {
       expect(screen.getByRole("alert")).toHaveTextContent("Quota exceeded");
     });
 
-    // Should not navigate
     expect(mockPush).not.toHaveBeenCalled();
   });
 
@@ -152,5 +153,21 @@ describe("HomePage", () => {
     await waitFor(() => {
       expect(screen.getByRole("alert")).toHaveTextContent("Network error");
     });
+  });
+
+  it("redirects to login when unauthenticated user tries to upload", () => {
+    mockSessionStatus = "unauthenticated";
+    render(<HomePage />);
+    fireEvent.click(screen.getByTestId("trigger-upload"));
+
+    expect(mockSignIn).toHaveBeenCalledWith("google");
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("shows login prompt when not authenticated", () => {
+    mockSessionStatus = "unauthenticated";
+    render(<HomePage />);
+    expect(screen.getByText("Sign in to start restoring your photos")).toBeInTheDocument();
+    expect(screen.getByText("Sign in with Google")).toBeInTheDocument();
   });
 });
