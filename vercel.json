@@ -2,13 +2,5 @@
   "crons": [
     { "path": "/api/worker/quota-reset", "schedule": "0 0 * * *" },
     { "path": "/api/worker/cleanup", "schedule": "0 0 * * *" }
-  ],
-  "redirects": [
-    {
-      "source": "/:path(.*)",
-      "has": [{ "type": "host", "value": "www.oldphotoliveai.com" }],
-      "destination": "https://oldphotoliveai.com/:path",
-      "permanent": true
-    }
   ]
 }
