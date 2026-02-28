@@ -13,17 +13,17 @@ export const MODELS = {
   colorization:
     "piddnad/ddcolor:ca494ba129e44e45f661d6ece83c4c98a9a7c774309beca01429b58fce8aa695",
   animation:
-    "stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
+    "bytedance/seedance-1-lite:78c9c4b0a7056c911b0483f58349b9931aff30d6465e7ab665e6c852949ce6d5",
 } as const;
 
 // Fixed animation parameters - readonly, not overridable (Req 16.2)
-// We keep 14 frames for cost, but tune motion/noise and playback smoothness for quality.
+// Keep animation short and stable for natural micro-expressions.
 export const ANIMATION_PARAMS = {
-  video_length: "14_frames_with_svd",
-  sizing_strategy: "maintain_aspect_ratio",
-  frames_per_second: 8,
-  motion_bucket_id: 96,
-  cond_aug: 0.015,
+  duration: 2,
+  fps: 24,
+  camera_fixed: true,
+  prompt:
+    "natural subtle smile, gentle blink, tiny head nod, preserve identity and facial details",
 } as const;
 
 export type ModelKey = keyof typeof MODELS;
@@ -54,10 +54,14 @@ export async function runModel(
   const client = getReplicateClient();
   const modelVersion = MODELS[modelKey];
 
+  // Some older call sites pass `input_image` (SVD-style). For Seedance, normalize to `image`.
+  const normalizedAnimationInput =
+    modelKey === "animation" ? normalizeAnimationInput(input) : input;
+
   // For animation model, merge fixed params with precedence over caller input.
   const finalInput =
     modelKey === "animation"
-      ? { ...input, ...ANIMATION_PARAMS }
+      ? { ...normalizedAnimationInput, ...ANIMATION_PARAMS }
       : { ...input };
 
   const output = await withRetry(
@@ -89,4 +93,18 @@ export async function runModel(
   throw new Error(
     `Unexpected output format from model "${modelKey}": ${String(output)}`
   );
+}
+
+function normalizeAnimationInput(
+  input: Record<string, unknown>
+): Record<string, unknown> {
+  const normalized = { ...input };
+  if (!("image" in normalized) && typeof normalized.input_image === "string") {
+    normalized.image = normalized.input_image;
+  }
+  // Avoid sending both keys to Seedance.
+  if ("input_image" in normalized) {
+    delete normalized.input_image;
+  }
+  return normalized;
 }

@@ -1,25 +1,17 @@
-import {
-  MODELS,
-  ANIMATION_PARAMS,
-  runModel,
-  getReplicateClient,
-} from "@/lib/replicate";
+import { MODELS, ANIMATION_PARAMS, runModel } from "@/lib/replicate";
 
-// ── Mock Replicate ──────────────────────────────────────────────────────────
 const runMock = jest.fn();
 
 jest.mock("replicate", () => {
   return jest.fn().mockImplementation(() => ({ run: runMock }));
 });
 
-// ── Mock config ─────────────────────────────────────────────────────────────
 jest.mock("@/lib/config", () => ({
   config: {
     replicate: { apiToken: "test-token" },
   },
 }));
 
-// ── Mock retry to avoid real delays in tests ────────────────────────────────
 jest.mock("@/lib/retry", () => ({
   withRetry: async <T>(fn: () => Promise<T>) => fn(),
 }));
@@ -28,12 +20,17 @@ beforeEach(() => {
   runMock.mockReset();
 });
 
-// ── MODELS constant ─────────────────────────────────────────────────────────
 describe("MODELS constant", () => {
   it("contains the three fixed model versions", () => {
-    expect(MODELS.restoration).toBe("sczhou/codeformer:cc4956dd26fa5a7185d5660cc9100fab1b8070a1d1654a8bb5eb6d443b020bb2");
-    expect(MODELS.colorization).toBe("piddnad/ddcolor:ca494ba129e44e45f661d6ece83c4c98a9a7c774309beca01429b58fce8aa695");
-    expect(MODELS.animation).toBe("stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438");
+    expect(MODELS.restoration).toBe(
+      "sczhou/codeformer:cc4956dd26fa5a7185d5660cc9100fab1b8070a1d1654a8bb5eb6d443b020bb2"
+    );
+    expect(MODELS.colorization).toBe(
+      "piddnad/ddcolor:ca494ba129e44e45f661d6ece83c4c98a9a7c774309beca01429b58fce8aa695"
+    );
+    expect(MODELS.animation).toBe(
+      "bytedance/seedance-1-lite:78c9c4b0a7056c911b0483f58349b9931aff30d6465e7ab665e6c852949ce6d5"
+    );
   });
 
   it("is readonly (frozen at type level via as const)", () => {
@@ -41,25 +38,25 @@ describe("MODELS constant", () => {
   });
 });
 
-// ── ANIMATION_PARAMS constant ───────────────────────────────────────────────
 describe("ANIMATION_PARAMS constant", () => {
   it("has the correct fixed values", () => {
     expect(ANIMATION_PARAMS).toEqual({
-      video_length: "14_frames_with_svd",
-      sizing_strategy: "maintain_aspect_ratio",
-      frames_per_second: 8,
-      motion_bucket_id: 96,
-      cond_aug: 0.015,
+      duration: 2,
+      fps: 24,
+      camera_fixed: true,
+      prompt:
+        "natural subtle smile, gentle blink, tiny head nod, preserve identity and facial details",
     });
   });
 });
 
-// ── runModel ────────────────────────────────────────────────────────────────
 describe("runModel", () => {
   it("calls replicate.run with the correct model version for restoration", async () => {
     runMock.mockResolvedValueOnce("https://output.url/restored.jpg");
 
-    const result = await runModel("restoration", { image: "https://input.url/photo.jpg" });
+    const result = await runModel("restoration", {
+      image: "https://input.url/photo.jpg",
+    });
 
     expect(result).toBe("https://output.url/restored.jpg");
     expect(runMock).toHaveBeenCalledWith(
@@ -71,7 +68,9 @@ describe("runModel", () => {
   it("calls replicate.run with the correct model version for colorization", async () => {
     runMock.mockResolvedValueOnce("https://output.url/colorized.jpg");
 
-    const result = await runModel("colorization", { image: "https://input.url/photo.jpg" });
+    const result = await runModel("colorization", {
+      image: "https://input.url/photo.jpg",
+    });
 
     expect(result).toBe("https://output.url/colorized.jpg");
     expect(runMock).toHaveBeenCalledWith(
@@ -83,27 +82,44 @@ describe("runModel", () => {
   it("merges ANIMATION_PARAMS for animation model with precedence", async () => {
     runMock.mockResolvedValueOnce("https://output.url/animation.mp4");
 
-    // Caller tries to override video_length — should be ignored
     const result = await runModel("animation", {
-      input_image: "https://input.url/photo.jpg",
-      video_length: "25_frames_with_svd",
+      image: "https://input.url/photo.jpg",
+      duration: 4,
     });
 
     expect(result).toBe("https://output.url/animation.mp4");
     expect(runMock).toHaveBeenCalledWith(
-      "stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
+      "bytedance/seedance-1-lite:78c9c4b0a7056c911b0483f58349b9931aff30d6465e7ab665e6c852949ce6d5",
       {
         input: {
-          input_image: "https://input.url/photo.jpg",
-          // ANIMATION_PARAMS override caller values
-          video_length: "14_frames_with_svd",
-          sizing_strategy: "maintain_aspect_ratio",
-          frames_per_second: 8,
-          motion_bucket_id: 96,
-          cond_aug: 0.015,
+          image: "https://input.url/photo.jpg",
+          duration: 2,
+          fps: 24,
+          camera_fixed: true,
+          prompt:
+            "natural subtle smile, gentle blink, tiny head nod, preserve identity and facial details",
         },
       }
     );
+  });
+
+  it("normalizes input_image to image for animation model", async () => {
+    runMock.mockResolvedValueOnce("https://output.url/animation.mp4");
+
+    await runModel("animation", {
+      input_image: "https://input.url/photo.jpg",
+    });
+
+    expect(runMock).toHaveBeenCalledWith(
+      "bytedance/seedance-1-lite:78c9c4b0a7056c911b0483f58349b9931aff30d6465e7ab665e6c852949ce6d5",
+      expect.objectContaining({
+        input: expect.objectContaining({
+          image: "https://input.url/photo.jpg",
+          duration: 2,
+        }),
+      })
+    );
+    expect(runMock.mock.calls[0][1].input).not.toHaveProperty("input_image");
   });
 
   it("does NOT merge ANIMATION_PARAMS for non-animation models", async () => {
@@ -112,7 +128,7 @@ describe("runModel", () => {
     await runModel("restoration", { img: "https://input.url/photo.jpg" });
 
     const callInput = runMock.mock.calls[0][1].input;
-    expect(callInput).not.toHaveProperty("video_length");
+    expect(callInput).not.toHaveProperty("duration");
   });
 
   it("handles array output (returns first element)", async () => {
@@ -124,7 +140,6 @@ describe("runModel", () => {
   });
 
   it("handles FileOutput objects (Replicate SDK v1.x)", async () => {
-    // FileOutput has toString() returning URL but JSON.stringify gives {}
     const fileOutput = { toString: () => "https://output.url/result.jpg" };
     runMock.mockResolvedValueOnce(fileOutput);
 
