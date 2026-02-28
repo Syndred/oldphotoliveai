@@ -8,6 +8,45 @@
 import type { RateLimitResult, RateLimitType } from "@/types";
 import { RATE_LIMITS } from "@/types";
 
+function parsePositiveInt(
+  value: string | undefined,
+  fallback: number
+): number {
+  if (!value) return fallback;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function getRateLimitConfig(type: RateLimitType): {
+  maxRequests: number;
+  windowMs: number;
+} {
+  const defaults = RATE_LIMITS[type];
+  if (type === "api") {
+    return {
+      maxRequests: parsePositiveInt(
+        process.env.RATE_LIMIT_API_MAX_REQUESTS,
+        defaults.maxRequests
+      ),
+      windowMs: parsePositiveInt(
+        process.env.RATE_LIMIT_API_WINDOW_MS,
+        defaults.windowMs
+      ),
+    };
+  }
+
+  return {
+    maxRequests: parsePositiveInt(
+      process.env.RATE_LIMIT_UPLOAD_MAX_REQUESTS,
+      defaults.maxRequests
+    ),
+    windowMs: parsePositiveInt(
+      process.env.RATE_LIMIT_UPLOAD_WINDOW_MS,
+      defaults.windowMs
+    ),
+  };
+}
+
 /**
  * Execute an Upstash Redis command via the REST API.
  * Works in both Node.js and Edge runtimes.
@@ -48,7 +87,7 @@ export async function checkRateLimit(
   identifier: string,
   type: RateLimitType
 ): Promise<RateLimitResult> {
-  const { maxRequests, windowMs } = RATE_LIMITS[type];
+  const { maxRequests, windowMs } = getRateLimitConfig(type);
 
   const windowId = Math.floor(Date.now() / windowMs);
   const key = `ratelimit:${type}:${identifier}:${windowId}`;

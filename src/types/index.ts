@@ -95,7 +95,7 @@ export const RESOLUTION_CONFIG = {
 
 export const RATE_LIMITS = {
   api: { maxRequests: 100, windowMs: 3_600_000 },
-  upload: { maxRequests: 10, windowMs: 3_600_000 },
+  upload: { maxRequests: 120, windowMs: 3_600_000 },
 } as const;
 
 export const PRIORITY_WEIGHTS = {

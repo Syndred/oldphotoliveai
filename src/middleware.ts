@@ -132,13 +132,19 @@ export async function middleware(request: NextRequest) {
       (typeof token.userId === "string" && token.userId) ||
       token.sub ||
       (typeof token.email === "string" && token.email) ||
-      "anonymous";
+      "";
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const clientIp =
+      request.ip ||
+      (forwardedFor ? forwardedFor.split(",")[0].trim() : "") ||
+      "unknown";
+    const rateLimitIdentifier = userId || `ip:${clientIp}`;
     const rateLimitType: RateLimitType = isUploadRoute(pathname)
       ? "upload"
       : "api";
 
     try {
-      const result = await checkRateLimit(userId, rateLimitType);
+      const result = await checkRateLimit(rateLimitIdentifier, rateLimitType);
 
       if (!result.allowed) {
         const retryAfter = Math.ceil((result.resetAt - Date.now()) / 1000);

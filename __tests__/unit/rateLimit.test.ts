@@ -104,16 +104,16 @@ describe("checkRateLimit", () => {
     expect(result.remaining).toBe(0);
   });
 
-  it("should deny request when count exceeds upload limit (10)", async () => {
-    mockRedisResponses(11);
+  it("should deny request when count exceeds upload limit", async () => {
+    mockRedisResponses(RATE_LIMITS.upload.maxRequests + 1);
     const checkRateLimit = (await import("@/lib/rateLimit")).checkRateLimit;
     const result = await checkRateLimit("user-1", "upload");
     expect(result.allowed).toBe(false);
     expect(result.remaining).toBe(0);
   });
 
-  it("should allow request at exactly the upload limit (10)", async () => {
-    mockRedisResponses(10);
+  it("should allow request at exactly the upload limit", async () => {
+    mockRedisResponses(RATE_LIMITS.upload.maxRequests);
     const checkRateLimit = (await import("@/lib/rateLimit")).checkRateLimit;
     const result = await checkRateLimit("user-1", "upload");
     expect(result.allowed).toBe(true);
