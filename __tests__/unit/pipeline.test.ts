@@ -66,6 +66,14 @@ function makeUser(overrides?: Partial<User>): User {
 const fakeImageBuffer = Buffer.from("fake-image-data");
 const fakeVideoBuffer = Buffer.from("fake-video-data");
 
+function mockSourceImageAccessible() {
+  mockFetch.mockResolvedValueOnce({
+    ok: true,
+    status: 200,
+    statusText: "OK",
+  });
+}
+
 function setupSuccessfulPipeline() {
   mockGetTask.mockResolvedValue(makeTask());
   mockGetUser.mockResolvedValue(makeUser());
@@ -79,6 +87,8 @@ function setupSuccessfulPipeline() {
     .mockResolvedValueOnce("https://replicate.com/restored.jpg")
     .mockResolvedValueOnce("https://replicate.com/colorized.jpg")
     .mockResolvedValueOnce("https://replicate.com/animation.mp4");
+
+  mockSourceImageAccessible();
 
   // fetch downloads the output from Replicate
   mockFetch
@@ -248,6 +258,7 @@ describe("executePipeline", () => {
       mockGetUser.mockResolvedValue(makeUser());
       mockGetR2CdnUrl.mockReturnValue("https://cdn.test.com/original.jpg");
       mockRunModel.mockRejectedValueOnce(new Error("GFPGAN model failed"));
+      mockSourceImageAccessible();
 
       await executePipeline(TASK_ID);
 
@@ -275,10 +286,12 @@ describe("executePipeline", () => {
         .mockResolvedValueOnce("https://replicate.com/restored.jpg")
         .mockRejectedValueOnce(new Error("DDColor model failed"));
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        arrayBuffer: () => Promise.resolve(fakeImageBuffer.buffer.slice(0)),
-      });
+      mockSourceImageAccessible();
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          arrayBuffer: () => Promise.resolve(fakeImageBuffer.buffer.slice(0)),
+        });
 
       await executePipeline(TASK_ID);
 
@@ -306,6 +319,7 @@ describe("executePipeline", () => {
         .mockResolvedValueOnce("https://replicate.com/colorized.jpg")
         .mockRejectedValueOnce(new Error("Animation model failed"));
 
+      mockSourceImageAccessible();
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
@@ -352,11 +366,13 @@ describe("executePipeline", () => {
       mockGetR2CdnUrl.mockReturnValue("https://cdn.test.com/original.jpg");
       mockRunModel.mockResolvedValueOnce("https://replicate.com/restored.jpg");
 
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        statusText: "Internal Server Error",
-      });
+      mockSourceImageAccessible();
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 500,
+          statusText: "Internal Server Error",
+        });
 
       await executePipeline(TASK_ID);
 
@@ -370,11 +386,32 @@ describe("executePipeline", () => {
       mockGetUser.mockResolvedValue(makeUser());
       mockGetR2CdnUrl.mockReturnValue("https://cdn.test.com/original.jpg");
       mockRunModel.mockRejectedValueOnce("string error");
+      mockSourceImageAccessible();
 
       await executePipeline(TASK_ID);
 
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
         errorMessage: "Processing failed. Please try again.",
+      });
+    });
+
+    it("marks task as failed with actionable message when source image URL is unreachable", async () => {
+      mockGetTask.mockResolvedValue(makeTask());
+      mockGetUser.mockResolvedValue(makeUser());
+      mockGetR2CdnUrl.mockReturnValue("https://cdn.test.com/original.jpg");
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: "Not Found",
+      });
+
+      await executePipeline(TASK_ID);
+
+      expect(mockRunModel).not.toHaveBeenCalled();
+      expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
+        errorMessage:
+          "Source image URL is unreachable (404 Not Found). Please re-upload or check R2 bucket/domain configuration.",
       });
     });
   });

@@ -39,6 +39,12 @@ describe("getR2CdnUrl", () => {
   it("handles keys without slashes", () => {
     expect(getR2CdnUrl("photo.png")).toBe("https://cdn.example.com/photo.png");
   });
+
+  it("URL-encodes unsafe filename characters", () => {
+    expect(getR2CdnUrl("tasks/abc/my image (1).jfif")).toBe(
+      "https://cdn.example.com/tasks/abc/my%20image%20(1).jfif"
+    );
+  });
 });
 
 // ── uploadToR2 ──────────────────────────────────────────────────────────────

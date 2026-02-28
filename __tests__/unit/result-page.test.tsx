@@ -137,6 +137,12 @@ describe("buildCdnUrl", () => {
     );
   });
 
+  it("URL-encodes unsafe filename characters", () => {
+    expect(buildCdnUrl("tasks/abc/my image (1).jfif")).toBe(
+      "https://cdn.example.com/tasks/abc/my%20image%20(1).jfif"
+    );
+  });
+
   it("handles missing domain gracefully", () => {
     delete process.env.NEXT_PUBLIC_R2_DOMAIN;
     expect(buildCdnUrl("key.jpg")).toBe("https:///key.jpg");

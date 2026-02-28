@@ -9,6 +9,10 @@ import {
 } from "@aws-sdk/client-s3";
 import { config } from "./config";
 
+function encodeObjectKeyForUrl(key: string): string {
+  return key.split("/").map((segment) => encodeURIComponent(segment)).join("/");
+}
+
 /**
  * Lazily-initialized S3-compatible client for Cloudflare R2.
  * Uses a getter so the client is only created when first accessed
@@ -57,11 +61,13 @@ export async function uploadToR2(
  * Format: https://{NEXT_PUBLIC_R2_DOMAIN}/{key}
  */
 export function getR2CdnUrl(key: string): string {
-  const domain = config.r2.publicDomain;
+  const domain = config.r2.publicDomain.replace(/\/+$/, "");
+  const encodedKey = encodeObjectKeyForUrl(key);
+
   if (domain.startsWith("http://") || domain.startsWith("https://")) {
-    return `${domain}/${key}`;
+    return `${domain}/${encodedKey}`;
   }
-  return `https://${domain}/${key}`;
+  return `https://${domain}/${encodedKey}`;
 }
 
 /**

@@ -21,6 +21,31 @@ async function downloadBuffer(url: string): Promise<Buffer> {
 }
 
 /**
+ * Verify source image URL is reachable before passing it to model APIs.
+ * Gives a deterministic, actionable error when bucket/domain config is wrong.
+ */
+async function assertSourceImageAccessible(url: string): Promise<void> {
+  const headResponse = await fetch(url, { method: "HEAD" });
+  if (headResponse.ok) return;
+
+  // Some origins may not support HEAD. Fall back to a tiny ranged GET probe.
+  if (headResponse.status === 405 || headResponse.status === 501) {
+    const probeResponse = await fetch(url, {
+      method: "GET",
+      headers: { Range: "bytes=0-0" },
+    });
+    if (probeResponse.ok) return;
+    throw new Error(
+      `SOURCE_IMAGE_UNREACHABLE:${probeResponse.status} ${probeResponse.statusText}`.trim()
+    );
+  }
+
+  throw new Error(
+    `SOURCE_IMAGE_UNREACHABLE:${headResponse.status} ${headResponse.statusText}`.trim()
+  );
+}
+
+/**
  * Determine whether a user tier is "free" (watermark + low res)
  * or "paid" (no watermark + high res).
  */
@@ -79,6 +104,7 @@ export async function executePipeline(taskId: string): Promise<void> {
     await updateTaskStatus(taskId, "restoring");
 
     const originalCdnUrl = getR2CdnUrl(task.originalImageKey);
+    await assertSourceImageAccessible(originalCdnUrl);
     const restoredOutputUrl = await runModel("restoration", { img: originalCdnUrl });
 
     // Download, apply tier settings, upload
@@ -122,6 +148,11 @@ export async function executePipeline(taskId: string): Promise<void> {
       errorMessage = "Service is temporarily busy. Please try again in a moment.";
     } else if (rawMessage.includes("422") || rawMessage.includes("Invalid version")) {
       errorMessage = "AI model configuration error. Please contact support.";
+    } else if (rawMessage.startsWith("SOURCE_IMAGE_UNREACHABLE:")) {
+      const detail = rawMessage.replace("SOURCE_IMAGE_UNREACHABLE:", "").trim();
+      const suffix = detail ? ` (${detail})` : "";
+      errorMessage =
+        `Source image URL is unreachable${suffix}. Please re-upload or check R2 bucket/domain configuration.`;
     } else if (rawMessage.includes("Failed to download")) {
       errorMessage = "Failed to download intermediate result. Please try again.";
     } else if (rawMessage.includes("Task not found") || rawMessage.includes("User not found")) {
