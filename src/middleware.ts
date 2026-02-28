@@ -85,6 +85,7 @@ function detectLocale(request: NextRequest): Locale {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  let rateLimitBypassed = false;
 
   // ── Locale Detection & Cookie Persistence ─────────────────────────────
   const locale = detectLocale(request);
@@ -136,21 +137,27 @@ export async function middleware(request: NextRequest) {
       ? "upload"
       : "api";
 
-    const result = await checkRateLimit(userId, rateLimitType);
+    try {
+      const result = await checkRateLimit(userId, rateLimitType);
 
-    if (!result.allowed) {
-      const retryAfter = Math.ceil((result.resetAt - Date.now()) / 1000);
-      return NextResponse.json(
-        { error: getErrorMessage("rateLimited", locale) },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(Math.max(1, retryAfter)),
-            "X-RateLimit-Remaining": String(result.remaining),
-            "X-RateLimit-Reset": String(result.resetAt),
-          },
-        }
-      );
+      if (!result.allowed) {
+        const retryAfter = Math.ceil((result.resetAt - Date.now()) / 1000);
+        return NextResponse.json(
+          { error: getErrorMessage("rateLimited", locale) },
+          {
+            status: 429,
+            headers: {
+              "Retry-After": String(Math.max(1, retryAfter)),
+              "X-RateLimit-Remaining": String(result.remaining),
+              "X-RateLimit-Reset": String(result.resetAt),
+            },
+          }
+        );
+      }
+    } catch (error) {
+      // Fail-open: rate limiter outage should not break core APIs like uploads.
+      rateLimitBypassed = true;
+      console.error("Rate limit check failed, bypassing:", error);
     }
   }
 
@@ -161,6 +168,9 @@ export async function middleware(request: NextRequest) {
       maxAge: 365 * 24 * 60 * 60,
       sameSite: "lax",
     });
+  }
+  if (rateLimitBypassed) {
+    response.headers.set("X-RateLimit-Bypass", "1");
   }
   return response;
 }
