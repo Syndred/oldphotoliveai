@@ -149,17 +149,31 @@
       "cta": "Try It Free"
     },
     "showcase": {
-      "title": "See the Magic",
-      "subtitle": "Hover to compare before and after results",
-      "items": {
-        "label1": "AI Restoration",
-        "label2": "Smart Colorization",
-        "label3": "Full Enhancement"
+      "title": "Real Results by Scenario",
+      "categories": {
+        "restoration": {
+          "title": "AI Restoration",
+          "subtitle": "Repair damage, remove scratches, and recover facial details"
+        },
+        "colorization": {
+          "title": "AI Colorization",
+          "subtitle": "Turn black-and-white memories into natural, vivid color"
+        }
+      },
+      "controls": {
+        "previous": "Previous",
+        "next": "Next",
+        "viewMore": "View More"
       }
     },
     "videoShowcase": {
-      "title": "See It in Motion",
-      "subtitle": "Watch how AI brings old photos to life with realistic animation"
+      "title": "Photo Animation Cases",
+      "subtitle": "Browse hand-picked animation examples from restored photos.",
+      "controls": {
+        "previous": "Previous",
+        "next": "Next",
+        "viewMore": "View More"
+      }
     },
     "features": {
       "title": "Powerful AI Features",

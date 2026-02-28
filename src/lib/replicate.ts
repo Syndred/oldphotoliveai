@@ -5,21 +5,25 @@ import Replicate from "replicate";
 import { config } from "./config";
 import { withRetry } from "./retry";
 
-// Fixed model versions — readonly, not overridable (Req 16.1)
+// Fixed model versions - readonly, not overridable (Req 16.1)
+// Balanced for better quality while keeping cost under control.
 export const MODELS = {
-  restoration: "tencentarc/gfpgan:0fbacf7afc6c144e5be9767cff80f25aff23e52b0708f17e20f9879b2f21516c",
-  colorization: "piddnad/ddcolor:ca494ba129e44e45f661d6ece83c4c98a9a7c774309beca01429b58fce8aa695",
-  animation: "stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
+  restoration:
+    "sczhou/codeformer:cc4956dd26fa5a7185d5660cc9100fab1b8070a1d1654a8bb5eb6d443b020bb2",
+  colorization:
+    "piddnad/ddcolor:ca494ba129e44e45f661d6ece83c4c98a9a7c774309beca01429b58fce8aa695",
+  animation:
+    "stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
 } as const;
 
-// Fixed animation parameters — readonly, not overridable (Req 16.2)
-// Uses stability-ai/stable-video-diffusion params
+// Fixed animation parameters - readonly, not overridable (Req 16.2)
+// We keep 14 frames for cost, but tune motion/noise and playback smoothness for quality.
 export const ANIMATION_PARAMS = {
   video_length: "14_frames_with_svd",
   sizing_strategy: "maintain_aspect_ratio",
-  frames_per_second: 6,
-  motion_bucket_id: 127,
-  cond_aug: 0.02,
+  frames_per_second: 8,
+  motion_bucket_id: 96,
+  cond_aug: 0.015,
 } as const;
 
 export type ModelKey = keyof typeof MODELS;
@@ -50,7 +54,7 @@ export async function runModel(
   const client = getReplicateClient();
   const modelVersion = MODELS[modelKey];
 
-  // For animation model, merge fixed params with precedence over caller input
+  // For animation model, merge fixed params with precedence over caller input.
   const finalInput =
     modelKey === "animation"
       ? { ...input, ...ANIMATION_PARAMS }

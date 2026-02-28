@@ -31,7 +31,7 @@ beforeEach(() => {
 // ── MODELS constant ─────────────────────────────────────────────────────────
 describe("MODELS constant", () => {
   it("contains the three fixed model versions", () => {
-    expect(MODELS.restoration).toBe("tencentarc/gfpgan:0fbacf7afc6c144e5be9767cff80f25aff23e52b0708f17e20f9879b2f21516c");
+    expect(MODELS.restoration).toBe("sczhou/codeformer:cc4956dd26fa5a7185d5660cc9100fab1b8070a1d1654a8bb5eb6d443b020bb2");
     expect(MODELS.colorization).toBe("piddnad/ddcolor:ca494ba129e44e45f661d6ece83c4c98a9a7c774309beca01429b58fce8aa695");
     expect(MODELS.animation).toBe("stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438");
   });
@@ -47,9 +47,9 @@ describe("ANIMATION_PARAMS constant", () => {
     expect(ANIMATION_PARAMS).toEqual({
       video_length: "14_frames_with_svd",
       sizing_strategy: "maintain_aspect_ratio",
-      frames_per_second: 6,
-      motion_bucket_id: 127,
-      cond_aug: 0.02,
+      frames_per_second: 8,
+      motion_bucket_id: 96,
+      cond_aug: 0.015,
     });
   });
 });
@@ -59,12 +59,12 @@ describe("runModel", () => {
   it("calls replicate.run with the correct model version for restoration", async () => {
     runMock.mockResolvedValueOnce("https://output.url/restored.jpg");
 
-    const result = await runModel("restoration", { img: "https://input.url/photo.jpg" });
+    const result = await runModel("restoration", { image: "https://input.url/photo.jpg" });
 
     expect(result).toBe("https://output.url/restored.jpg");
     expect(runMock).toHaveBeenCalledWith(
-      "tencentarc/gfpgan:0fbacf7afc6c144e5be9767cff80f25aff23e52b0708f17e20f9879b2f21516c",
-      { input: { img: "https://input.url/photo.jpg" } }
+      "sczhou/codeformer:cc4956dd26fa5a7185d5660cc9100fab1b8070a1d1654a8bb5eb6d443b020bb2",
+      { input: { image: "https://input.url/photo.jpg" } }
     );
   });
 
@@ -98,9 +98,9 @@ describe("runModel", () => {
           // ANIMATION_PARAMS override caller values
           video_length: "14_frames_with_svd",
           sizing_strategy: "maintain_aspect_ratio",
-          frames_per_second: 6,
-          motion_bucket_id: 127,
-          cond_aug: 0.02,
+          frames_per_second: 8,
+          motion_bucket_id: 96,
+          cond_aug: 0.015,
         },
       }
     );

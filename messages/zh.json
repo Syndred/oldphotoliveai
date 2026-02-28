@@ -124,14 +124,14 @@
     "retryFailed": "重试失败",
     "historyLoadFailed": "加载历史记录失败",
     "taskCreateFailed": "创建任务失败",
-    "uploadCancelled": "\u4e0a\u4f20\u5df2\u53d6\u6d88\u3002",
-    "paymentUnavailable": "\u652f\u4ed8\u529f\u80fd\u6682\u65f6\u4e0d\u53ef\u7528\u3002",
-    "processingFailedGeneric": "\u5904\u7406\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002",
-    "sourceImageUnreachable": "\u6e90\u56fe\u7247\u65e0\u6cd5\u8bbf\u95ee\uff0c\u8bf7\u91cd\u65b0\u4e0a\u4f20\u540e\u518d\u8bd5\u3002",
-    "modelConfigError": "AI \u6a21\u578b\u914d\u7f6e\u5f02\u5e38\uff0c\u8bf7\u8054\u7cfb\u5ba2\u670d\u3002",
-    "intermediateDownloadFailed": "\u4e2d\u95f4\u7ed3\u679c\u4e0b\u8f7d\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002",
-    "taskIdsRequired": "\u8bf7\u81f3\u5c11\u9009\u62e9\u4e00\u6761\u8bb0\u5f55\u3002",
-    "taskBatchTooLarge": "\u5355\u6b21\u6700\u591a\u53ef\u5220\u9664 50 \u6761\u8bb0\u5f55\u3002"
+    "uploadCancelled": "上传已取消。",
+    "paymentUnavailable": "支付功能暂时不可用。",
+    "processingFailedGeneric": "处理失败，请稍后重试。",
+    "sourceImageUnreachable": "源图片无法访问，请重新上传后再试。",
+    "modelConfigError": "AI 模型配置异常，请联系客服。",
+    "intermediateDownloadFailed": "中间结果下载失败，请稍后重试。",
+    "taskIdsRequired": "请至少选择一条记录。",
+    "taskBatchTooLarge": "单次最多可删除 50 条记录。"
   },
   "auth": {
     "signInWith": "使用 Google 登录",
@@ -149,17 +149,31 @@
       "cta": "免费试用"
     },
     "showcase": {
-      "title": "见证奇迹",
-      "subtitle": "悬停鼠标对比修复前后效果",
-      "items": {
-        "label1": "AI 修复",
-        "label2": "智能上色",
-        "label3": "完整增强"
+      "title": "按场景查看真实效果",
+      "categories": {
+        "restoration": {
+          "title": "AI修复",
+          "subtitle": "修复破损、划痕和模糊细节"
+        },
+        "colorization": {
+          "title": "AI上色",
+          "subtitle": "将黑白老照片还原为自然彩色"
+        }
+      },
+      "controls": {
+        "previous": "上一条",
+        "next": "下一条",
+        "viewMore": "查看更多"
       }
     },
     "videoShowcase": {
-      "title": "动态效果展示",
-      "subtitle": "看 AI 如何让老照片栩栩如生"
+      "title": "照片动效案例",
+      "subtitle": "精选修复老照片的动效示例，点击查看更多了解全部案例。",
+      "controls": {
+        "previous": "上一条",
+        "next": "下一条",
+        "viewMore": "查看更多"
+      }
     },
     "features": {
       "title": "强大的 AI 功能",

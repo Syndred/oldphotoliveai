@@ -200,6 +200,7 @@ describe("executePipeline", () => {
 
       expect(mockRunModel.mock.calls[1][1]).toEqual({
         image: `https://cdn.test.com/tasks/${TASK_ID}/restored.jpg`,
+        model_size: "large",
       });
     });
 

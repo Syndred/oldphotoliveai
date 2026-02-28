@@ -74,9 +74,9 @@ async function applyImageTierSettings(
  *
  * Steps:
  * 1. Get task and user from Redis
- * 2. Restoration (GFPGAN) → apply tier settings → upload to R2
+ * 2. Restoration (CodeFormer) → apply tier settings → upload to R2
  * 3. Colorization (DDColor) → apply tier settings → upload to R2
- * 4. Animation (Animate Diffusion) → upload to R2
+ * 4. Animation (Stable Video Diffusion) → upload to R2
  * 5. Mark task as completed
  *
  * If any step fails, the task is marked as "failed" with the error message
@@ -105,7 +105,13 @@ export async function executePipeline(taskId: string): Promise<void> {
 
     const originalCdnUrl = getR2CdnUrl(task.originalImageKey);
     await assertSourceImageAccessible(originalCdnUrl);
-    const restoredOutputUrl = await runModel("restoration", { img: originalCdnUrl });
+    const restoredOutputUrl = await runModel("restoration", {
+      image: originalCdnUrl,
+      upscale: 2,
+      face_upsample: true,
+      background_enhance: true,
+      codeformer_fidelity: 0.6,
+    });
 
     // Download, apply tier settings, upload
     const restoredBuffer = await downloadBuffer(restoredOutputUrl);
@@ -117,7 +123,10 @@ export async function executePipeline(taskId: string): Promise<void> {
     // ── Step 2: Colorization ────────────────────────────────────────────
     await updateTaskStatus(taskId, "colorizing", { restoredImageKey: restoredKey });
 
-    const colorizedOutputUrl = await runModel("colorization", { image: restoredCdnUrl });
+    const colorizedOutputUrl = await runModel("colorization", {
+      image: restoredCdnUrl,
+      model_size: "large",
+    });
 
     // Download, apply tier settings, upload
     const colorizedBuffer = await downloadBuffer(colorizedOutputUrl);
