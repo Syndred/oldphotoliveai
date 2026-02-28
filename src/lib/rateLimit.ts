@@ -55,10 +55,14 @@ export async function checkRateLimit(
   const expireSeconds = Math.floor(windowMs / 1000) + 1;
 
   // Increment the counter for the current window
-  const count = (await redisCommand(["INCR", key])) as number;
+  const countRaw = await redisCommand(["INCR", key]);
+  const count = Number(countRaw);
+  if (!Number.isFinite(count)) {
+    throw new Error(`Unexpected INCR response from Upstash: ${String(countRaw)}`);
+  }
 
   // Set expiration on first request in this window
-  if (count === 1) {
+  if (count <= 1) {
     await redisCommand(["EXPIRE", key, expireSeconds]);
   }
 

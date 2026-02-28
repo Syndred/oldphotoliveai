@@ -2,8 +2,9 @@
 
 import { useTranslations } from "next-intl";
 import VideoPlayer from "@/components/VideoPlayer";
+import { buildCdnUrl } from "@/lib/url";
 
-const VIDEO_URL = "https://pub-1d53303d843e4e19a071284a6933ffb6.r2.dev/tasks/a858f503-a2a1-4d2e-b65e-ebec5d0369db/animation.mp4";
+const VIDEO_URL = buildCdnUrl("showcase/animation.mp4");
 
 export default function VideoShowcaseSection() {
   const t = useTranslations("landing.videoShowcase");

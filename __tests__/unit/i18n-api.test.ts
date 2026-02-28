@@ -110,7 +110,8 @@ describe("getErrorMessage", () => {
       "quotaExceeded", "creditsExpired", "rateLimited",
       "taskNotFound", "cannotCancel", "unauthorized",
       "checkoutFailed", "retryFailed", "historyLoadFailed",
-      "taskCreateFailed",
+      "taskCreateFailed", "sourceImageUnreachable",
+      "modelConfigError", "intermediateDownloadFailed",
     ];
     for (const key of keys) {
       const msg = getErrorMessage(key, "en");
@@ -124,7 +125,8 @@ describe("getErrorMessage", () => {
       "quotaExceeded", "creditsExpired", "rateLimited",
       "taskNotFound", "cannotCancel", "unauthorized",
       "checkoutFailed", "retryFailed", "historyLoadFailed",
-      "taskCreateFailed",
+      "taskCreateFailed", "sourceImageUnreachable",
+      "modelConfigError", "intermediateDownloadFailed",
     ];
     for (const key of keys) {
       const msg = getErrorMessage(key, "zh");

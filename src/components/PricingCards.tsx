@@ -59,6 +59,7 @@ export default function PricingCards() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const t = useTranslations("pricing");
+  const tErrors = useTranslations("errors");
 
   async function handleCheckout(plan: "pay_as_you_go" | "professional") {
     setLoadingPlan(plan);
@@ -73,15 +74,15 @@ export default function PricingCards() {
       if (!res.ok) {
         // Show friendly message for unavailable payment feature
         if (res.status === 503) {
-          throw new Error("Payment feature is coming soon. Please check back later!");
+          throw new Error(tErrors("paymentUnavailable"));
         }
-        throw new Error(data.error ?? "Checkout failed");
+        throw new Error(data.error ?? tErrors("checkoutFailed"));
       }
       if (data.url) {
         window.location.href = data.url;
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : tErrors("checkoutFailed"));
     } finally {
       setLoadingPlan(null);
     }

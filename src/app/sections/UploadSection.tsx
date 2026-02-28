@@ -13,6 +13,7 @@ export default function UploadSection() {
   const [error, setError] = useState("");
   const t = useTranslations("upload");
   const tAuth = useTranslations("auth");
+  const tErrors = useTranslations("errors");
 
   async function handleUpload(imageKey: string) {
     // If not logged in, redirect to login
@@ -33,13 +34,15 @@ export default function UploadSection() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(data?.error || `Failed to create task (${res.status})`);
+        throw new Error(data?.error || tErrors("taskCreateFailed"));
       }
 
       const { taskId } = await res.json();
       router.push(`/result/${taskId}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(
+        err instanceof Error ? err.message : tErrors("taskCreateFailed")
+      );
       setIsCreating(false);
     }
   }

@@ -16,7 +16,14 @@ jest.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string, params?: Record<string, unknown>) => {
     const translations: Record<string, Record<string, string>> = {
       upload: { dragDrop: "Drag and drop your photo here", browse: "browse files", supportedFormats: "Supports JPEG, PNG, WebP (max 10 MB)", uploading: "Uploading… {progress}%", creatingTask: "Creating task…" },
-      errors: { fileTypeNotSupported: "Please upload a JPEG, PNG, or WebP image", fileTooLarge: "File size exceeds the 10MB limit" },
+      errors: {
+        fileTypeNotSupported: "Please upload a JPEG, PNG, or WebP image",
+        fileTooLarge: "File size exceeds the 10MB limit",
+        uploadFailed: "Upload failed. Please try again later.",
+        invalidResponse: "Invalid server response",
+        networkError: "Network error. Please check your connection.",
+        uploadCancelled: "Upload was cancelled.",
+      },
     };
     let result = translations[namespace]?.[key] ?? key;
     if (params) {

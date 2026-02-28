@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
@@ -33,11 +33,54 @@ export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
   const t = useTranslations("upload");
   const tErrors = useTranslations("errors");
 
+  const uploadWithProgress = useCallback(
+    (formData: FormData, onProgress: (pct: number) => void): Promise<string> =>
+      new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            onProgress(Math.round((e.loaded / e.total) * 100));
+          }
+        });
+
+        xhr.addEventListener("load", () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              resolve(data.key);
+            } catch {
+              reject(new Error(tErrors("invalidResponse")));
+            }
+            return;
+          }
+
+          try {
+            const data = JSON.parse(xhr.responseText);
+            reject(new Error(data.error || tErrors("uploadFailed")));
+          } catch {
+            reject(new Error(tErrors("uploadFailed")));
+          }
+        });
+
+        xhr.addEventListener("error", () => {
+          reject(new Error(tErrors("networkError")));
+        });
+
+        xhr.addEventListener("abort", () => {
+          reject(new Error(tErrors("uploadCancelled")));
+        });
+
+        xhr.open("POST", "/api/upload");
+        xhr.send(formData);
+      }),
+    [tErrors]
+  );
+
   const handleFile = useCallback(
     async (file: File) => {
       if (disabled) return;
 
-      // Client-side pre-validation
       const validationError = validateClientFile(file, tErrors);
       if (validationError) {
         setState("error");
@@ -53,18 +96,18 @@ export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
         const formData = new FormData();
         formData.append("file", file);
 
-        const url = await uploadWithProgress(formData, setProgress);
+        const key = await uploadWithProgress(formData, setProgress);
         setState("idle");
         setProgress(0);
-        onUpload(url);
+        onUpload(key);
       } catch (err) {
         setState("error");
         setErrorMsg(
-          err instanceof Error ? err.message : "Upload failed. Please try again."
+          err instanceof Error ? err.message : tErrors("uploadFailed")
         );
       }
     },
-    [disabled, onUpload, tErrors]
+    [disabled, onUpload, tErrors, uploadWithProgress]
   );
 
   const onDragOver = useCallback(
@@ -98,7 +141,6 @@ export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) handleFile(file);
-      // Reset so the same file can be re-selected
       e.target.value = "";
     },
     [handleFile]
@@ -134,7 +176,6 @@ export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
         }
       `}
     >
-      {/* Cloud upload icon */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
         className={`h-12 w-12 transition-transform duration-300 ${
@@ -201,50 +242,4 @@ export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
       />
     </div>
   );
-}
-
-// ── Upload helper with progress tracking ────────────────────────────────────
-
-function uploadWithProgress(
-  formData: FormData,
-  onProgress: (pct: number) => void
-): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-
-    xhr.upload.addEventListener("progress", (e) => {
-      if (e.lengthComputable) {
-        onProgress(Math.round((e.loaded / e.total) * 100));
-      }
-    });
-
-    xhr.addEventListener("load", () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        try {
-          const data = JSON.parse(xhr.responseText);
-          resolve(data.key);
-        } catch {
-          reject(new Error("Invalid server response"));
-        }
-      } else {
-        try {
-          const data = JSON.parse(xhr.responseText);
-          reject(new Error(data.error || "Upload failed"));
-        } catch {
-          reject(new Error(`Upload failed (${xhr.status})`));
-        }
-      }
-    });
-
-    xhr.addEventListener("error", () => {
-      reject(new Error("Network error. Please check your connection."));
-    });
-
-    xhr.addEventListener("abort", () => {
-      reject(new Error("Upload cancelled"));
-    });
-
-    xhr.open("POST", "/api/upload");
-    xhr.send(formData);
-  });
 }

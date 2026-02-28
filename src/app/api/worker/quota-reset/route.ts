@@ -40,11 +40,15 @@ export async function POST(request: Request): Promise<NextResponse> {
  * Vercel cron sends GET requests. We verify using CRON_SECRET.
  */
 export async function GET(request: Request): Promise<NextResponse> {
+  const locale = getRequestLocale(request);
   const authHeader = request.headers.get("Authorization");
   const cronSecret = process.env.CRON_SECRET;
 
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: getErrorMessage("unauthorized", locale) },
+      { status: 401 }
+    );
   }
 
   try {
@@ -56,7 +60,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   } catch (error) {
     console.error("Quota reset failed:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: getErrorMessage("serviceBusy", locale) },
       { status: 500 }
     );
   }

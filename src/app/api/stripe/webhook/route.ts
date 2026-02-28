@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
   // Check if Stripe is enabled
   if (!config.stripe.isEnabled) {
     return NextResponse.json(
-      { error: "Payment feature is currently unavailable" },
+      { error: getErrorMessage("paymentUnavailable", locale) },
       { status: 503 }
     );
   }

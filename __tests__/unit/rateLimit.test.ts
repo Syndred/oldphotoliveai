@@ -23,6 +23,18 @@ function mockRedisResponses(incrResult: number) {
     });
 }
 
+function mockRedisResponsesRaw(incrResult: unknown) {
+  fetchSpy
+    .mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ result: incrResult }),
+    })
+    .mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ result: 1 }),
+    });
+}
+
 beforeEach(() => {
   fetchSpy = jest.spyOn(global, "fetch").mockImplementation();
 });
@@ -58,6 +70,15 @@ describe("checkRateLimit", () => {
     expect(expireBody[0]).toBe("EXPIRE");
     const expireSeconds = Math.floor(RATE_LIMITS.api.windowMs / 1000) + 1;
     expect(expireBody[2]).toBe(expireSeconds);
+  });
+
+  it("should handle string INCR response and still call EXPIRE", async () => {
+    mockRedisResponsesRaw("1");
+    const checkRateLimit = (await import("@/lib/rateLimit")).checkRateLimit;
+    await checkRateLimit("user-1", "api");
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    const expireBody = JSON.parse(fetchSpy.mock.calls[1][1].body);
+    expect(expireBody[0]).toBe("EXPIRE");
   });
 
   it("should NOT call EXPIRE on subsequent requests", async () => {

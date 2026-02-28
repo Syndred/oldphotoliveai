@@ -8,6 +8,7 @@ import ProgressIndicator from "@/components/ProgressIndicator";
 import BeforeAfterCompare from "@/components/BeforeAfterCompare";
 import VideoPlayer from "@/components/VideoPlayer";
 import { buildCdnUrl } from "@/lib/url";
+import { resolveTaskErrorMessage } from "@/lib/task-error";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -30,6 +31,7 @@ export default function ResultPage() {
   const tResult = useTranslations("result");
   const tProcessing = useTranslations("processing");
   const tCommon = useTranslations("common");
+  const tErrors = useTranslations("errors");
 
   // Fetch user tier for watermark decision
   useEffect(() => {
@@ -46,7 +48,9 @@ export default function ResultPage() {
     if (!taskId) return;
 
     fetch(`/api/tasks/${taskId}/status`)
-      .then((res) => res.ok ? res.json() : Promise.reject(new Error("Failed to load task")))
+      .then((res) =>
+        res.ok ? res.json() : Promise.reject(new Error(tErrors("taskNotFound")))
+      )
       .then((data) => {
         if (data.status === "completed" && data.colorizedImageKey && data.animationVideoKey) {
           setResult({
@@ -55,7 +59,7 @@ export default function ResultPage() {
             animationVideoKey: data.animationVideoKey,
           });
         } else if (data.status === "failed") {
-          setError(data.errorMessage || "Processing failed");
+          setError(resolveTaskErrorMessage(data.errorMessage, tErrors));
         } else {
           // Task is still processing — need SSE polling
           setNeedsPolling(true);
@@ -80,10 +84,13 @@ export default function ResultPage() {
     [],
   );
 
-  const handleError = useCallback((msg: string) => {
-    setError(msg);
-    setResult(null);
-  }, []);
+  const handleError = useCallback(
+    (msg: string) => {
+      setError(resolveTaskErrorMessage(msg, tErrors));
+      setResult(null);
+    },
+    [tErrors],
+  );
 
   async function handleRetry() {
     setRetrying(true);
@@ -91,12 +98,12 @@ export default function ResultPage() {
       const res = await fetch(`/api/tasks/${taskId}/retry`, { method: "POST" });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        throw new Error(body?.error || "Retry failed");
+        throw new Error(body?.error || tErrors("retryFailed"));
       }
       // Reload to reconnect SSE with fresh state
       window.location.reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Retry failed");
+      setError(err instanceof Error ? err.message : tErrors("retryFailed"));
     } finally {
       setRetrying(false);
     }

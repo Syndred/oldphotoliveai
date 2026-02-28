@@ -26,6 +26,10 @@ jest.mock("next-intl", () => ({
         payFeature1: "5 credits", payFeature2: "High resolution (1920×1080)", payFeature3: "No watermark",
         proFeature1: "Unlimited photos", proFeature2: "High resolution (1920×1080)", proFeature3: "No watermark", proFeature4: "Priority processing",
       },
+      errors: {
+        checkoutFailed: "Checkout failed",
+        paymentUnavailable: "Payment feature is currently unavailable.",
+      },
       nav: { home: "Home", history: "History", pricing: "Pricing", login: "Sign In", logout: "Sign Out" },
     };
     return translations[namespace]?.[key] ?? key;

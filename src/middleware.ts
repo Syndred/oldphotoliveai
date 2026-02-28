@@ -6,6 +6,7 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { checkRateLimit } from "@/lib/rateLimit";
 import type { RateLimitType } from "@/types";
+import { getErrorMessage } from "@/lib/i18n-api";
 import { locales, defaultLocale, LOCALE_COOKIE } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
 
@@ -117,7 +118,7 @@ export async function middleware(request: NextRequest) {
       // API routes get 401, page routes get redirected
       if (pathname.startsWith("/api/")) {
         return NextResponse.json(
-          { error: "Unauthorized" },
+          { error: getErrorMessage("unauthorized", locale) },
           { status: 401 }
         );
       }
@@ -126,7 +127,11 @@ export async function middleware(request: NextRequest) {
     }
 
     // ── Rate Limiting ───────────────────────────────────────────────────
-    const userId = token.sub ?? "anonymous";
+    const userId =
+      (typeof token.userId === "string" && token.userId) ||
+      token.sub ||
+      (typeof token.email === "string" && token.email) ||
+      "anonymous";
     const rateLimitType: RateLimitType = isUploadRoute(pathname)
       ? "upload"
       : "api";
@@ -136,7 +141,7 @@ export async function middleware(request: NextRequest) {
     if (!result.allowed) {
       const retryAfter = Math.ceil((result.resetAt - Date.now()) / 1000);
       return NextResponse.json(
-        { error: "Too many requests" },
+        { error: getErrorMessage("rateLimited", locale) },
         {
           status: 429,
           headers: {

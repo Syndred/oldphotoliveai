@@ -17,6 +17,7 @@ export default function HistoryPage() {
   const [deleting, setDeleting] = useState(false);
   const t = useTranslations("history");
   const tAuth = useTranslations("auth");
+  const tErrors = useTranslations("errors");
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -40,7 +41,7 @@ export default function HistoryPage() {
         const res = await fetch("/api/history");
         if (!res.ok) {
           const body = await res.json().catch(() => null);
-          throw new Error(body?.error ?? "Failed to load history");
+          throw new Error(body?.error ?? tErrors("historyLoadFailed"));
         }
         const data = await res.json();
         const taskList = data.tasks ?? [];
@@ -50,7 +51,9 @@ export default function HistoryPage() {
           sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data: taskList, ts: Date.now() }));
         } catch { /* quota exceeded — ignore */ }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load history");
+        setError(
+          err instanceof Error ? err.message : tErrors("historyLoadFailed")
+        );
       } finally {
         setLoading(false);
       }

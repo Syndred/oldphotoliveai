@@ -29,6 +29,7 @@ jest.mock("next-intl", () => ({
         "status.animating": "Animating", "status.completed": "Completed",
         "status.failed": "Failed", "status.cancelled": "Cancelled",
       },
+      errors: { historyLoadFailed: "Failed to load history" },
       nav: { home: "Home", history: "History", pricing: "Pricing", login: "Sign In", logout: "Sign Out" },
       auth: { signInWith: "Sign in with Google", signInPrompt: "Sign in to start restoring your photos" },
     };

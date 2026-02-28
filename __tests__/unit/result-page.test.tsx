@@ -27,6 +27,7 @@ jest.mock("next-intl", () => ({
       result: { beforeAfter: "Before & After", animation: "Animation", before: "Before", after: "After", downloadImage: "Download Image", downloadVideo: "Download Video", failed: "Processing Failed", retryMessage: "Something went wrong. Please try again.", retrying: "Retrying…" },
       processing: { title: "Processing Your Photo" },
       common: { retry: "Retry" },
+      errors: { taskNotFound: "Task not found", processingFailedGeneric: "Processing failed", retryFailed: "Retry failed" },
       nav: { home: "Home", history: "History", pricing: "Pricing", login: "Sign In", logout: "Sign Out" },
     };
     return translations[namespace]?.[key] ?? key;

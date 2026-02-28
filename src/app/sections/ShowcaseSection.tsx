@@ -2,23 +2,22 @@
 
 import { useTranslations } from "next-intl";
 import BeforeAfterCompare from "@/components/BeforeAfterCompare";
-
-const R2_BASE = "https://pub-1d53303d843e4e19a071284a6933ffb6.r2.dev";
+import { buildCdnUrl } from "@/lib/url";
 
 const SHOWCASE_ITEMS = [
   {
-    beforeUrl: `${R2_BASE}/tasks/acbfdf8a-19a1-47a9-a7ed-f1ee883ef013/original.jpg`,
-    afterUrl: `${R2_BASE}/tasks/acbfdf8a-19a1-47a9-a7ed-f1ee883ef013/restored.jpg`,
+    beforeUrl: buildCdnUrl("showcase/original.jpg"),
+    afterUrl: buildCdnUrl("showcase/restored.jpg"),
     labelKey: "items.label1" as const,
   },
   {
-    beforeUrl: `${R2_BASE}/tasks/acbfdf8a-19a1-47a9-a7ed-f1ee883ef013/original.jpg`,
-    afterUrl: `${R2_BASE}/tasks/acbfdf8a-19a1-47a9-a7ed-f1ee883ef013/colorized.jpg`,
+    beforeUrl: buildCdnUrl("showcase/original.jpg"),
+    afterUrl: buildCdnUrl("showcase/colorized.jpg"),
     labelKey: "items.label2" as const,
   },
   {
-    beforeUrl: `${R2_BASE}/tasks/acbfdf8a-19a1-47a9-a7ed-f1ee883ef013/restored.jpg`,
-    afterUrl: `${R2_BASE}/tasks/acbfdf8a-19a1-47a9-a7ed-f1ee883ef013/colorized.jpg`,
+    beforeUrl: buildCdnUrl("showcase/restored.jpg"),
+    afterUrl: buildCdnUrl("showcase/colorized.jpg"),
     labelKey: "items.label3" as const,
   },
 ];

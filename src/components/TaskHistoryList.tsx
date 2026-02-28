@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { resolveTaskErrorMessage } from "@/lib/task-error";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -64,6 +65,7 @@ export default function TaskHistoryList({
   deleting = false,
 }: TaskHistoryListProps) {
   const t = useTranslations("history");
+  const tErrors = useTranslations("errors");
 
   if (tasks.length === 0) {
     return (
@@ -98,6 +100,10 @@ export default function TaskHistoryList({
         };
         const isProcessing = PROCESSING_STATUSES.has(task.status);
         const isSelected = selectedIds.has(task.id);
+        const failedMessage =
+          task.status === "failed" && task.errorMessage
+            ? resolveTaskErrorMessage(task.errorMessage, tErrors)
+            : null;
 
         return (
           <div
@@ -187,9 +193,9 @@ export default function TaskHistoryList({
                   </div>
                 )}
 
-                {task.status === "failed" && task.errorMessage && (
-                  <p className="mt-1 max-w-[200px] truncate text-xs text-red-400 cursor-default" title={task.errorMessage}>
-                    {task.errorMessage}
+                {task.status === "failed" && failedMessage && (
+                  <p className="mt-1 max-w-[200px] truncate cursor-default text-xs text-red-400" title={failedMessage}>
+                    {failedMessage}
                   </p>
                 )}
               </div>

@@ -33,6 +33,14 @@ jest.mock("next-intl", () => ({
         "status.animating": "Animating", "status.completed": "Completed",
         "status.failed": "Failed", "status.cancelled": "Cancelled",
       },
+      errors: {
+        processingFailedGeneric: "Processing failed",
+        taskNotFound: "Task not found",
+        sourceImageUnreachable: "Source image is unavailable",
+        modelConfigError: "Model config error",
+        intermediateDownloadFailed: "Intermediate download failed",
+        serviceBusy: "Service is temporarily busy",
+      },
     };
     return translations[namespace]?.[key] ?? key;
   },

@@ -12,6 +12,15 @@ jest.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => {
     const translations: Record<string, Record<string, string>> = {
       processing: { step1: "Upload", step2: "Restore", step3: "Colorize", step4: "Animate", pending: "Waiting in queue…", completed: "Processing complete", connectionLost: "Connection lost", title: "Processing Your Photo", previewRestored: "Restored", previewColorized: "Colorized", previewAnimation: "Animation" },
+      errors: {
+        processingFailedGeneric: "Processing failed",
+        taskNotFound: "Task not found",
+        sourceImageUnreachable: "Source image is unavailable",
+        modelConfigError: "Model config error",
+        intermediateDownloadFailed: "Intermediate download failed",
+        serviceBusy: "Service is temporarily busy",
+      },
+      "history.status": { restoring: "Restoring", colorizing: "Colorizing", animating: "Animating" },
     };
     return translations[namespace]?.[key] ?? key;
   },

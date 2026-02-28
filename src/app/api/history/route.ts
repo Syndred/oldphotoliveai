@@ -73,7 +73,7 @@ export async function DELETE(request: NextRequest) {
 
     if (!Array.isArray(taskIds) || taskIds.length === 0) {
       return NextResponse.json(
-        { error: "taskIds is required" },
+        { error: getErrorMessage("taskIdsRequired", locale) },
         { status: 400 }
       );
     }
@@ -81,7 +81,7 @@ export async function DELETE(request: NextRequest) {
     // Limit batch size
     if (taskIds.length > 50) {
       return NextResponse.json(
-        { error: "Maximum 50 tasks per batch" },
+        { error: getErrorMessage("taskBatchTooLarge", locale) },
         { status: 400 }
       );
     }

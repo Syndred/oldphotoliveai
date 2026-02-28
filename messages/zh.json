@@ -118,7 +118,15 @@
     "checkoutFailed": "结账失败",
     "retryFailed": "重试失败",
     "historyLoadFailed": "加载历史记录失败",
-    "taskCreateFailed": "创建任务失败"
+    "taskCreateFailed": "创建任务失败",
+    "uploadCancelled": "\u4e0a\u4f20\u5df2\u53d6\u6d88\u3002",
+    "paymentUnavailable": "\u652f\u4ed8\u529f\u80fd\u6682\u65f6\u4e0d\u53ef\u7528\u3002",
+    "processingFailedGeneric": "\u5904\u7406\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002",
+    "sourceImageUnreachable": "\u6e90\u56fe\u7247\u65e0\u6cd5\u8bbf\u95ee\uff0c\u8bf7\u91cd\u65b0\u4e0a\u4f20\u540e\u518d\u8bd5\u3002",
+    "modelConfigError": "AI \u6a21\u578b\u914d\u7f6e\u5f02\u5e38\uff0c\u8bf7\u8054\u7cfb\u5ba2\u670d\u3002",
+    "intermediateDownloadFailed": "\u4e2d\u95f4\u7ed3\u679c\u4e0b\u8f7d\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002",
+    "taskIdsRequired": "\u8bf7\u81f3\u5c11\u9009\u62e9\u4e00\u6761\u8bb0\u5f55\u3002",
+    "taskBatchTooLarge": "\u5355\u6b21\u6700\u591a\u53ef\u5220\u9664 50 \u6761\u8bb0\u5f55\u3002"
   },
   "auth": {
     "signInWith": "使用 Google 登录",
