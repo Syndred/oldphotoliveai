@@ -45,6 +45,12 @@ function createTestFile(
   return new File([buffer], name, { type });
 }
 
+function createNamedError(name: string, message: string): Error {
+  const err = new Error(message);
+  err.name = name;
+  return err;
+}
+
 // ── Tests ───────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
@@ -125,7 +131,7 @@ describe("POST /api/upload", () => {
     );
   });
 
-  it("returns 500 when R2 upload fails", async () => {
+  it("returns 503 with classified network error when R2 upload has connectivity issues", async () => {
     mockUploadToR2.mockRejectedValueOnce(new Error("R2 connection error"));
 
     const file = createTestFile("photo.jpg", "image/jpeg", 1024);
@@ -133,8 +139,55 @@ describe("POST /api/upload", () => {
     const res = await POST(req);
     const body = await res.json();
 
+    expect(res.status).toBe(503);
+    expect(body.error).toBe("Storage service is temporarily unreachable. Please try again.");
+    expect(body.errorCode).toBe("R2_NETWORK_ERROR");
+    expect(body.requestId).toMatch(/^upl_/);
+  });
+
+  it("returns config classification for missing/invalid storage config", async () => {
+    mockUploadToR2.mockRejectedValueOnce(
+      new Error("Missing required environment variables: R2_BUCKET_NAME")
+    );
+
+    const file = createTestFile("photo.jpg", "image/jpeg", 1024);
+    const req = createFileRequest(file);
+    const res = await POST(req);
+    const body = await res.json();
+
     expect(res.status).toBe(500);
-    expect(body.error).toBe("Upload failed. Please try again later.");
+    expect(body.error).toBe("Storage configuration error. Please contact support.");
+    expect(body.errorCode).toBe("R2_CONFIG_ERROR");
+  });
+
+  it("returns auth classification for R2 credential permission errors", async () => {
+    mockUploadToR2.mockRejectedValueOnce(
+      createNamedError("AccessDenied", "Access denied")
+    );
+
+    const file = createTestFile("photo.jpg", "image/jpeg", 1024);
+    const req = createFileRequest(file);
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(500);
+    expect(body.error).toBe("Storage permission error. Please contact support.");
+    expect(body.errorCode).toBe("R2_AUTH_ERROR");
+  });
+
+  it("returns bucket classification when target bucket does not exist", async () => {
+    mockUploadToR2.mockRejectedValueOnce(
+      createNamedError("NoSuchBucket", "The specified bucket does not exist")
+    );
+
+    const file = createTestFile("photo.jpg", "image/jpeg", 1024);
+    const req = createFileRequest(file);
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(500);
+    expect(body.error).toBe("Storage bucket is unavailable. Please contact support.");
+    expect(body.errorCode).toBe("R2_BUCKET_NOT_FOUND");
   });
 
   it("accepts a file exactly at 10MB", async () => {

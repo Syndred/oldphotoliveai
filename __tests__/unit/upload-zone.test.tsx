@@ -20,6 +20,11 @@ jest.mock("next-intl", () => ({
         fileTypeNotSupported: "Please upload a JPEG, PNG, or WebP image",
         fileTooLarge: "File size exceeds the 10MB limit",
         uploadFailed: "Upload failed. Please try again later.",
+        uploadStorageConfigError: "Storage configuration error. Please contact support.",
+        uploadStorageAuthError: "Storage permission error. Please contact support.",
+        uploadStorageBucketMissing: "Storage bucket is unavailable. Please contact support.",
+        uploadStorageNetworkError: "Storage service is temporarily unreachable. Please try again.",
+        uploadSupportHint: "Ref: {requestId} ({code})",
         invalidResponse: "Invalid server response",
         networkError: "Network error. Please check your connection.",
         uploadCancelled: "Upload was cancelled.",
@@ -261,6 +266,29 @@ describe("UploadZone", () => {
 
     await waitFor(() => {
       expect(screen.getByRole("alert")).toHaveTextContent("File type not supported");
+    });
+    expect(mockOnUpload).not.toHaveBeenCalled();
+  });
+
+  it("shows request reference when server returns classified upload error", async () => {
+    mockXHR({
+      status: 503,
+      response:
+        '{"error":"Storage service is temporarily unreachable. Please try again.","errorCode":"R2_NETWORK_ERROR","requestId":"upl_test_123"}',
+    });
+
+    render(<UploadZone onUpload={mockOnUpload} />);
+    const zone = screen.getByRole("button", { name: /upload photo/i });
+
+    const file = createMockFile("photo.jpg", 5000, "image/jpeg");
+    const dataTransfer = { files: [file] } as unknown as DataTransfer;
+
+    fireEvent.drop(zone, { dataTransfer });
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Storage service is temporarily unreachable. Please try again. Ref: upl_test_123 (R2_NETWORK_ERROR)"
+      );
     });
     expect(mockOnUpload).not.toHaveBeenCalled();
   });

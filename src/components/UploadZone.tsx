@@ -10,6 +10,11 @@ interface UploadZoneProps {
 }
 
 type UploadState = "idle" | "dragging" | "uploading" | "error";
+interface UploadErrorPayload {
+  error?: string;
+  errorCode?: string;
+  requestId?: string;
+}
 
 function validateClientFile(file: File, tErrors: (key: string) => string): string | null {
   if (
@@ -23,6 +28,20 @@ function validateClientFile(file: File, tErrors: (key: string) => string): strin
     return tErrors("fileTooLarge");
   }
   return null;
+}
+
+function buildUploadErrorMessage(
+  payload: UploadErrorPayload | null,
+  tErrors: (key: string, values?: Record<string, string>) => string
+): string {
+  const base = payload?.error || tErrors("uploadFailed");
+  if (payload?.errorCode && payload?.requestId) {
+    return `${base} ${tErrors("uploadSupportHint", {
+      code: payload.errorCode,
+      requestId: payload.requestId,
+    })}`;
+  }
+  return base;
 }
 
 export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
@@ -57,7 +76,7 @@ export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
 
           try {
             const data = JSON.parse(xhr.responseText);
-            reject(new Error(data.error || tErrors("uploadFailed")));
+            reject(new Error(buildUploadErrorMessage(data, tErrors)));
           } catch {
             reject(new Error(tErrors("uploadFailed")));
           }

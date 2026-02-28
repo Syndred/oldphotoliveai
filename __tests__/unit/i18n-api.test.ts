@@ -107,6 +107,9 @@ describe("getErrorMessage", () => {
   it("returns all known error keys for en locale", () => {
     const keys = [
       "fileTypeNotSupported", "fileTooLarge", "uploadFailed",
+      "uploadStorageConfigError", "uploadStorageAuthError",
+      "uploadStorageBucketMissing", "uploadStorageNetworkError",
+      "uploadSupportHint",
       "quotaExceeded", "creditsExpired", "rateLimited",
       "taskNotFound", "cannotCancel", "unauthorized",
       "checkoutFailed", "retryFailed", "historyLoadFailed",
@@ -122,6 +125,9 @@ describe("getErrorMessage", () => {
   it("returns all known error keys for zh locale", () => {
     const keys = [
       "fileTypeNotSupported", "fileTooLarge", "uploadFailed",
+      "uploadStorageConfigError", "uploadStorageAuthError",
+      "uploadStorageBucketMissing", "uploadStorageNetworkError",
+      "uploadSupportHint",
       "quotaExceeded", "creditsExpired", "rateLimited",
       "taskNotFound", "cannotCancel", "unauthorized",
       "checkoutFailed", "retryFailed", "historyLoadFailed",
