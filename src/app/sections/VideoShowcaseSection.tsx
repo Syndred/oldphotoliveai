@@ -93,7 +93,11 @@ export default function VideoShowcaseSection() {
           <div className="relative">
             <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
               {visibleItems.map((item, index) => (
-                <VideoCard key={`${item.id}-${index}`} item={item} />
+                <VideoCard
+                  key={`${item.id}-${index}`}
+                  item={item}
+                  className={index > 0 ? "hidden sm:block" : ""}
+                />
               ))}
             </div>
 
@@ -112,9 +116,17 @@ export default function VideoShowcaseSection() {
   );
 }
 
-function VideoCard({ item }: { item: VideoShowcaseItem }) {
+function VideoCard({
+  item,
+  className,
+}: {
+  item: VideoShowcaseItem;
+  className?: string;
+}) {
   return (
-    <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-white/[0.02] p-1.5">
+    <div
+      className={`overflow-hidden rounded-xl border border-[var(--color-border)] bg-white/[0.02] p-1.5 ${className ?? ""}`}
+    >
       <VideoPlayer src={resolveShowcaseAssetUrl(item.videoKey, item.version)} />
     </div>
   );

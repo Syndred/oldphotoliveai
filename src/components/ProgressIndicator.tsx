@@ -277,7 +277,7 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
                   data-testid={p.testId}
                   src={p.src}
                   alt={p.label}
-                  className="w-full rounded-lg object-cover"
+                  className="w-full rounded-lg object-contain bg-black/20"
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = "none";
                   }}

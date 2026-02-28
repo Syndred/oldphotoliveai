@@ -92,7 +92,7 @@ export default function BeforeAfterCompare({
         <img
           src={afterUrl}
           alt={resolvedAfterLabel}
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-contain"
         />
 
         {/* Before image (clipped to left portion) */}
@@ -104,7 +104,7 @@ export default function BeforeAfterCompare({
           <img
             src={beforeUrl}
             alt={resolvedBeforeLabel}
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-contain"
           />
         </div>
 

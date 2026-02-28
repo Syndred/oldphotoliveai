@@ -117,7 +117,9 @@ function CompareRow({
           {visibleItems.map((item, index) => (
             <div
               key={`${item.id}-${index}`}
-              className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-white/[0.02] p-1.5"
+              className={`overflow-hidden rounded-xl border border-[var(--color-border)] bg-white/[0.02] p-1.5 ${
+                index > 0 ? "hidden sm:block" : ""
+              }`}
             >
               <BeforeAfterCompare
                 beforeUrl={resolveShowcaseAssetUrl(item.beforeKey, item.version)}

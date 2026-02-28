@@ -13,7 +13,7 @@ export default function HowItWorksSection() {
 
   return (
     <section id="how-it-works-section" className="px-4 py-10 sm:py-14">
-      <div className="mx-auto max-w-5xl">
+      <div className="mx-auto max-w-6xl">
         <h2 className="text-center text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">
           {t("title")}
         </h2>
