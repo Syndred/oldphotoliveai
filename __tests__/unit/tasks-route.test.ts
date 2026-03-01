@@ -166,6 +166,25 @@ describe("POST /api/tasks", () => {
     expect(mockEnqueueTask).not.toHaveBeenCalled();
   });
 
+  it("returns credits error for pay_as_you_go user with no credits", async () => {
+    const user = makeFakeUser({ tier: "pay_as_you_go" });
+    mockGetUser.mockResolvedValue(user);
+    mockCheckAndDecrementQuota.mockResolvedValue({
+      allowed: false,
+      remaining: 0,
+      reason: "No credits remaining",
+    });
+
+    const req = createJsonRequest({ imageKey: "uploads/photo.jpg" });
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(403);
+    expect(body.error).toBe("Credits have expired. Please purchase again.");
+    expect(mockCreateTask).not.toHaveBeenCalled();
+    expect(mockEnqueueTask).not.toHaveBeenCalled();
+  });
+
   it("creates task with normal priority for free user", async () => {
     const user = makeFakeUser({ tier: "free" });
     const task = makeFakeTask({ priority: "normal" });

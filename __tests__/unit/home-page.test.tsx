@@ -12,7 +12,7 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/",
 }));
 
-// Mock next-auth — default to authenticated
+// Mock next-auth (default to authenticated)
 const mockSignIn = jest.fn();
 let mockSessionStatus = "authenticated";
 jest.mock("next-auth/react", () => ({
@@ -25,9 +25,37 @@ jest.mock("next-auth/react", () => ({
 jest.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => {
     const translations: Record<string, Record<string, string>> = {
-      nav: { home: "Home", history: "History", pricing: "Pricing", login: "Sign In", logout: "Sign Out" },
-      upload: { title: "Restore Your Old Photos", subtitle: "AI-powered restoration, colorization, and animation in one click", creatingTask: "Creating task…", dragDrop: "Drag and drop your photo here", browse: "browse files", supportedFormats: "Supports JPEG, PNG, WebP (max 10 MB)" },
-      auth: { signInWith: "Sign in with Google", signInPrompt: "Sign in to start restoring your photos" },
+      nav: {
+        home: "Home",
+        history: "History",
+        pricing: "Pricing",
+        login: "Sign In",
+        logout: "Sign Out",
+      },
+      upload: {
+        title: "Restore Your Old Photos",
+        subtitle:
+          "AI-powered restoration, colorization, and animation in one click",
+        creatingTask: "Creating task...",
+        dragDrop: "Drag and drop your photo here",
+        browse: "browse files",
+        supportedFormats: "Supports JPEG, PNG, WebP (max 10 MB)",
+      },
+      auth: {
+        signInWith: "Sign in with Google",
+        signInPrompt: "Sign in to start restoring your photos",
+      },
+      pricing: {
+        currentPlan: "Current Plan",
+        free: "Free",
+        payAsYouGo: "Pay As You Go",
+        professional: "Professional",
+      },
+      quota: {
+        remaining: "{count} remaining",
+        resetsAt: "Resets at {time}",
+        unlimited: "Unlimited",
+      },
     };
     return translations[namespace]?.[key] ?? key;
   },
@@ -59,10 +87,30 @@ jest.mock("@/components/UploadZone", () => {
 
 import HomePage from "@/app/page";
 
+function getRequestUrl(input: unknown): string {
+  if (typeof input === "string") return input;
+  if (input instanceof URL) return input.toString();
+  if (
+    input &&
+    typeof input === "object" &&
+    "url" in input &&
+    typeof (input as { url: unknown }).url === "string"
+  ) {
+    return (input as { url: string }).url;
+  }
+  return String(input);
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockSessionStatus = "authenticated";
-  global.fetch = jest.fn();
+  global.fetch = jest.fn(async (input: unknown) => {
+    const url = getRequestUrl(input);
+    if (url.endsWith("/api/tasks")) {
+      return { ok: true, json: async () => ({ taskId: "task-123" }) };
+    }
+    return { ok: true, json: async () => ({}) };
+  }) as jest.Mock;
 });
 
 describe("HomePage", () => {
@@ -80,11 +128,6 @@ describe("HomePage", () => {
   });
 
   it("creates task and navigates to result page on successful upload", async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ taskId: "task-123" }),
-    });
-
     render(<HomePage />);
     fireEvent.click(screen.getByTestId("trigger-upload"));
 
@@ -103,17 +146,21 @@ describe("HomePage", () => {
 
   it("shows loading state while creating task", async () => {
     let resolveTask!: (value: unknown) => void;
-    (global.fetch as jest.Mock).mockReturnValueOnce(
-      new Promise((resolve) => {
-        resolveTask = resolve;
-      })
-    );
+    (global.fetch as jest.Mock).mockImplementation((input: unknown) => {
+      const url = getRequestUrl(input);
+      if (url.endsWith("/api/tasks")) {
+        return new Promise((resolve) => {
+          resolveTask = resolve;
+        });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
 
     render(<HomePage />);
     fireEvent.click(screen.getByTestId("trigger-upload"));
 
     await waitFor(() => {
-      expect(screen.getByText("Creating task…")).toBeInTheDocument();
+      expect(screen.getByText("Creating task...")).toBeInTheDocument();
     });
 
     expect(screen.getByTestId("upload-zone")).toHaveAttribute(
@@ -126,10 +173,16 @@ describe("HomePage", () => {
   });
 
   it("shows error when task creation fails", async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: false,
-      status: 403,
-      json: async () => ({ error: "Quota exceeded" }),
+    (global.fetch as jest.Mock).mockImplementation(async (input: unknown) => {
+      const url = getRequestUrl(input);
+      if (url.endsWith("/api/tasks")) {
+        return {
+          ok: false,
+          status: 403,
+          json: async () => ({ error: "Quota exceeded" }),
+        };
+      }
+      return { ok: true, json: async () => ({}) };
     });
 
     render(<HomePage />);
@@ -143,9 +196,13 @@ describe("HomePage", () => {
   });
 
   it("shows generic error when fetch throws", async () => {
-    (global.fetch as jest.Mock).mockRejectedValueOnce(
-      new Error("Network error")
-    );
+    (global.fetch as jest.Mock).mockImplementation((input: unknown) => {
+      const url = getRequestUrl(input);
+      if (url.endsWith("/api/tasks")) {
+        return Promise.reject(new Error("Network error"));
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
 
     render(<HomePage />);
     fireEvent.click(screen.getByTestId("trigger-upload"));
@@ -167,7 +224,9 @@ describe("HomePage", () => {
   it("shows login prompt when not authenticated", () => {
     mockSessionStatus = "unauthenticated";
     render(<HomePage />);
-    expect(screen.getByText("Sign in to start restoring your photos")).toBeInTheDocument();
+    expect(
+      screen.getByText("Sign in to start restoring your photos")
+    ).toBeInTheDocument();
     expect(screen.getByText("Sign in with Google")).toBeInTheDocument();
   });
 });

@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
 // Mock next-auth/react
@@ -49,12 +49,21 @@ jest.mock("next/link", () => ({
 
 // Mock next-intl
 jest.mock("next-intl", () => ({
-  useTranslations: (namespace: string) => (key: string) => {
+  useTranslations:
+    (namespace: string) =>
+    (key: string, params?: Record<string, string | number>) => {
     const translations: Record<string, Record<string, string>> = {
       nav: { home: "Home", history: "History", pricing: "Pricing", login: "Sign In", logout: "Sign Out" },
       pricing: { free: "Free", payAsYouGo: "Pay As You Go", professional: "Professional", currentPlan: "Current Plan" },
+      quota: { remaining: "{count} remaining" },
     };
-    return translations[namespace]?.[key] ?? key;
+    let value = translations[namespace]?.[key] ?? key;
+    if (params) {
+      for (const [name, replacement] of Object.entries(params)) {
+        value = value.replace(`{${name}}`, String(replacement));
+      }
+    }
+    return value;
   },
   useLocale: () => "en",
 }));
@@ -62,9 +71,35 @@ jest.mock("next-intl", () => ({
 import AuthButton from "@/components/AuthButton";
 import Navbar from "@/components/Navbar";
 
+function getRequestUrl(input: unknown): string {
+  if (typeof input === "string") return input;
+  if (input instanceof URL) return input.toString();
+  if (
+    input &&
+    typeof input === "object" &&
+    "url" in input &&
+    typeof (input as { url: unknown }).url === "string"
+  ) {
+    return (input as { url: string }).url;
+  }
+  return String(input);
+}
+
 describe("AuthButton", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    global.fetch = jest.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        userId: "u1",
+        tier: "free",
+        remaining: 1,
+        dailyLimit: 1,
+        resetAt: null,
+        credits: 0,
+        creditsExpireAt: null,
+      }),
+    })) as jest.Mock;
   });
 
   it("shows loading skeleton when session is loading", () => {
@@ -133,6 +168,24 @@ describe("Navbar", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseSession.mockReturnValue({ data: null, status: "unauthenticated" });
+    global.fetch = jest.fn(async (input: unknown) => {
+      const url = getRequestUrl(input);
+      if (url.endsWith("/api/quota")) {
+        return {
+          ok: true,
+          json: async () => ({
+            userId: "u1",
+            tier: "professional",
+            remaining: 0,
+            dailyLimit: null,
+            resetAt: null,
+            credits: 0,
+            creditsExpireAt: null,
+          }),
+        };
+      }
+      return { ok: true, json: async () => ({}) };
+    }) as jest.Mock;
   });
 
   it("renders the logo text", () => {
@@ -216,6 +269,42 @@ describe("Navbar", () => {
     expect(screen.getByTestId("tier-badge-mobile")).toHaveTextContent(
       "Current Plan: Professional"
     );
+  });
+
+  it("shows pay-as-you-go remaining count in tier badge", async () => {
+    mockUsePathname.mockReturnValue("/");
+    mockUseSession.mockReturnValue({
+      data: {
+        user: { name: "Payg User", email: "payg@example.com", tier: "pay_as_you_go" },
+      },
+      status: "authenticated",
+    });
+    (global.fetch as jest.Mock).mockImplementation(async (input: unknown) => {
+      const url = getRequestUrl(input);
+      if (url.endsWith("/api/quota")) {
+        return {
+          ok: true,
+          json: async () => ({
+            userId: "u1",
+            tier: "pay_as_you_go",
+            remaining: 3,
+            dailyLimit: null,
+            resetAt: null,
+            credits: 3,
+            creditsExpireAt: null,
+          }),
+        };
+      }
+      return { ok: true, json: async () => ({}) };
+    });
+
+    render(<Navbar />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("auth-tier-badge")).toHaveTextContent(
+        "Pay As You Go | 3 remaining"
+      );
+    });
   });
 
   it("logo links to home page", () => {

@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import AuthButton from "./AuthButton";
 import LanguageSwitcher from "./LanguageSwitcher";
-import type { UserTier } from "@/types";
+import type { QuotaInfo, UserTier } from "@/types";
 
 const NAV_LINKS = [
   { href: "/", labelKey: "home" },
@@ -28,19 +28,55 @@ function parseUserTier(value: unknown): UserTier | null {
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const t = useTranslations("nav");
   const tPricing = useTranslations("pricing");
+  const tQuota = useTranslations("quota");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const tier = parseUserTier(
+  const [quota, setQuota] = useState<QuotaInfo | null>(null);
+  const sessionTier = parseUserTier(
     (session?.user as Record<string, unknown> | undefined)?.tier
   );
-  const tierLabel =
+
+  useEffect(() => {
+    if (status !== "authenticated") {
+      setQuota(null);
+      return;
+    }
+
+    const abortController = new AbortController();
+
+    fetch("/api/quota", { signal: abortController.signal })
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = (await res.json()) as QuotaInfo;
+        setQuota(data);
+      })
+      .catch(() => {
+        // Ignore quota fetch error; fallback to session tier label.
+      });
+
+    return () => {
+      abortController.abort();
+    };
+  }, [status]);
+
+  const tier = quota?.tier ?? sessionTier;
+
+  const tierBaseLabel =
     tier === "pay_as_you_go"
       ? tPricing("payAsYouGo")
       : tier
         ? tPricing(tier)
         : null;
+  const paygRemaining =
+    tier === "pay_as_you_go" && quota
+      ? quota.credits ?? quota.remaining
+      : null;
+  const tierLabel =
+    tierBaseLabel && paygRemaining !== null
+      ? `${tierBaseLabel} | ${tQuota("remaining", { count: paygRemaining })}`
+      : tierBaseLabel;
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-[var(--color-primary-bg)]/80 backdrop-blur-md">
@@ -79,7 +115,7 @@ export default function Navbar() {
           <div className="hidden sm:block">
             <LanguageSwitcher />
           </div>
-          <AuthButton />
+          <AuthButton tierBadgeText={tierLabel} />
           {/* Hamburger button - visible only on small screens */}
           <button
             type="button"
@@ -145,3 +181,4 @@ export default function Navbar() {
     </nav>
   );
 }
+

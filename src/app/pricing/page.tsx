@@ -1,10 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import Navbar from "@/components/Navbar";
 import PricingCards from "@/components/PricingCards";
-import type { UserTier } from "@/types";
+import type { QuotaInfo, UserTier } from "@/types";
 
 function parseUserTier(value: unknown): UserTier | null {
   if (
@@ -18,18 +19,48 @@ function parseUserTier(value: unknown): UserTier | null {
 }
 
 export default function PricingPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const t = useTranslations("pricing");
+  const tQuota = useTranslations("quota");
+  const [quota, setQuota] = useState<QuotaInfo | null>(null);
 
-  const tier = parseUserTier(
+  useEffect(() => {
+    if (status !== "authenticated") {
+      setQuota(null);
+      return;
+    }
+
+    const abortController = new AbortController();
+
+    fetch("/api/quota", { signal: abortController.signal })
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = (await res.json()) as QuotaInfo;
+        setQuota(data);
+      })
+      .catch(() => {
+        // Keep page usable even when quota API is unavailable.
+      });
+
+    return () => {
+      abortController.abort();
+    };
+  }, [status]);
+
+  const sessionTier = parseUserTier(
     (session?.user as Record<string, unknown> | undefined)?.tier
   );
+  const tier = quota?.tier ?? sessionTier;
   const planLabel =
     tier === "pay_as_you_go"
       ? t("payAsYouGo")
       : tier
         ? t(tier)
         : null;
+  const paygRemaining =
+    tier === "pay_as_you_go" && quota
+      ? quota.credits ?? quota.remaining
+      : null;
 
   return (
     <div className="min-h-screen bg-[var(--color-primary-bg)]">
@@ -52,10 +83,15 @@ export default function PricingPage() {
               <span className="font-medium text-[var(--color-text-primary)]">
                 {planLabel}
               </span>
+              {paygRemaining !== null && (
+                <span className="ml-2 text-[var(--color-text-secondary)]">
+                  ({tQuota("remaining", { count: paygRemaining })})
+                </span>
+              )}
             </p>
           )}
 
-          <PricingCards />
+          <PricingCards paygRemaining={paygRemaining} />
         </section>
       </main>
     </div>

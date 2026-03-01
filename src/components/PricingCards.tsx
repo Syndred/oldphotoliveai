@@ -17,6 +17,10 @@ interface PricingPlan {
   plan?: "pay_as_you_go" | "professional";
 }
 
+interface PricingCardsProps {
+  paygRemaining?: number | null;
+}
+
 function parseUserTier(value: unknown): UserTier | null {
   if (
     value === "free" ||
@@ -68,11 +72,14 @@ const PLANS: PricingPlan[] = [
   },
 ];
 
-export default function PricingCards() {
+export default function PricingCards({
+  paygRemaining = null,
+}: PricingCardsProps) {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { data: session } = useSession();
   const t = useTranslations("pricing");
+  const tQuota = useTranslations("quota");
   const tErrors = useTranslations("errors");
 
   const currentTier = parseUserTier(
@@ -163,8 +170,13 @@ export default function PricingCards() {
 
               <div className="mt-6">
                 {isCurrentPlan ? (
-                  <span className="block w-full rounded-lg border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 py-3 text-center text-sm text-[var(--color-text-primary)] min-h-[44px]">
-                    {t("currentPlan")}
+                  <span className="block w-full rounded-lg border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 px-3 py-3 text-center text-sm text-[var(--color-text-primary)] min-h-[44px]">
+                    <span className="block">{t("currentPlan")}</span>
+                    {p.id === "pay_as_you_go" && paygRemaining !== null && (
+                      <span className="mt-1 block text-xs text-[var(--color-text-secondary)]">
+                        {tQuota("remaining", { count: paygRemaining })}
+                      </span>
+                    )}
                   </span>
                 ) : checkoutPlan ? (
                   <button

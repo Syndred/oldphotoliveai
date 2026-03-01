@@ -6,8 +6,24 @@ import { getToken } from "next-auth/jwt";
 import { createTask, getUser } from "@/lib/redis";
 import { enqueueTask } from "@/lib/queue";
 import { checkAndDecrementQuota } from "@/lib/quota";
-import type { TaskPriority } from "@/types";
+import type { TaskPriority, UserTier } from "@/types";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
+
+function resolveQuotaErrorKey(reason: string | undefined, tier: UserTier): string {
+  if (reason === "No credits remaining") {
+    return "creditsExpired";
+  }
+
+  if (reason === "Daily free quota exhausted") {
+    return "quotaExceeded";
+  }
+
+  if (reason === "Quota not initialized") {
+    return tier === "pay_as_you_go" ? "creditsExpired" : "quotaExceeded";
+  }
+
+  return tier === "pay_as_you_go" ? "creditsExpired" : "quotaExceeded";
+}
 
 export async function POST(request: NextRequest) {
   const locale = getRequestLocale(request);
@@ -52,8 +68,9 @@ export async function POST(request: NextRequest) {
     // 5. Check and decrement quota before creating a task
     const quotaResult = await checkAndDecrementQuota(userId, user.tier);
     if (!quotaResult.allowed) {
+      const errorKey = resolveQuotaErrorKey(quotaResult.reason, user.tier);
       return NextResponse.json(
-        { error: getErrorMessage("quotaExceeded", locale) },
+        { error: getErrorMessage(errorKey, locale) },
         { status: 403 }
       );
     }

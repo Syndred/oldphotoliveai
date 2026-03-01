@@ -92,6 +92,9 @@ export async function checkAndDecrementQuota(
 
   const raw = await redis.get(keys.quota(userId));
   if (!raw) {
+    if (userTier === "pay_as_you_go") {
+      return { allowed: false, remaining: 0, reason: "No credits remaining" };
+    }
     return { allowed: false, remaining: 0, reason: "Quota not initialized" };
   }
 

@@ -173,6 +173,13 @@ describe("checkAndDecrementQuota", () => {
     expect(result.allowed).toBe(false);
     expect(result.reason).toBeDefined();
   });
+
+  it("returns no credits reason for pay_as_you_go user without quota record", async () => {
+    const result = await checkAndDecrementQuota("u-payg", "pay_as_you_go");
+    expect(result.allowed).toBe(false);
+    expect(result.remaining).toBe(0);
+    expect(result.reason).toBe("No credits remaining");
+  });
 });
 
 // ── getQuotaInfo ────────────────────────────────────────────────────────────

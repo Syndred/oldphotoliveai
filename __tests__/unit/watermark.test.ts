@@ -73,6 +73,12 @@ describe("resizeImage", () => {
 // ── applyImageWatermark ─────────────────────────────────────────────────────
 
 describe("applyImageWatermark", () => {
+  it("changes pixel content to visibly mark free-tier output", async () => {
+    const input = await createTestImage(800, 600);
+    const output = await applyImageWatermark(input);
+    expect(output.equals(input)).toBe(false);
+  });
+
   it("returns a valid image buffer", async () => {
     const input = await createTestImage(800, 600);
     const output = await applyImageWatermark(input);

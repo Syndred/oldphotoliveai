@@ -17,7 +17,11 @@ function parseUserTier(value: unknown): UserTier | null {
   return null;
 }
 
-export default function AuthButton() {
+interface AuthButtonProps {
+  tierBadgeText?: string | null;
+}
+
+export default function AuthButton({ tierBadgeText = null }: AuthButtonProps) {
   const { data: session, status } = useSession();
   const t = useTranslations("nav");
   const tPricing = useTranslations("pricing");
@@ -26,12 +30,13 @@ export default function AuthButton() {
   const tier = parseUserTier(
     (session?.user as Record<string, unknown> | undefined)?.tier
   );
-  const tierLabel =
+  const fallbackTierLabel =
     tier === "pay_as_you_go"
       ? tPricing("payAsYouGo")
       : tier
         ? tPricing(tier)
         : null;
+  const tierLabel = tierBadgeText ?? fallbackTierLabel;
 
   if (status === "loading") {
     return (

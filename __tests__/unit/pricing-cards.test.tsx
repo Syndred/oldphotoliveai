@@ -17,7 +17,9 @@ jest.mock("next-auth/react", () => ({
 
 // Mock next-intl (needed by LanguageSwitcher and PricingCards)
 jest.mock("next-intl", () => ({
-  useTranslations: (namespace: string) => (key: string) => {
+  useTranslations:
+    (namespace: string) =>
+    (key: string, params?: Record<string, string | number>) => {
     const translations: Record<string, Record<string, string>> = {
       pricing: {
         title: "Choose Your Plan", subtitle: "Unlock the full power of AI photo restoration",
@@ -33,9 +35,16 @@ jest.mock("next-intl", () => ({
         checkoutFailed: "Checkout failed",
         paymentUnavailable: "Payment feature is currently unavailable.",
       },
+      quota: { remaining: "{count} remaining" },
       nav: { home: "Home", history: "History", pricing: "Pricing", login: "Sign In", logout: "Sign Out" },
     };
-    return translations[namespace]?.[key] ?? key;
+    let value = translations[namespace]?.[key] ?? key;
+    if (params) {
+      for (const [name, replacement] of Object.entries(params)) {
+        value = value.replace(`{${name}}`, String(replacement));
+      }
+    }
+    return value;
   },
   useLocale: () => "en",
 }));
@@ -69,9 +78,24 @@ import PricingPage from "@/app/pricing/page";
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
+function getRequestUrl(input: unknown): string {
+  if (typeof input === "string") return input;
+  if (input instanceof URL) return input.toString();
+  if (
+    input &&
+    typeof input === "object" &&
+    "url" in input &&
+    typeof (input as { url: unknown }).url === "string"
+  ) {
+    return (input as { url: string }).url;
+  }
+  return String(input);
+}
+
 describe("PricingCards", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockFetch.mockReset();
     mockUseSession.mockReturnValue({ data: null, status: "unauthenticated" });
   });
 
@@ -215,7 +239,26 @@ describe("PricingCards", () => {
 describe("PricingPage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockFetch.mockReset();
     mockUseSession.mockReturnValue({ data: null, status: "unauthenticated" });
+    mockFetch.mockImplementation(async (input: unknown) => {
+      const url = getRequestUrl(input);
+      if (url.endsWith("/api/quota")) {
+        return {
+          ok: true,
+          json: async () => ({
+            userId: "u1",
+            tier: "professional",
+            remaining: 0,
+            dailyLimit: null,
+            resetAt: null,
+            credits: 0,
+            creditsExpireAt: null,
+          }),
+        };
+      }
+      return { ok: true, json: async () => ({}) };
+    });
   });
 
   it("renders the page title", () => {
@@ -256,5 +299,37 @@ describe("PricingPage", () => {
   it("does not show current plan summary for unauthenticated users", () => {
     render(<PricingPage />);
     expect(screen.queryByTestId("current-plan-summary")).not.toBeInTheDocument();
+  });
+
+  it("shows pay-as-you-go remaining credits in summary", async () => {
+    mockUseSession.mockReturnValue({
+      data: { user: { name: "Payg User", tier: "pay_as_you_go" } },
+      status: "authenticated",
+    });
+    mockFetch.mockImplementation(async (input: unknown) => {
+      const url = getRequestUrl(input);
+      if (url.endsWith("/api/quota")) {
+        return {
+          ok: true,
+          json: async () => ({
+            userId: "u1",
+            tier: "pay_as_you_go",
+            remaining: 2,
+            dailyLimit: null,
+            resetAt: null,
+            credits: 2,
+            creditsExpireAt: null,
+          }),
+        };
+      }
+      return { ok: true, json: async () => ({}) };
+    });
+
+    render(<PricingPage />);
+    await waitFor(() => {
+      expect(screen.getByTestId("current-plan-summary")).toHaveTextContent(
+        /Current Plan:\s*Pay As You Go\s*\(2 remaining\)/
+      );
+    });
   });
 });
