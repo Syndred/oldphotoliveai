@@ -70,7 +70,7 @@ export default function ResultPage() {
         setNeedsPolling(true);
       })
       .finally(() => setInitialLoading(false));
-  }, [taskId]);
+  }, [taskId, tErrors]);
 
   const handleComplete = useCallback(
     (data: { status: string; progress: number; [key: string]: unknown }) => {

@@ -113,6 +113,7 @@ export default function PricingCards() {
         {PLANS.map((p) => {
           const isCurrentPlan = p.id === currentPlanId;
           const isHighlighted = p.highlighted || isCurrentPlan;
+          const checkoutPlan = p.plan;
 
           return (
             <div
@@ -165,9 +166,9 @@ export default function PricingCards() {
                   <span className="block w-full rounded-lg border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 py-3 text-center text-sm text-[var(--color-text-primary)] min-h-[44px]">
                     {t("currentPlan")}
                   </span>
-                ) : p.plan ? (
+                ) : checkoutPlan ? (
                   <button
-                    onClick={() => handleCheckout(p.plan)}
+                    onClick={() => handleCheckout(checkoutPlan)}
                     disabled={loadingPlan !== null}
                     className={`w-full rounded-lg py-3 text-sm font-medium transition-colors min-h-[44px] ${
                       p.highlighted
@@ -175,7 +176,7 @@ export default function PricingCards() {
                         : "bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] text-white hover:opacity-90"
                     } disabled:opacity-50`}
                   >
-                    {loadingPlan === p.plan ? t("redirecting") : t(p.ctaKey)}
+                    {loadingPlan === checkoutPlan ? t("redirecting") : t(p.ctaKey)}
                   </button>
                 ) : (
                   <span className="block w-full rounded-lg border border-white/10 py-3 text-center text-sm text-[var(--color-text-secondary)] min-h-[44px]">
