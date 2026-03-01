@@ -1,4 +1,5 @@
 import { buildCdnUrl } from "@/lib/url";
+import { SHOWCASE_SAMPLE_ASSETS } from "@/config/showcase-assets";
 
 export type CompareShowcaseItem = {
   id: string;
@@ -36,36 +37,32 @@ export const IMAGE_SHOWCASE_ROWS: CompareShowcaseRow[] = [
     id: "restoration",
     titleKey: "categories.restoration.title",
     subtitleKey: "categories.restoration.subtitle",
-    items: Array.from({ length: 5 }, (_, i) => ({
-      id: `restoration-${i + 1}`,
-      beforeKey: "showcase/original.jpg",
-      afterKey: "showcase/restored.jpg",
-      version: i + 1,
+    items: SHOWCASE_SAMPLE_ASSETS.map((sample, index) => ({
+      id: `restoration-${index + 1}`,
+      beforeKey: sample.beforeKey,
+      afterKey: sample.restoredKey,
     })),
   },
   {
     id: "colorization",
     titleKey: "categories.colorization.title",
     subtitleKey: "categories.colorization.subtitle",
-    items: Array.from({ length: 5 }, (_, i) => ({
-      id: `colorization-${i + 1}`,
-      beforeKey: "showcase/original.jpg",
-      afterKey: "showcase/colorized.jpg",
-      version: i + 1,
+    items: SHOWCASE_SAMPLE_ASSETS.map((sample, index) => ({
+      id: `colorization-${index + 1}`,
+      beforeKey: sample.beforeKey,
+      afterKey: sample.colorizedKey,
     })),
   },
 ];
 
 // Configure video examples here.
 // Later you can replace each videoKey with different demo videos.
-export const VIDEO_SHOWCASE_ITEMS: VideoShowcaseItem[] = Array.from(
-  { length: 5 },
-  (_, i) => ({
-    id: `animation-${i + 1}`,
-    videoKey: "showcase/animation.mp4",
-    version: i + 1,
-  })
-);
+export const VIDEO_SHOWCASE_ITEMS: VideoShowcaseItem[] = [
+  ...SHOWCASE_SAMPLE_ASSETS.map((sample, index) => ({
+    id: `animation-${index + 1}`,
+    videoKey: sample.animationKey,
+  })),
+];
 
 export function resolveShowcaseAssetUrl(key: string, version?: number): string {
   const baseUrl = buildCdnUrl(key);

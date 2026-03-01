@@ -9,20 +9,33 @@ export interface VideoPlayerProps {
   poster?: string;
   /** Show watermark overlay (for free tier users) */
   showWatermark?: boolean;
+  /** Optional class for outer container */
+  containerClassName?: string;
+  /** Optional class for video element */
+  videoClassName?: string;
 }
 
 // ── Component ───────────────────────────────────────────────────────────────
 
-export default function VideoPlayer({ src, poster, showWatermark = false }: VideoPlayerProps) {
+export default function VideoPlayer({
+  src,
+  poster,
+  showWatermark = false,
+  containerClassName,
+  videoClassName,
+}: VideoPlayerProps) {
   return (
-    <div data-testid="video-player" className="relative w-full">
+    <div
+      data-testid="video-player"
+      className={`relative w-full ${containerClassName ?? ""}`.trim()}
+    >
       <video
         src={src}
         poster={poster}
         controls
         playsInline
         preload="metadata"
-        className="w-full rounded-lg bg-black/20"
+        className={`w-full rounded-lg bg-black/20 ${videoClassName ?? ""}`.trim()}
       >
         Your browser does not support the video tag.
       </video>

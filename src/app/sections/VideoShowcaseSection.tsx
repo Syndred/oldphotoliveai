@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
 import VideoPlayer from "@/components/VideoPlayer";
 import {
   VIDEO_SHOWCASE_ITEMS,
@@ -77,19 +76,13 @@ export default function VideoShowcaseSection() {
     <section id="video-showcase-section" className="px-4 pt-0 pb-8 sm:pb-12">
       <div className="mx-auto max-w-6xl">
         <article className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-4 sm:p-5">
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="mb-4">
             <div>
               <h3 className="text-base font-semibold text-[var(--color-text-primary)] sm:text-xl">
                 {t("title")}
               </h3>
               <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{t("subtitle")}</p>
             </div>
-            <Link
-              href="/pricing"
-              className="inline-flex min-h-[40px] items-center rounded-full border border-[var(--color-border)] bg-[var(--color-card-bg)] px-3 py-1.5 text-xs text-[var(--color-text-secondary)] transition hover:bg-white/10 hover:text-[var(--color-text-primary)]"
-            >
-              {t("controls.viewMore")}
-            </Link>
           </div>
 
           <div className="relative">
@@ -134,7 +127,13 @@ function VideoCard({
     <div
       className={`overflow-hidden rounded-xl border border-[var(--color-border)] bg-white/[0.02] p-1.5 ${className ?? ""}`}
     >
-      <VideoPlayer src={resolveShowcaseAssetUrl(item.videoKey, item.version)} />
+      <div className="aspect-[4/5] overflow-hidden rounded-lg bg-black/20">
+        <VideoPlayer
+          src={resolveShowcaseAssetUrl(item.videoKey, item.version)}
+          containerClassName="h-full"
+          videoClassName="h-full w-full object-cover"
+        />
+      </div>
     </div>
   );
 }

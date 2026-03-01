@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
 import BeforeAfterCompare from "@/components/BeforeAfterCompare";
 import {
   IMAGE_SHOWCASE_ROWS,
@@ -66,14 +65,12 @@ function CompareRow({
   items,
   previousLabel,
   nextLabel,
-  viewMoreLabel,
 }: {
   title: string;
   subtitle: string;
   items: CompareShowcaseItem[];
   previousLabel: string;
   nextLabel: string;
-  viewMoreLabel: string;
 }) {
   const [offset, setOffset] = useState(0);
   const total = items.length;
@@ -99,19 +96,13 @@ function CompareRow({
 
   return (
     <article className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-4 sm:p-5">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="mb-4">
         <div>
           <h3 className="text-base font-semibold text-[var(--color-text-primary)] sm:text-xl">
             {title}
           </h3>
           <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{subtitle}</p>
         </div>
-        <Link
-          href="/pricing"
-          className="inline-flex min-h-[40px] items-center rounded-full border border-[var(--color-border)] bg-[var(--color-card-bg)] px-3 py-1.5 text-xs text-[var(--color-text-secondary)] transition hover:bg-white/10 hover:text-[var(--color-text-primary)]"
-        >
-          {viewMoreLabel}
-        </Link>
       </div>
 
       <div className="relative">
@@ -169,7 +160,6 @@ export default function ShowcaseSection() {
               items={row.items}
               previousLabel={t("controls.previous")}
               nextLabel={t("controls.next")}
-              viewMoreLabel={t("controls.viewMore")}
             />
           ))}
         </div>
