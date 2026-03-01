@@ -120,4 +120,9 @@ export const config = {
       secret: process.env.WORKER_SECRET!,
     };
   },
+  get admin() {
+    return {
+      apiKey: process.env.ADMIN_API_KEY || "",
+    };
+  },
 };

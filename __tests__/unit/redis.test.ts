@@ -1,6 +1,7 @@
 import {
   createOrGetUser,
   getUser,
+  getUserByEmail,
   updateUserTier,
   createTask,
   updateTaskStatus,
@@ -37,6 +38,13 @@ const redisMock = {
     const set = sortedSets.get(key);
     if (!set) return [];
     return set.map((e) => e.member);
+  }),
+  scan: jest.fn(async (cursor: string | number, options?: { match?: string; count?: number }) => {
+    const allKeys = Array.from(store.keys());
+    const matched = options?.match === "user:*"
+      ? allKeys.filter((key) => key.startsWith("user:"))
+      : allKeys;
+    return [0, matched];
   }),
 };
 
@@ -114,6 +122,21 @@ describe("getUser", () => {
     expect(fetched).not.toBeNull();
     expect(fetched!.id).toBe(created.id);
     expect(fetched!.email).toBe("a@b.com");
+  });
+});
+
+describe("getUserByEmail", () => {
+  it("returns user by email index", async () => {
+    const created = await createOrGetUser("g3", "lookup@example.com", "Lookup User");
+    const fetched = await getUserByEmail("lookup@example.com");
+
+    expect(fetched).not.toBeNull();
+    expect(fetched!.id).toBe(created.id);
+  });
+
+  it("returns null when email is not found", async () => {
+    const fetched = await getUserByEmail("missing@example.com");
+    expect(fetched).toBeNull();
   });
 });
 

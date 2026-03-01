@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { createTask, getUser } from "@/lib/redis";
 import { enqueueTask } from "@/lib/queue";
+import { checkAndDecrementQuota } from "@/lib/quota";
 import type { TaskPriority } from "@/types";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
@@ -48,20 +49,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. Determine priority based on tier
+    // 5. Check and decrement quota before creating a task
+    const quotaResult = await checkAndDecrementQuota(userId, user.tier);
+    if (!quotaResult.allowed) {
+      return NextResponse.json(
+        { error: getErrorMessage("quotaExceeded", locale) },
+        { status: 403 }
+      );
+    }
+
+    // 6. Determine priority based on tier
     const priority: TaskPriority = user.tier === "free" ? "normal" : "high";
 
-    // 6. Create task record in Redis (status: pending)
+    // 7. Create task record in Redis (status: pending)
     const task = await createTask({
       userId,
       originalImageKey: imageKey.trim(),
       priority,
     });
 
-    // 7. Enqueue task for processing
+    // 8. Enqueue task for processing
     await enqueueTask(task.id, priority);
 
-    // 8. Fire-and-forget: trigger worker pipeline
+    // 9. Fire-and-forget: trigger worker pipeline
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
     fetch(`${baseUrl}/api/worker/pipeline`, {
       method: "POST",
@@ -72,7 +82,7 @@ export async function POST(request: NextRequest) {
       // Ignore errors - worker will pick up task on next cron cycle
     });
 
-    // 9. Return task ID
+    // 10. Return task ID
     return NextResponse.json({ taskId: task.id }, { status: 201 });
   } catch (error) {
     console.error("Create task failed:", error);

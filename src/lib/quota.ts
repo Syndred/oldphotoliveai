@@ -46,6 +46,17 @@ export async function initializeFreeQuota(userId: string): Promise<void> {
   await redis.sadd(keys.dailyUsers(), userId);
 }
 
+/**
+ * Initialize free quota only when the user has no quota record yet.
+ * This prevents resetting remaining quota on every login.
+ */
+export async function ensureFreeQuotaInitialized(userId: string): Promise<void> {
+  const redis = getRedisClient();
+  const existing = await redis.get(keys.quota(userId));
+  if (existing) return;
+  await initializeFreeQuota(userId);
+}
+
 // ── Clean Expired Credits ───────────────────────────────────────────────────
 
 export async function cleanExpiredCredits(userId: string): Promise<void> {

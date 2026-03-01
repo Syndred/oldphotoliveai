@@ -7,6 +7,8 @@ import type { User, Task } from "@/types";
 const mockGetUser = jest.fn<Promise<User | null>, [string]>();
 const mockCreateTask = jest.fn<Promise<Task>, [{ userId: string; originalImageKey: string; priority: string }]>();
 const mockGetToken = jest.fn();
+const mockCheckAndDecrementQuota = jest.fn();
+const mockEnqueueTask = jest.fn().mockResolvedValue(undefined);
 
 jest.mock("next-auth/jwt", () => ({
   getToken: (...args: unknown[]) => mockGetToken(...args),
@@ -18,7 +20,12 @@ jest.mock("@/lib/redis", () => ({
 }));
 
 jest.mock("@/lib/queue", () => ({
-  enqueueTask: jest.fn().mockResolvedValue(undefined),
+  enqueueTask: (...args: unknown[]) => mockEnqueueTask(args[0] as string, args[1] as string),
+}));
+
+jest.mock("@/lib/quota", () => ({
+  checkAndDecrementQuota: (...args: unknown[]) =>
+    mockCheckAndDecrementQuota(args[0] as string, args[1] as string),
 }));
 
 jest.mock("@/lib/config", () => ({
@@ -75,8 +82,11 @@ beforeEach(() => {
   mockGetUser.mockReset();
   mockCreateTask.mockReset();
   mockGetToken.mockReset();
+  mockCheckAndDecrementQuota.mockReset();
+  mockEnqueueTask.mockReset();
   // Default: authenticated user
   mockGetToken.mockResolvedValue({ userId: "test-user-001" });
+  mockCheckAndDecrementQuota.mockResolvedValue({ allowed: true, remaining: 0 });
   // Suppress console.error from error-path tests
   jest.spyOn(console, "error").mockImplementation(() => {});
 });
@@ -137,6 +147,25 @@ describe("POST /api/tasks", () => {
     expect(body.error).toBe("Please sign in to continue");
   });
 
+  it("returns 403 when quota is exceeded", async () => {
+    const user = makeFakeUser({ tier: "free" });
+    mockGetUser.mockResolvedValue(user);
+    mockCheckAndDecrementQuota.mockResolvedValue({
+      allowed: false,
+      remaining: 0,
+      reason: "Daily free quota exhausted",
+    });
+
+    const req = createJsonRequest({ imageKey: "uploads/photo.jpg" });
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(403);
+    expect(body.error).toBe("Daily free quota used up. Upgrade or try again tomorrow.");
+    expect(mockCreateTask).not.toHaveBeenCalled();
+    expect(mockEnqueueTask).not.toHaveBeenCalled();
+  });
+
   it("creates task with normal priority for free user", async () => {
     const user = makeFakeUser({ tier: "free" });
     const task = makeFakeTask({ priority: "normal" });
@@ -154,6 +183,7 @@ describe("POST /api/tasks", () => {
       originalImageKey: "uploads/photo.jpg",
       priority: "normal",
     });
+    expect(mockCheckAndDecrementQuota).toHaveBeenCalledWith("test-user-001", "free");
   });
 
   it("creates task with high priority for pay_as_you_go user", async () => {
@@ -174,6 +204,7 @@ describe("POST /api/tasks", () => {
       originalImageKey: "uploads/photo.jpg",
       priority: "high",
     });
+    expect(mockCheckAndDecrementQuota).toHaveBeenCalledWith("paid-user", "pay_as_you_go");
   });
 
   it("creates task with high priority for professional user", async () => {
@@ -193,6 +224,7 @@ describe("POST /api/tasks", () => {
       originalImageKey: "uploads/photo.jpg",
       priority: "high",
     });
+    expect(mockCheckAndDecrementQuota).toHaveBeenCalledWith("pro-user", "professional");
   });
 
   it("uses default test user ID when userId is not provided", async () => {

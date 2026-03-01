@@ -32,9 +32,14 @@ export function getRedisClient(): Redis {
 const keys = {
   user: (userId: string) => `user:${userId}`,
   userGoogle: (googleId: string) => `user:google:${googleId}`,
+  userEmail: (email: string) => `user:email:${email}`,
   task: (taskId: string) => `task:${taskId}`,
   userTasks: (userId: string) => `user:${userId}:tasks`,
 };
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
 
 // ── User Operations ─────────────────────────────────────────────────────────
 
@@ -44,6 +49,7 @@ export async function createOrGetUser(
   name: string
 ): Promise<User> {
   const redis = getRedisClient();
+  const normalizedEmail = normalizeEmail(email);
 
   // Check if user already exists via Google ID index
   const existingUserId = await redis.get<string>(keys.userGoogle(googleId));
@@ -51,6 +57,8 @@ export async function createOrGetUser(
   if (existingUserId) {
     const existing = await redis.get<User>(keys.user(existingUserId));
     if (existing) {
+      // Keep email index in sync for lookups by email
+      await redis.set(keys.userEmail(normalizedEmail), existing.id);
       return existing;
     }
   }
@@ -71,8 +79,47 @@ export async function createOrGetUser(
   // Store user data and Google ID index
   await redis.set(keys.user(user.id), user);
   await redis.set(keys.userGoogle(googleId), user.id);
+  await redis.set(keys.userEmail(normalizedEmail), user.id);
 
   return user;
+}
+
+export async function getUserByEmail(email: string): Promise<User | null> {
+  const redis = getRedisClient();
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) return null;
+
+  // Fast path: direct email index
+  const indexedUserId = await redis.get<string>(keys.userEmail(normalizedEmail));
+  if (indexedUserId) {
+    const indexedUser = await redis.get<User>(keys.user(indexedUserId));
+    if (indexedUser) return indexedUser;
+  }
+
+  // Fallback path for legacy data without email index
+  let cursor: string | number = 0;
+  do {
+    const [nextCursor, userKeys] = await redis.scan(cursor, {
+      match: "user:*",
+      count: 100,
+    });
+    cursor = nextCursor as unknown as number;
+
+    for (const key of userKeys) {
+      // Only scan user objects like user:<uuid>; skip indexes and task sets
+      const parts = key.split(":");
+      if (parts.length !== 2 || parts[0] !== "user") continue;
+
+      const candidate = await redis.get<User>(key);
+      if (!candidate) continue;
+      if (normalizeEmail(candidate.email) !== normalizedEmail) continue;
+
+      await redis.set(keys.userEmail(normalizedEmail), candidate.id);
+      return candidate;
+    }
+  } while (cursor !== 0);
+
+  return null;
 }
 
 export async function getUser(userId: string): Promise<User | null> {

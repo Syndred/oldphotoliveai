@@ -5,7 +5,7 @@ import type { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { config } from "./config";
 import { createOrGetUser } from "./redis";
-import { initializeFreeQuota } from "./quota";
+import { ensureFreeQuotaInitialized } from "./quota";
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -28,10 +28,9 @@ export const authOptions: AuthOptions = {
           user.name
         );
 
-        // Initialize free quota for new users
-        // initializeFreeQuota is idempotent-safe since it overwrites
+        // Initialize free quota for new users only (do not reset on every login)
         if (dbUser.tier === "free") {
-          await initializeFreeQuota(dbUser.id);
+          await ensureFreeQuotaInitialized(dbUser.id);
         }
 
         return true;

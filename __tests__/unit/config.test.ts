@@ -25,12 +25,19 @@ const OPTIONAL_STRIPE_VARS = [
   "STRIPE_PRICE_PROFESSIONAL",
 ];
 
+const OPTIONAL_ADMIN_VARS = [
+  "ADMIN_API_KEY",
+];
+
 function setAllEnvVars(): void {
   for (const name of ALL_REQUIRED_VARS) {
     process.env[name] = `test-value-${name}`;
   }
   // Also set Stripe vars to avoid warnings
   for (const name of OPTIONAL_STRIPE_VARS) {
+    process.env[name] = `test-value-${name}`;
+  }
+  for (const name of OPTIONAL_ADMIN_VARS) {
     process.env[name] = `test-value-${name}`;
   }
 }
@@ -40,6 +47,9 @@ function clearAllEnvVars(): void {
     delete process.env[name];
   }
   for (const name of OPTIONAL_STRIPE_VARS) {
+    delete process.env[name];
+  }
+  for (const name of OPTIONAL_ADMIN_VARS) {
     delete process.env[name];
   }
 }
@@ -162,6 +172,10 @@ describe("config object", () => {
 
   it("should map worker env vars correctly", () => {
     expect(config.worker.secret).toBe("test-value-WORKER_SECRET");
+  });
+
+  it("should map admin env vars correctly", () => {
+    expect(config.admin.apiKey).toBe("test-value-ADMIN_API_KEY");
   });
 
   it("should not expose any NEXT_PUBLIC_ vars except R2_DOMAIN", () => {

@@ -1,5 +1,6 @@
 import {
   initializeFreeQuota,
+  ensureFreeQuotaInitialized,
   checkAndDecrementQuota,
   getQuotaInfo,
   addCredits,
@@ -100,6 +101,27 @@ describe("initializeFreeQuota", () => {
 });
 
 // ── checkAndDecrementQuota ──────────────────────────────────────────────────
+
+describe("ensureFreeQuotaInitialized", () => {
+  it("initializes quota when no record exists", async () => {
+    await ensureFreeQuotaInitialized("u1");
+
+    const quota = getStoredQuota("u1");
+    expect(quota).not.toBeNull();
+    expect(quota!.remaining).toBe(1);
+    expect(sets.get("quota:daily:users")?.has("u1")).toBe(true);
+  });
+
+  it("does not overwrite existing quota", async () => {
+    await initializeFreeQuota("u1");
+    await checkAndDecrementQuota("u1", "free"); // remaining -> 0
+
+    await ensureFreeQuotaInitialized("u1");
+
+    const quota = getStoredQuota("u1");
+    expect(quota!.remaining).toBe(0);
+  });
+});
 
 describe("checkAndDecrementQuota", () => {
   it("allows professional users without any quota record", async () => {
