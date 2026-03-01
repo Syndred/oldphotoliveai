@@ -30,7 +30,7 @@ export default function FAQSection() {
               >
                 <button
                   onClick={() => toggle(index)}
-                  className="flex w-full items-center justify-between px-6 py-4 text-left"
+                  className="flex w-full items-center justify-between px-4 py-4 text-left sm:px-6"
                   aria-expanded={isOpen}
                 >
                   <span className="text-sm font-medium text-[var(--color-text-primary)] sm:text-base">
@@ -57,7 +57,7 @@ export default function FAQSection() {
                   className="overflow-hidden transition-[max-height] duration-300 ease-in-out"
                   style={{ maxHeight: isOpen ? "500px" : "0px" }}
                 >
-                  <p className="px-6 pb-4 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                  <p className="px-4 pb-4 text-sm leading-relaxed text-[var(--color-text-secondary)] sm:px-6">
                     {t(key.replace("q", "a") as `a${string}`)}
                   </p>
                 </div>

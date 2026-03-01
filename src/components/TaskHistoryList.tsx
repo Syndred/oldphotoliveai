@@ -108,7 +108,7 @@ export default function TaskHistoryList({
         return (
           <div
             key={task.id}
-            className={`flex items-center gap-4 rounded-xl border p-4 transition-colors ${
+            className={`flex items-start gap-3 rounded-xl border p-4 transition-colors sm:items-center sm:gap-4 ${
               isSelected
                 ? "border-[var(--color-accent,#6366f1)]/50 bg-[var(--color-accent,#6366f1)]/5"
                 : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"
@@ -138,11 +138,11 @@ export default function TaskHistoryList({
             {/* Clickable area linking to result */}
             <Link
               href={`/result/${task.id}`}
-              className="flex flex-1 items-center gap-4"
+              className="flex flex-1 items-start gap-3 sm:items-center sm:gap-4"
               onClick={selectable ? (e) => { e.preventDefault(); onToggleSelect?.(task.id); } : undefined}
             >
               {/* Thumbnail */}
-              <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-white/5">
+              <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-white/5 sm:h-16 sm:w-16">
                 {task.thumbnailUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -180,7 +180,7 @@ export default function TaskHistoryList({
                   </span>
                 </div>
 
-                <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                <p className="mt-1 text-xs text-[var(--color-text-secondary)] sm:text-sm">
                   {formatDate(task.createdAt)}
                 </p>
 
@@ -194,7 +194,7 @@ export default function TaskHistoryList({
                 )}
 
                 {task.status === "failed" && failedMessage && (
-                  <p className="mt-1 max-w-[200px] truncate cursor-default text-xs text-red-400" title={failedMessage}>
+                  <p className="mt-1 max-w-full truncate cursor-default text-xs text-red-400 sm:max-w-[220px]" title={failedMessage}>
                     {failedMessage}
                   </p>
                 )}
@@ -202,7 +202,7 @@ export default function TaskHistoryList({
 
               {/* Chevron */}
               <svg
-                className="h-5 w-5 flex-shrink-0 text-[var(--color-text-secondary)]"
+                className="hidden h-5 w-5 flex-shrink-0 text-[var(--color-text-secondary)] sm:block"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -219,7 +219,7 @@ export default function TaskHistoryList({
                 type="button"
                 onClick={() => onDelete(task.id)}
                 disabled={deleting}
-                className="flex-shrink-0 rounded-lg p-2 text-[var(--color-text-secondary)] transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
+                className="flex-shrink-0 rounded-lg p-2.5 text-[var(--color-text-secondary)] transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
                 aria-label={t("delete")}
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

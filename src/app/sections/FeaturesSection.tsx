@@ -38,15 +38,15 @@ export default function FeaturesSection() {
         <h2 className="text-center text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">
           {t("title")}
         </h2>
-        <p className="mt-3 text-center text-[var(--color-text-secondary)]">
+        <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-relaxed text-[var(--color-text-secondary)] sm:text-base">
           {t("subtitle")}
         </p>
 
-        <div className="mt-8 grid gap-6 sm:grid-cols-3">
+        <div className="mt-8 grid gap-4 md:grid-cols-3 md:gap-6">
           {FEATURES.map((feature) => (
             <div
               key={feature.key}
-              className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-6 backdrop-blur-sm"
+              className="mx-auto w-full max-w-md rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-5 backdrop-blur-sm sm:p-6"
             >
               <div className="mb-4 text-[var(--color-accent)]">
                 {feature.icon}

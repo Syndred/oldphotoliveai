@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useState } from "react";
 import { useSession, signIn } from "next-auth/react";
@@ -35,7 +35,9 @@ export default function HistoryPage() {
               setLoading(false);
               return;
             }
-          } catch { /* ignore corrupt cache */ }
+          } catch {
+            // ignore corrupt cache
+          }
         }
 
         const res = await fetch("/api/history");
@@ -48,8 +50,13 @@ export default function HistoryPage() {
         setTasks(taskList);
 
         try {
-          sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data: taskList, ts: Date.now() }));
-        } catch { /* quota exceeded — ignore */ }
+          sessionStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({ data: taskList, ts: Date.now() })
+          );
+        } catch {
+          // quota exceeded, ignore
+        }
       } catch (err) {
         setError(
           err instanceof Error ? err.message : tErrors("historyLoadFailed")
@@ -58,8 +65,9 @@ export default function HistoryPage() {
         setLoading(false);
       }
     }
+
     fetchHistory();
-  }, [status]);
+  }, [status, tErrors]);
 
   const handleToggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -74,26 +82,33 @@ export default function HistoryPage() {
     if (selectedIds.size === tasks.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(tasks.map((t) => t.id)));
+      setSelectedIds(new Set(tasks.map((task) => task.id)));
     }
   }, [tasks, selectedIds.size]);
 
   const handleDeleteTasks = useCallback(async (taskIds: string[]) => {
     if (taskIds.length === 0) return;
     setDeleting(true);
+
     try {
       const res = await fetch("/api/history", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ taskIds }),
       });
+
       if (res.ok) {
         const deletedSet = new Set(taskIds);
         setTasks((prev) => {
-          const updated = prev.filter((t) => !deletedSet.has(t.id));
+          const updated = prev.filter((task) => !deletedSet.has(task.id));
           try {
-            sessionStorage.setItem("history_cache", JSON.stringify({ data: updated, ts: Date.now() }));
-          } catch { /* ignore */ }
+            sessionStorage.setItem(
+              "history_cache",
+              JSON.stringify({ data: updated, ts: Date.now() })
+            );
+          } catch {
+            // ignore cache write errors
+          }
           return updated;
         });
         setSelectedIds((prev) => {
@@ -103,15 +118,18 @@ export default function HistoryPage() {
         });
       }
     } catch {
-      // silently fail — user can retry
+      // silently fail, user can retry
     } finally {
       setDeleting(false);
     }
   }, []);
 
-  const handleDeleteSingle = useCallback((id: string) => {
-    handleDeleteTasks([id]);
-  }, [handleDeleteTasks]);
+  const handleDeleteSingle = useCallback(
+    (id: string) => {
+      handleDeleteTasks([id]);
+    },
+    [handleDeleteTasks]
+  );
 
   const handleDeleteSelected = useCallback(() => {
     handleDeleteTasks(Array.from(selectedIds));
@@ -119,21 +137,33 @@ export default function HistoryPage() {
 
   const allSelected = tasks.length > 0 && selectedIds.size === tasks.length;
 
-  // Unauthenticated: show login prompt
   if (status === "unauthenticated") {
     return (
       <div className="min-h-screen bg-[var(--color-primary-bg)]">
         <Navbar />
         <main className="mx-auto max-w-3xl px-4 py-10 sm:py-16">
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center backdrop-blur-sm">
-            <svg className="mx-auto mb-4 h-12 w-12 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            <svg
+              className="mx-auto mb-4 h-12 w-12 text-[var(--color-text-secondary)]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+              />
             </svg>
-            <p className="mb-4 text-[var(--color-text-secondary)]">{tAuth("signInPrompt")}</p>
+            <p className="mb-4 text-[var(--color-text-secondary)]">
+              {tAuth("signInPrompt")}
+            </p>
             <button
               type="button"
               onClick={() => signIn("google")}
-              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 min-h-[44px]"
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 sm:w-auto"
             >
               {tAuth("signInWith")}
             </button>
@@ -149,97 +179,106 @@ export default function HistoryPage() {
 
       <main className="mx-auto max-w-3xl px-4 py-10 sm:py-16">
         <section aria-labelledby="history-heading">
-        <div className="mb-8 flex items-center justify-between">
-          <h1 id="history-heading" className="text-2xl font-bold text-[var(--color-text-primary)]">
-            {t("title")}
-          </h1>
+          <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h1
+              id="history-heading"
+              className="text-2xl font-bold text-[var(--color-text-primary)]"
+            >
+              {t("title")}
+            </h1>
 
-          {!loading && !error && tasks.length > 0 && (
-            <div className="flex items-center gap-2">
-              {selectable ? (
-                <>
+            {!loading && !error && tasks.length > 0 && (
+              <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
+                {selectable ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleSelectAll}
+                      className="min-h-[40px] rounded-lg px-3 py-1.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-white/10"
+                    >
+                      {allSelected ? t("deselectAll") : t("selectAll")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDeleteSelected}
+                      disabled={selectedIds.size === 0 || deleting}
+                      className="min-h-[40px] rounded-lg bg-red-500/20 px-3 py-1.5 text-sm text-red-400 transition-colors hover:bg-red-500/30 disabled:opacity-50"
+                    >
+                      {deleting ? t("deleting") : t("deleteSelected")} (
+                      {selectedIds.size})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectable(false);
+                        setSelectedIds(new Set());
+                      }}
+                      className="min-h-[40px] rounded-lg px-3 py-1.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-white/10"
+                    >
+                      X
+                    </button>
+                  </>
+                ) : (
                   <button
                     type="button"
-                    onClick={handleSelectAll}
-                    className="rounded-lg px-3 py-1.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-white/10"
+                    onClick={() => setSelectable(true)}
+                    className="min-h-[40px] rounded-lg px-3 py-1.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-white/10"
                   >
-                    {allSelected ? t("deselectAll") : t("selectAll")}
+                    {t("deleteSelected")}
                   </button>
-                  <button
-                    type="button"
-                    onClick={handleDeleteSelected}
-                    disabled={selectedIds.size === 0 || deleting}
-                    className="rounded-lg bg-red-500/20 px-3 py-1.5 text-sm text-red-400 transition-colors hover:bg-red-500/30 disabled:opacity-50"
-                  >
-                    {deleting ? t("deleting") : t("deleteSelected")} ({selectedIds.size})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setSelectable(false); setSelectedIds(new Set()); }}
-                    className="rounded-lg px-3 py-1.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-white/10"
-                  >
-                    ✕
-                  </button>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setSelectable(true)}
-                  className="rounded-lg px-3 py-1.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-white/10"
-                >
-                  {t("deleteSelected")}
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-
-        {loading && (
-          <div className="space-y-3" data-testid="loading-skeleton">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="flex animate-pulse items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-4"
-              >
-                <div className="h-16 w-16 flex-shrink-0 rounded-lg bg-white/10" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 w-20 rounded bg-white/10" />
-                  <div className="h-3 w-32 rounded bg-white/10" />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {error && !loading && (
-          <div
-            className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 text-center"
-            role="alert"
-          >
-            <p className="text-sm text-red-400">{error}</p>
-          </div>
-        )}
-
-        {!loading && !error && (
-          <div className="relative">
-            {deleting && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-black/30 backdrop-blur-sm">
-                <div className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-bg)] px-4 py-3 shadow-lg border border-white/10">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--color-accent)] border-t-transparent" />
-                  <span className="text-sm text-[var(--color-text-primary)]">{t("deleting")}</span>
-                </div>
+                )}
               </div>
             )}
-            <TaskHistoryList
-              tasks={tasks}
-              selectable={selectable}
-              selectedIds={selectedIds}
-              onToggleSelect={handleToggleSelect}
-              onDelete={handleDeleteSingle}
-              deleting={deleting}
-            />
           </div>
-        )}
+
+          {loading && (
+            <div className="space-y-3" data-testid="loading-skeleton">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="flex animate-pulse items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-4"
+                >
+                  <div className="h-16 w-16 flex-shrink-0 rounded-lg bg-white/10" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-20 rounded bg-white/10" />
+                    <div className="h-3 w-32 rounded bg-white/10" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {error && !loading && (
+            <div
+              className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 text-center"
+              role="alert"
+            >
+              <p className="text-sm text-red-400">{error}</p>
+            </div>
+          )}
+
+          {!loading && !error && (
+            <div className="relative">
+              {deleting && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-black/30 backdrop-blur-sm">
+                  <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-[var(--color-primary-bg)] px-4 py-3 shadow-lg">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--color-accent)] border-t-transparent" />
+                    <span className="text-sm text-[var(--color-text-primary)]">
+                      {t("deleting")}
+                    </span>
+                  </div>
+                </div>
+              )}
+              <TaskHistoryList
+                tasks={tasks}
+                selectable={selectable}
+                selectedIds={selectedIds}
+                onToggleSelect={handleToggleSelect}
+                onDelete={handleDeleteSingle}
+                deleting={deleting}
+              />
+            </div>
+          )}
         </section>
       </main>
     </div>

@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import AuthButton from "./AuthButton";
 import LanguageSwitcher from "./LanguageSwitcher";
+import type { UserTier } from "@/types";
 
 const NAV_LINKS = [
   { href: "/", labelKey: "home" },
@@ -13,18 +15,40 @@ const NAV_LINKS = [
   { href: "/pricing", labelKey: "pricing" },
 ] as const;
 
+function parseUserTier(value: unknown): UserTier | null {
+  if (
+    value === "free" ||
+    value === "pay_as_you_go" ||
+    value === "professional"
+  ) {
+    return value;
+  }
+  return null;
+}
+
 export default function Navbar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
   const t = useTranslations("nav");
+  const tPricing = useTranslations("pricing");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const tier = parseUserTier(
+    (session?.user as Record<string, unknown> | undefined)?.tier
+  );
+  const tierLabel =
+    tier === "pay_as_you_go"
+      ? tPricing("payAsYouGo")
+      : tier
+        ? tPricing(tier)
+        : null;
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-[var(--color-primary-bg)]/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6">
         {/* Logo */}
         <Link
           href="/"
-          className="bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-accent)] bg-clip-text text-lg font-bold text-transparent"
+          className="block min-w-0 max-w-[46vw] truncate bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-accent)] bg-clip-text text-base font-bold text-transparent sm:max-w-none sm:text-lg"
         >
           OldPhotoLive AI
         </Link>
@@ -51,8 +75,10 @@ export default function Navbar() {
         </div>
 
         {/* Auth, Language & Mobile Menu Button */}
-        <div className="flex items-center gap-2">
-          <LanguageSwitcher />
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <div className="hidden sm:block">
+            <LanguageSwitcher />
+          </div>
           <AuthButton />
           {/* Hamburger button - visible only on small screens */}
           <button
@@ -83,6 +109,19 @@ export default function Navbar() {
       {/* Mobile Navigation Menu */}
       {mobileMenuOpen && (
         <div className="sm:hidden border-t border-white/10 px-4 pb-3 pt-2">
+          {tierLabel && (
+            <div className="px-3 py-2">
+              <span
+                data-testid="tier-badge-mobile"
+                className="inline-flex items-center rounded-full border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 px-2.5 py-1 text-xs font-medium text-[var(--color-text-primary)]"
+              >
+                {tPricing("currentPlan")}: {tierLabel}
+              </span>
+            </div>
+          )}
+          <div className="px-3 py-2">
+            <LanguageSwitcher />
+          </div>
           {NAV_LINKS.map(({ href, labelKey }) => {
             const isActive =
               href === "/" ? pathname === "/" : pathname.startsWith(href);

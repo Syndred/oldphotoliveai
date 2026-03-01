@@ -27,17 +27,19 @@ function ArrowButton({
   label,
   direction,
   onClick,
+  className,
 }: {
   label: string;
   direction: "left" | "right";
   onClick: () => void;
+  className?: string;
 }) {
   return (
     <button
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-card-bg)] text-[var(--color-text-primary)] transition hover:bg-white/10"
+      className={`flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-card-bg)] text-[var(--color-text-primary)] transition hover:bg-white/10 ${className ?? ""}`}
     >
       <svg
         className="h-4 w-4"
@@ -75,16 +77,16 @@ export default function VideoShowcaseSection() {
     <section id="video-showcase-section" className="px-4 pt-0 pb-8 sm:pb-12">
       <div className="mx-auto max-w-6xl">
         <article className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-4 sm:p-5">
-          <div className="mb-3 flex items-center justify-between gap-2">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-[var(--color-text-primary)] sm:text-xl">
+              <h3 className="text-base font-semibold text-[var(--color-text-primary)] sm:text-xl">
                 {t("title")}
               </h3>
               <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{t("subtitle")}</p>
             </div>
             <Link
               href="/pricing"
-              className="rounded-full border border-[var(--color-border)] bg-[var(--color-card-bg)] px-3 py-1.5 text-xs text-[var(--color-text-secondary)] transition hover:bg-white/10 hover:text-[var(--color-text-primary)]"
+              className="inline-flex min-h-[40px] items-center rounded-full border border-[var(--color-border)] bg-[var(--color-card-bg)] px-3 py-1.5 text-xs text-[var(--color-text-secondary)] transition hover:bg-white/10 hover:text-[var(--color-text-primary)]"
             >
               {t("controls.viewMore")}
             </Link>
@@ -101,12 +103,17 @@ export default function VideoShowcaseSection() {
               ))}
             </div>
 
-            <div className="pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center justify-between px-1">
+            <div className="mt-3 flex items-center justify-between sm:hidden">
+              <ArrowButton label={t("controls.previous")} direction="left" onClick={handlePrevious} />
+              <ArrowButton label={t("controls.next")} direction="right" onClick={handleNext} />
+            </div>
+
+            <div className="pointer-events-none absolute inset-y-0 left-0 right-0 hidden items-center justify-between px-1 sm:flex">
               <div className="pointer-events-auto">
-                <ArrowButton label={t("controls.previous")} direction="left" onClick={handlePrevious} />
+                <ArrowButton label={t("controls.previous")} direction="left" onClick={handlePrevious} className="h-8 w-8" />
               </div>
               <div className="pointer-events-auto">
-                <ArrowButton label={t("controls.next")} direction="right" onClick={handleNext} />
+                <ArrowButton label={t("controls.next")} direction="right" onClick={handleNext} className="h-8 w-8" />
               </div>
             </div>
           </div>

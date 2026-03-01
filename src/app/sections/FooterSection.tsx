@@ -24,7 +24,7 @@ export default function FooterSection() {
           </p>
         </div>
 
-        <nav aria-label="Footer navigation" className="flex gap-4">
+        <nav aria-label="Footer navigation" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:justify-end">
           {FOOTER_LINKS.map((link) => (
             <Link
               key={link.href}

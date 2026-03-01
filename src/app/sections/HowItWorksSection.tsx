@@ -17,13 +17,13 @@ export default function HowItWorksSection() {
         <h2 className="text-center text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">
           {t("title")}
         </h2>
-        <p className="mt-3 text-center text-[var(--color-text-secondary)]">
+        <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-relaxed text-[var(--color-text-secondary)] sm:text-base">
           {t("subtitle")}
         </p>
 
-        <div className="mt-8 grid gap-8 sm:grid-cols-3">
+        <div className="mt-8 grid gap-6 md:grid-cols-3 md:gap-8">
           {STEPS.map((step) => (
-            <div key={step.key} className="flex flex-col items-center text-center">
+            <div key={step.key} className="mx-auto flex max-w-md flex-col items-center text-center">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] text-xl font-bold text-[var(--color-primary-bg)]">
                 {step.number}
               </div>

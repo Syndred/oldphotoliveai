@@ -5,11 +5,14 @@ import React from "react";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
-// Mock next-auth/react (needed by Navbar/AuthButton)
+// Mock next-auth/react (needed by Navbar/AuthButton/PricingCards)
+const mockUseSession = jest.fn();
+const mockSignIn = jest.fn();
+const mockSignOut = jest.fn();
 jest.mock("next-auth/react", () => ({
-  useSession: () => ({ data: null, status: "unauthenticated" }),
-  signIn: jest.fn(),
-  signOut: jest.fn(),
+  useSession: () => mockUseSession(),
+  signIn: (...args: unknown[]) => mockSignIn(...args),
+  signOut: (...args: unknown[]) => mockSignOut(...args),
 }));
 
 // Mock next-intl (needed by LanguageSwitcher and PricingCards)
@@ -69,6 +72,7 @@ global.fetch = mockFetch;
 describe("PricingCards", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseSession.mockReturnValue({ data: null, status: "unauthenticated" });
   });
 
   it("renders three pricing plans", () => {
@@ -101,6 +105,19 @@ describe("PricingCards", () => {
     render(<PricingCards />);
     const currentPlan = screen.getByText("Current Plan");
     expect(currentPlan.tagName).toBe("SPAN");
+  });
+
+  it("shows Current Plan on professional card for professional users", () => {
+    mockUseSession.mockReturnValue({
+      data: { user: { name: "Pro User", tier: "professional" } },
+      status: "authenticated",
+    });
+
+    render(<PricingCards />);
+
+    const professionalCard = screen.getByTestId("plan-professional");
+    expect(professionalCard).toHaveTextContent("Current Plan");
+    expect(screen.queryByText("Subscribe")).not.toBeInTheDocument();
   });
 
   it("shows Buy Credits button for pay-as-you-go", () => {
@@ -198,6 +215,7 @@ describe("PricingCards", () => {
 describe("PricingPage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseSession.mockReturnValue({ data: null, status: "unauthenticated" });
   });
 
   it("renders the page title", () => {
@@ -221,5 +239,22 @@ describe("PricingPage", () => {
     expect(
       screen.getByText("Unlock the full power of AI photo restoration")
     ).toBeInTheDocument();
+  });
+
+  it("shows current plan summary for authenticated users", () => {
+    mockUseSession.mockReturnValue({
+      data: { user: { name: "Pro User", tier: "professional" } },
+      status: "authenticated",
+    });
+
+    render(<PricingPage />);
+    expect(screen.getByTestId("current-plan-summary")).toHaveTextContent(
+      "Current Plan: Professional"
+    );
+  });
+
+  it("does not show current plan summary for unauthenticated users", () => {
+    render(<PricingPage />);
+    expect(screen.queryByTestId("current-plan-summary")).not.toBeInTheDocument();
   });
 });

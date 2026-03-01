@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
 // Mock next-auth/react
@@ -52,6 +52,7 @@ jest.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => {
     const translations: Record<string, Record<string, string>> = {
       nav: { home: "Home", history: "History", pricing: "Pricing", login: "Sign In", logout: "Sign Out" },
+      pricing: { free: "Free", payAsYouGo: "Pay As You Go", professional: "Professional", currentPlan: "Current Plan" },
     };
     return translations[namespace]?.[key] ?? key;
   },
@@ -185,6 +186,36 @@ describe("Navbar", () => {
     render(<Navbar />);
     // AuthButton renders Sign In when unauthenticated
     expect(screen.getByText("Sign In")).toBeInTheDocument();
+  });
+
+  it("shows themed tier badge next to username for authenticated user", () => {
+    mockUsePathname.mockReturnValue("/");
+    mockUseSession.mockReturnValue({
+      data: {
+        user: { name: "Paid User", email: "paid@example.com", tier: "professional" },
+      },
+      status: "authenticated",
+    });
+
+    render(<Navbar />);
+    expect(screen.getByText("Paid User")).toBeInTheDocument();
+    expect(screen.getByTestId("auth-tier-badge")).toHaveTextContent("Professional");
+  });
+
+  it("shows tier badge in mobile menu when expanded", () => {
+    mockUsePathname.mockReturnValue("/");
+    mockUseSession.mockReturnValue({
+      data: {
+        user: { name: "Paid User", email: "paid@example.com", tier: "professional" },
+      },
+      status: "authenticated",
+    });
+
+    render(<Navbar />);
+    fireEvent.click(screen.getByLabelText("Toggle navigation menu"));
+    expect(screen.getByTestId("tier-badge-mobile")).toHaveTextContent(
+      "Current Plan: Professional"
+    );
   });
 
   it("logo links to home page", () => {

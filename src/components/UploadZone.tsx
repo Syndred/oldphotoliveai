@@ -181,7 +181,7 @@ export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
       }}
       className={`
         relative flex flex-col items-center justify-center gap-4
-        rounded-2xl border-2 border-dashed p-8 sm:p-12
+        rounded-2xl border-2 border-dashed p-6 sm:p-12
         transition-all duration-300 ease-out cursor-pointer
         focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50
         ${
@@ -245,7 +245,7 @@ export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
       )}
 
       {state === "error" && errorMsg && (
-        <p className="text-xs text-red-400" role="alert">
+        <p className="text-center text-xs text-red-400" role="alert">
           {errorMsg}
         </p>
       )}

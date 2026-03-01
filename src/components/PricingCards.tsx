@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
+import type { UserTier } from "@/types";
 
 interface PricingPlan {
-  id: string;
+  id: "free" | "pay_as_you_go" | "professional";
   nameKey: string;
   price: string;
   period: string;
@@ -15,6 +17,17 @@ interface PricingPlan {
   plan?: "pay_as_you_go" | "professional";
 }
 
+function parseUserTier(value: unknown): UserTier | null {
+  if (
+    value === "free" ||
+    value === "pay_as_you_go" ||
+    value === "professional"
+  ) {
+    return value;
+  }
+  return null;
+}
+
 const PLANS: PricingPlan[] = [
   {
     id: "free",
@@ -23,7 +36,7 @@ const PLANS: PricingPlan[] = [
     period: "",
     descKey: "freeDesc",
     featureKeys: ["freeFeature1", "freeFeature2", "freeFeature3"],
-    ctaKey: "currentPlan",
+    ctaKey: "free",
     highlighted: false,
   },
   {
@@ -58,8 +71,14 @@ const PLANS: PricingPlan[] = [
 export default function PricingCards() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { data: session } = useSession();
   const t = useTranslations("pricing");
   const tErrors = useTranslations("errors");
+
+  const currentTier = parseUserTier(
+    (session?.user as Record<string, unknown> | undefined)?.tier
+  );
+  const currentPlanId: PricingPlan["id"] = currentTier ?? "free";
 
   async function handleCheckout(plan: "pay_as_you_go" | "professional") {
     setLoadingPlan(plan);
@@ -91,73 +110,82 @@ export default function PricingCards() {
   return (
     <div>
       <div className="grid gap-6 md:grid-cols-3">
-        {PLANS.map((p) => (
-          <div
-            key={p.id}
-            data-testid={`plan-${p.id}`}
-            className={`relative rounded-2xl border p-6 transition-shadow ${
-              p.highlighted
-                ? "border-[var(--color-accent)] bg-gradient-to-b from-[var(--color-accent)]/10 to-transparent shadow-lg shadow-[var(--color-accent)]/10"
-                : "border-white/10 bg-white/[0.03]"
-            }`}
-          >
-            {p.highlighted && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--color-accent)] px-3 py-0.5 text-xs font-semibold text-white">
-                {t("recommended")}
-              </span>
-            )}
+        {PLANS.map((p) => {
+          const isCurrentPlan = p.id === currentPlanId;
+          const isHighlighted = p.highlighted || isCurrentPlan;
 
-            <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-              {t(p.nameKey)}
-            </h2>
-            <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-              {t(p.descKey)}
-            </p>
-
-            <div className="mt-4 flex items-baseline gap-1">
-              <span className="text-3xl font-bold text-[var(--color-text-primary)]">
-                {p.price}
-              </span>
-              {p.period && (
-                <span className="text-sm text-[var(--color-text-secondary)]">
-                  {p.period}
+          return (
+            <div
+              key={p.id}
+              data-testid={`plan-${p.id}`}
+              className={`relative rounded-2xl border p-6 transition-shadow ${
+                isHighlighted
+                  ? "border-[var(--color-accent)] bg-gradient-to-b from-[var(--color-accent)]/10 to-transparent shadow-lg shadow-[var(--color-accent)]/10"
+                  : "border-white/10 bg-white/[0.03]"
+              }`}
+            >
+              {p.highlighted && !isCurrentPlan && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--color-accent)] px-3 py-0.5 text-xs font-semibold text-white">
+                  {t("recommended")}
                 </span>
               )}
-            </div>
 
-            <ul className="mt-6 space-y-2">
-              {p.featureKeys.map((fk) => (
-                <li
-                  key={fk}
-                  className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]"
-                >
-                  <span className="mt-0.5 text-[var(--color-accent)]">✓</span>
-                  {t(fk)}
-                </li>
-              ))}
-            </ul>
+              <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                {t(p.nameKey)}
+              </h2>
+              <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                {t(p.descKey)}
+              </p>
 
-            <div className="mt-6">
-              {p.plan ? (
-                <button
-                  onClick={() => handleCheckout(p.plan!)}
-                  disabled={loadingPlan !== null}
-                  className={`w-full rounded-lg py-3 text-sm font-medium transition-colors min-h-[44px] ${
-                    p.highlighted
-                      ? "bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent)]/90"
-                      : "bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] text-white hover:opacity-90"
-                  } disabled:opacity-50`}
-                >
-                  {loadingPlan === p.plan ? t("redirecting") : t(p.ctaKey)}
-                </button>
-              ) : (
-                <span className="block w-full rounded-lg border border-white/10 py-3 text-center text-sm text-[var(--color-text-secondary)] min-h-[44px]">
-                  {t(p.ctaKey)}
+              <div className="mt-4 flex items-baseline gap-1">
+                <span className="text-3xl font-bold text-[var(--color-text-primary)]">
+                  {p.price}
                 </span>
-              )}
+                {p.period && (
+                  <span className="text-sm text-[var(--color-text-secondary)]">
+                    {p.period}
+                  </span>
+                )}
+              </div>
+
+              <ul className="mt-6 space-y-2">
+                {p.featureKeys.map((fk) => (
+                  <li
+                    key={fk}
+                    className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]"
+                  >
+                    <span className="mt-0.5 text-[var(--color-accent)]">{"\u2713"}</span>
+                    {t(fk)}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-6">
+                {isCurrentPlan ? (
+                  <span className="block w-full rounded-lg border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 py-3 text-center text-sm text-[var(--color-text-primary)] min-h-[44px]">
+                    {t("currentPlan")}
+                  </span>
+                ) : p.plan ? (
+                  <button
+                    onClick={() => handleCheckout(p.plan)}
+                    disabled={loadingPlan !== null}
+                    className={`w-full rounded-lg py-3 text-sm font-medium transition-colors min-h-[44px] ${
+                      p.highlighted
+                        ? "bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent)]/90"
+                        : "bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] text-white hover:opacity-90"
+                    } disabled:opacity-50`}
+                  >
+                    {loadingPlan === p.plan ? t("redirecting") : t(p.ctaKey)}
+                  </button>
+                ) : (
+                  <span className="block w-full rounded-lg border border-white/10 py-3 text-center text-sm text-[var(--color-text-secondary)] min-h-[44px]">
+                    {t(p.ctaKey)}
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {error && (
