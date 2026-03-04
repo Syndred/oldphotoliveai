@@ -12,20 +12,21 @@ import FooterSection from "./sections/FooterSection";
 export const metadata: Metadata = {
   title: "AI Photo Restoration & Colorization",
   description:
-    "Restore, colorize, and animate your old photos with AI â€?bring faded memories back to life in seconds.",
+    "Restore, colorize, and animate your old photos with AI - bring faded memories back to life in seconds.",
   openGraph: {
     title: "AI Photo Restoration & Colorization",
     description:
-      "Restore, colorize, and animate your old photos with AI â€?bring faded memories back to life in seconds.",
+      "Restore, colorize, and animate your old photos with AI - bring faded memories back to life in seconds.",
     url: "https://oldphotoliveai.com",
   },
   twitter: {
     card: "summary_large_image",
     title: "AI Photo Restoration & Colorization",
     description:
-      "Restore, colorize, and animate your old photos with AI â€?bring faded memories back to life in seconds.",
+      "Restore, colorize, and animate your old photos with AI - bring faded memories back to life in seconds.",
   },
 };
+
 export default function HomePage() {
   const jsonLd = {
     "@context": "https://schema.org",
