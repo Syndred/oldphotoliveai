@@ -42,18 +42,30 @@ export function getS3Client(): S3Client {
 export async function uploadToR2(
   file: Buffer,
   key: string,
-  contentType: string
+  contentType: string,
+  cacheControl?: string
 ): Promise<string> {
   const client = getS3Client();
+  const resolvedCacheControl =
+    cacheControl ?? resolveCacheControlForContentType(contentType);
   await client.send(
     new PutObjectCommand({
       Bucket: config.r2.bucketName,
       Key: key,
       Body: file,
       ContentType: contentType,
+      CacheControl: resolvedCacheControl,
     })
   );
   return key;
+}
+
+function resolveCacheControlForContentType(contentType: string): string {
+  if (contentType.startsWith("image/") || contentType.startsWith("video/")) {
+    // Task outputs are content-addressed by task UUID path, so short-term public caching is safe.
+    return "public, max-age=86400, stale-while-revalidate=604800";
+  }
+  return "public, max-age=3600";
 }
 
 /**

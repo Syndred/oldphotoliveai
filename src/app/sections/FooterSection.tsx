@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 const FOOTER_LINKS = [
-  { href: "/", key: "home" as const },
-  { href: "/pricing", key: "pricing" as const },
-  { href: "/history", key: "history" as const },
+  { href: "/", key: "home" as const, label: null },
+  { href: "/pricing", key: "pricing" as const, label: null },
+  { href: "/history", key: "history" as const, label: null },
+  { href: "/privacy", key: null, label: "Privacy" },
+  { href: "/terms", key: null, label: "Terms" },
 ] as const;
 
 export default function FooterSection() {
@@ -31,7 +33,7 @@ export default function FooterSection() {
               href={link.href}
               className="text-sm text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text-primary)]"
             >
-              {t(`links.${link.key}`)}
+              {link.key ? t(`links.${link.key}`) : link.label}
             </Link>
           ))}
         </nav>

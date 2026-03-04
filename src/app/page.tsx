@@ -12,18 +12,18 @@ import FooterSection from "./sections/FooterSection";
 export const metadata: Metadata = {
   title: "AI Photo Restoration & Colorization",
   description:
-    "Restore, colorize, and animate your old photos with AI â€” bring faded memories back to life in seconds.",
+    "Restore, colorize, and animate your old photos with AI â€?bring faded memories back to life in seconds.",
   openGraph: {
     title: "AI Photo Restoration & Colorization",
     description:
-      "Restore, colorize, and animate your old photos with AI â€” bring faded memories back to life in seconds.",
-    url: "https://oldphotolive.com",
+      "Restore, colorize, and animate your old photos with AI â€?bring faded memories back to life in seconds.",
+    url: "https://oldphotoliveai.com",
   },
   twitter: {
     card: "summary_large_image",
     title: "AI Photo Restoration & Colorization",
     description:
-      "Restore, colorize, and animate your old photos with AI â€” bring faded memories back to life in seconds.",
+      "Restore, colorize, and animate your old photos with AI â€?bring faded memories back to life in seconds.",
   },
 };
 export default function HomePage() {
@@ -33,7 +33,7 @@ export default function HomePage() {
     name: "OldPhotoLive AI",
     description:
       "AI-powered photo restoration, colorization, and animation",
-    url: "https://oldphotolive.com",
+    url: "https://oldphotoliveai.com",
     applicationCategory: "MultimediaApplication",
     operatingSystem: "Web",
     offers: {

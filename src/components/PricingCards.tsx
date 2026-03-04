@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import type { UserTier } from "@/types";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 
 interface PricingPlan {
   id: "free" | "pay_as_you_go" | "professional";
@@ -90,6 +91,7 @@ export default function PricingCards({
   async function handleCheckout(plan: "pay_as_you_go" | "professional") {
     setLoadingPlan(plan);
     setError(null);
+    trackAnalyticsEvent("checkout_started", { plan });
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
@@ -105,9 +107,11 @@ export default function PricingCards({
         throw new Error(data.error ?? tErrors("checkoutFailed"));
       }
       if (data.url) {
+        trackAnalyticsEvent("checkout_redirected", { plan });
         window.location.href = data.url;
       }
     } catch (err) {
+      trackAnalyticsEvent("checkout_failed", { plan });
       setError(err instanceof Error ? err.message : tErrors("checkoutFailed"));
     } finally {
       setLoadingPlan(null);

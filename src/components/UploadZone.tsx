@@ -3,6 +3,8 @@
 import { useState, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { SUPPORTED_MIME_TYPES, MAX_FILE_SIZE } from "@/lib/validation";
+import { compressImageForUpload } from "@/lib/client-image";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 
 interface UploadZoneProps {
   onUpload: (imageKey: string) => void;
@@ -112,8 +114,15 @@ export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
       setErrorMsg("");
 
       try {
+        const uploadFile = await compressImageForUpload(file);
+        if (uploadFile.size < file.size) {
+          trackAnalyticsEvent("upload_compressed", {
+            bytes_saved: file.size - uploadFile.size,
+          });
+        }
+
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", uploadFile);
 
         const key = await uploadWithProgress(formData, setProgress);
         setState("idle");
@@ -181,7 +190,8 @@ export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
       }}
       className={`
         relative flex flex-col items-center justify-center gap-4
-        rounded-2xl border-2 border-dashed p-6 sm:p-12
+        rounded-2xl border-2 border-dashed px-4 py-8 sm:p-12
+        min-h-[280px] sm:min-h-[320px]
         transition-all duration-300 ease-out cursor-pointer
         focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50
         ${
@@ -228,17 +238,17 @@ export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
       ) : (
         <>
           <div className="text-center">
-            <p className="text-sm font-medium text-[var(--color-text-primary)]">
+            <p className="text-base font-medium text-[var(--color-text-primary)] sm:text-sm">
               {t("dragDrop")}
             </p>
-            <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+            <p className="mt-1 text-sm text-[var(--color-text-secondary)] sm:text-xs">
               or{" "}
               <span className="text-[var(--color-accent)] underline underline-offset-2">
                 {t("browse")}
               </span>
             </p>
           </div>
-          <p className="text-xs text-[var(--color-text-secondary)]">
+          <p className="text-sm text-[var(--color-text-secondary)] sm:text-xs">
             {t("supportedFormats")}
           </p>
         </>

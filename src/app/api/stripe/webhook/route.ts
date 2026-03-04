@@ -6,9 +6,22 @@ import type { NextRequest } from "next/server";
 import Stripe from "stripe";
 import { getStripeClient } from "@/lib/stripe";
 import { config } from "@/lib/config";
-import { updateUserTier } from "@/lib/redis";
+import { getRedisClient, updateUserTier } from "@/lib/redis";
 import { addCredits } from "@/lib/quota";
+import { sendPaymentEmail } from "@/lib/email";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
+
+const EMAIL_EVENT_TTL_SECONDS = 3 * 24 * 60 * 60;
+
+async function shouldSendWebhookEmail(eventId: string): Promise<boolean> {
+  const redis = getRedisClient();
+  const key = `email:webhook:${eventId}`;
+  const result = await redis.set(key, "1", {
+    nx: true,
+    ex: EMAIL_EVENT_TTL_SECONDS,
+  });
+  return result === "OK";
+}
 
 export async function POST(request: NextRequest) {
   const locale = getRequestLocale(request);
@@ -69,6 +82,18 @@ export async function POST(request: NextRequest) {
           await updateUserTier(userId, "professional");
         }
 
+        const email =
+          session.customer_details?.email ?? session.customer_email ?? null;
+        if (email && (await shouldSendWebhookEmail(event.id))) {
+          sendPaymentEmail({
+            to: email,
+            type: "payment_success",
+            plan,
+          }).catch((error) => {
+            console.error("Failed to send payment success email:", error);
+          });
+        }
+
         break;
       }
 
@@ -92,6 +117,17 @@ export async function POST(request: NextRequest) {
           if (userId) {
             await updateUserTier(userId, "free");
           }
+        }
+
+        const customerEmail = invoice.customer_email;
+        if (customerEmail && (await shouldSendWebhookEmail(event.id))) {
+          sendPaymentEmail({
+            to: customerEmail,
+            type: "payment_failed",
+            plan: "professional",
+          }).catch((error) => {
+            console.error("Failed to send payment failure email:", error);
+          });
         }
 
         break;

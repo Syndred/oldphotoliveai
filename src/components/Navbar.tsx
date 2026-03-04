@@ -144,7 +144,7 @@ export default function Navbar() {
 
       {/* Mobile Navigation Menu */}
       {mobileMenuOpen && (
-        <div className="sm:hidden border-t border-white/10 px-4 pb-3 pt-2">
+        <div className="sm:hidden border-t border-white/10 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-2">
           {tierLabel && (
             <div className="px-3 py-2">
               <span
@@ -166,7 +166,7 @@ export default function Navbar() {
                 key={href}
                 href={href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block rounded-md px-3 py-2 text-sm transition-colors ${
+                className={`block rounded-md px-3 py-2.5 text-sm transition-colors min-h-[44px] ${
                   isActive
                     ? "text-white"
                     : "text-[var(--color-text-secondary)] hover:text-white"

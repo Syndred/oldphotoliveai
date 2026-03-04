@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import UploadZone from "@/components/UploadZone";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 
 export default function UploadSection() {
   const router = useRouter();
@@ -18,10 +19,16 @@ export default function UploadSection() {
   async function handleUpload(imageKey: string) {
     // If not logged in, redirect to login
     if (status !== "authenticated") {
+      trackAnalyticsEvent("sign_in_prompted_upload", {
+        source: "upload_section",
+      });
       signIn("google");
       return;
     }
 
+    trackAnalyticsEvent("task_create_started", {
+      source: "upload_section",
+    });
     setIsCreating(true);
     setError("");
 
@@ -38,8 +45,14 @@ export default function UploadSection() {
       }
 
       const { taskId } = await res.json();
+      trackAnalyticsEvent("task_create_succeeded", {
+        source: "upload_section",
+      });
       router.push(`/result/${taskId}`);
     } catch (err) {
+      trackAnalyticsEvent("task_create_failed", {
+        source: "upload_section",
+      });
       setError(
         err instanceof Error ? err.message : tErrors("taskCreateFailed")
       );
@@ -48,12 +61,15 @@ export default function UploadSection() {
   }
 
   return (
-    <section id="upload-section" className="px-4 py-10 sm:py-14">
-      <div className="mx-auto w-full max-w-6xl rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-5 shadow-xl backdrop-blur-sm sm:p-10">
-        <h2 className="mb-2 bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-accent)] bg-clip-text text-center text-3xl font-bold text-transparent sm:text-4xl">
+    <section
+      id="upload-section"
+      className="px-3 py-8 sm:px-4 sm:py-14"
+    >
+      <div className="mx-auto w-full max-w-6xl rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-4 shadow-xl backdrop-blur-sm sm:p-10">
+        <h2 className="mb-2 bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-accent)] bg-clip-text text-center text-2xl font-bold text-transparent sm:text-4xl">
           {t("title")}
         </h2>
-        <p className="mx-auto mb-8 max-w-2xl text-center text-sm leading-relaxed text-[var(--color-text-secondary)]">
+        <p className="mx-auto mb-6 max-w-2xl text-center text-sm leading-relaxed text-[var(--color-text-secondary)] sm:mb-8">
           {t("subtitle")}
         </p>
 
@@ -66,7 +82,7 @@ export default function UploadSection() {
             <button
               type="button"
               onClick={() => signIn("google")}
-              className="mt-2 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 min-h-[44px]"
+              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-4 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 min-h-[44px] sm:mt-2 sm:w-auto sm:py-2"
             >
               {tAuth("signInWith")}
             </button>

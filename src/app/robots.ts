@@ -3,6 +3,6 @@ import { MetadataRoute } from "next";
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: { userAgent: "*", allow: "/" },
-    sitemap: "https://oldphotolive.com/sitemap.xml",
+    sitemap: "https://oldphotoliveai.com/sitemap.xml",
   };
 }

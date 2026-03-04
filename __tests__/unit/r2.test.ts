@@ -64,6 +64,7 @@ describe("uploadToR2", () => {
       Key: key,
       Body: buf,
       ContentType: "image/jpeg",
+      CacheControl: "public, max-age=86400, stale-while-revalidate=604800",
     });
   });
 

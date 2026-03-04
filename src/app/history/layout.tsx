@@ -3,18 +3,18 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "History",
   description:
-    "View and manage your past photo restoration tasks â€” download results or re-process images anytime.",
+    "View and manage your past photo restoration tasks â€?download results or re-process images anytime.",
   openGraph: {
     title: "History",
     description:
-      "View and manage your past photo restoration tasks â€” download results or re-process images anytime.",
-    url: "https://oldphotolive.com/history",
+      "View and manage your past photo restoration tasks â€?download results or re-process images anytime.",
+    url: "https://oldphotoliveai.com/history",
   },
   twitter: {
     card: "summary_large_image",
     title: "History",
     description:
-      "View and manage your past photo restoration tasks â€” download results or re-process images anytime.",
+      "View and manage your past photo restoration tasks â€?download results or re-process images anytime.",
   },
 };
 

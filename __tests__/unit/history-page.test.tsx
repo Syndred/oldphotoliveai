@@ -79,6 +79,32 @@ const MOCK_TASKS = [
   },
 ];
 
+function mockFetchForHistory(
+  historyHandler: () => Promise<unknown> | unknown
+): void {
+  (global.fetch as jest.Mock).mockImplementation(
+    (input: RequestInfo | URL): Promise<unknown> => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url === "/api/quota") {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ tier: "free", remaining: 0 }),
+        });
+      }
+
+      if (url === "/api/history") {
+        return Promise.resolve(historyHandler());
+      }
+
+      return Promise.resolve({
+        ok: false,
+        json: async () => ({}),
+      });
+    }
+  );
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockSessionStatus = "authenticated";
@@ -90,22 +116,22 @@ beforeEach(() => {
 
 describe("HistoryPage", () => {
   it("shows loading skeleton initially", () => {
-    (global.fetch as jest.Mock).mockReturnValue(new Promise(() => {}));
+    mockFetchForHistory(() => new Promise(() => {}));
     render(<HistoryPage />);
     expect(screen.getByTestId("loading-skeleton")).toBeInTheDocument();
   });
 
   it("renders page title", () => {
-    (global.fetch as jest.Mock).mockReturnValue(new Promise(() => {}));
+    mockFetchForHistory(() => new Promise(() => {}));
     render(<HistoryPage />);
     expect(screen.getByText("Processing History")).toBeInTheDocument();
   });
 
   it("fetches and displays tasks", async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    mockFetchForHistory(() => ({
       ok: true,
       json: async () => ({ tasks: MOCK_TASKS }),
-    });
+    }));
 
     render(<HistoryPage />);
 
@@ -118,10 +144,10 @@ describe("HistoryPage", () => {
   });
 
   it("shows empty state when no tasks returned", async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    mockFetchForHistory(() => ({
       ok: true,
       json: async () => ({ tasks: [] }),
-    });
+    }));
 
     render(<HistoryPage />);
 
@@ -133,10 +159,10 @@ describe("HistoryPage", () => {
   });
 
   it("shows error state when fetch fails", async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    mockFetchForHistory(() => ({
       ok: false,
       json: async () => ({ error: "Unauthorized" }),
-    });
+    }));
 
     render(<HistoryPage />);
 
@@ -147,9 +173,7 @@ describe("HistoryPage", () => {
   });
 
   it("shows generic error when fetch throws", async () => {
-    (global.fetch as jest.Mock).mockRejectedValueOnce(
-      new Error("Network error")
-    );
+    mockFetchForHistory(() => Promise.reject(new Error("Network error")));
 
     render(<HistoryPage />);
 
@@ -159,10 +183,10 @@ describe("HistoryPage", () => {
   });
 
   it("hides loading skeleton after fetch completes", async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    mockFetchForHistory(() => ({
       ok: true,
       json: async () => ({ tasks: MOCK_TASKS }),
-    });
+    }));
 
     render(<HistoryPage />);
 
@@ -172,10 +196,10 @@ describe("HistoryPage", () => {
   });
 
   it("calls /api/history endpoint", async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    mockFetchForHistory(() => ({
       ok: true,
       json: async () => ({ tasks: [] }),
-    });
+    }));
 
     render(<HistoryPage />);
 
@@ -185,10 +209,10 @@ describe("HistoryPage", () => {
   });
 
   it("handles response with missing tasks field", async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    mockFetchForHistory(() => ({
       ok: true,
       json: async () => ({}),
-    });
+    }));
 
     render(<HistoryPage />);
 

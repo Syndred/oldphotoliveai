@@ -14,7 +14,7 @@ export async function generateMetadata({
       title: `Result ${taskId}`,
       description:
         "View your AI-restored photo result — compare before and after, download colorized images and animated videos.",
-      url: `https://oldphotolive.com/result/${taskId}`,
+      url: `https://oldphotoliveai.com/result/${taskId}`,
     },
     twitter: {
       card: "summary_large_image",

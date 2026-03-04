@@ -40,16 +40,18 @@ export async function GET(
   const stream = new ReadableStream({
     async start(controller) {
       const encoder = new TextEncoder();
-      let pollInterval: ReturnType<typeof setInterval> | undefined;
-      let heartbeatInterval: ReturnType<typeof setInterval> | undefined;
+      const intervals: {
+        poll?: ReturnType<typeof setInterval>;
+        heartbeat?: ReturnType<typeof setInterval>;
+      } = {};
       let closed = false;
       let lastEventPayload = "";
 
       const close = () => {
         if (closed) return;
         closed = true;
-        if (pollInterval) clearInterval(pollInterval);
-        if (heartbeatInterval) clearInterval(heartbeatInterval);
+        if (intervals.poll) clearInterval(intervals.poll);
+        if (intervals.heartbeat) clearInterval(intervals.heartbeat);
         controller.close();
       };
 
@@ -122,7 +124,7 @@ export async function GET(
       }
 
       // Continue polling at interval
-      pollInterval = setInterval(async () => {
+      intervals.poll = setInterval(async () => {
         try {
           const done = await poll();
           if (done) {
@@ -133,7 +135,7 @@ export async function GET(
         }
       }, POLL_INTERVAL_MS);
 
-      heartbeatInterval = setInterval(() => {
+      intervals.heartbeat = setInterval(() => {
         sendHeartbeat();
       }, HEARTBEAT_INTERVAL_MS);
 
