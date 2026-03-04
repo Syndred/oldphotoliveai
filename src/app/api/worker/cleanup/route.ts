@@ -3,12 +3,88 @@
 
 import { NextResponse } from "next/server";
 import { config } from "@/lib/config";
-import { getRedisClient } from "@/lib/redis";
+import { getRedisClient, hardDeleteTask } from "@/lib/redis";
 import { deleteTaskFiles } from "@/lib/r2";
+import { removeFromQueue } from "@/lib/queue";
 import type { Task } from "@/types";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+function parseTaskRecord(raw: unknown): Task | null {
+  if (!raw) return null;
+
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      return parseTaskRecord(parsed);
+    } catch {
+      return null;
+    }
+  }
+
+  if (typeof raw !== "object") return null;
+  const candidate = raw as Partial<Task>;
+  if (
+    typeof candidate.id !== "string" ||
+    typeof candidate.userId !== "string" ||
+    typeof candidate.status !== "string" ||
+    typeof candidate.createdAt !== "string"
+  ) {
+    return null;
+  }
+
+  return candidate as Task;
+}
+
+function isPrimaryTaskKey(key: string): boolean {
+  const parts = key.split(":");
+  return parts.length === 2 && parts[0] === "task";
+}
+
+async function cleanupFailedTasks(): Promise<number> {
+  const redis = getRedisClient();
+  const now = Date.now();
+  let cleaned = 0;
+  let cursor = "0";
+
+  do {
+    const [nextCursor, taskKeys] = await redis.scan(cursor, {
+      match: "task:*",
+      count: 100,
+    });
+    cursor = String(nextCursor);
+
+    for (const key of taskKeys) {
+      if (!isPrimaryTaskKey(key)) continue;
+
+      const raw = await redis.get<unknown>(key);
+      const task = parseTaskRecord(raw);
+      if (!task || task.status !== "failed") continue;
+
+      const anchorTime = task.completedAt ?? task.createdAt;
+      const anchorTimestamp = new Date(anchorTime).getTime();
+      if (!Number.isFinite(anchorTimestamp)) continue;
+      if (now - anchorTimestamp <= SEVEN_DAYS_MS) continue;
+
+      try {
+        await deleteTaskFiles(task.id, [
+          task.originalImageKey,
+          task.restoredImageKey,
+          task.colorizedImageKey,
+          task.animationVideoKey,
+        ]);
+        await hardDeleteTask(task.id);
+        await removeFromQueue(task.id);
+        cleaned++;
+      } catch (error) {
+        console.error(`Cleanup failed for task ${task.id}:`, error);
+      }
+    }
+  } while (cursor !== "0");
+
+  return cleaned;
+}
 
 export async function POST(request: Request): Promise<NextResponse> {
   const locale = getRequestLocale(request);
@@ -23,36 +99,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   try {
-    const redis = getRedisClient();
-    const now = Date.now();
-    let cleaned = 0;
-    let cursor: string | number = 0;
-
-    // Step 2: Scan for task keys and find failed ones older than 7 days
-    do {
-      const [nextCursor, taskKeys] = await redis.scan(cursor, {
-        match: "task:*",
-        count: 100,
-      });
-      cursor = nextCursor as unknown as number;
-
-      for (const key of taskKeys) {
-        // Skip non-task keys (e.g. user task sorted sets)
-        if (key.includes(":") && key.split(":").length > 2) continue;
-
-        const raw = await redis.get<string>(key);
-        if (!raw) continue;
-
-        const task = JSON.parse(raw) as Task;
-        if (task.status !== "failed") continue;
-
-        const createdAt = new Date(task.createdAt).getTime();
-        if (now - createdAt > SEVEN_DAYS_MS) {
-          await deleteTaskFiles(task.id);
-          cleaned++;
-        }
-      }
-    } while (cursor !== 0);
+    const cleaned = await cleanupFailedTasks();
 
     return NextResponse.json(
       { message: `Cleaned ${cleaned} failed task(s)` },
@@ -85,31 +132,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   }
 
   try {
-    const redis = getRedisClient();
-    const now = Date.now();
-    let cleaned = 0;
-    let cursor: string | number = 0;
-
-    do {
-      const [nextCursor, taskKeys] = await redis.scan(cursor, {
-        match: "task:*",
-        count: 100,
-      });
-      cursor = nextCursor as unknown as number;
-
-      for (const key of taskKeys) {
-        if (key.includes(":") && key.split(":").length > 2) continue;
-        const raw = await redis.get<string>(key);
-        if (!raw) continue;
-        const task = JSON.parse(raw) as Task;
-        if (task.status !== "failed") continue;
-        const createdAt = new Date(task.createdAt).getTime();
-        if (now - createdAt > SEVEN_DAYS_MS) {
-          await deleteTaskFiles(task.id);
-          cleaned++;
-        }
-      }
-    } while (cursor !== 0);
+    const cleaned = await cleanupFailedTasks();
 
     return NextResponse.json(
       { message: `Cleaned ${cleaned} failed task(s)` },

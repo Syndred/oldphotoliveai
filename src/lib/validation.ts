@@ -12,6 +12,7 @@ export const SUPPORTED_MIME_TYPES = [
 ] as const;
 
 export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_STORAGE_KEY_LENGTH = 512;
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
@@ -59,9 +60,48 @@ export function getFileExtension(filename: string): string {
 
 /**
  * Generates a unique R2 storage key for an uploaded file.
- * Format: tasks/{uuid}/{original-filename}
+ * Format: tasks/{uuid}/original{ext}
+ * We intentionally avoid using the raw user filename in object keys.
  */
 export function generateStorageKey(filename: string): string {
   const id = uuidv4();
-  return `tasks/${id}/${filename}`;
+  const ext = getFileExtension(filename)
+    .toLowerCase()
+    .replace(/[^a-z0-9.]/g, "");
+  const safeExt = /^\.[a-z0-9]{1,10}$/.test(ext) ? ext : "";
+  return `tasks/${id}/original${safeExt}`;
+}
+
+/**
+ * Validate task image key coming from client before creating a task.
+ * This blocks URL injection and obvious path traversal payloads.
+ */
+export function isSafeTaskStorageKey(key: string): boolean {
+  const normalized = key.trim();
+  if (!normalized || normalized.length > MAX_STORAGE_KEY_LENGTH) {
+    return false;
+  }
+
+  if (!normalized.startsWith("tasks/")) {
+    return false;
+  }
+
+  if (
+    normalized.includes("..") ||
+    normalized.startsWith("/") ||
+    normalized.startsWith("\\")
+  ) {
+    return false;
+  }
+
+  if (/^https?:\/\//i.test(normalized)) {
+    return false;
+  }
+
+  // Keep key URL-safe and storage-friendly.
+  if (!/^[a-zA-Z0-9/_\-.]+$/.test(normalized)) {
+    return false;
+  }
+
+  return true;
 }

@@ -44,6 +44,14 @@ function createJsonRequest(body: unknown): NextRequest {
   });
 }
 
+function createMalformedJsonRequest(raw: string): NextRequest {
+  return new NextRequest("http://localhost/api/tasks", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: raw,
+  });
+}
+
 function makeFakeUser(overrides: Partial<User> = {}): User {
   return {
     id: "test-user-001",
@@ -64,7 +72,7 @@ function makeFakeTask(overrides: Partial<Task> = {}): Task {
     userId: "test-user-001",
     status: "pending",
     priority: "normal",
-    originalImageKey: "uploads/photo.jpg",
+    originalImageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
     restoredImageKey: null,
     colorizedImageKey: null,
     animationVideoKey: null,
@@ -94,7 +102,7 @@ beforeEach(() => {
 describe("POST /api/tasks", () => {
   it("returns 401 when not authenticated", async () => {
     mockGetToken.mockResolvedValue(null);
-    const req = createJsonRequest({ imageKey: "uploads/photo.jpg" });
+    const req = createJsonRequest({ imageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg" });
     const res = await POST(req);
     expect(res.status).toBe(401);
   });
@@ -135,11 +143,42 @@ describe("POST /api/tasks", () => {
     expect(body.error).toBe("Failed to create task");
   });
 
+  it("returns 400 when imageKey is a URL", async () => {
+    const req = createJsonRequest({
+      imageKey: "https://example.com/evil.jpg",
+    });
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.error).toBe("Failed to create task");
+  });
+
+  it("returns 400 when imageKey contains path traversal", async () => {
+    const req = createJsonRequest({
+      imageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/../../secret.jpg",
+    });
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.error).toBe("Failed to create task");
+  });
+
+  it("returns 400 when request body is malformed JSON", async () => {
+    const req = createMalformedJsonRequest("{bad json");
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.error).toBe("Failed to create task");
+  });
+
   it("returns 404 when user is not found", async () => {
     mockGetToken.mockResolvedValue({ userId: "nonexistent" });
     mockGetUser.mockResolvedValue(null);
 
-    const req = createJsonRequest({ imageKey: "uploads/photo.jpg" });
+    const req = createJsonRequest({ imageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg" });
     const res = await POST(req);
     const body = await res.json();
 
@@ -156,7 +195,7 @@ describe("POST /api/tasks", () => {
       reason: "Daily free quota exhausted",
     });
 
-    const req = createJsonRequest({ imageKey: "uploads/photo.jpg" });
+    const req = createJsonRequest({ imageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg" });
     const res = await POST(req);
     const body = await res.json();
 
@@ -175,7 +214,7 @@ describe("POST /api/tasks", () => {
       reason: "No credits remaining",
     });
 
-    const req = createJsonRequest({ imageKey: "uploads/photo.jpg" });
+    const req = createJsonRequest({ imageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg" });
     const res = await POST(req);
     const body = await res.json();
 
@@ -191,7 +230,7 @@ describe("POST /api/tasks", () => {
     mockGetUser.mockResolvedValue(user);
     mockCreateTask.mockResolvedValue(task);
 
-    const req = createJsonRequest({ imageKey: "uploads/photo.jpg" });
+    const req = createJsonRequest({ imageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg" });
     const res = await POST(req);
     const body = await res.json();
 
@@ -199,7 +238,7 @@ describe("POST /api/tasks", () => {
     expect(body.taskId).toBe("task-uuid-123");
     expect(mockCreateTask).toHaveBeenCalledWith({
       userId: "test-user-001",
-      originalImageKey: "uploads/photo.jpg",
+      originalImageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
       priority: "normal",
     });
     expect(mockCheckAndDecrementQuota).toHaveBeenCalledWith("test-user-001", "free");
@@ -212,7 +251,7 @@ describe("POST /api/tasks", () => {
     mockGetUser.mockResolvedValue(user);
     mockCreateTask.mockResolvedValue(task);
 
-    const req = createJsonRequest({ imageKey: "uploads/photo.jpg" });
+    const req = createJsonRequest({ imageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg" });
     const res = await POST(req);
     const body = await res.json();
 
@@ -220,7 +259,7 @@ describe("POST /api/tasks", () => {
     expect(body.taskId).toBe("task-paid");
     expect(mockCreateTask).toHaveBeenCalledWith({
       userId: "paid-user",
-      originalImageKey: "uploads/photo.jpg",
+      originalImageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
       priority: "high",
     });
     expect(mockCheckAndDecrementQuota).toHaveBeenCalledWith("paid-user", "pay_as_you_go");
@@ -233,14 +272,14 @@ describe("POST /api/tasks", () => {
     mockGetUser.mockResolvedValue(user);
     mockCreateTask.mockResolvedValue(task);
 
-    const req = createJsonRequest({ imageKey: "uploads/photo.jpg" });
+    const req = createJsonRequest({ imageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg" });
     const res = await POST(req);
     const body = await res.json();
 
     expect(res.status).toBe(201);
     expect(mockCreateTask).toHaveBeenCalledWith({
       userId: "pro-user",
-      originalImageKey: "uploads/photo.jpg",
+      originalImageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
       priority: "high",
     });
     expect(mockCheckAndDecrementQuota).toHaveBeenCalledWith("pro-user", "professional");
@@ -252,7 +291,7 @@ describe("POST /api/tasks", () => {
     mockGetUser.mockResolvedValue(user);
     mockCreateTask.mockResolvedValue(task);
 
-    const req = createJsonRequest({ imageKey: "uploads/photo.jpg" });
+    const req = createJsonRequest({ imageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg" });
     const res = await POST(req);
     const body = await res.json();
 
@@ -269,12 +308,12 @@ describe("POST /api/tasks", () => {
     mockGetUser.mockResolvedValue(user);
     mockCreateTask.mockResolvedValue(task);
 
-    const req = createJsonRequest({ imageKey: "  uploads/photo.jpg  " });
+    const req = createJsonRequest({ imageKey: "  tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg  " });
     const res = await POST(req);
 
     expect(res.status).toBe(201);
     expect(mockCreateTask).toHaveBeenCalledWith(
-      expect.objectContaining({ originalImageKey: "uploads/photo.jpg" })
+      expect.objectContaining({ originalImageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg" })
     );
   });
 
@@ -283,7 +322,7 @@ describe("POST /api/tasks", () => {
     mockGetUser.mockResolvedValue(user);
     mockCreateTask.mockRejectedValue(new Error("Redis connection error"));
 
-    const req = createJsonRequest({ imageKey: "uploads/photo.jpg" });
+    const req = createJsonRequest({ imageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg" });
     const res = await POST(req);
     const body = await res.json();
 
@@ -294,7 +333,7 @@ describe("POST /api/tasks", () => {
   it("returns 500 when getUser throws", async () => {
     mockGetUser.mockRejectedValue(new Error("Redis timeout"));
 
-    const req = createJsonRequest({ imageKey: "uploads/photo.jpg" });
+    const req = createJsonRequest({ imageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg" });
     const res = await POST(req);
     const body = await res.json();
 

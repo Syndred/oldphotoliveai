@@ -88,7 +88,10 @@ export async function deleteFromR2(key: string): Promise<void> {
  * Lists objects with the prefix `tasks/{taskId}/` and deletes each one.
  * Covers original, restored, colorized, and animation files.
  */
-export async function deleteTaskFiles(taskId: string): Promise<void> {
+export async function deleteTaskFiles(
+  taskId: string,
+  extraKeys: Array<string | null | undefined> = []
+): Promise<void> {
   const client = getS3Client();
   const prefix = `tasks/${taskId}/`;
 
@@ -100,9 +103,21 @@ export async function deleteTaskFiles(taskId: string): Promise<void> {
   );
 
   const objects = listResult.Contents ?? [];
+  const keys = new Set<string>();
+
+  for (const obj of objects) {
+    if (obj.Key) {
+      keys.add(obj.Key);
+    }
+  }
+
+  for (const key of extraKeys) {
+    if (key && key.trim()) {
+      keys.add(key);
+    }
+  }
+
   await Promise.all(
-    objects.map((obj) =>
-      obj.Key ? deleteFromR2(obj.Key) : Promise.resolve()
-    )
+    Array.from(keys).map((key) => deleteFromR2(key))
   );
 }

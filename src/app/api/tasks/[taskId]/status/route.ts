@@ -2,7 +2,8 @@
 // Requirements: 4.3, 18.5
 
 import { NextRequest, NextResponse } from "next/server";
-import { getTask } from "@/lib/redis";
+import { getToken } from "next-auth/jwt";
+import { getTaskOwnedByUser } from "@/lib/redis";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
 export async function GET(
@@ -14,7 +15,19 @@ export async function GET(
   try {
     const { taskId } = params;
 
-    const task = await getTask(taskId);
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
+    const userId = token?.userId as string | undefined;
+    if (!userId) {
+      return NextResponse.json(
+        { error: getErrorMessage("unauthorized", locale) },
+        { status: 401 }
+      );
+    }
+
+    const task = await getTaskOwnedByUser(taskId, userId);
     if (!task) {
       return NextResponse.json(
         { error: getErrorMessage("taskNotFound", locale) },

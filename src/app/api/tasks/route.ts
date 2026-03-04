@@ -6,6 +6,7 @@ import { getToken } from "next-auth/jwt";
 import { createTask, getUser } from "@/lib/redis";
 import { enqueueTask } from "@/lib/queue";
 import { checkAndDecrementQuota } from "@/lib/quota";
+import { isSafeTaskStorageKey } from "@/lib/validation";
 import type { TaskPriority, UserTier } from "@/types";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
@@ -45,11 +46,26 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Parse JSON body
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: getErrorMessage("taskCreateFailed", locale) },
+        { status: 400 }
+      );
+    }
     const { imageKey } = body as { imageKey?: string };
 
     // 3. Validate required fields
     if (!imageKey || typeof imageKey !== "string" || imageKey.trim() === "") {
+      return NextResponse.json(
+        { error: getErrorMessage("taskCreateFailed", locale) },
+        { status: 400 }
+      );
+    }
+    const normalizedImageKey = imageKey.trim();
+    if (!isSafeTaskStorageKey(normalizedImageKey)) {
       return NextResponse.json(
         { error: getErrorMessage("taskCreateFailed", locale) },
         { status: 400 }
@@ -81,7 +97,7 @@ export async function POST(request: NextRequest) {
     // 7. Create task record in Redis (status: pending)
     const task = await createTask({
       userId,
-      originalImageKey: imageKey.trim(),
+      originalImageKey: normalizedImageKey,
       priority,
     });
 

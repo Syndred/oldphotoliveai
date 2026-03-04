@@ -2,10 +2,13 @@
 // Requirements: 4.2, 4.3, 18.5
 
 import { NextRequest } from "next/server";
-import { getTask } from "@/lib/redis";
+import { NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+import { getTaskOwnedByUser } from "@/lib/redis";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
 const POLL_INTERVAL_MS = 2000;
+const HEARTBEAT_INTERVAL_MS = 15000;
 
 export async function GET(
   request: NextRequest,
@@ -13,18 +16,56 @@ export async function GET(
 ) {
   const { taskId } = params;
   const locale = getRequestLocale(request);
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
+  const userId = token?.userId as string | undefined;
+
+  if (!userId) {
+    return NextResponse.json(
+      { error: getErrorMessage("unauthorized", locale) },
+      { status: 401 }
+    );
+  }
+
+  const initialTask = await getTaskOwnedByUser(taskId, userId);
+  if (!initialTask) {
+    return NextResponse.json(
+      { error: getErrorMessage("taskNotFound", locale) },
+      { status: 404 }
+    );
+  }
 
   const stream = new ReadableStream({
     async start(controller) {
       const encoder = new TextEncoder();
+      let pollInterval: ReturnType<typeof setInterval> | undefined;
+      let heartbeatInterval: ReturnType<typeof setInterval> | undefined;
+      let closed = false;
+      let lastEventPayload = "";
+
+      const close = () => {
+        if (closed) return;
+        closed = true;
+        if (pollInterval) clearInterval(pollInterval);
+        if (heartbeatInterval) clearInterval(heartbeatInterval);
+        controller.close();
+      };
 
       const sendEvent = (data: Record<string, unknown>) => {
+        if (closed) return;
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+      };
+
+      const sendHeartbeat = () => {
+        if (closed) return;
+        controller.enqueue(encoder.encode(`: keep-alive\n\n`));
       };
 
       const poll = async (): Promise<boolean> => {
         try {
-          const task = await getTask(taskId);
+          const task = await getTaskOwnedByUser(taskId, userId);
           if (!task) {
             sendEvent({ error: getErrorMessage("taskNotFound", locale) });
             return true; // stop polling
@@ -51,7 +92,11 @@ export async function GET(
             eventData.animationVideoKey = task.animationVideoKey;
           }
 
-          sendEvent(eventData);
+          const payload = JSON.stringify(eventData);
+          if (payload !== lastEventPayload) {
+            lastEventPayload = payload;
+            sendEvent(eventData);
+          }
 
           // Close connection on terminal states
           if (
@@ -72,28 +117,29 @@ export async function GET(
       // Initial poll
       const shouldStop = await poll();
       if (shouldStop) {
-        controller.close();
+        close();
         return;
       }
 
       // Continue polling at interval
-      const interval = setInterval(async () => {
+      pollInterval = setInterval(async () => {
         try {
           const done = await poll();
           if (done) {
-            clearInterval(interval);
-            controller.close();
+            close();
           }
         } catch {
-          clearInterval(interval);
-          controller.close();
+          close();
         }
       }, POLL_INTERVAL_MS);
 
+      heartbeatInterval = setInterval(() => {
+        sendHeartbeat();
+      }, HEARTBEAT_INTERVAL_MS);
+
       // Clean up on client disconnect
       request.signal.addEventListener("abort", () => {
-        clearInterval(interval);
-        controller.close();
+        close();
       });
     },
   });

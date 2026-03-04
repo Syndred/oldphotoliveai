@@ -126,7 +126,7 @@ describe("POST /api/upload", () => {
 
     expect(mockUploadToR2).toHaveBeenCalledWith(
       expect.any(Buffer),
-      expect.stringContaining("test.png"),
+      expect.stringMatching(/tasks\/[0-9a-f-]{36}\/original\.png$/),
       "image/png"
     );
   });

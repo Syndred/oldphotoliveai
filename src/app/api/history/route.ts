@@ -4,7 +4,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { getUserTasks, deleteTask } from "@/lib/redis";
+import { getUserTasks, deleteTask, getTaskOwnedByUser } from "@/lib/redis";
 import { getR2CdnUrl, deleteTaskFiles } from "@/lib/r2";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
@@ -68,10 +68,34 @@ export async function DELETE(request: NextRequest) {
     }
 
     const userId = token.userId as string;
-    const body = await request.json();
-    const taskIds: string[] = body.taskIds;
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: getErrorMessage("taskIdsRequired", locale) },
+        { status: 400 }
+      );
+    }
+    const rawTaskIds = (body as { taskIds?: unknown }).taskIds;
 
-    if (!Array.isArray(taskIds) || taskIds.length === 0) {
+    if (!Array.isArray(rawTaskIds) || rawTaskIds.length === 0) {
+      return NextResponse.json(
+        { error: getErrorMessage("taskIdsRequired", locale) },
+        { status: 400 }
+      );
+    }
+
+    const taskIds = Array.from(
+      new Set(
+        rawTaskIds
+          .filter((id): id is string => typeof id === "string")
+          .map((id) => id.trim())
+          .filter((id) => id.length > 0 && id.length <= 128)
+      )
+    );
+
+    if (taskIds.length === 0) {
       return NextResponse.json(
         { error: getErrorMessage("taskIdsRequired", locale) },
         { status: 400 }
@@ -90,8 +114,20 @@ export async function DELETE(request: NextRequest) {
 
     for (const taskId of taskIds) {
       try {
-        // Delete R2 files first
-        await deleteTaskFiles(taskId);
+        // Verify ownership before deleting files to prevent IDOR-style abuse.
+        const task = await getTaskOwnedByUser(taskId, userId);
+        if (!task) {
+          results.push({ id: taskId, deleted: false });
+          continue;
+        }
+
+        await deleteTaskFiles(taskId, [
+          task.originalImageKey,
+          task.restoredImageKey,
+          task.colorizedImageKey,
+          task.animationVideoKey,
+        ]);
+
         // Delete from Redis
         const deleted = await deleteTask(taskId, userId);
         results.push({ id: taskId, deleted });

@@ -4,9 +4,11 @@
 import { NextResponse } from "next/server";
 import { config } from "@/lib/config";
 import { dequeueTask } from "@/lib/queue";
-import { acquireLock, releaseLock } from "@/lib/lock";
+import { acquireLock, releaseLock, refreshLock } from "@/lib/lock";
 import { executePipeline } from "@/lib/pipeline";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
+
+const LOCK_RENEW_INTERVAL_MS = 90_000;
 
 export async function POST(request: Request): Promise<NextResponse> {
   const locale = getRequestLocale(request);
@@ -28,15 +30,29 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   // Step 3: Acquire distributed lock
   const lockKey = `lock:task:${taskId}`;
-  const locked = await acquireLock(lockKey);
-  if (!locked) {
+  const lease = await acquireLock(lockKey);
+  if (!lease) {
     return NextResponse.json(
       { message: getErrorMessage("serviceBusy", locale) },
       { status: 200 }
     );
   }
 
+  let renewInterval: ReturnType<typeof setInterval> | undefined;
+
   try {
+    // Keep lock alive for long-running tasks.
+    renewInterval = setInterval(async () => {
+      try {
+        const renewed = await refreshLock(lease);
+        if (!renewed) {
+          console.warn(`Failed to renew lock for task ${taskId}: lease not owned`);
+        }
+      } catch (error) {
+        console.error(`Failed to renew lock for task ${taskId}:`, error);
+      }
+    }, LOCK_RENEW_INTERVAL_MS);
+
     // Step 4: Execute pipeline
     await executePipeline(taskId);
 
@@ -61,7 +77,10 @@ export async function POST(request: Request): Promise<NextResponse> {
       { status: 200 }
     );
   } finally {
+    if (renewInterval) {
+      clearInterval(renewInterval);
+    }
     // Step 6: Always release lock
-    await releaseLock(lockKey);
+    await releaseLock(lease);
   }
 }

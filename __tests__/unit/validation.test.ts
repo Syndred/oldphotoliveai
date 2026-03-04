@@ -2,6 +2,7 @@ import {
   validateFile,
   generateStorageKey,
   getFileExtension,
+  isSafeTaskStorageKey,
   SUPPORTED_MIME_TYPES,
   MAX_FILE_SIZE,
 } from "@/lib/validation";
@@ -98,15 +99,19 @@ describe("getFileExtension", () => {
 // ── generateStorageKey ──────────────────────────────────────────────────────
 
 describe("generateStorageKey", () => {
-  it("produces a key in tasks/{uuid}/{filename} format", () => {
+  it("produces a key in tasks/{uuid}/original{ext} format", () => {
     const key = generateStorageKey("photo.jpg");
-    expect(key).toMatch(/^tasks\/[0-9a-f-]{36}\/photo\.jpg$/);
+    expect(key).toMatch(/^tasks\/[0-9a-f-]{36}\/original\.jpg$/);
   });
 
-  it("preserves the original filename", () => {
-    const key = generateStorageKey("my image (1).png");
-    expect(key).toContain("my image (1).png");
-    expect(key).toMatch(/^tasks\/[0-9a-f-]{36}\//);
+  it("normalizes extension to lowercase", () => {
+    const key = generateStorageKey("MyImage.JPEG");
+    expect(key).toMatch(/^tasks\/[0-9a-f-]{36}\/original\.jpeg$/);
+  });
+
+  it("normalizes extension by stripping unsupported characters", () => {
+    const key = generateStorageKey("photo.jp*g");
+    expect(key).toMatch(/^tasks\/[0-9a-f-]{36}\/original\.jpg$/);
   });
 
   it("generates unique keys for the same filename", () => {
@@ -120,6 +125,28 @@ describe("generateStorageKey", () => {
     const key1 = generateStorageKey("a.jpg");
     const key2 = generateStorageKey("b.png");
     expect(key1).not.toBe(key2);
+  });
+});
+
+describe("isSafeTaskStorageKey", () => {
+  it("accepts valid task storage key", () => {
+    expect(
+      isSafeTaskStorageKey(
+        "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg"
+      )
+    ).toBe(true);
+  });
+
+  it("rejects URL values", () => {
+    expect(isSafeTaskStorageKey("https://example.com/a.jpg")).toBe(false);
+  });
+
+  it("rejects path traversal payloads", () => {
+    expect(
+      isSafeTaskStorageKey(
+        "tasks/123e4567-e89b-12d3-a456-426614174000/../../secret.jpg"
+      )
+    ).toBe(false);
   });
 });
 

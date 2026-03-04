@@ -97,13 +97,13 @@ export async function getUserByEmail(email: string): Promise<User | null> {
   }
 
   // Fallback path for legacy data without email index
-  let cursor: string | number = 0;
+  let cursor = "0";
   do {
     const [nextCursor, userKeys] = await redis.scan(cursor, {
       match: "user:*",
       count: 100,
     });
-    cursor = nextCursor as unknown as number;
+    cursor = String(nextCursor);
 
     for (const key of userKeys) {
       // Only scan user objects like user:<uuid>; skip indexes and task sets
@@ -117,7 +117,7 @@ export async function getUserByEmail(email: string): Promise<User | null> {
       await redis.set(keys.userEmail(normalizedEmail), candidate.id);
       return candidate;
     }
-  } while (cursor !== 0);
+  } while (cursor !== "0");
 
   return null;
 }
@@ -215,6 +215,17 @@ export async function getTask(taskId: string): Promise<Task | null> {
   return data ?? null;
 }
 
+export async function getTaskOwnedByUser(
+  taskId: string,
+  userId: string
+): Promise<Task | null> {
+  const task = await getTask(taskId);
+  if (!task || task.userId !== userId) {
+    return null;
+  }
+  return task;
+}
+
 export async function getUserTasks(userId: string): Promise<Task[]> {
   const redis = getRedisClient();
 
@@ -296,5 +307,19 @@ export async function deleteTask(taskId: string, userId: string): Promise<boolea
   await redis.del(keys.task(taskId));
   await redis.zrem(keys.userTasks(userId), taskId);
 
+  return true;
+}
+
+/**
+ * Delete a task regardless of ownership.
+ * Intended for trusted worker-side cleanup jobs only.
+ */
+export async function hardDeleteTask(taskId: string): Promise<boolean> {
+  const redis = getRedisClient();
+  const task = await redis.get<Task>(keys.task(taskId));
+  if (!task) return false;
+
+  await redis.del(keys.task(taskId));
+  await redis.zrem(keys.userTasks(task.userId), taskId);
   return true;
 }

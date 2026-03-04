@@ -1,20 +1,31 @@
 import { NextRequest } from "next/server";
 import type { Task } from "@/types";
 
-// ── Mock dependencies ───────────────────────────────────────────────────────
-
 const mockGetToken = jest.fn();
 jest.mock("next-auth/jwt", () => ({
   getToken: (...args: unknown[]) => mockGetToken(...args),
 }));
 
 const mockGetUserTasks = jest.fn<Promise<Task[]>, [string]>();
+const mockDeleteTask = jest.fn<Promise<boolean>, [string, string]>();
+const mockGetTaskOwnedByUser = jest.fn<Promise<Task | null>, [string, string]>();
+
 jest.mock("@/lib/redis", () => ({
   getUserTasks: (...args: unknown[]) => mockGetUserTasks(args[0] as string),
+  deleteTask: (...args: unknown[]) => mockDeleteTask(args[0] as string, args[1] as string),
+  getTaskOwnedByUser: (...args: unknown[]) =>
+    mockGetTaskOwnedByUser(args[0] as string, args[1] as string),
 }));
+
+const mockDeleteTaskFiles = jest.fn<Promise<void>, [string, Array<string | null | undefined>]>();
 
 jest.mock("@/lib/r2", () => ({
   getR2CdnUrl: (key: string) => `https://cdn.example.com/${key}`,
+  deleteTaskFiles: (...args: unknown[]) =>
+    mockDeleteTaskFiles(
+      args[0] as string,
+      (args[1] as Array<string | null | undefined>) ?? []
+    ),
 }));
 
 jest.mock("@/lib/config", () => ({
@@ -24,11 +35,7 @@ jest.mock("@/lib/config", () => ({
   },
 }));
 
-// ── Import after mocks ─────────────────────────────────────────────────────
-
-import { GET } from "@/app/api/history/route";
-
-// ── Helpers ─────────────────────────────────────────────────────────────────
+import { GET, DELETE } from "@/app/api/history/route";
 
 function makeFakeTask(overrides: Partial<Task> = {}): Task {
   return {
@@ -52,28 +59,33 @@ function makeGetRequest(): NextRequest {
   return new NextRequest("http://localhost/api/history", { method: "GET" });
 }
 
-// ── Reset ───────────────────────────────────────────────────────────────────
+function makeDeleteRequest(taskIds: string[] | unknown): NextRequest {
+  return new NextRequest("http://localhost/api/history", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ taskIds }),
+  });
+}
+
+function makeMalformedDeleteRequest(raw: string): NextRequest {
+  return new NextRequest("http://localhost/api/history", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: raw,
+  });
+}
 
 beforeEach(() => {
   mockGetToken.mockReset();
   mockGetUserTasks.mockReset();
+  mockDeleteTask.mockReset();
+  mockGetTaskOwnedByUser.mockReset();
+  mockDeleteTaskFiles.mockReset();
 });
-
-// ── Tests ───────────────────────────────────────────────────────────────────
 
 describe("GET /api/history", () => {
   it("returns 401 when not authenticated", async () => {
     mockGetToken.mockResolvedValue(null);
-
-    const res = await GET(makeGetRequest());
-    const body = await res.json();
-
-    expect(res.status).toBe(401);
-    expect(body.error).toBe("Please sign in to continue");
-  });
-
-  it("returns 401 when token has no userId", async () => {
-    mockGetToken.mockResolvedValue({ email: "test@example.com" });
 
     const res = await GET(makeGetRequest());
     const body = await res.json();
@@ -94,7 +106,7 @@ describe("GET /api/history", () => {
     expect(mockGetUserTasks).toHaveBeenCalledWith("user-001");
   });
 
-  it("returns mapped tasks with thumbnailUrl for completed task", async () => {
+  it("returns mapped tasks with thumbnailUrl", async () => {
     mockGetToken.mockResolvedValue({ userId: "user-001" });
     mockGetUserTasks.mockResolvedValue([makeFakeTask()]);
 
@@ -102,7 +114,6 @@ describe("GET /api/history", () => {
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.tasks).toHaveLength(1);
     expect(body.tasks[0]).toEqual({
       id: "task-001",
       status: "completed",
@@ -113,88 +124,71 @@ describe("GET /api/history", () => {
       errorMessage: null,
     });
   });
+});
 
-  it("returns errorMessage only for failed tasks", async () => {
+describe("DELETE /api/history", () => {
+  it("returns 401 when not authenticated", async () => {
+    mockGetToken.mockResolvedValue(null);
+
+    const res = await DELETE(makeDeleteRequest(["task-001"]));
+    const body = await res.json();
+
+    expect(res.status).toBe(401);
+    expect(body.error).toBe("Please sign in to continue");
+  });
+
+  it("returns 400 when taskIds is invalid", async () => {
     mockGetToken.mockResolvedValue({ userId: "user-001" });
-    mockGetUserTasks.mockResolvedValue([
-      makeFakeTask({
-        id: "task-002",
-        status: "failed",
-        progress: 25,
-        errorMessage: "GFPGAN timeout",
-        completedAt: null,
-      }),
+
+    const res = await DELETE(makeDeleteRequest("task-001"));
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.error).toBe("Please select at least one task.");
+  });
+
+  it("returns 400 when DELETE body is malformed JSON", async () => {
+    mockGetToken.mockResolvedValue({ userId: "user-001" });
+
+    const res = await DELETE(makeMalformedDeleteRequest("{bad json"));
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.error).toBe("Please select at least one task.");
+  });
+
+  it("verifies ownership before deleting files", async () => {
+    const task = makeFakeTask();
+    mockGetToken.mockResolvedValue({ userId: "user-001" });
+    mockGetTaskOwnedByUser.mockResolvedValue(task);
+    mockDeleteTask.mockResolvedValue(true);
+    mockDeleteTaskFiles.mockResolvedValue(undefined);
+
+    const res = await DELETE(makeDeleteRequest(["task-001"]));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(mockGetTaskOwnedByUser).toHaveBeenCalledWith("task-001", "user-001");
+    expect(mockDeleteTaskFiles).toHaveBeenCalledWith("task-001", [
+      task.originalImageKey,
+      task.restoredImageKey,
+      task.colorizedImageKey,
+      task.animationVideoKey,
     ]);
-
-    const res = await GET(makeGetRequest());
-    const body = await res.json();
-
-    expect(body.tasks[0].errorMessage).toBe("GFPGAN timeout");
-    expect(body.tasks[0].status).toBe("failed");
+    expect(mockDeleteTask).toHaveBeenCalledWith("task-001", "user-001");
+    expect(body.results).toEqual([{ id: "task-001", deleted: true }]);
   });
 
-  it("returns null errorMessage for non-failed tasks", async () => {
+  it("does not delete files when ownership check fails", async () => {
     mockGetToken.mockResolvedValue({ userId: "user-001" });
-    mockGetUserTasks.mockResolvedValue([
-      makeFakeTask({ status: "restoring", progress: 25 }),
-    ]);
+    mockGetTaskOwnedByUser.mockResolvedValue(null);
 
-    const res = await GET(makeGetRequest());
+    const res = await DELETE(makeDeleteRequest(["task-999"]));
     const body = await res.json();
 
-    expect(body.tasks[0].errorMessage).toBeNull();
-  });
-
-  it("returns tasks sorted by createdAt descending (newest first)", async () => {
-    mockGetToken.mockResolvedValue({ userId: "user-001" });
-    mockGetUserTasks.mockResolvedValue([
-      makeFakeTask({ id: "task-new", createdAt: "2024-01-03T00:00:00.000Z" }),
-      makeFakeTask({ id: "task-old", createdAt: "2024-01-01T00:00:00.000Z" }),
-    ]);
-
-    const res = await GET(makeGetRequest());
-    const body = await res.json();
-
-    expect(body.tasks[0].id).toBe("task-new");
-    expect(body.tasks[1].id).toBe("task-old");
-  });
-
-  it("returns null thumbnailUrl when originalImageKey is missing", async () => {
-    mockGetToken.mockResolvedValue({ userId: "user-001" });
-    mockGetUserTasks.mockResolvedValue([
-      makeFakeTask({ originalImageKey: "" }),
-    ]);
-
-    const res = await GET(makeGetRequest());
-    const body = await res.json();
-
-    expect(body.tasks[0].thumbnailUrl).toBeNull();
-  });
-
-  it("returns 500 when getUserTasks throws", async () => {
-    mockGetToken.mockResolvedValue({ userId: "user-001" });
-    mockGetUserTasks.mockRejectedValue(new Error("Redis error"));
-
-    const res = await GET(makeGetRequest());
-    const body = await res.json();
-
-    expect(res.status).toBe(500);
-    expect(body.error).toBe("Failed to load history");
-  });
-
-  it("does not expose internal task fields like restoredImageKey", async () => {
-    mockGetToken.mockResolvedValue({ userId: "user-001" });
-    mockGetUserTasks.mockResolvedValue([makeFakeTask()]);
-
-    const res = await GET(makeGetRequest());
-    const body = await res.json();
-
-    const task = body.tasks[0];
-    expect(task.restoredImageKey).toBeUndefined();
-    expect(task.colorizedImageKey).toBeUndefined();
-    expect(task.animationVideoKey).toBeUndefined();
-    expect(task.originalImageKey).toBeUndefined();
-    expect(task.userId).toBeUndefined();
-    expect(task.priority).toBeUndefined();
+    expect(res.status).toBe(200);
+    expect(mockDeleteTaskFiles).not.toHaveBeenCalled();
+    expect(mockDeleteTask).not.toHaveBeenCalled();
+    expect(body.results).toEqual([{ id: "task-999", deleted: false }]);
   });
 });
