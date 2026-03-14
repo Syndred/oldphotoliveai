@@ -2,16 +2,14 @@
  * @jest-environment jsdom
  */
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
-// Mock next-intl
 const mockUseLocale = jest.fn();
 jest.mock("next-intl", () => ({
   useLocale: () => mockUseLocale(),
 }));
 
-// Mock the reloadPage function used by LanguageSwitcher
 const mockReload = jest.fn();
 jest.mock("@/lib/browser", () => ({
   reloadPage: (...args: unknown[]) => mockReload(...args),
@@ -28,70 +26,88 @@ beforeEach(() => {
 describe("LanguageSwitcher", () => {
   it("renders current locale label", () => {
     render(<LanguageSwitcher />);
-    expect(screen.getByText("EN")).toBeInTheDocument();
+    expect(screen.getByText("English")).toBeInTheDocument();
   });
 
-  it("renders 中文 label when locale is zh", () => {
+  it("renders current locale label for zh", () => {
     mockUseLocale.mockReturnValue("zh");
     render(<LanguageSwitcher />);
     expect(screen.getByText("中文")).toBeInTheDocument();
   });
 
-  it("shows dropdown with other locale on click", () => {
+  it("opens a themed menu with four language options", () => {
     render(<LanguageSwitcher />);
-    fireEvent.click(screen.getByText("EN"));
-    expect(screen.getByText("中文")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Open language menu" }));
+
+    expect(screen.getByRole("menu", { name: "Language options" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitemradio", { name: "English" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitemradio", { name: "中文" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitemradio", { name: "Español" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitemradio", { name: "日本語" })).toBeInTheDocument();
   });
 
-  it("does not show current locale in dropdown options", () => {
+  it("marks the current locale as selected", () => {
     render(<LanguageSwitcher />);
-    fireEvent.click(screen.getByText("EN"));
-    const buttons = screen.getAllByRole("button");
-    // One toggle button + one option
-    expect(buttons).toHaveLength(2);
+
+    fireEvent.click(screen.getByRole("button", { name: "Open language menu" }));
+
+    expect(screen.getByRole("menuitemradio", { name: "English" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    expect(screen.getByRole("menuitemradio", { name: "中文" })).toHaveAttribute(
+      "aria-checked",
+      "false"
+    );
   });
 
   it("sets cookie and reloads when switching locale", () => {
     render(<LanguageSwitcher />);
-    fireEvent.click(screen.getByText("EN"));
-    fireEvent.click(screen.getByText("中文"));
-    expect(document.cookie).toContain("NEXT_LOCALE=zh");
-    expect(mockReload).toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Open language menu" }));
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "Español" }));
+
+    expect(document.cookie).toContain("NEXT_LOCALE=es");
+    expect(mockReload).toHaveBeenCalledTimes(1);
   });
 
-  it("does not reload when no switch happens", () => {
+  it("closes the menu without reloading when clicking the current locale", () => {
     render(<LanguageSwitcher />);
-    // Just rendering and not clicking anything should not trigger reload
+
+    fireEvent.click(screen.getByRole("button", { name: "Open language menu" }));
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "English" }));
+
     expect(mockReload).not.toHaveBeenCalled();
+    expect(screen.queryByRole("menu", { name: "Language options" })).not.toBeInTheDocument();
   });
 
-  it("closes dropdown on outside click", () => {
+  it("closes the menu on outside click", () => {
     render(
       <div>
         <div data-testid="outside">outside</div>
         <LanguageSwitcher />
       </div>
     );
-    fireEvent.click(screen.getByText("EN"));
-    expect(screen.getByText("中文")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Open language menu" }));
+    expect(screen.getByRole("menu", { name: "Language options" })).toBeInTheDocument();
+
     fireEvent.mouseDown(screen.getByTestId("outside"));
-    expect(screen.queryByText("中文")).not.toBeInTheDocument();
+
+    expect(screen.queryByRole("menu", { name: "Language options" })).not.toBeInTheDocument();
   });
 
-  it("has correct aria attributes", () => {
+  it("updates aria-expanded as the menu opens and closes", () => {
     render(<LanguageSwitcher />);
-    const button = screen.getByLabelText("Switch language");
+
+    const button = screen.getByRole("button", { name: "Open language menu" });
     expect(button).toHaveAttribute("aria-expanded", "false");
+
     fireEvent.click(button);
     expect(button).toHaveAttribute("aria-expanded", "true");
-  });
 
-  it("toggles dropdown open and closed", () => {
-    render(<LanguageSwitcher />);
-    const toggle = screen.getByText("EN");
-    fireEvent.click(toggle);
-    expect(screen.getByText("中文")).toBeInTheDocument();
-    fireEvent.click(toggle);
-    expect(screen.queryByText("中文")).not.toBeInTheDocument();
+    fireEvent.click(button);
+    expect(button).toHaveAttribute("aria-expanded", "false");
   });
 });

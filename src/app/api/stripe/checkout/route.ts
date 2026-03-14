@@ -39,6 +39,11 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+    const userId = String(token.userId);
+    const customerEmail =
+      typeof token.email === "string" && token.email.trim()
+        ? token.email
+        : undefined;
 
     const body = await request.json();
     const { plan } = body as { plan?: string };
@@ -64,10 +69,22 @@ export async function POST(request: NextRequest) {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${config.nextauth.url}/pricing?success=true`,
       cancel_url: `${config.nextauth.url}/pricing?cancelled=true`,
+      client_reference_id: userId,
+      customer_email: customerEmail,
       metadata: {
-        userId: token.userId as string,
+        userId,
         plan,
       },
+      ...(mode === "subscription"
+        ? {
+            subscription_data: {
+              metadata: {
+                userId,
+                plan,
+              },
+            },
+          }
+        : {}),
     });
 
     return NextResponse.json({ url: session.url });

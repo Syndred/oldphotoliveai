@@ -1,0 +1,344 @@
+{
+  "common": {
+    "appName": "OldPhotoLive AI",
+    "loading": "Cargando...",
+    "error": "Se produjo un error",
+    "retry": "Reintentar",
+    "download": "Descargar",
+    "cancel": "Cancelar",
+    "tryAgain": "Intentar de nuevo",
+    "backToHome": "Volver al inicio",
+    "pageNotFound": "Pagina no encontrada",
+    "pageNotFoundDesc": "La pagina que buscas no existe o se ha movido.",
+    "somethingWentWrong": "Algo salio mal",
+    "unexpectedError": "Ocurrio un error inesperado. Vuelve a intentarlo."
+  },
+  "nav": {
+    "home": "Inicio",
+    "history": "Historial",
+    "pricing": "Precios",
+    "login": "Iniciar sesion",
+    "logout": "Cerrar sesion"
+  },
+  "upload": {
+    "title": "Restaura tus fotos antiguas",
+    "subtitle": "Restauracion, colorizacion y animacion con IA en un clic",
+    "dragDrop": "Arrastra y suelta tu foto aqui",
+    "browse": "explorar archivos",
+    "supportedFormats": "Admite JPEG, PNG y WebP (max. 10 MB)",
+    "uploading": "Subiendo... {progress}%",
+    "creatingTask": "Creando tarea..."
+  },
+  "processing": {
+    "title": "Procesando tu foto",
+    "step1": "Subir",
+    "step2": "Restaurar",
+    "step3": "Colorizar",
+    "step4": "Animar",
+    "pending": "En cola...",
+    "completed": "Procesamiento completado",
+    "connectionLost": "Conexion perdida",
+    "previewRestored": "Restaurada",
+    "previewColorized": "Colorizada",
+    "previewAnimation": "Animacion"
+  },
+  "result": {
+    "beforeAfter": "Antes y despues",
+    "animation": "Animacion",
+    "before": "Antes",
+    "after": "Despues",
+    "downloadImage": "Descargar imagen",
+    "downloadVideo": "Descargar video",
+    "failed": "Procesamiento fallido",
+    "retryMessage": "Algo salio mal. Vuelve a intentarlo.",
+    "retrying": "Reintentando..."
+  },
+  "pricing": {
+    "title": "Elige tu plan",
+    "subtitle": "Desbloquea todo el potencial de la restauracion de fotos con IA",
+    "free": "Gratis",
+    "payAsYouGo": "Pago por uso",
+    "professional": "Profesional",
+    "recommended": "Recomendado",
+    "currentPlan": "Plan actual",
+    "subscribe": "Suscribirse",
+    "buyCredits": "Comprar creditos",
+    "redirecting": "Redirigiendo...",
+    "freeDesc": "Pruébalo",
+    "payAsYouGoDesc": "Para uso ocasional",
+    "professionalDesc": "La mejor relacion calidad-precio",
+    "freeFeature1": "1 foto por dia",
+    "freeFeature2": "Resolucion baja (800x600)",
+    "freeFeature3": "Marca de agua en la salida",
+    "payFeature1": "5 creditos",
+    "payFeature2": "Alta resolucion (1920x1080)",
+    "payFeature3": "Sin marca de agua",
+    "proFeature1": "Fotos ilimitadas",
+    "proFeature2": "Alta resolucion (1920x1080)",
+    "proFeature3": "Sin marca de agua",
+    "proFeature4": "Procesamiento prioritario"
+  },
+  "history": {
+    "title": "Historial de procesamiento",
+    "empty": "Aun no hay historial",
+    "delete": "Eliminar",
+    "deleteSelected": "Eliminar seleccionados",
+    "selectAll": "Seleccionar todo",
+    "deselectAll": "Deseleccionar todo",
+    "confirmDelete": "Eliminar {count} tarea(s) seleccionada(s)?",
+    "deleting": "Eliminando...",
+    "deleteSuccess": "Eliminado correctamente",
+    "deleteFailed": "Error al eliminar",
+    "status": {
+      "pending": "Pendiente",
+      "queued": "En cola",
+      "restoring": "Restaurando",
+      "colorizing": "Colorizando",
+      "animating": "Animando",
+      "completed": "Completado",
+      "failed": "Fallido",
+      "cancelled": "Cancelado"
+    }
+  },
+  "errors": {
+    "fileTypeNotSupported": "Sube una imagen JPEG, PNG o WebP",
+    "fileTooLarge": "El archivo supera el limite de 10 MB",
+    "uploadFailed": "La subida fallo. Intentalo de nuevo mas tarde.",
+    "uploadStorageConfigError": "Error de configuracion del almacenamiento. Contacta con soporte.",
+    "uploadStorageAuthError": "Error de permisos del almacenamiento. Contacta con soporte.",
+    "uploadStorageBucketMissing": "El bucket de almacenamiento no esta disponible. Contacta con soporte.",
+    "uploadStorageNetworkError": "No se puede acceder temporalmente al servicio de almacenamiento. Intentalo de nuevo.",
+    "uploadSupportHint": "Ref: {requestId} ({code})",
+    "uploadCancelled": "La subida fue cancelada.",
+    "quotaExceeded": "La cuota diaria gratuita se ha agotado. Mejora tu plan o vuelve manana.",
+    "creditsExpired": "Tus creditos han caducado. Compralos de nuevo.",
+    "rateLimited": "Demasiadas solicitudes. Intentalo de nuevo mas tarde.",
+    "paymentFailed": "El pago fallo: {reason}",
+    "paymentUnavailable": "La funcion de pago no esta disponible por ahora.",
+    "taskNotFound": "Tarea no encontrada",
+    "cannotCancel": "Esta tarea no se puede cancelar",
+    "unauthorized": "Inicia sesion para continuar",
+    "processingTimeout": "El procesamiento agoto el tiempo. Haz clic en reintentar.",
+    "processingFailedGeneric": "El procesamiento fallo. Vuelve a intentarlo.",
+    "sourceImageUnreachable": "No se puede acceder a la imagen original. Vuelve a subirla e intentalo otra vez.",
+    "modelConfigError": "Error de configuracion del modelo de IA. Contacta con soporte.",
+    "intermediateDownloadFailed": "No se pudo descargar el resultado intermedio. Vuelve a intentarlo.",
+    "serviceBusy": "El servicio esta ocupado temporalmente. Tu tarea ha sido puesta en cola.",
+    "networkError": "Error de red. Revisa tu conexion.",
+    "invalidResponse": "Respuesta del servidor no valida",
+    "checkoutFailed": "El checkout fallo",
+    "retryFailed": "El reintento fallo",
+    "historyLoadFailed": "No se pudo cargar el historial",
+    "taskCreateFailed": "No se pudo crear la tarea",
+    "taskIdsRequired": "Selecciona al menos una tarea.",
+    "taskBatchTooLarge": "Solo puedes eliminar hasta 50 tareas a la vez."
+  },
+  "auth": {
+    "signInWith": "Iniciar sesion con Google",
+    "signInPrompt": "Inicia sesion para empezar a restaurar tus fotos"
+  },
+  "quota": {
+    "remaining": "{count} restantes",
+    "resetsAt": "Se restablece a las {time}",
+    "unlimited": "Ilimitado"
+  },
+  "landing": {
+    "hero": {
+      "title": "Devuelve la vida a tus fotos antiguas",
+      "subtitle": "Restauracion, colorizacion y animacion con IA: transforma recuerdos desvanecidos en momentos llenos de vida",
+      "cta": "Pruébalo gratis"
+    },
+    "showcase": {
+      "title": "Resultados reales por escenario",
+      "categories": {
+        "restoration": {
+          "title": "Restauracion con IA",
+          "subtitle": "Repara danos, elimina rayones y recupera detalles faciales"
+        },
+        "colorization": {
+          "title": "Colorizacion con IA",
+          "subtitle": "Convierte recuerdos en blanco y negro en color natural y vivo"
+        }
+      },
+      "controls": {
+        "previous": "Anterior",
+        "next": "Siguiente",
+        "viewMore": "Ver mas"
+      }
+    },
+    "videoShowcase": {
+      "title": "Casos de animacion de fotos",
+      "subtitle": "Explora ejemplos seleccionados de animacion a partir de fotos restauradas.",
+      "controls": {
+        "previous": "Anterior",
+        "next": "Siguiente",
+        "viewMore": "Ver mas"
+      }
+    },
+    "features": {
+      "title": "Potentes funciones de IA",
+      "subtitle": "Tres pasos para recuperar tus recuerdos",
+      "restoration": {
+        "title": "Restauracion de fotos",
+        "description": "Elimina rayones, corrige danos y mejora la nitidez con restauracion impulsada por IA"
+      },
+      "colorization": {
+        "title": "Colorizacion inteligente",
+        "description": "Anade colores naturales y vivos a fotos en blanco y negro mediante aprendizaje profundo"
+      },
+      "animation": {
+        "title": "Animacion de fotos",
+        "description": "Da vida a fotos estaticas con expresiones faciales realistas y movimientos sutiles"
+      }
+    },
+    "howItWorks": {
+      "title": "Como funciona",
+      "subtitle": "Tres pasos sencillos para transformar tus fotos",
+      "step1": {
+        "title": "Sube tu foto",
+        "description": "Sube tu foto antigua o danada"
+      },
+      "step2": {
+        "title": "Procesamiento con IA",
+        "description": "Nuestra IA restaura, coloriza y anima tu foto"
+      },
+      "step3": {
+        "title": "Descarga",
+        "description": "Descarga tu foto restaurada y el video animado"
+      }
+    },
+    "faq": {
+      "title": "Preguntas frecuentes",
+      "q1": "Que tipos de fotos funcionan mejor?",
+      "a1": "Nuestra IA funciona mejor con retratos, fotos familiares y paisajes. Cuanto mayor sea la resolucion original, mejor sera el resultado.",
+      "q2": "Cuanto tarda el procesamiento?",
+      "a2": "La mayoria de las fotos se procesan en 1-3 minutos. Las restauraciones o animaciones complejas pueden tardar un poco mas.",
+      "q3": "Estan seguros mis datos?",
+      "a3": "Si. Tus fotos se procesan de forma segura y usamos proveedores de confianza para autenticacion, pagos, almacenamiento y analitica. Los archivos pueden seguir disponibles en tu historial hasta que los elimines o los retiremos por razones operativas o de cumplimiento. Consulta la Politica de privacidad para mas detalles.",
+      "q4": "Puedo usar los resultados con fines comerciales?",
+      "a4": "Si. Conservas todos los derechos sobre las versiones restauradas y animadas de tus fotos."
+    },
+    "footer": {
+      "description": "Restauracion, colorizacion y animacion de fotos con IA",
+      "links": {
+        "home": "Inicio",
+        "pricing": "Precios",
+        "history": "Historial",
+        "privacy": "Privacidad",
+        "terms": "Terminos"
+      },
+      "copyright": "© 2025 OldPhotoLive AI. Todos los derechos reservados."
+    }
+  },
+  "legal": {
+    "shared": {
+      "lastUpdated": "Ultima actualizacion"
+    },
+    "privacy": {
+      "eyebrow": "Privacidad",
+      "title": "Politica de privacidad",
+      "description": "Como OldPhotoLive AI recopila, usa, almacena y protege tu informacion.",
+      "intro": "Esta Politica de privacidad explica como OldPhotoLive AI recopila, usa, almacena, comparte y protege tu informacion cuando utilizas nuestro sitio web y servicios, incluidos los flujos de autenticacion, pagos, cargas, resultados generados y analitica del sitio.",
+      "contactTitle": "Contacto",
+      "contactBody": "Si tienes preguntas sobre esta politica o solicitudes de privacidad, utiliza el correo que aparece abajo.",
+      "relatedLink": "Ver Terminos del servicio",
+      "sections": {
+        "informationCollected": {
+          "title": "1. Informacion que recopilamos",
+          "body": "Podemos recopilar informacion de la cuenta, como tu correo, nombre e imagen de perfil de Google Sign-In; fotos subidas y resultados generados; metadatos de suscripciones y pagos de Stripe; e informacion tecnica como direccion IP, detalles del navegador, registros de solicitudes y errores para operar el servicio y prevenir abusos."
+        },
+        "usage": {
+          "title": "2. Como usamos la informacion",
+          "body": "Usamos la informacion recopilada para ofrecer servicios de restauracion, colorizacion y animacion de fotos; autenticar cuentas; gestionar suscripciones, creditos y eventos de pago; resolver incidencias; mejorar la fiabilidad y la calidad del producto; medir el rendimiento; y proteger el servicio frente a fraude, abuso e incidentes de seguridad."
+        },
+        "cookies": {
+          "title": "3. Cookies, almacenamiento local y analitica",
+          "body": "Usamos cookies y mecanismos de almacenamiento similares para mantener tu sesion iniciada, recordar tu idioma, apoyar funciones de seguridad y mejorar la experiencia. Cuando esta habilitado, tambien podemos usar herramientas de analitica como Google Analytics para entender el rendimiento del sitio y las tendencias de uso."
+        },
+        "sharing": {
+          "title": "4. Como compartimos la informacion",
+          "body": "Compartimos informacion solo cuando es necesario para operar el servicio, por ejemplo con proveedores que prestan autenticacion, pagos, almacenamiento en la nube, colas, computo, envio de correo y analitica. Tambien podemos divulgar informacion cuando la ley lo exija, para hacer cumplir nuestros terminos, para proteger derechos y seguridad, o en el marco de una fusion, financiacion o transferencia del negocio."
+        },
+        "storage": {
+          "title": "5. Almacenamiento y retencion",
+          "body": "Los archivos subidos y generados se almacenan en almacenamiento de objetos en la nube para que puedas acceder a tu historial y resultados. Los registros de facturacion, cuenta y operacion pueden conservarse por motivos de soporte, seguridad, prevencion de fraude y cumplimiento. Los archivos y registros pueden eliminarse cuando ya no sean necesarios, cuando los elimines o cuando determinemos que deben retirarse por razones operativas o legales."
+        },
+        "security": {
+          "title": "6. Seguridad",
+          "body": "Aplicamos medidas tecnicas y organizativas razonables para proteger la informacion personal, incluidos controles de acceso, medidas de seguridad gestionadas por proveedores y acceso operativo restringido. Ningun servicio en linea puede garantizar seguridad absoluta, por lo que tambien debes proteger tus credenciales y tu cuenta de correo."
+        },
+        "internationalTransfers": {
+          "title": "7. Transferencias internacionales",
+          "body": "Nuestros proveedores pueden procesar o almacenar informacion en varios paises. Al usar el servicio, entiendes que tu informacion puede transferirse a jurisdicciones con normas de proteccion de datos diferentes a las de tu lugar de residencia."
+        },
+        "rights": {
+          "title": "8. Tus derechos y opciones",
+          "body": "Dependiendo de donde vivas, puedes tener derechos para solicitar acceso, correccion, eliminacion o una copia de cierta informacion personal, asi como para oponerte o limitar determinados tratamientos. Tambien puedes gestionar parte de tu informacion mediante tu cuenta de Google, tu proveedor de pagos y las herramientas de historial que ponemos a tu disposicion. Revisaremos las solicitudes validas y responderemos en un plazo razonable."
+        },
+        "children": {
+          "title": "9. Menores",
+          "body": "OldPhotoLive AI no esta dirigido a menores de 13 anos ni a personas que no tengan la edad suficiente para consentir el tratamiento de datos conforme a la ley aplicable. Si crees que un menor nos ha facilitado informacion personal, contactanos para revisar el caso y adoptar las medidas apropiadas."
+        },
+        "changes": {
+          "title": "10. Cambios en esta politica",
+          "body": "Podemos actualizar esta Politica de privacidad para reflejar cambios del producto, requisitos legales o necesidades operativas. Cuando haya cambios importantes, actualizaremos la fecha de \"Ultima actualizacion\" y podremos ofrecer un aviso adicional cuando corresponda."
+        }
+      }
+    },
+    "terms": {
+      "eyebrow": "Terminos",
+      "title": "Terminos del servicio",
+      "description": "Las reglas y condiciones para usar OldPhotoLive AI.",
+      "intro": "Estos Terminos del servicio regulan tu acceso y uso de OldPhotoLive AI, incluido el sitio web, la pagina de precios, los flujos de carga, los resultados generados y las funciones de facturacion relacionadas. Al utilizar el servicio, aceptas estos terminos.",
+      "contactTitle": "Contacto",
+      "contactBody": "Para consultas legales o relacionadas con los terminos, utiliza el correo que aparece abajo.",
+      "relatedLink": "Ver Politica de privacidad",
+      "sections": {
+        "eligibility": {
+          "title": "1. Elegibilidad",
+          "body": "Debes poder celebrar un acuerdo vinculante para utilizar el servicio. Si utilizas OldPhotoLive AI en nombre de una empresa u organizacion, declaras que tienes autoridad para obligar a esa entidad a estos terminos."
+        },
+        "serviceDescription": {
+          "title": "2. Descripcion del servicio",
+          "body": "OldPhotoLive AI ofrece funciones asistidas por IA para restauracion, colorizacion y animacion de fotos. Las funciones, los limites, los precios, la velocidad de procesamiento y la calidad del resultado pueden variar segun el plan, la disponibilidad de modelos, el volumen de uso y otros factores tecnicos fuera de nuestro control."
+        },
+        "accounts": {
+          "title": "3. Cuentas y acceso",
+          "body": "Eres responsable de mantener la seguridad de tu cuenta y de toda actividad realizada en ella. Debes proporcionar informacion exacta, mantener protegido tu metodo de acceso e informarnos si crees que tu cuenta ha sido comprometida."
+        },
+        "acceptableUse": {
+          "title": "4. Uso aceptable",
+          "body": "Solo puedes usar el servicio de conformidad con la ley aplicable y estos terminos. No puedes usarlo para vulnerar privacidad, imagen o propiedad intelectual, suplantar a terceros, crear contenido ilegal o enganoso, eludir cuotas o medidas de seguridad, extraer el servicio a gran escala ni interferir con otros usuarios o con nuestra infraestructura."
+        },
+        "contentPermissions": {
+          "title": "5. Contenido subido y permisos",
+          "body": "Conservas los derechos sobre el contenido que envias, sin perjuicio de los derechos de terceros. Declaras que tienes todos los derechos y permisos necesarios para subir, procesar, animar, colorear y usar ese contenido, incluido cualquier consentimiento necesario de las personas que aparezcan en el. Nos concedes una licencia limitada para alojar, reproducir, procesar y transmitir ese contenido solo para operar, mantener y mejorar el servicio."
+        },
+        "aiOutputs": {
+          "title": "6. Resultados de IA",
+          "body": "Los resultados generados proceden de sistemas automatizados y pueden contener inexactitudes, artefactos estilisticos o resultados inesperados. Eres responsable de revisar los resultados antes de compartirlos, publicarlos o basarte en ellos, y de cumplir con cualquier regla de divulgacion, consentimiento o archivo aplicable a medios sinteticos o modificados."
+        },
+        "payments": {
+          "title": "7. Pagos, creditos y suscripciones",
+          "body": "Los planes de pago, los creditos y las suscripciones se procesan a traves de Stripe. Los creditos de pago por uso se venden actualmente en paquetes fijos y pueden caducar tras el periodo indicado en la compra. Las suscripciones Professional se renuevan automaticamente segun el ciclo elegido en el checkout, salvo que se cancelen antes de la renovacion. Salvo que la ley exija lo contrario, las tarifas no son reembolsables y eres responsable de impuestos aplicables, devoluciones de cargos e importes pendientes."
+        },
+        "termination": {
+          "title": "8. Suspension y terminacion",
+          "body": "Podemos suspender o terminar el acceso al servicio, retirar contenido o limitar funciones si consideramos razonablemente que has infringido estos terminos, has creado un riesgo legal o de seguridad, has abusado del servicio o no has pagado las tarifas aplicables. Puedes dejar de usar el servicio en cualquier momento. Las secciones que deban sobrevivir por su naturaleza seguiran aplicandose tras la terminacion."
+        },
+        "changes": {
+          "title": "9. Cambios en el servicio y en los terminos",
+          "body": "Podemos modificar, suspender o interrumpir cualquier parte del servicio, y podemos actualizar estos terminos ocasionalmente. Cuando existan cambios importantes, actualizaremos la fecha de \"Ultima actualizacion\" y podremos proporcionar un aviso adicional cuando corresponda. El uso continuado del servicio tras la entrada en vigor de los cambios implica que aceptas los terminos actualizados."
+        },
+        "disclaimers": {
+          "title": "10. Exenciones de responsabilidad",
+          "body": "El servicio se presta \"tal cual\" y \"segun disponibilidad\". En la medida permitida por la ley, renunciamos a garantias de comerciabilidad, idoneidad para un fin particular, no infraccion, disponibilidad ininterrumpida y exactitud de los resultados. No garantizamos que el servicio sea ininterrumpido, seguro o libre de errores."
+        },
+        "liability": {
+          "title": "11. Limitacion de responsabilidad",
+          "body": "En la maxima medida permitida por la ley, OldPhotoLive AI y sus proveedores no seran responsables de danos indirectos, incidentales, especiales, consecuentes, ejemplares o punitivos, ni de la perdida de beneficios, ingresos, fondo de comercio, datos u oportunidades de negocio. Si la ley exige un limite de responsabilidad directa, nuestra responsabilidad agregada no superara el importe que nos hayas pagado por el servicio de pago correspondiente durante los 12 meses anteriores al hecho que origino la reclamacion."
+        }
+      }
+    }
+  }
+}

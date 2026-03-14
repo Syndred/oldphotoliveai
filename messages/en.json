@@ -214,7 +214,7 @@
       "q2": "How long does processing take?",
       "a2": "Most photos are processed within 1-3 minutes. Complex restorations or animations may take slightly longer.",
       "q3": "Is my data safe?",
-      "a3": "Yes. Your photos are processed securely and automatically deleted after 24 hours. We never share your data with third parties.",
+      "a3": "Yes. Your photos are processed securely, and we use trusted providers for authentication, payments, storage, and analytics. Media may remain available in your history until you delete it or we remove it for operational or compliance reasons. See our Privacy Policy for details.",
       "q4": "Can I use the results commercially?",
       "a4": "Yes. You own full rights to the restored and animated versions of your photos."
     },
@@ -223,9 +223,122 @@
       "links": {
         "home": "Home",
         "pricing": "Pricing",
-        "history": "History"
+        "history": "History",
+        "privacy": "Privacy",
+        "terms": "Terms"
       },
       "copyright": "© 2025 OldPhotoLive AI. All rights reserved."
+    }
+  },
+  "legal": {
+    "shared": {
+      "lastUpdated": "Last updated"
+    },
+    "privacy": {
+      "eyebrow": "Privacy",
+      "title": "Privacy Policy",
+      "description": "How OldPhotoLive AI collects, uses, stores, and protects your information.",
+      "intro": "This Privacy Policy explains how OldPhotoLive AI collects, uses, stores, shares, and protects your information when you use our website and services. It is intended to give a practical overview of the data flows involved in authentication, payments, uploads, generated media, and site analytics.",
+      "contactTitle": "Contact",
+      "contactBody": "Questions about this policy or privacy requests can be sent to the email below.",
+      "relatedLink": "View Terms of Service",
+      "sections": {
+        "informationCollected": {
+          "title": "1. Information We Collect",
+          "body": "We may collect account information such as your email, name, and profile image from Google Sign-In; uploaded photos and generated outputs; billing and subscription metadata from Stripe; and technical information such as IP address, browser details, request logs, and error data used to operate the service and prevent abuse."
+        },
+        "usage": {
+          "title": "2. How We Use Information",
+          "body": "We use collected information to provide photo restoration, colorization, and animation services; authenticate accounts; manage subscriptions, credits, and billing events; troubleshoot issues; improve reliability and product quality; measure performance; and protect the service against fraud, misuse, and security incidents."
+        },
+        "cookies": {
+          "title": "3. Cookies, Local Storage, and Analytics",
+          "body": "We use cookies and similar storage mechanisms to keep you signed in, remember your language selection, support security features, and improve usability. We may also use analytics tools such as Google Analytics when enabled to understand site performance and product usage trends."
+        },
+        "sharing": {
+          "title": "4. How We Share Information",
+          "body": "We share information only as needed to operate the service, including with providers that support authentication, payments, cloud storage, queueing, compute, email delivery, and analytics. We may also disclose information when required by law, to enforce our terms, to protect rights and safety, or as part of a merger, financing, or business transfer."
+        },
+        "storage": {
+          "title": "5. Storage and Retention",
+          "body": "Uploaded and generated media are stored in cloud object storage so you can access your task history and results. Billing records, account records, and operational logs may be retained for support, security, fraud prevention, and compliance. Media and logs may be deleted when no longer needed, when you delete them, or when we determine removal is appropriate for operational or legal reasons."
+        },
+        "security": {
+          "title": "6. Security",
+          "body": "We use reasonable technical and organizational safeguards designed to protect personal information, including access controls, provider-managed security measures, and restricted operational access. No online service can guarantee absolute security, so you should also protect your account credentials and connected email account."
+        },
+        "internationalTransfers": {
+          "title": "7. International Transfers",
+          "body": "Our service providers may process or store information in multiple countries. By using the service, you understand that your information may be transferred to jurisdictions that may have different data protection rules than your own."
+        },
+        "rights": {
+          "title": "8. Your Rights and Choices",
+          "body": "Depending on where you live, you may have rights to request access, correction, deletion, or a copy of certain personal information, and to object to or limit certain processing. You can also manage some information through your Google account, your billing provider, and the task history tools we make available. We will review lawful requests and respond within a reasonable time."
+        },
+        "children": {
+          "title": "9. Children",
+          "body": "OldPhotoLive AI is not intended for children under 13, and you should not use the service if you are not old enough to consent under applicable law. If you believe a child has provided personal information to us, contact us so we can review and take appropriate action."
+        },
+        "changes": {
+          "title": "10. Changes to This Policy",
+          "body": "We may update this Privacy Policy from time to time to reflect product changes, legal requirements, or operational needs. When we make material updates, we will revise the \"Last updated\" date and may provide additional notice where appropriate."
+        }
+      }
+    },
+    "terms": {
+      "eyebrow": "Terms",
+      "title": "Terms of Service",
+      "description": "The rules and conditions for using OldPhotoLive AI.",
+      "intro": "These Terms of Service govern your access to and use of OldPhotoLive AI, including our website, pricing, upload workflows, generated results, and related billing features. By using the service, you agree to these terms.",
+      "contactTitle": "Contact",
+      "contactBody": "For legal or terms-related inquiries, please use the email below.",
+      "relatedLink": "View Privacy Policy",
+      "sections": {
+        "eligibility": {
+          "title": "1. Eligibility",
+          "body": "You must be legally able to enter into a binding agreement to use the service. If you use OldPhotoLive AI on behalf of a company or organization, you represent that you have authority to bind that entity to these terms."
+        },
+        "serviceDescription": {
+          "title": "2. Service Description",
+          "body": "OldPhotoLive AI provides AI-assisted photo restoration, colorization, and animation features. Features, limits, pricing, processing speed, and output quality may vary by plan, model availability, usage volume, and technical factors outside our control."
+        },
+        "accounts": {
+          "title": "3. Accounts and Access",
+          "body": "You are responsible for maintaining the security of your account and for all activity that occurs under it. You must provide accurate account information, keep your sign-in method secure, and promptly notify us if you believe your account has been compromised."
+        },
+        "acceptableUse": {
+          "title": "4. Acceptable Use",
+          "body": "You may use the service only in compliance with applicable law and these terms. You may not use the service to violate privacy or publicity rights, infringe intellectual property, impersonate others, create unlawful or deceptive content, bypass quotas or security measures, reverse engineer protected parts of the service, scrape the service at scale, or interfere with other users or our infrastructure."
+        },
+        "contentPermissions": {
+          "title": "5. Uploaded Content and Permissions",
+          "body": "You retain rights in the photos and other content you submit, subject to the rights of third parties. You represent that you have the rights and permissions necessary to upload, process, animate, colorize, and otherwise use that content, including any needed consent from people depicted in the media. You grant us a limited license to host, reproduce, process, and transmit content solely to operate, maintain, and improve the service."
+        },
+        "aiOutputs": {
+          "title": "6. AI Outputs",
+          "body": "Generated outputs are produced by automated systems and may contain inaccuracies, stylistic artifacts, or unexpected results. You are responsible for reviewing outputs before sharing, publishing, or relying on them, and for complying with any disclosure, consent, or archival rules that apply to synthetic or modified media in your use case."
+        },
+        "payments": {
+          "title": "7. Payments, Credits, and Subscriptions",
+          "body": "Paid plans, credits, and subscriptions are processed by Stripe. Pay-as-you-go credits are currently sold in fixed packs and may expire after the period disclosed at purchase. Professional subscriptions renew automatically according to the billing cycle you choose at checkout unless canceled before renewal. Except where required by law, fees are non-refundable, and you are responsible for applicable taxes, chargebacks, and unpaid amounts."
+        },
+        "termination": {
+          "title": "8. Suspension and Termination",
+          "body": "We may suspend or terminate access to the service, remove content, or limit functionality if we reasonably believe you have violated these terms, created legal or security risk, abused the service, or failed to pay applicable fees. You may stop using the service at any time. Sections that by their nature should survive termination will continue to apply."
+        },
+        "changes": {
+          "title": "9. Service and Terms Changes",
+          "body": "We may modify, suspend, or discontinue any part of the service, and we may update these terms from time to time. When we make material changes, we will update the \"Last updated\" date and may provide additional notice where appropriate. Your continued use of the service after changes take effect means you accept the updated terms."
+        },
+        "disclaimers": {
+          "title": "10. Disclaimers",
+          "body": "The service is provided on an \"as is\" and \"as available\" basis. To the extent permitted by law, we disclaim warranties of merchantability, fitness for a particular purpose, non-infringement, uninterrupted availability, and output accuracy. We do not guarantee that the service will be uninterrupted, secure, or error-free."
+        },
+        "liability": {
+          "title": "11. Limitation of Liability",
+          "body": "To the fullest extent permitted by law, OldPhotoLive AI and its service providers will not be liable for indirect, incidental, special, consequential, exemplary, or punitive damages, or for loss of profits, revenues, goodwill, data, or business opportunities. To the extent a direct-liability cap is required by law, our aggregate liability for claims arising out of the service will not exceed the amount you paid us for the relevant paid service during the 12 months before the event giving rise to the claim."
+        }
+      }
     }
   }
 }

@@ -1,3 +1,5 @@
+import { BRAND_NAME, SITE_URL, SUPPORT_EMAIL } from "@/lib/site";
+
 interface SendPaymentEmailParams {
   to: string;
   type: "payment_success" | "payment_failed";
@@ -22,17 +24,20 @@ function buildEmailContent(params: SendPaymentEmailParams): {
   html: string;
 } {
   const safePlan = params.plan ? escapeHtml(params.plan) : "your plan";
+  const pricingUrl = `${SITE_URL}/pricing`;
+  const safeSupportEmail = escapeHtml(SUPPORT_EMAIL);
 
   if (params.type === "payment_success") {
     return {
-      subject: "Payment successful - OldPhotoLive AI",
+      subject: `Payment successful - ${BRAND_NAME}`,
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111827;">
           <h2 style="margin: 0 0 12px;">Payment successful</h2>
           <p>Thanks for your purchase. Your ${safePlan} access has been activated.</p>
-          <p>You can continue at <a href="https://oldphotoliveai.com/pricing">oldphotoliveai.com</a>.</p>
+          <p>You can continue at <a href="${pricingUrl}">${SITE_URL.replace("https://", "")}</a>.</p>
+          <p>If you need billing help, contact <a href="mailto:${safeSupportEmail}">${safeSupportEmail}</a>.</p>
           <p style="margin-top: 20px; color: #6b7280; font-size: 12px;">
-            OldPhotoLive AI
+            ${BRAND_NAME}
           </p>
         </div>
       `,
@@ -40,17 +45,18 @@ function buildEmailContent(params: SendPaymentEmailParams): {
   }
 
   return {
-    subject: "Payment issue - OldPhotoLive AI",
+    subject: `Payment issue - ${BRAND_NAME}`,
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111827;">
         <h2 style="margin: 0 0 12px;">Payment failed</h2>
         <p>We could not process your latest payment for ${safePlan}.</p>
         <p>Please update your billing method and retry from the pricing page.</p>
         <p>
-          <a href="https://oldphotoliveai.com/pricing">Open pricing page</a>
+          <a href="${pricingUrl}">Open pricing page</a>
         </p>
+        <p>If you need help, contact <a href="mailto:${safeSupportEmail}">${safeSupportEmail}</a>.</p>
         <p style="margin-top: 20px; color: #6b7280; font-size: 12px;">
-          OldPhotoLive AI
+          ${BRAND_NAME}
         </p>
       </div>
     `,
@@ -80,6 +86,7 @@ export async function sendPaymentEmail(
     body: JSON.stringify({
       from,
       to: [params.to],
+      reply_to: SUPPORT_EMAIL,
       subject,
       html,
     }),

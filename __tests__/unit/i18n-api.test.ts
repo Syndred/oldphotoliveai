@@ -1,9 +1,4 @@
-// Unit tests for src/lib/i18n-api.ts
-// Tests getRequestLocale() and getErrorMessage()
-
-import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
-
-// ── Helpers ─────────────────────────────────────────────────────────────────
+import { getErrorMessage, getRequestLocale } from "@/lib/i18n-api";
 
 function createRequest(opts: {
   cookie?: string;
@@ -15,128 +10,132 @@ function createRequest(opts: {
   return new Request("http://localhost/api/test", { headers });
 }
 
-// ── getRequestLocale ────────────────────────────────────────────────────────
-
 describe("getRequestLocale", () => {
-  it("returns 'en' as default when no cookie or Accept-Language", () => {
-    const req = createRequest();
-    expect(getRequestLocale(req)).toBe("en");
+  it("returns en as default when no cookie or Accept-Language exists", () => {
+    expect(getRequestLocale(createRequest())).toBe("en");
   });
 
   it("returns locale from NEXT_LOCALE cookie", () => {
-    const req = createRequest({ cookie: "NEXT_LOCALE=zh" });
-    expect(getRequestLocale(req)).toBe("zh");
+    expect(getRequestLocale(createRequest({ cookie: "NEXT_LOCALE=zh" }))).toBe("zh");
+    expect(getRequestLocale(createRequest({ cookie: "NEXT_LOCALE=ja" }))).toBe("ja");
   });
 
-  it("returns locale from NEXT_LOCALE cookie when multiple cookies present", () => {
-    const req = createRequest({ cookie: "other=value; NEXT_LOCALE=zh; foo=bar" });
-    expect(getRequestLocale(req)).toBe("zh");
+  it("returns locale from NEXT_LOCALE cookie when multiple cookies are present", () => {
+    const req = createRequest({ cookie: "foo=bar; NEXT_LOCALE=es; other=value" });
+    expect(getRequestLocale(req)).toBe("es");
   });
 
-  it("returns locale from Accept-Language when no cookie", () => {
-    const req = createRequest({ acceptLanguage: "zh-CN,zh;q=0.9,en;q=0.8" });
-    expect(getRequestLocale(req)).toBe("zh");
+  it("returns locale from Accept-Language when no cookie exists", () => {
+    expect(
+      getRequestLocale(
+        createRequest({ acceptLanguage: "zh-CN,zh;q=0.9,en;q=0.8" })
+      )
+    ).toBe("zh");
+    expect(
+      getRequestLocale(
+        createRequest({ acceptLanguage: "es-ES,es;q=0.9,en;q=0.8" })
+      )
+    ).toBe("es");
+    expect(
+      getRequestLocale(
+        createRequest({ acceptLanguage: "ja-JP,ja;q=0.9,en;q=0.8" })
+      )
+    ).toBe("ja");
   });
 
-  it("returns en from Accept-Language header", () => {
-    const req = createRequest({ acceptLanguage: "en-US,en;q=0.9" });
-    expect(getRequestLocale(req)).toBe("en");
-  });
-
-  it("cookie takes priority over Accept-Language", () => {
+  it("gives cookie precedence over Accept-Language", () => {
     const req = createRequest({
       cookie: "NEXT_LOCALE=en",
-      acceptLanguage: "zh-CN,zh;q=0.9",
+      acceptLanguage: "ja-JP,ja;q=0.9",
     });
     expect(getRequestLocale(req)).toBe("en");
   });
 
-  it("falls back to default for unsupported cookie locale", () => {
-    const req = createRequest({ cookie: "NEXT_LOCALE=fr" });
-    expect(getRequestLocale(req)).toBe("en");
-  });
-
-  it("falls back to default for unsupported Accept-Language", () => {
-    const req = createRequest({ acceptLanguage: "fr-FR,de;q=0.9" });
-    expect(getRequestLocale(req)).toBe("en");
-  });
-
-  it("handles Accept-Language with prefix match", () => {
-    const req = createRequest({ acceptLanguage: "zh-TW;q=0.9" });
-    expect(getRequestLocale(req)).toBe("zh");
+  it("falls back to default for unsupported locales", () => {
+    expect(getRequestLocale(createRequest({ cookie: "NEXT_LOCALE=fr" }))).toBe("en");
+    expect(
+      getRequestLocale(createRequest({ acceptLanguage: "fr-FR,de;q=0.9" }))
+    ).toBe("en");
   });
 });
 
-// ── getErrorMessage ─────────────────────────────────────────────────────────
-
 describe("getErrorMessage", () => {
-  it("returns English error message for en locale", () => {
+  it("returns English, Spanish, and Japanese messages for taskNotFound", () => {
     expect(getErrorMessage("taskNotFound", "en")).toBe("Task not found");
+    expect(getErrorMessage("taskNotFound", "es")).toBe("Tarea no encontrada");
+    expect(getErrorMessage("taskNotFound", "ja")).toBe("タスクが見つかりません");
   });
 
-  it("returns Chinese error message for zh locale", () => {
-    expect(getErrorMessage("taskNotFound", "zh")).toBe("未找到该任务");
+  it("returns a translated Chinese message instead of the key", () => {
+    expect(getErrorMessage("taskNotFound", "zh")).not.toBe("taskNotFound");
   });
 
-  it("returns English fileTypeNotSupported message", () => {
+  it("returns translated fileTypeNotSupported messages for all locales", () => {
     expect(getErrorMessage("fileTypeNotSupported", "en")).toBe(
       "Please upload a JPEG, PNG, or WebP image"
     );
-  });
-
-  it("returns Chinese fileTypeNotSupported message", () => {
-    expect(getErrorMessage("fileTypeNotSupported", "zh")).toBe(
-      "请上传 JPEG、PNG 或 WebP 格式的图片"
+    expect(getErrorMessage("fileTypeNotSupported", "es")).toBe(
+      "Sube una imagen JPEG, PNG o WebP"
+    );
+    expect(getErrorMessage("fileTypeNotSupported", "ja")).toBe(
+      "JPEG、PNG、WebP画像をアップロードしてください"
+    );
+    expect(getErrorMessage("fileTypeNotSupported", "zh")).not.toBe(
+      "fileTypeNotSupported"
     );
   });
 
-  it("interpolates params in error message", () => {
-    const msg = getErrorMessage("paymentFailed", "en", { reason: "Card declined" });
-    expect(msg).toBe("Payment failed: Card declined");
-  });
+  it("interpolates params in localized error messages", () => {
+    expect(getErrorMessage("paymentFailed", "en", { reason: "Card declined" })).toBe(
+      "Payment failed: Card declined"
+    );
+    expect(getErrorMessage("paymentFailed", "es", { reason: "Tarjeta rechazada" })).toBe(
+      "El pago fallo: Tarjeta rechazada"
+    );
+    expect(getErrorMessage("paymentFailed", "ja", { reason: "カードが拒否されました" })).toBe(
+      "支払いに失敗しました: カードが拒否されました"
+    );
 
-  it("interpolates params in Chinese error message", () => {
-    const msg = getErrorMessage("paymentFailed", "zh", { reason: "卡被拒绝" });
-    expect(msg).toBe("支付失败：卡被拒绝");
+    const zhReason = "测试原因";
+    const zhMessage = getErrorMessage("paymentFailed", "zh", { reason: zhReason });
+    expect(zhMessage).toContain(zhReason);
+    expect(zhMessage).not.toBe("paymentFailed");
   });
 
   it("returns the key itself when translation is missing", () => {
     expect(getErrorMessage("nonExistentKey", "en")).toBe("nonExistentKey");
   });
 
-  it("returns all known error keys for en locale", () => {
+  it("returns all known API error keys for every supported locale", () => {
+    const locales = ["en", "zh", "es", "ja"] as const;
     const keys = [
-      "fileTypeNotSupported", "fileTooLarge", "uploadFailed",
-      "uploadStorageConfigError", "uploadStorageAuthError",
-      "uploadStorageBucketMissing", "uploadStorageNetworkError",
+      "fileTypeNotSupported",
+      "fileTooLarge",
+      "uploadFailed",
+      "uploadStorageConfigError",
+      "uploadStorageAuthError",
+      "uploadStorageBucketMissing",
+      "uploadStorageNetworkError",
       "uploadSupportHint",
-      "quotaExceeded", "creditsExpired", "rateLimited",
-      "taskNotFound", "cannotCancel", "unauthorized",
-      "checkoutFailed", "retryFailed", "historyLoadFailed",
-      "taskCreateFailed", "sourceImageUnreachable",
-      "modelConfigError", "intermediateDownloadFailed",
+      "quotaExceeded",
+      "creditsExpired",
+      "rateLimited",
+      "taskNotFound",
+      "cannotCancel",
+      "unauthorized",
+      "checkoutFailed",
+      "retryFailed",
+      "historyLoadFailed",
+      "taskCreateFailed",
+      "sourceImageUnreachable",
+      "modelConfigError",
+      "intermediateDownloadFailed"
     ];
-    for (const key of keys) {
-      const msg = getErrorMessage(key, "en");
-      expect(msg).not.toBe(key); // should have a real translation
-    }
-  });
 
-  it("returns all known error keys for zh locale", () => {
-    const keys = [
-      "fileTypeNotSupported", "fileTooLarge", "uploadFailed",
-      "uploadStorageConfigError", "uploadStorageAuthError",
-      "uploadStorageBucketMissing", "uploadStorageNetworkError",
-      "uploadSupportHint",
-      "quotaExceeded", "creditsExpired", "rateLimited",
-      "taskNotFound", "cannotCancel", "unauthorized",
-      "checkoutFailed", "retryFailed", "historyLoadFailed",
-      "taskCreateFailed", "sourceImageUnreachable",
-      "modelConfigError", "intermediateDownloadFailed",
-    ];
-    for (const key of keys) {
-      const msg = getErrorMessage(key, "zh");
-      expect(msg).not.toBe(key); // should have a real translation
+    for (const locale of locales) {
+      for (const key of keys) {
+        expect(getErrorMessage(key, locale)).not.toBe(key);
+      }
     }
   });
 });

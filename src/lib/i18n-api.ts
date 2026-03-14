@@ -6,12 +6,16 @@ import { locales, defaultLocale, LOCALE_COOKIE } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
 import enMessages from "../../messages/en.json";
 import zhMessages from "../../messages/zh.json";
+import esMessages from "../../messages/es.json";
+import jaMessages from "../../messages/ja.json";
 
 // ── Message maps ────────────────────────────────────────────────────────────
 
 const messages: Record<Locale, Record<string, Record<string, string>>> = {
   en: enMessages as unknown as Record<string, Record<string, string>>,
   zh: zhMessages as unknown as Record<string, Record<string, string>>,
+  es: esMessages as unknown as Record<string, Record<string, string>>,
+  ja: jaMessages as unknown as Record<string, Record<string, string>>,
 };
 
 // ── Locale detection ────────────────────────────────────────────────────────

@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale } from "next-intl";
 import { locales, LOCALE_COOKIE, type Locale } from "@/i18n/routing";
 import { reloadPage } from "@/lib/browser";
 
 const LOCALE_LABELS: Record<Locale, string> = {
-  en: "EN",
+  en: "English",
   zh: "中文",
+  es: "Español",
+  ja: "日本語",
 };
 
 export default function LanguageSwitcher() {
@@ -16,13 +18,25 @@ export default function LanguageSwitcher() {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
         setOpen(false);
       }
     }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    }
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
   }, []);
 
   function switchLocale(locale: Locale) {
@@ -30,34 +44,67 @@ export default function LanguageSwitcher() {
       setOpen(false);
       return;
     }
-    document.cookie = `${LOCALE_COOKIE}=${locale};path=/;max-age=${365 * 24 * 60 * 60}`;
+
+    document.cookie =
+      `${LOCALE_COOKIE}=${locale};path=/;max-age=${365 * 24 * 60 * 60};SameSite=Lax`;
     reloadPage();
   }
 
   return (
     <div ref={ref} className="relative">
       <button
+        type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="rounded-md border border-white/20 px-2 py-1.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-white/40 hover:text-white min-h-[44px]"
-        aria-label="Switch language"
+        className="inline-flex min-h-[44px] items-center gap-2 rounded-md border border-white/20 bg-white/[0.03] px-3 py-2 text-sm text-[var(--color-text-secondary)] backdrop-blur-sm transition-colors hover:border-[var(--color-accent)]/40 hover:text-white"
+        aria-label="Open language menu"
         aria-expanded={open}
+        aria-haspopup="menu"
       >
-        {LOCALE_LABELS[currentLocale]}
+        <span>{LOCALE_LABELS[currentLocale]}</span>
+        <svg
+          className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.8}
+          aria-hidden="true"
+        >
+          <path d="M5.5 7.5L10 12l4.5-4.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-1 min-w-[80px] rounded-md border border-white/10 bg-[var(--color-primary-bg)] py-1 shadow-lg">
-          {locales
-            .filter((l) => l !== currentLocale)
-            .map((locale) => (
+        <div
+          role="menu"
+          aria-label="Language options"
+          className="absolute right-0 z-50 mt-2 w-44 rounded-xl border border-[var(--color-border)] bg-[var(--color-primary-bg)]/95 p-1.5 shadow-[0_18px_40px_rgba(0,0,0,0.38)] backdrop-blur-md"
+        >
+          {locales.map((locale) => {
+            const isCurrent = locale === currentLocale;
+
+            return (
               <button
                 key={locale}
+                type="button"
+                role="menuitemradio"
+                aria-checked={isCurrent}
                 onClick={() => switchLocale(locale)}
-                className="block w-full px-3 py-2 text-left text-sm text-[var(--color-text-secondary)] hover:bg-white/10 hover:text-white"
+                className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                  isCurrent
+                    ? "bg-[var(--color-accent)]/12 text-[var(--color-text-primary)]"
+                    : "text-[var(--color-text-secondary)] hover:bg-white/8 hover:text-white"
+                }`}
               >
-                {LOCALE_LABELS[locale]}
+                <span>{LOCALE_LABELS[locale]}</span>
+                {isCurrent && (
+                  <span
+                    className="h-2.5 w-2.5 rounded-full bg-[var(--color-accent)]"
+                    aria-hidden="true"
+                  />
+                )}
               </button>
-            ))}
+            );
+          })}
         </div>
       )}
     </div>

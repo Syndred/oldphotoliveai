@@ -97,16 +97,20 @@ export const config = {
   },
   get stripe() {
     const secretKey = process.env.STRIPE_SECRET_KEY || "";
-    const isEnabled = secretKey && !secretKey.includes("placeholder");
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
+    const payAsYouGo = process.env.STRIPE_PRICE_PAY_AS_YOU_GO || "";
+    const professional = process.env.STRIPE_PRICE_PROFESSIONAL || "";
+    const isConfigured = [secretKey, webhookSecret, payAsYouGo, professional]
+      .every((value) => value && !value.includes("placeholder"));
     
     return {
       secretKey,
-      webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
+      webhookSecret,
       priceIds: {
-        payAsYouGo: process.env.STRIPE_PRICE_PAY_AS_YOU_GO || "",
-        professional: process.env.STRIPE_PRICE_PROFESSIONAL || "",
+        payAsYouGo,
+        professional,
       },
-      isEnabled, // Helper flag to check if Stripe is configured
+      isEnabled: isConfigured, // Helper flag to check if Stripe is fully configured
     };
   },
   get nextauth() {

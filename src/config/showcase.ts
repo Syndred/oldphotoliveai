@@ -6,7 +6,7 @@ export type CompareShowcaseItem = {
   beforeKey: string;
   afterKey: string;
   // Useful when multiple examples temporarily reuse the same source file.
-  // Keeps browser cache keys distinct so carousel switching is visible.
+  // Keeps browser cache keys distinct when showcase samples reuse the same files.
   version?: number;
 };
 
@@ -24,9 +24,6 @@ export type VideoShowcaseItem = {
   videoKey: string;
   version?: number;
 };
-
-export const SHOWCASE_IMAGE_AUTO_ROTATE_MS = 5000;
-export const SHOWCASE_VIDEO_AUTO_ROTATE_MS = 6000;
 
 // Configure image examples here.
 // Later you can replace keys with real files, e.g.:

@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import BeforeAfterCompare from "@/components/BeforeAfterCompare";
 import {
   IMAGE_SHOWCASE_ROWS,
-  SHOWCASE_IMAGE_AUTO_ROTATE_MS,
   resolveShowcaseAssetUrl,
   type CompareShowcaseItem,
 } from "@/config/showcase";
@@ -39,7 +38,7 @@ function ArrowButton({
       type="button"
       aria-label={label}
       onClick={onClick}
-      className={`flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-card-bg)] text-[var(--color-text-primary)] transition hover:bg-white/10 ${className ?? ""}`}
+      className={`flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-black/70 text-[var(--color-text-primary)] shadow-[0_10px_24px_rgba(0,0,0,0.3)] transition hover:bg-black/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-primary-bg)] ${className ?? ""}`}
     >
       <svg
         className="h-4 w-4"
@@ -75,16 +74,6 @@ function CompareRow({
   const [offset, setOffset] = useState(0);
   const total = items.length;
   const visibleItems = getVisibleItems(items, offset, VISIBLE_COUNT);
-
-  useEffect(() => {
-    if (total <= 1) return;
-
-    const timer = setInterval(() => {
-      setOffset((prev) => wrapIndex(prev + 1, total));
-    }, SHOWCASE_IMAGE_AUTO_ROTATE_MS);
-
-    return () => clearInterval(timer);
-  }, [total]);
 
   const handlePrevious = () => {
     setOffset((prev) => wrapIndex(prev - 1, total));
@@ -136,7 +125,6 @@ function CompareRow({
           </div>
         </div>
       </div>
-
     </article>
   );
 }

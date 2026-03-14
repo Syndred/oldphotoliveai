@@ -6,12 +6,31 @@ import type { NextRequest } from "next/server";
 import Stripe from "stripe";
 import { getStripeClient } from "@/lib/stripe";
 import { config } from "@/lib/config";
-import { getRedisClient, updateUserTier } from "@/lib/redis";
+import { getRedisClient, getUserByEmail, updateUserTier } from "@/lib/redis";
 import { addCredits } from "@/lib/quota";
 import { sendPaymentEmail } from "@/lib/email";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
 const EMAIL_EVENT_TTL_SECONDS = 3 * 24 * 60 * 60;
+const PROCESSED_EVENT_TTL_SECONDS = 7 * 24 * 60 * 60;
+
+function getProcessedWebhookKey(eventId: string): string {
+  return `stripe:webhook:processed:${eventId}`;
+}
+
+async function claimWebhookEvent(eventId: string): Promise<boolean> {
+  const redis = getRedisClient();
+  const result = await redis.set(getProcessedWebhookKey(eventId), "1", {
+    nx: true,
+    ex: PROCESSED_EVENT_TTL_SECONDS,
+  });
+  return result === "OK";
+}
+
+async function releaseWebhookEventClaim(eventId: string): Promise<void> {
+  const redis = getRedisClient();
+  await redis.del(getProcessedWebhookKey(eventId));
+}
 
 async function shouldSendWebhookEmail(eventId: string): Promise<boolean> {
   const redis = getRedisClient();
@@ -62,6 +81,11 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const shouldProcess = await claimWebhookEvent(event.id);
+    if (!shouldProcess) {
+      return NextResponse.json({ received: true });
+    }
+
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
@@ -102,6 +126,7 @@ export async function POST(request: NextRequest) {
         const invoice = event.data.object as Stripe.Invoice;
         const subscriptionRef =
           invoice.parent?.subscription_details?.subscription ?? null;
+        let userId: string | null = null;
 
         if (subscriptionRef) {
           // Get the customer's userId from subscription metadata
@@ -113,10 +138,16 @@ export async function POST(request: NextRequest) {
             subscriptionObj = subscriptionRef;
           }
 
-          const userId = subscriptionObj.metadata?.userId;
-          if (userId) {
-            await updateUserTier(userId, "free");
-          }
+          userId = subscriptionObj.metadata?.userId ?? null;
+        }
+
+        if (!userId && invoice.customer_email) {
+          const user = await getUserByEmail(invoice.customer_email);
+          userId = user?.id ?? null;
+        }
+
+        if (userId) {
+          await updateUserTier(userId, "free");
         }
 
         const customerEmail = invoice.customer_email;
@@ -140,6 +171,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
+    await releaseWebhookEventClaim(event.id);
     console.error("Webhook processing error:", error);
     return NextResponse.json(
       { error: getErrorMessage("paymentFailed", locale, { reason: "Processing failed" }) },
