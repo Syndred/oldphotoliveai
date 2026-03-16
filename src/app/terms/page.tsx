@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import Navbar from "@/components/Navbar";
 import FooterSection from "@/app/sections/FooterSection";
+import { getContentSafetyCopy } from "@/lib/content-safety";
 import { SUPPORT_EMAIL } from "@/lib/site";
 
-const LAST_UPDATED = "March 14, 2026";
+const LAST_UPDATED = "March 16, 2026";
 
 const SECTION_KEYS = [
   "eligibility",
@@ -21,8 +22,10 @@ const SECTION_KEYS = [
 ] as const;
 
 export default async function TermsOfServicePage() {
+  const locale = await getLocale();
   const t = await getTranslations("legal.terms");
   const tShared = await getTranslations("legal.shared");
+  const contentSafety = getContentSafetyCopy(locale);
 
   return (
     <div className="min-h-screen bg-[var(--color-primary-bg)]">
@@ -54,17 +57,27 @@ export default async function TermsOfServicePage() {
               </section>
 
               {SECTION_KEYS.map((key) => (
-                <section
-                  key={key}
-                  className="rounded-2xl border border-white/8 bg-white/[0.025] p-5 sm:p-6"
-                >
-                  <h2 className="text-lg font-semibold text-[var(--color-text-primary)] sm:text-xl">
-                    {t(`sections.${key}.title`)}
-                  </h2>
-                  <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
-                    {t(`sections.${key}.body`)}
-                  </p>
-                </section>
+                <div key={key} className="space-y-4">
+                  <section className="rounded-2xl border border-white/8 bg-white/[0.025] p-5 sm:p-6">
+                    <h2 className="text-lg font-semibold text-[var(--color-text-primary)] sm:text-xl">
+                      {t(`sections.${key}.title`)}
+                    </h2>
+                    <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                      {t(`sections.${key}.body`)}
+                    </p>
+                  </section>
+
+                  {key === "acceptableUse" ? (
+                    <section className="rounded-2xl border border-[var(--color-accent)]/18 bg-[var(--color-accent)]/8 p-5 sm:p-6">
+                      <h2 className="text-lg font-semibold text-[var(--color-text-primary)] sm:text-xl">
+                        {contentSafety.termsTitle}
+                      </h2>
+                      <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                        {contentSafety.termsBody}
+                      </p>
+                    </section>
+                  ) : null}
+                </div>
               ))}
 
               <section className="rounded-2xl border border-[var(--color-accent)]/18 bg-[var(--color-accent)]/8 p-5 sm:p-6">

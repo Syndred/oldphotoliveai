@@ -157,6 +157,7 @@ jest.mock("next-intl", () => ({
 jest.mock("next-intl/server", () => ({
   getTranslations: async (namespace: string) => (key: string) =>
     getTranslation(mockLocale as keyof typeof translations, namespace, key),
+  getLocale: async () => mockLocale,
 }));
 
 jest.mock("next/link", () => ({
@@ -222,5 +223,21 @@ describe("legal pages", () => {
       "href",
       "mailto:support@oldphotoliveai.com"
     );
+  });
+
+  it("renders an explicit NSFW prohibition on the terms page", async () => {
+    mockLocale = "en";
+    render((await TermsOfServicePage()) as React.ReactElement);
+
+    expect(
+      screen.getByRole("heading", {
+        name: "4A. Content Safety and Moderation",
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /You may not use OldPhotoLive AI to upload, generate, restore, animate, edit, transform, or distribute NSFW/
+      )
+    ).toBeInTheDocument();
   });
 });

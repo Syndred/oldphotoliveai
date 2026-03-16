@@ -12,6 +12,22 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/",
 }));
 
+jest.mock("next/link", () => ({
+  __esModule: true,
+  default: ({
+    children,
+    href,
+    ...props
+  }: {
+    children: React.ReactNode;
+    href: string;
+  } & React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
 // Mock next-auth (default to authenticated)
 const mockSignIn = jest.fn();
 let mockSessionStatus = "authenticated";
@@ -125,6 +141,20 @@ describe("HomePage", () => {
   it("renders UploadZone component", () => {
     render(<HomePage />);
     expect(screen.getByTestId("upload-zone")).toBeInTheDocument();
+  });
+
+  it("shows the content safety notice and terms link", () => {
+    render(<HomePage />);
+
+    expect(screen.getByText("Content Safety")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Only upload lawful images you have the right to use. NSFW, nude, sexually explicit, pornographic, or exploitative content is prohibited and may be blocked or removed."
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Read our Terms of Service" })
+    ).toHaveAttribute("href", "/terms");
   });
 
   it("creates task and navigates to result page on successful upload", async () => {

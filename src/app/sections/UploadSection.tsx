@@ -1,20 +1,24 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import UploadZone from "@/components/UploadZone";
 import { trackAnalyticsEvent } from "@/lib/analytics";
+import { getContentSafetyCopy } from "@/lib/content-safety";
 
 export default function UploadSection() {
   const router = useRouter();
   const { status } = useSession();
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState("");
+  const locale = useLocale();
   const t = useTranslations("upload");
   const tAuth = useTranslations("auth");
   const tErrors = useTranslations("errors");
+  const contentSafety = getContentSafetyCopy(locale);
 
   async function handleUpload(imageKey: string) {
     // If not logged in, redirect to login
@@ -90,6 +94,21 @@ export default function UploadSection() {
         )}
 
         <UploadZone onUpload={handleUpload} disabled={isCreating} />
+
+        <div className="mt-4 rounded-xl border border-[var(--color-accent)]/20 bg-[var(--color-accent)]/6 p-4 text-left">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">
+            {contentSafety.uploadTitle}
+          </p>
+          <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
+            {contentSafety.uploadNotice}
+          </p>
+          <Link
+            href="/terms"
+            className="mt-3 inline-flex min-h-[44px] items-center rounded-full border border-white/12 bg-white/[0.03] px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.06] hover:text-white"
+          >
+            {contentSafety.linkLabel}
+          </Link>
+        </div>
 
         {isCreating && (
           <div className="mt-4 flex items-center justify-center gap-2">
