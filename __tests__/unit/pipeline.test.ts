@@ -272,6 +272,22 @@ describe("executePipeline", () => {
       // No uploads happened
       expect(mockUploadToR2).not.toHaveBeenCalled();
     });
+
+    it("surfaces model configuration errors for Replicate authentication failures", async () => {
+      mockGetTask.mockResolvedValue(makeTask());
+      mockGetUser.mockResolvedValue(makeUser());
+      mockGetR2CdnUrl.mockReturnValue("https://cdn.test.com/original.jpg");
+      mockRunModel.mockRejectedValueOnce(
+        new Error("Request failed with status 401 Unauthorized: Unauthenticated")
+      );
+      mockSourceImageAccessible();
+
+      await executePipeline(TASK_ID);
+
+      expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
+        errorMessage: "AI model configuration error. Please contact support.",
+      });
+    });
   });
 
   describe("failure at colorization step", () => {

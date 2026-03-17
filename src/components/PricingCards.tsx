@@ -132,6 +132,8 @@ export default function PricingCards({
           const isCurrentPlan = p.id === currentPlanId;
           const isHighlighted = p.highlighted || isCurrentPlan;
           const checkoutPlan = p.plan;
+          const canBuyMoreCredits =
+            p.id === "pay_as_you_go" && currentPlanId === "pay_as_you_go";
 
           return (
             <div
@@ -180,7 +182,7 @@ export default function PricingCards({
               </ul>
 
               <div className="mt-6">
-                {isCurrentPlan ? (
+                {isCurrentPlan && !canBuyMoreCredits ? (
                   <span className="block w-full rounded-lg border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 px-3 py-3 text-center text-sm text-[var(--color-text-primary)] min-h-[44px]">
                     <span className="block">{t("currentPlan")}</span>
                     {p.id === "pay_as_you_go" && paygRemaining !== null && (
@@ -190,6 +192,17 @@ export default function PricingCards({
                     )}
                   </span>
                 ) : checkoutPlan ? (
+                  <div className="space-y-3">
+                    {canBuyMoreCredits && (
+                      <span className="block w-full rounded-lg border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 px-3 py-3 text-center text-sm text-[var(--color-text-primary)] min-h-[44px]">
+                        <span className="block">{t("currentPlan")}</span>
+                        {paygRemaining !== null && (
+                          <span className="mt-1 block text-xs text-[var(--color-text-secondary)]">
+                            {tQuota("remaining", { count: paygRemaining })}
+                          </span>
+                        )}
+                      </span>
+                    )}
                   <button
                     onClick={() => handleCheckout(checkoutPlan)}
                     disabled={loadingPlan !== null}
@@ -201,6 +214,7 @@ export default function PricingCards({
                   >
                     {loadingPlan === checkoutPlan ? t("redirecting") : t(p.ctaKey)}
                   </button>
+                  </div>
                 ) : (
                   <span className="block w-full rounded-lg border border-white/10 py-3 text-center text-sm text-[var(--color-text-secondary)] min-h-[44px]">
                     {t(p.ctaKey)}

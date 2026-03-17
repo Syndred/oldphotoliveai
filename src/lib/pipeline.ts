@@ -333,6 +333,12 @@ export async function executePipeline(taskId: string): Promise<void> {
     let errorMessage = "Processing failed. Please try again.";
     if (rawMessage.includes("429") || rawMessage.includes("throttled") || rawMessage.includes("rate limit")) {
       errorMessage = "Service is temporarily busy. Please try again in a moment.";
+    } else if (
+      rawMessage.includes("401") ||
+      rawMessage.includes("Unauthenticated") ||
+      rawMessage.includes("authentication token")
+    ) {
+      errorMessage = "AI model configuration error. Please contact support.";
     } else if (rawMessage.includes("422") || rawMessage.includes("Invalid version")) {
       errorMessage = "AI model configuration error. Please contact support.";
     } else if (rawMessage.startsWith("SOURCE_IMAGE_UNREACHABLE:")) {

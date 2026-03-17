@@ -165,6 +165,35 @@ describe("PricingCards", () => {
     expect(screen.queryByText("Subscribe")).not.toBeInTheDocument();
   });
 
+  it("still shows Buy Credits for pay-as-you-go users on their current plan", async () => {
+    mockUseSession.mockReturnValue({
+      data: { user: { name: "Payg User", tier: "pay_as_you_go" } },
+      status: "authenticated",
+    });
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ url: "https://checkout.stripe.com/session-payg" }),
+    });
+
+    render(<PricingCards paygRemaining={2} />);
+
+    const paygCard = screen.getByTestId("plan-pay_as_you_go");
+    expect(paygCard).toHaveTextContent("Current Plan");
+    expect(paygCard).toHaveTextContent("2 remaining");
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("Buy Credits"));
+    });
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: "pay_as_you_go" }),
+      });
+    });
+  });
+
   it("shows Buy Credits button for pay-as-you-go", () => {
     render(<PricingCards />);
     const btn = screen.getByText("Buy Credits");
