@@ -176,6 +176,42 @@ export async function addCredits(
   await redis.srem(keys.dailyUsers(), userId);
 }
 
+export async function clearCredits(userId: string): Promise<void> {
+  const redis = getRedisClient();
+  const raw = await redis.get(keys.quota(userId));
+  if (!raw) return;
+
+  const quota = parseQuota(raw);
+  quota.credits = 0;
+  quota.creditsExpireAt = null;
+
+  await redis.set(keys.quota(userId), quota);
+}
+
+export async function resetFreeQuota(userId: string): Promise<void> {
+  const redis = getRedisClient();
+  const raw = await redis.get(keys.quota(userId));
+
+  const quota: QuotaInfo = raw
+    ? parseQuota(raw)
+    : {
+        userId,
+        tier: "free",
+        remaining: 0,
+        dailyLimit: 1,
+        resetAt: null,
+        credits: 0,
+        creditsExpireAt: null,
+      };
+
+  quota.remaining = 1;
+  quota.dailyLimit = 1;
+  quota.resetAt = getNextUtcMidnight();
+
+  await redis.set(keys.quota(userId), quota);
+  await redis.sadd(keys.dailyUsers(), userId);
+}
+
 // ── Reset All Daily Quotas ──────────────────────────────────────────────────
 
 export async function resetAllDailyQuotas(): Promise<void> {

@@ -11,6 +11,22 @@ import {
 } from "@/lib/stripe";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
+function getSubscriptionCurrentPeriodEnd(
+  subscription: unknown
+): string | null {
+  if (!subscription || typeof subscription !== "object") {
+    return null;
+  }
+
+  const currentPeriodEnd = (subscription as { current_period_end?: unknown })
+    .current_period_end;
+  if (typeof currentPeriodEnd !== "number") {
+    return null;
+  }
+
+  return new Date(currentPeriodEnd * 1000).toISOString();
+}
+
 export async function GET(request: NextRequest) {
   const locale = getRequestLocale(request);
 
@@ -81,9 +97,7 @@ export async function GET(request: NextRequest) {
       {
         hasActiveSubscription: true,
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
-        currentPeriodEnd: new Date(
-          subscription.current_period_end * 1000
-        ).toISOString(),
+        currentPeriodEnd: getSubscriptionCurrentPeriodEnd(subscription),
       },
       { status: 200 }
     );

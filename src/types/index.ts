@@ -72,6 +72,19 @@ export interface SubscriptionStatus {
   currentPeriodEnd: string | null;
 }
 
+export interface AdminStripeSnapshot {
+  customerId: string | null;
+  subscriptionStatus: string | null;
+  cancelAtPeriodEnd: boolean;
+  currentPeriodEnd: string | null;
+}
+
+export interface AdminUserSnapshot {
+  user: User;
+  quota: QuotaInfo;
+  stripe: AdminStripeSnapshot;
+}
+
 export interface QuotaCheckResult {
   allowed: boolean;
   remaining: number;

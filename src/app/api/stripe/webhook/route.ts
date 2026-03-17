@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
 
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
-        let userId = subscription.metadata?.userId ?? null;
+        let userId: string | null = subscription.metadata?.userId ?? null;
 
         if (!userId) {
           const customerRef = subscription.customer;

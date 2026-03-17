@@ -128,6 +128,37 @@ export async function getUser(userId: string): Promise<User | null> {
   return data ?? null;
 }
 
+export async function listRecentUsers(limit = 10): Promise<User[]> {
+  const redis = getRedisClient();
+  const usersById = new Map<string, User>();
+  let cursor = "0";
+
+  do {
+    const [nextCursor, userKeys] = await redis.scan(cursor, {
+      match: "user:*",
+      count: 100,
+    });
+    cursor = String(nextCursor);
+
+    for (const key of userKeys) {
+      const parts = key.split(":");
+      if (parts.length !== 2 || parts[0] !== "user") continue;
+
+      const user = await redis.get<User>(key);
+      if (!user) continue;
+      usersById.set(user.id, user);
+    }
+  } while (cursor !== "0");
+
+  return Array.from(usersById.values())
+    .sort((a, b) => {
+      const aTime = new Date(a.updatedAt || a.createdAt).getTime();
+      const bTime = new Date(b.updatedAt || b.createdAt).getTime();
+      return bTime - aTime;
+    })
+    .slice(0, limit);
+}
+
 export async function updateUserTier(
   userId: string,
   tier: UserTier

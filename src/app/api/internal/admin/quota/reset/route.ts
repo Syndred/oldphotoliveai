@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { initializeFreeQuota, ensureFreeQuotaInitialized } from "@/lib/quota";
-import { getUser, getUserByEmail, updateUserTier } from "@/lib/redis";
 import { requireAdmin } from "@/lib/admin";
-import type { UserTier } from "@/types";
+import { getQuotaInfo, resetFreeQuota } from "@/lib/quota";
+import { getUser, getUserByEmail } from "@/lib/redis";
 import { getRequestLocale } from "@/lib/i18n-api";
 
-interface UpdateTierBody {
+interface ResetQuotaBody {
   userId?: string;
   email?: string;
-  tier?: string;
-}
-
-function isUserTier(value: string): value is UserTier {
-  return value === "free" || value === "pay_as_you_go" || value === "professional";
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -22,9 +16,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return unauthorizedResponse;
   }
 
-  let body: UpdateTierBody;
+  let body: ResetQuotaBody;
   try {
-    body = (await request.json()) as UpdateTierBody;
+    body = (await request.json()) as ResetQuotaBody;
   } catch {
     return NextResponse.json(
       { error: "Invalid JSON body" },
@@ -34,10 +28,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const userId = body.userId?.trim();
   const email = body.email?.trim();
-  const tier = body.tier?.trim();
-  if ((!userId && !email) || !tier || !isUserTier(tier)) {
+  if (!userId && !email) {
     return NextResponse.json(
-      { error: "Invalid payload. Expected { tier, userId? , email? } and either userId or email." },
+      { error: "Invalid payload. Expected { userId? , email? } and either userId or email." },
       { status: 400 }
     );
   }
@@ -51,31 +44,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const targetUserId = user.id;
-
-    await updateUserTier(targetUserId, tier);
-    if (tier === "free") {
-      if (user.tier === "free") {
-        await ensureFreeQuotaInitialized(targetUserId);
-      } else {
-        await initializeFreeQuota(targetUserId);
-      }
-    }
+    await resetFreeQuota(user.id);
+    const quota = await getQuotaInfo(user.id);
 
     return NextResponse.json(
       {
-        userId: targetUserId,
+        userId: user.id,
         email: user.email,
-        previousTier: user.tier,
-        tier,
+        quota,
         updated: true,
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Admin tier update failed:", error);
+    console.error("Admin quota reset failed:", error);
     return NextResponse.json(
-      { error: "Failed to update tier" },
+      { error: "Failed to reset free quota" },
       { status: 500 }
     );
   }
