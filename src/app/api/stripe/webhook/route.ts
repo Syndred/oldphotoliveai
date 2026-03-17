@@ -165,6 +165,36 @@ export async function POST(request: NextRequest) {
         break;
       }
 
+      case "customer.subscription.deleted": {
+        const subscription = event.data.object as Stripe.Subscription;
+        let userId = subscription.metadata?.userId ?? null;
+
+        if (!userId) {
+          const customerRef = subscription.customer;
+          let customerEmail: string | null = null;
+
+          if (typeof customerRef === "string") {
+            const customer = await stripe.customers.retrieve(customerRef);
+            if (!("deleted" in customer)) {
+              customerEmail = customer.email ?? null;
+            }
+          } else if (customerRef && !("deleted" in customerRef)) {
+            customerEmail = customerRef.email ?? null;
+          }
+
+          if (customerEmail) {
+            const user = await getUserByEmail(customerEmail);
+            userId = user?.id ?? null;
+          }
+        }
+
+        if (userId) {
+          await updateUserTier(userId, "free");
+        }
+
+        break;
+      }
+
       default:
         // Unhandled event type - ignore
         break;

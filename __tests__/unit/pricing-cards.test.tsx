@@ -31,6 +31,9 @@ jest.mock("next-intl", () => ({
           currentPlan: "Current Plan",
           subscribe: "Subscribe",
           buyCredits: "Buy Credits",
+          manageSubscription: "Manage Subscription",
+          scheduledCancellation:
+            "Scheduled to downgrade to Free on {date} at period end.",
           redirecting: "Redirecting...",
           freeDesc: "Try it out",
           payAsYouGoDesc: "For occasional use",
@@ -48,6 +51,7 @@ jest.mock("next-intl", () => ({
         },
         errors: {
           checkoutFailed: "Checkout failed",
+          billingPortalFailed: "Billing portal failed",
           paymentUnavailable: "Payment feature is currently unavailable.",
         },
         quota: { remaining: "{count} remaining" },
@@ -162,7 +166,31 @@ describe("PricingCards", () => {
 
     const professionalCard = screen.getByTestId("plan-professional");
     expect(professionalCard).toHaveTextContent("Current Plan");
+    expect(screen.getByText("Manage Subscription")).toBeInTheDocument();
     expect(screen.queryByText("Subscribe")).not.toBeInTheDocument();
+  });
+
+  it("opens the billing portal for professional users", async () => {
+    mockUseSession.mockReturnValue({
+      data: { user: { name: "Pro User", tier: "professional" } },
+      status: "authenticated",
+    });
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ url: "https://billing.stripe.com/session-test" }),
+    });
+
+    render(<PricingCards />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("Manage Subscription"));
+    });
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith("/api/stripe/portal", {
+        method: "POST",
+      });
+    });
   });
 
   it("still shows Buy Credits for pay-as-you-go users on their current plan", async () => {
@@ -175,11 +203,11 @@ describe("PricingCards", () => {
       json: async () => ({ url: "https://checkout.stripe.com/session-payg" }),
     });
 
-    render(<PricingCards paygRemaining={2} />);
+    render(<PricingCards />);
 
     const paygCard = screen.getByTestId("plan-pay_as_you_go");
     expect(paygCard).toHaveTextContent("Current Plan");
-    expect(paygCard).toHaveTextContent("2 remaining");
+    expect(paygCard).not.toHaveTextContent("2 remaining");
 
     await act(async () => {
       fireEvent.click(screen.getByText("Buy Credits"));
@@ -307,6 +335,16 @@ describe("PricingPage", () => {
           }),
         };
       }
+      if (url.endsWith("/api/stripe/subscription")) {
+        return {
+          ok: true,
+          json: async () => ({
+            hasActiveSubscription: true,
+            cancelAtPeriodEnd: false,
+            currentPeriodEnd: null,
+          }),
+        };
+      }
       return { ok: true, json: async () => ({}) };
     });
   });
@@ -380,6 +418,49 @@ describe("PricingPage", () => {
       expect(screen.getByTestId("current-plan-summary")).toHaveTextContent(
         /Current Plan:\s*Pay As You Go\s*\(2 remaining\)/
       );
+    });
+  });
+
+  it("shows the scheduled downgrade date when a subscription is set to cancel", async () => {
+    mockUseSession.mockReturnValue({
+      data: { user: { name: "Pro User", tier: "professional" } },
+      status: "authenticated",
+    });
+    mockFetch.mockImplementation(async (input: unknown) => {
+      const url = getRequestUrl(input);
+      if (url.endsWith("/api/quota")) {
+        return {
+          ok: true,
+          json: async () => ({
+            userId: "u1",
+            tier: "professional",
+            remaining: 0,
+            dailyLimit: null,
+            resetAt: null,
+            credits: 0,
+            creditsExpireAt: null,
+          }),
+        };
+      }
+      if (url.endsWith("/api/stripe/subscription")) {
+        return {
+          ok: true,
+          json: async () => ({
+            hasActiveSubscription: true,
+            cancelAtPeriodEnd: true,
+            currentPeriodEnd: "2026-04-17T00:00:00.000Z",
+          }),
+        };
+      }
+      return { ok: true, json: async () => ({}) };
+    });
+
+    render(<PricingPage />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("scheduled-cancellation-summary")
+      ).toBeInTheDocument();
     });
   });
 });

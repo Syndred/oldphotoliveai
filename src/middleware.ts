@@ -18,6 +18,8 @@ const PROTECTED_ROUTES = [
   "/api/quota",
   "/api/history",
   "/api/stripe/checkout",
+  "/api/stripe/portal",
+  "/api/stripe/subscription",
 ];
 
 const PUBLIC_ROUTES = [

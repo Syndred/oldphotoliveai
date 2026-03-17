@@ -2,14 +2,19 @@ import { NextRequest } from "next/server";
 
 const mockGetToken = jest.fn();
 const mockCheckoutCreate = jest.fn();
+const mockBillingPortalCreate = jest.fn();
 const mockConstructEvent = jest.fn();
 const mockRetrieveSubscription = jest.fn();
+const mockListSubscriptions = jest.fn();
+const mockRetrieveCustomer = jest.fn();
 const mockRedisSet = jest.fn();
 const mockRedisDel = jest.fn();
 const mockAddCredits = jest.fn();
 const mockUpdateUserTier = jest.fn();
 const mockGetUserByEmail = jest.fn();
 const mockSendPaymentEmail = jest.fn();
+const mockGetOrCreateStripeCustomer = jest.fn();
+const mockFindStripeCustomerByEmail = jest.fn();
 
 jest.mock("next-auth/jwt", () => ({
   getToken: (...args: unknown[]) => mockGetToken(...args),
@@ -22,13 +27,28 @@ jest.mock("@/lib/stripe", () => ({
         create: (...args: unknown[]) => mockCheckoutCreate(...args),
       },
     },
+    billingPortal: {
+      sessions: {
+        create: (...args: unknown[]) => mockBillingPortalCreate(...args),
+      },
+    },
     webhooks: {
       constructEvent: (...args: unknown[]) => mockConstructEvent(...args),
     },
     subscriptions: {
       retrieve: (...args: unknown[]) => mockRetrieveSubscription(...args),
+      list: (...args: unknown[]) => mockListSubscriptions(...args),
+    },
+    customers: {
+      retrieve: (...args: unknown[]) => mockRetrieveCustomer(...args),
     },
   }),
+  getOrCreateStripeCustomer: (...args: unknown[]) =>
+    mockGetOrCreateStripeCustomer(...args),
+  findStripeCustomerByEmail: (...args: unknown[]) =>
+    mockFindStripeCustomerByEmail(...args),
+  findProfessionalSubscriptionByCustomerId: (...args: unknown[]) =>
+    mockListSubscriptions(...args),
 }));
 
 jest.mock("@/lib/config", () => ({
@@ -75,6 +95,8 @@ jest.mock("@/lib/i18n-api", () => ({
 }));
 
 import { POST as checkoutPost } from "@/app/api/stripe/checkout/route";
+import { POST as portalPost } from "@/app/api/stripe/portal/route";
+import { GET as subscriptionGet } from "@/app/api/stripe/subscription/route";
 import { POST as webhookPost } from "@/app/api/stripe/webhook/route";
 
 describe("Stripe checkout route", () => {
@@ -86,6 +108,10 @@ describe("Stripe checkout route", () => {
     mockGetToken.mockResolvedValue({
       userId: "user-123",
       email: "owner@example.com",
+      name: "Owner Example",
+    });
+    mockGetOrCreateStripeCustomer.mockResolvedValue({
+      id: "cus_123",
     });
     mockCheckoutCreate.mockResolvedValue({
       url: "https://checkout.stripe.com/c/pay/test",
@@ -110,7 +136,7 @@ describe("Stripe checkout route", () => {
         success_url: "https://oldphotoliveai.com/pricing?success=true",
         cancel_url: "https://oldphotoliveai.com/pricing?cancelled=true",
         client_reference_id: "user-123",
-        customer_email: "owner@example.com",
+        customer: "cus_123",
         metadata: {
           userId: "user-123",
           plan: "professional",
@@ -123,6 +149,91 @@ describe("Stripe checkout route", () => {
         },
       })
     );
+    expect(mockGetOrCreateStripeCustomer).toHaveBeenCalledWith({
+      email: "owner@example.com",
+      userId: "user-123",
+      name: "Owner Example",
+    });
+  });
+});
+
+describe("Stripe billing portal route", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("creates a billing portal session for the authenticated customer", async () => {
+    mockGetToken.mockResolvedValue({
+      userId: "user-123",
+      email: "owner@example.com",
+    });
+    mockFindStripeCustomerByEmail.mockResolvedValue({
+      id: "cus_123",
+    });
+    mockBillingPortalCreate.mockResolvedValue({
+      url: "https://billing.stripe.com/session/test",
+    });
+
+    const request = new NextRequest("http://localhost/api/stripe/portal", {
+      method: "POST",
+    });
+
+    const response = await portalPost(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.url).toBe("https://billing.stripe.com/session/test");
+    expect(mockFindStripeCustomerByEmail).toHaveBeenCalledWith(
+      "owner@example.com"
+    );
+    expect(mockBillingPortalCreate).toHaveBeenCalledWith({
+      customer: "cus_123",
+      return_url: "https://oldphotoliveai.com/pricing",
+    });
+  });
+});
+
+describe("Stripe subscription status route", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("returns the scheduled cancellation date for an active subscription", async () => {
+    mockGetToken.mockResolvedValue({
+      userId: "user-123",
+      email: "owner@example.com",
+    });
+    mockFindStripeCustomerByEmail.mockResolvedValue({
+      id: "cus_123",
+    });
+    mockListSubscriptions.mockResolvedValue({
+      id: "sub_123",
+      created: 1,
+      status: "active",
+      cancel_at_period_end: true,
+      current_period_end: 1776384000,
+    });
+
+    const request = new NextRequest(
+      "http://localhost/api/stripe/subscription",
+      {
+        method: "GET",
+      }
+    );
+
+    const response = await subscriptionGet(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(mockFindStripeCustomerByEmail).toHaveBeenCalledWith(
+      "owner@example.com"
+    );
+    expect(mockListSubscriptions).toHaveBeenCalledWith("cus_123");
+    expect(body).toEqual({
+      hasActiveSubscription: true,
+      cancelAtPeriodEnd: true,
+      currentPeriodEnd: "2026-04-17T00:00:00.000Z",
+    });
   });
 });
 
@@ -215,5 +326,38 @@ describe("Stripe webhook route", () => {
     expect(mockGetUserByEmail).toHaveBeenCalledWith("owner@example.com");
     expect(mockUpdateUserTier).toHaveBeenCalledWith("user-by-email", "free");
     expect(mockSendPaymentEmail).toHaveBeenCalledTimes(1);
+  });
+
+  it("downgrades a cancelled subscription by looking up the customer email", async () => {
+    mockConstructEvent.mockReturnValue({
+      id: "evt_cancelled_123",
+      type: "customer.subscription.deleted",
+      data: {
+        object: {
+          metadata: {},
+          customer: "cus_123",
+        },
+      },
+    });
+    mockRetrieveCustomer.mockResolvedValue({
+      email: "owner@example.com",
+    });
+    mockGetUserByEmail.mockResolvedValue({
+      id: "user-by-email",
+    });
+    mockRedisSet.mockResolvedValueOnce("OK");
+
+    const request = new NextRequest("http://localhost/api/stripe/webhook", {
+      method: "POST",
+      headers: { "stripe-signature": "sig_test" },
+      body: JSON.stringify({ any: "payload" }),
+    });
+
+    const response = await webhookPost(request);
+
+    expect(response.status).toBe(200);
+    expect(mockRetrieveCustomer).toHaveBeenCalledWith("cus_123");
+    expect(mockGetUserByEmail).toHaveBeenCalledWith("owner@example.com");
+    expect(mockUpdateUserTier).toHaveBeenCalledWith("user-by-email", "free");
   });
 });

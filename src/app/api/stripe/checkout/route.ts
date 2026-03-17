@@ -4,7 +4,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { getStripeClient } from "@/lib/stripe";
+import { getStripeClient, getOrCreateStripeCustomer } from "@/lib/stripe";
 import { config } from "@/lib/config";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
@@ -44,6 +44,10 @@ export async function POST(request: NextRequest) {
       typeof token.email === "string" && token.email.trim()
         ? token.email
         : undefined;
+    const customerName =
+      typeof token.name === "string" && token.name.trim()
+        ? token.name
+        : undefined;
 
     const body = await request.json();
     const { plan } = body as { plan?: string };
@@ -62,6 +66,13 @@ export async function POST(request: NextRequest) {
         : config.stripe.priceIds.professional;
 
     const mode = plan === "professional" ? "subscription" : "payment";
+    const customer = customerEmail
+      ? await getOrCreateStripeCustomer({
+          email: customerEmail,
+          userId,
+          name: customerName,
+        })
+      : null;
 
     const session = await stripe.checkout.sessions.create({
       mode,
@@ -70,7 +81,9 @@ export async function POST(request: NextRequest) {
       success_url: `${config.nextauth.url}/pricing?success=true`,
       cancel_url: `${config.nextauth.url}/pricing?cancelled=true`,
       client_reference_id: userId,
-      customer_email: customerEmail,
+      ...(customer
+        ? { customer: customer.id }
+        : { customer_email: customerEmail }),
       metadata: {
         userId,
         plan,

@@ -23,10 +23,6 @@ interface PricingPlan {
   plan?: "pay_as_you_go" | "professional";
 }
 
-interface PricingCardsProps {
-  paygRemaining?: number | null;
-}
-
 function parseUserTier(value: unknown): UserTier | null {
   if (
     value === "free" ||
@@ -80,14 +76,11 @@ const PLANS: PricingPlan[] = [
   },
 ];
 
-export default function PricingCards({
-  paygRemaining = null,
-}: PricingCardsProps) {
+export default function PricingCards() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { data: session } = useSession();
   const t = useTranslations("pricing");
-  const tQuota = useTranslations("quota");
   const tErrors = useTranslations("errors");
 
   const currentTier = parseUserTier(
@@ -120,6 +113,35 @@ export default function PricingCards({
     } catch (err) {
       trackAnalyticsEvent("checkout_failed", { plan });
       setError(err instanceof Error ? err.message : tErrors("checkoutFailed"));
+    } finally {
+      setLoadingPlan(null);
+    }
+  }
+
+  async function handleBillingPortal() {
+    setLoadingPlan("manage_subscription");
+    setError(null);
+    trackAnalyticsEvent("billing_portal_started");
+    try {
+      const res = await fetch("/api/stripe/portal", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 503) {
+          throw new Error(tErrors("paymentUnavailable"));
+        }
+        throw new Error(data.error ?? tErrors("billingPortalFailed"));
+      }
+      if (data.url) {
+        trackAnalyticsEvent("billing_portal_redirected");
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      trackAnalyticsEvent("billing_portal_failed");
+      setError(
+        err instanceof Error ? err.message : tErrors("billingPortalFailed")
+      );
     } finally {
       setLoadingPlan(null);
     }
@@ -183,37 +205,46 @@ export default function PricingCards({
 
               <div className="mt-6">
                 {isCurrentPlan && !canBuyMoreCredits ? (
-                  <span className="block w-full rounded-lg border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 px-3 py-3 text-center text-sm text-[var(--color-text-primary)] min-h-[44px]">
-                    <span className="block">{t("currentPlan")}</span>
-                    {p.id === "pay_as_you_go" && paygRemaining !== null && (
-                      <span className="mt-1 block text-xs text-[var(--color-text-secondary)]">
-                        {tQuota("remaining", { count: paygRemaining })}
+                  p.id === "professional" ? (
+                    <div className="space-y-3">
+                      <span className="block w-full rounded-lg border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 px-3 py-3 text-center text-sm text-[var(--color-text-primary)] min-h-[44px]">
+                        <span className="block">{t("currentPlan")}</span>
                       </span>
-                    )}
-                  </span>
+                      <button
+                        onClick={() => handleBillingPortal()}
+                        disabled={loadingPlan !== null}
+                        className="w-full rounded-lg bg-[var(--color-accent)] py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent)]/90 disabled:opacity-50 min-h-[44px]"
+                      >
+                        {loadingPlan === "manage_subscription"
+                          ? t("redirecting")
+                          : t("manageSubscription")}
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="block w-full rounded-lg border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 px-3 py-3 text-center text-sm text-[var(--color-text-primary)] min-h-[44px]">
+                      <span className="block">{t("currentPlan")}</span>
+                    </span>
+                  )
                 ) : checkoutPlan ? (
                   <div className="space-y-3">
                     {canBuyMoreCredits && (
                       <span className="block w-full rounded-lg border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 px-3 py-3 text-center text-sm text-[var(--color-text-primary)] min-h-[44px]">
                         <span className="block">{t("currentPlan")}</span>
-                        {paygRemaining !== null && (
-                          <span className="mt-1 block text-xs text-[var(--color-text-secondary)]">
-                            {tQuota("remaining", { count: paygRemaining })}
-                          </span>
-                        )}
                       </span>
                     )}
-                  <button
-                    onClick={() => handleCheckout(checkoutPlan)}
-                    disabled={loadingPlan !== null}
-                    className={`w-full rounded-lg py-3 text-sm font-medium transition-colors min-h-[44px] ${
-                      p.highlighted
-                        ? "bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent)]/90"
-                        : "bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] text-white hover:opacity-90"
-                    } disabled:opacity-50`}
-                  >
-                    {loadingPlan === checkoutPlan ? t("redirecting") : t(p.ctaKey)}
-                  </button>
+                    <button
+                      onClick={() => handleCheckout(checkoutPlan)}
+                      disabled={loadingPlan !== null}
+                      className={`w-full rounded-lg py-3 text-sm font-medium transition-colors min-h-[44px] ${
+                        p.highlighted
+                          ? "bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent)]/90"
+                          : "bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] text-white hover:opacity-90"
+                      } disabled:opacity-50`}
+                    >
+                      {loadingPlan === checkoutPlan
+                        ? t("redirecting")
+                        : t(p.ctaKey)}
+                    </button>
                   </div>
                 ) : (
                   <span className="block w-full rounded-lg border border-white/10 py-3 text-center text-sm text-[var(--color-text-secondary)] min-h-[44px]">

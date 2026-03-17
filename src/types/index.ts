@@ -66,6 +66,12 @@ export interface QuotaInfo {
   creditsExpireAt: string | null;
 }
 
+export interface SubscriptionStatus {
+  hasActiveSubscription: boolean;
+  cancelAtPeriodEnd: boolean;
+  currentPeriodEnd: string | null;
+}
+
 export interface QuotaCheckResult {
   allowed: boolean;
   remaining: number;

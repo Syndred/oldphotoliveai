@@ -34,6 +34,7 @@ const PROFESSIONAL = {
 const ENABLED_EVENTS = [
   "checkout.session.completed",
   "invoice.payment_failed",
+  "customer.subscription.deleted",
 ];
 
 function requireEnv(name) {
@@ -95,10 +96,22 @@ async function ensureWebhookEndpoint(stripe, webhookUrl) {
   const existing = endpoints.data.find((endpoint) => endpoint.url === webhookUrl);
 
   if (existing) {
+    const enabledEvents = Array.from(
+      new Set([...existing.enabled_events, ...ENABLED_EVENTS])
+    );
+    const needsUpdate =
+      ENABLED_EVENTS.some((eventName) => !existing.enabled_events.includes(eventName));
+    const endpoint = needsUpdate
+      ? await stripe.webhookEndpoints.update(existing.id, {
+          enabled_events: enabledEvents,
+        })
+      : existing;
+
     return {
-      endpoint: existing,
+      endpoint,
       secret: null,
       created: false,
+      updated: needsUpdate,
     };
   }
 
@@ -115,6 +128,7 @@ async function ensureWebhookEndpoint(stripe, webhookUrl) {
     endpoint,
     secret: endpoint.secret,
     created: true,
+    updated: false,
   };
 }
 
@@ -147,7 +161,9 @@ async function main() {
   console.log(
     webhook.created
       ? `Created webhook endpoint: ${webhook.endpoint.id}`
-      : `Reused webhook endpoint: ${webhook.endpoint.id}`
+      : webhook.updated
+        ? `Updated webhook endpoint: ${webhook.endpoint.id}`
+        : `Reused webhook endpoint: ${webhook.endpoint.id}`
   );
 
   console.log("");
