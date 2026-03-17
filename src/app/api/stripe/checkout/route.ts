@@ -6,6 +6,7 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { getStripeClient, getOrCreateStripeCustomer } from "@/lib/stripe";
 import { config } from "@/lib/config";
+import { getUser } from "@/lib/redis";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
 const VALID_PLANS = ["pay_as_you_go", "professional"] as const;
@@ -56,6 +57,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: getErrorMessage("checkoutFailed", locale) },
         { status: 400 }
+      );
+    }
+
+    const user = await getUser(userId);
+    if (plan === "pay_as_you_go" && user?.tier === "professional") {
+      return NextResponse.json(
+        {
+          error: getErrorMessage(
+            "professionalAlreadyIncludesCredits",
+            locale
+          ),
+        },
+        { status: 409 }
       );
     }
 

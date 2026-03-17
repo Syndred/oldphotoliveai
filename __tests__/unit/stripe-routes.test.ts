@@ -10,8 +10,10 @@ const mockRetrieveCustomer = jest.fn();
 const mockRedisSet = jest.fn();
 const mockRedisDel = jest.fn();
 const mockAddCredits = jest.fn();
+const mockInitializeFreeQuota = jest.fn();
 const mockUpdateUserTier = jest.fn();
 const mockGetUserByEmail = jest.fn();
+const mockGetUser = jest.fn();
 const mockSendPaymentEmail = jest.fn();
 const mockGetOrCreateStripeCustomer = jest.fn();
 const mockFindStripeCustomerByEmail = jest.fn();
@@ -75,10 +77,12 @@ jest.mock("@/lib/redis", () => ({
   }),
   updateUserTier: (...args: unknown[]) => mockUpdateUserTier(...args),
   getUserByEmail: (...args: unknown[]) => mockGetUserByEmail(...args),
+  getUser: (...args: unknown[]) => mockGetUser(...args),
 }));
 
 jest.mock("@/lib/quota", () => ({
   addCredits: (...args: unknown[]) => mockAddCredits(...args),
+  initializeFreeQuota: (...args: unknown[]) => mockInitializeFreeQuota(...args),
 }));
 
 jest.mock("@/lib/email", () => ({
@@ -102,6 +106,8 @@ import { POST as webhookPost } from "@/app/api/stripe/webhook/route";
 describe("Stripe checkout route", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetUser.mockReset();
+    mockInitializeFreeQuota.mockReset();
   });
 
   it("creates a subscription checkout session with subscription metadata", async () => {
@@ -155,11 +161,38 @@ describe("Stripe checkout route", () => {
       name: "Owner Example",
     });
   });
+
+  it("blocks pay-as-you-go checkout for professional users", async () => {
+    mockGetToken.mockResolvedValue({
+      userId: "user-123",
+      email: "owner@example.com",
+      name: "Owner Example",
+    });
+    mockGetUser.mockResolvedValue({
+      id: "user-123",
+      tier: "professional",
+    });
+
+    const request = new NextRequest("http://localhost/api/stripe/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan: "pay_as_you_go" }),
+    });
+
+    const response = await checkoutPost(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body.error).toBe("professionalAlreadyIncludesCredits");
+    expect(mockCheckoutCreate).not.toHaveBeenCalled();
+  });
 });
 
 describe("Stripe billing portal route", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetUser.mockReset();
+    mockInitializeFreeQuota.mockReset();
   });
 
   it("creates a billing portal session for the authenticated customer", async () => {
@@ -196,6 +229,8 @@ describe("Stripe billing portal route", () => {
 describe("Stripe subscription status route", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetUser.mockReset();
+    mockInitializeFreeQuota.mockReset();
   });
 
   it("returns the scheduled cancellation date for an active subscription", async () => {
@@ -240,6 +275,8 @@ describe("Stripe subscription status route", () => {
 describe("Stripe webhook route", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetUser.mockReset();
+    mockInitializeFreeQuota.mockReset();
     mockSendPaymentEmail.mockResolvedValue(undefined);
   });
 
@@ -325,6 +362,7 @@ describe("Stripe webhook route", () => {
     expect(mockRetrieveSubscription).toHaveBeenCalledWith("sub_123");
     expect(mockGetUserByEmail).toHaveBeenCalledWith("owner@example.com");
     expect(mockUpdateUserTier).toHaveBeenCalledWith("user-by-email", "free");
+    expect(mockInitializeFreeQuota).toHaveBeenCalledWith("user-by-email");
     expect(mockSendPaymentEmail).toHaveBeenCalledTimes(1);
   });
 
@@ -359,5 +397,6 @@ describe("Stripe webhook route", () => {
     expect(mockRetrieveCustomer).toHaveBeenCalledWith("cus_123");
     expect(mockGetUserByEmail).toHaveBeenCalledWith("owner@example.com");
     expect(mockUpdateUserTier).toHaveBeenCalledWith("user-by-email", "free");
+    expect(mockInitializeFreeQuota).toHaveBeenCalledWith("user-by-email");
   });
 });

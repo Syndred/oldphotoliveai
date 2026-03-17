@@ -125,7 +125,12 @@ export default function PricingPage() {
             </div>
           )}
 
-          <PricingCards />
+          <PricingCards
+            currentTier={tier}
+            hasActiveStripeSubscription={Boolean(
+              subscriptionStatus?.hasActiveSubscription
+            )}
+          />
         </section>
       </main>
     </div>

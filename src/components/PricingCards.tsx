@@ -23,6 +23,11 @@ interface PricingPlan {
   plan?: "pay_as_you_go" | "professional";
 }
 
+interface PricingCardsProps {
+  currentTier?: UserTier | null;
+  hasActiveStripeSubscription?: boolean;
+}
+
 function parseUserTier(value: unknown): UserTier | null {
   if (
     value === "free" ||
@@ -76,19 +81,29 @@ const PLANS: PricingPlan[] = [
   },
 ];
 
-export default function PricingCards() {
+export default function PricingCards({
+  currentTier: currentTierProp,
+  hasActiveStripeSubscription = false,
+}: PricingCardsProps) {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { data: session } = useSession();
   const t = useTranslations("pricing");
   const tErrors = useTranslations("errors");
 
-  const currentTier = parseUserTier(
+  const sessionTier = parseUserTier(
     (session?.user as Record<string, unknown> | undefined)?.tier
   );
+  const currentTier = currentTierProp ?? sessionTier;
   const currentPlanId: PricingPlan["id"] = currentTier ?? "free";
+  const professionalIncludesCredits = currentPlanId === "professional";
 
   async function handleCheckout(plan: "pay_as_you_go" | "professional") {
+    if (plan === "pay_as_you_go" && professionalIncludesCredits) {
+      setError(tErrors("professionalAlreadyIncludesCredits"));
+      return;
+    }
+
     setLoadingPlan(plan);
     setError(null);
     trackAnalyticsEvent("checkout_started", { plan });
@@ -156,6 +171,8 @@ export default function PricingCards() {
           const checkoutPlan = p.plan;
           const canBuyMoreCredits =
             p.id === "pay_as_you_go" && currentPlanId === "pay_as_you_go";
+          const isPaygBlockedForProfessional =
+            p.id === "pay_as_you_go" && professionalIncludesCredits;
 
           return (
             <div
@@ -205,7 +222,7 @@ export default function PricingCards() {
 
               <div className="mt-6">
                 {isCurrentPlan && !canBuyMoreCredits ? (
-                  p.id === "professional" ? (
+                  p.id === "professional" && hasActiveStripeSubscription ? (
                     <div className="space-y-3">
                       <span className="block w-full rounded-lg border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 px-3 py-3 text-center text-sm text-[var(--color-text-primary)] min-h-[44px]">
                         <span className="block">{t("currentPlan")}</span>
@@ -225,6 +242,10 @@ export default function PricingCards() {
                       <span className="block">{t("currentPlan")}</span>
                     </span>
                   )
+                ) : isPaygBlockedForProfessional ? (
+                  <span className="block w-full rounded-lg border border-white/10 py-3 text-center text-sm text-[var(--color-text-secondary)] min-h-[44px]">
+                    {t("includedInProfessional")}
+                  </span>
                 ) : checkoutPlan ? (
                   <div className="space-y-3">
                     {canBuyMoreCredits && (

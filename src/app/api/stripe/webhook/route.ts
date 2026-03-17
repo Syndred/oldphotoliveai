@@ -7,7 +7,7 @@ import Stripe from "stripe";
 import { getStripeClient } from "@/lib/stripe";
 import { config } from "@/lib/config";
 import { getRedisClient, getUserByEmail, updateUserTier } from "@/lib/redis";
-import { addCredits } from "@/lib/quota";
+import { addCredits, initializeFreeQuota } from "@/lib/quota";
 import { sendPaymentEmail } from "@/lib/email";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 import { PAY_AS_YOU_GO_CREDITS } from "@/lib/billing";
@@ -41,6 +41,11 @@ async function shouldSendWebhookEmail(eventId: string): Promise<boolean> {
     ex: EMAIL_EVENT_TTL_SECONDS,
   });
   return result === "OK";
+}
+
+async function downgradeUserToFreePlan(userId: string): Promise<void> {
+  await updateUserTier(userId, "free");
+  await initializeFreeQuota(userId);
 }
 
 export async function POST(request: NextRequest) {
@@ -148,7 +153,7 @@ export async function POST(request: NextRequest) {
         }
 
         if (userId) {
-          await updateUserTier(userId, "free");
+          await downgradeUserToFreePlan(userId);
         }
 
         const customerEmail = invoice.customer_email;
@@ -189,7 +194,7 @@ export async function POST(request: NextRequest) {
         }
 
         if (userId) {
-          await updateUserTier(userId, "free");
+          await downgradeUserToFreePlan(userId);
         }
 
         break;

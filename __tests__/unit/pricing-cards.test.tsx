@@ -31,6 +31,7 @@ jest.mock("next-intl", () => ({
           currentPlan: "Current Plan",
           subscribe: "Subscribe",
           buyCredits: "Buy Credits",
+          includedInProfessional: "Included in Professional",
           manageSubscription: "Manage Subscription",
           scheduledCancellation:
             "Scheduled to downgrade to Free on {date} at period end.",
@@ -53,6 +54,8 @@ jest.mock("next-intl", () => ({
           checkoutFailed: "Checkout failed",
           billingPortalFailed: "Billing portal failed",
           paymentUnavailable: "Payment feature is currently unavailable.",
+          professionalAlreadyIncludesCredits:
+            "Professional already includes unlimited restorations. No extra credits are needed.",
         },
         quota: { remaining: "{count} remaining" },
         nav: {
@@ -162,12 +165,25 @@ describe("PricingCards", () => {
       status: "authenticated",
     });
 
-    render(<PricingCards />);
+    render(<PricingCards hasActiveStripeSubscription />);
 
     const professionalCard = screen.getByTestId("plan-professional");
     expect(professionalCard).toHaveTextContent("Current Plan");
     expect(screen.getByText("Manage Subscription")).toBeInTheDocument();
     expect(screen.queryByText("Subscribe")).not.toBeInTheDocument();
+  });
+
+  it("does not show Buy Credits for professional users", () => {
+    mockUseSession.mockReturnValue({
+      data: { user: { name: "Pro User", tier: "professional" } },
+      status: "authenticated",
+    });
+
+    render(<PricingCards />);
+
+    const paygCard = screen.getByTestId("plan-pay_as_you_go");
+    expect(paygCard).toHaveTextContent("Included in Professional");
+    expect(screen.queryByText("Buy Credits")).not.toBeInTheDocument();
   });
 
   it("opens the billing portal for professional users", async () => {
@@ -180,7 +196,7 @@ describe("PricingCards", () => {
       json: async () => ({ url: "https://billing.stripe.com/session-test" }),
     });
 
-    render(<PricingCards />);
+    render(<PricingCards hasActiveStripeSubscription />);
 
     await act(async () => {
       fireEvent.click(screen.getByText("Manage Subscription"));
@@ -462,5 +478,89 @@ describe("PricingPage", () => {
         screen.getByTestId("scheduled-cancellation-summary")
       ).toBeInTheDocument();
     });
+  });
+
+  it("hides Manage Subscription when professional access has no active Stripe subscription", async () => {
+    mockUseSession.mockReturnValue({
+      data: { user: { name: "Pro User", tier: "professional" } },
+      status: "authenticated",
+    });
+    mockFetch.mockImplementation(async (input: unknown) => {
+      const url = getRequestUrl(input);
+      if (url.endsWith("/api/quota")) {
+        return {
+          ok: true,
+          json: async () => ({
+            userId: "u1",
+            tier: "professional",
+            remaining: 0,
+            dailyLimit: null,
+            resetAt: null,
+            credits: 0,
+            creditsExpireAt: null,
+          }),
+        };
+      }
+      if (url.endsWith("/api/stripe/subscription")) {
+        return {
+          ok: true,
+          json: async () => ({
+            hasActiveSubscription: false,
+            cancelAtPeriodEnd: false,
+            currentPeriodEnd: null,
+          }),
+        };
+      }
+      return { ok: true, json: async () => ({}) };
+    });
+
+    render(<PricingPage />);
+
+    await waitFor(() => {
+      expect(screen.queryByText("Manage Subscription")).not.toBeInTheDocument();
+    });
+  });
+
+  it("uses the latest quota tier to hide pay-as-you-go purchase for professional users", async () => {
+    mockUseSession.mockReturnValue({
+      data: { user: { name: "Pro User", tier: "free" } },
+      status: "authenticated",
+    });
+    mockFetch.mockImplementation(async (input: unknown) => {
+      const url = getRequestUrl(input);
+      if (url.endsWith("/api/quota")) {
+        return {
+          ok: true,
+          json: async () => ({
+            userId: "u1",
+            tier: "professional",
+            remaining: 0,
+            dailyLimit: null,
+            resetAt: null,
+            credits: 0,
+            creditsExpireAt: null,
+          }),
+        };
+      }
+      if (url.endsWith("/api/stripe/subscription")) {
+        return {
+          ok: true,
+          json: async () => ({
+            hasActiveSubscription: true,
+            cancelAtPeriodEnd: false,
+            currentPeriodEnd: null,
+          }),
+        };
+      }
+      return { ok: true, json: async () => ({}) };
+    });
+
+    render(<PricingPage />);
+
+    await waitFor(() => {
+      const paygCard = screen.getByTestId("plan-pay_as_you_go");
+      expect(paygCard).toHaveTextContent("Included in Professional");
+    });
+    expect(screen.queryByText("Buy Credits")).not.toBeInTheDocument();
   });
 });

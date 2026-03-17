@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { getRateLimitBucket } from "@/lib/rateLimitBucket";
 import type { RateLimitType } from "@/types";
 import { getErrorMessage } from "@/lib/i18n-api";
 import { locales, defaultLocale, LOCALE_COOKIE } from "@/i18n/routing";
@@ -141,12 +142,16 @@ export async function middleware(request: NextRequest) {
       (forwardedFor ? forwardedFor.split(",")[0].trim() : "") ||
       "unknown";
     const rateLimitIdentifier = userId || `ip:${clientIp}`;
+    const rateLimitBucket = getRateLimitBucket(pathname, request.method);
     const rateLimitType: RateLimitType = isUploadRoute(pathname)
       ? "upload"
       : "api";
 
     try {
-      const result = await checkRateLimit(rateLimitIdentifier, rateLimitType);
+      const result = await checkRateLimit(
+        `${rateLimitIdentifier}:${rateLimitBucket}`,
+        rateLimitType
+      );
 
       if (!result.allowed) {
         const retryAfter = Math.ceil((result.resetAt - Date.now()) / 1000);
