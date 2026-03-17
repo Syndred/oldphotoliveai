@@ -20,32 +20,53 @@ jest.mock("next-intl", () => ({
   useTranslations:
     (namespace: string) =>
     (key: string, params?: Record<string, string | number>) => {
-    const translations: Record<string, Record<string, string>> = {
-      pricing: {
-        title: "Choose Your Plan", subtitle: "Unlock the full power of AI photo restoration",
-        free: "Free", payAsYouGo: "Pay As You Go", professional: "Professional",
-        recommended: "Recommended", currentPlan: "Current Plan", subscribe: "Subscribe",
-        buyCredits: "Buy Credits", redirecting: "Redirecting…",
-        freeDesc: "Try it out", payAsYouGoDesc: "For occasional use", professionalDesc: "Best value",
-        freeFeature1: "1 photo per day", freeFeature2: "Low resolution (800×600)", freeFeature3: "Watermark on output",
-        payFeature1: "5 credits", payFeature2: "High resolution (1920×1080)", payFeature3: "No watermark",
-        proFeature1: "Unlimited photos", proFeature2: "High resolution (1920×1080)", proFeature3: "No watermark", proFeature4: "Priority processing",
-      },
-      errors: {
-        checkoutFailed: "Checkout failed",
-        paymentUnavailable: "Payment feature is currently unavailable.",
-      },
-      quota: { remaining: "{count} remaining" },
-      nav: { home: "Home", history: "History", pricing: "Pricing", login: "Sign In", logout: "Sign Out" },
-    };
-    let value = translations[namespace]?.[key] ?? key;
-    if (params) {
-      for (const [name, replacement] of Object.entries(params)) {
-        value = value.replace(`{${name}}`, String(replacement));
+      const translations: Record<string, Record<string, string>> = {
+        pricing: {
+          title: "Choose Your Plan",
+          subtitle: "Unlock the full power of AI photo restoration",
+          free: "Free",
+          payAsYouGo: "Pay As You Go",
+          professional: "Professional",
+          recommended: "Recommended",
+          currentPlan: "Current Plan",
+          subscribe: "Subscribe",
+          buyCredits: "Buy Credits",
+          redirecting: "Redirecting...",
+          freeDesc: "Try it out",
+          payAsYouGoDesc: "For occasional use",
+          professionalDesc: "Best value",
+          freeFeature1: "1 photo per day",
+          freeFeature2: "Low resolution (800x600)",
+          freeFeature3: "Watermark on output",
+          payFeature1: "10 credits",
+          payFeature2: "High resolution (1920x1080)",
+          payFeature3: "No watermark",
+          proFeature1: "Unlimited photos",
+          proFeature2: "High resolution (1920x1080)",
+          proFeature3: "No watermark",
+          proFeature4: "Priority processing",
+        },
+        errors: {
+          checkoutFailed: "Checkout failed",
+          paymentUnavailable: "Payment feature is currently unavailable.",
+        },
+        quota: { remaining: "{count} remaining" },
+        nav: {
+          home: "Home",
+          history: "History",
+          pricing: "Pricing",
+          login: "Sign In",
+          logout: "Sign Out",
+        },
+      };
+      let value = translations[namespace]?.[key] ?? key;
+      if (params) {
+        for (const [name, replacement] of Object.entries(params)) {
+          value = value.replace(`{${name}}`, String(replacement));
+        }
       }
-    }
-    return value;
-  },
+      return value;
+    },
   useLocale: () => "en",
 }));
 
@@ -116,8 +137,8 @@ describe("PricingCards", () => {
   it("displays correct prices", () => {
     render(<PricingCards />);
     expect(screen.getByText("$0")).toBeInTheDocument();
-    expect(screen.getByText("$4.99")).toBeInTheDocument();
     expect(screen.getByText("$9.99")).toBeInTheDocument();
+    expect(screen.getByText("$19.90")).toBeInTheDocument();
   });
 
   it("shows Recommended badge on Professional plan", () => {
@@ -159,7 +180,7 @@ describe("PricingCards", () => {
   it("displays features for each plan", () => {
     render(<PricingCards />);
     expect(screen.getByText("1 photo per day")).toBeInTheDocument();
-    expect(screen.getByText("5 credits")).toBeInTheDocument();
+    expect(screen.getByText("10 credits")).toBeInTheDocument();
     expect(screen.getByText("Unlimited photos")).toBeInTheDocument();
     expect(screen.getByText("Priority processing")).toBeInTheDocument();
   });
@@ -227,7 +248,7 @@ describe("PricingCards", () => {
     render(<PricingCards />);
     fireEvent.click(screen.getByText("Subscribe"));
 
-    expect(screen.getByText("Redirecting…")).toBeInTheDocument();
+    expect(screen.getByText("Redirecting...")).toBeInTheDocument();
 
     resolvePromise!({
       ok: true,

@@ -10,6 +10,7 @@ import { getRedisClient, getUserByEmail, updateUserTier } from "@/lib/redis";
 import { addCredits } from "@/lib/quota";
 import { sendPaymentEmail } from "@/lib/email";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
+import { PAY_AS_YOU_GO_CREDITS } from "@/lib/billing";
 
 const EMAIL_EVENT_TTL_SECONDS = 3 * 24 * 60 * 60;
 const PROCESSED_EVENT_TTL_SECONDS = 7 * 24 * 60 * 60;
@@ -98,8 +99,8 @@ export async function POST(request: NextRequest) {
         }
 
         if (plan === "pay_as_you_go") {
-          // Add 5 credits, 30-day expiration (Req 6.5)
-          await addCredits(userId, 5, 30);
+          // Add pay-as-you-go credits with a 30-day expiration window.
+          await addCredits(userId, PAY_AS_YOU_GO_CREDITS, 30);
           await updateUserTier(userId, "pay_as_you_go");
         } else if (plan === "professional") {
           // Set tier to professional (Req 6.6)

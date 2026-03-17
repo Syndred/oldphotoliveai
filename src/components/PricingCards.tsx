@@ -5,6 +5,11 @@ import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import type { UserTier } from "@/types";
 import { trackAnalyticsEvent } from "@/lib/analytics";
+import {
+  PAY_AS_YOU_GO_CREDITS,
+  PAY_AS_YOU_GO_DISPLAY_PRICE,
+  PROFESSIONAL_MONTHLY_DISPLAY_PRICE,
+} from "@/lib/billing";
 
 interface PricingPlan {
   id: "free" | "pay_as_you_go" | "professional";
@@ -47,8 +52,8 @@ const PLANS: PricingPlan[] = [
   {
     id: "pay_as_you_go",
     nameKey: "payAsYouGo",
-    price: "$4.99",
-    period: "/ 5 credits",
+    price: PAY_AS_YOU_GO_DISPLAY_PRICE,
+    period: `/ ${PAY_AS_YOU_GO_CREDITS} credits`,
     descKey: "payAsYouGoDesc",
     featureKeys: ["payFeature1", "payFeature2", "payFeature3"],
     ctaKey: "buyCredits",
@@ -58,7 +63,7 @@ const PLANS: PricingPlan[] = [
   {
     id: "professional",
     nameKey: "professional",
-    price: "$9.99",
+    price: PROFESSIONAL_MONTHLY_DISPLAY_PRICE,
     period: "/ month",
     descKey: "professionalDesc",
     featureKeys: [
