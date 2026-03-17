@@ -6,20 +6,20 @@ const API_VERSION = "2025-05-28.basil";
 
 const PAY_AS_YOU_GO = {
   productName: `${APP_NAME} Pay As You Go`,
-  lookupKey: `${APP_ID}_pay_as_you_go_10_credits_usd_v1`,
-  unitAmount: 999,
+  lookupKey: `${APP_ID}_pay_as_you_go_1_credit_usd_v2`,
+  unitAmount: 99,
   currency: "usd",
   metadata: {
     app: APP_ID,
     plan: "pay_as_you_go",
-    credits: "10",
+    credits: "1",
   },
 };
 
 const PROFESSIONAL = {
   productName: `${APP_NAME} Professional`,
-  lookupKey: `${APP_ID}_professional_monthly_usd_v1`,
-  unitAmount: 1990,
+  lookupKey: `${APP_ID}_professional_monthly_usd_v2`,
+  unitAmount: 1999,
   currency: "usd",
   recurring: {
     interval: "month",

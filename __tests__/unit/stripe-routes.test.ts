@@ -171,7 +171,7 @@ describe("Stripe webhook route", () => {
     expect(firstResponse.status).toBe(200);
     expect(secondResponse.status).toBe(200);
     expect(mockAddCredits).toHaveBeenCalledTimes(1);
-    expect(mockAddCredits).toHaveBeenCalledWith("user-123", 10, 30);
+    expect(mockAddCredits).toHaveBeenCalledWith("user-123", 1, 30);
     expect(mockUpdateUserTier).toHaveBeenCalledTimes(1);
     expect(mockUpdateUserTier).toHaveBeenCalledWith("user-123", "pay_as_you_go");
     expect(mockSendPaymentEmail).toHaveBeenCalledTimes(1);

@@ -38,7 +38,7 @@ jest.mock("next-intl", () => ({
           freeFeature1: "1 photo per day",
           freeFeature2: "Low resolution (800x600)",
           freeFeature3: "Watermark on output",
-          payFeature1: "10 credits",
+          payFeature1: "1 credit",
           payFeature2: "High resolution (1920x1080)",
           payFeature3: "No watermark",
           proFeature1: "Unlimited photos",
@@ -137,8 +137,8 @@ describe("PricingCards", () => {
   it("displays correct prices", () => {
     render(<PricingCards />);
     expect(screen.getByText("$0")).toBeInTheDocument();
-    expect(screen.getByText("$9.99")).toBeInTheDocument();
-    expect(screen.getByText("$19.90")).toBeInTheDocument();
+    expect(screen.getByText("$0.99")).toBeInTheDocument();
+    expect(screen.getByText("$19.99")).toBeInTheDocument();
   });
 
   it("shows Recommended badge on Professional plan", () => {
@@ -180,7 +180,7 @@ describe("PricingCards", () => {
   it("displays features for each plan", () => {
     render(<PricingCards />);
     expect(screen.getByText("1 photo per day")).toBeInTheDocument();
-    expect(screen.getByText("10 credits")).toBeInTheDocument();
+    expect(screen.getByText("1 credit")).toBeInTheDocument();
     expect(screen.getByText("Unlimited photos")).toBeInTheDocument();
     expect(screen.getByText("Priority processing")).toBeInTheDocument();
   });

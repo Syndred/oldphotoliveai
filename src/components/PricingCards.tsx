@@ -53,7 +53,9 @@ const PLANS: PricingPlan[] = [
     id: "pay_as_you_go",
     nameKey: "payAsYouGo",
     price: PAY_AS_YOU_GO_DISPLAY_PRICE,
-    period: `/ ${PAY_AS_YOU_GO_CREDITS} credits`,
+    period: `/ ${PAY_AS_YOU_GO_CREDITS} ${
+      PAY_AS_YOU_GO_CREDITS === 1 ? "credit" : "credits"
+    }`,
     descKey: "payAsYouGoDesc",
     featureKeys: ["payFeature1", "payFeature2", "payFeature3"],
     ctaKey: "buyCredits",
