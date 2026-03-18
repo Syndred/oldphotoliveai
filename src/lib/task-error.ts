@@ -8,10 +8,6 @@ function includesAny(raw: string, patterns: readonly string[]): boolean {
   return patterns.some((p) => lower.includes(p));
 }
 
-/**
- * Normalize backend task/pipeline errors into localized, user-friendly text.
- * Unknown messages are returned as-is to avoid hiding useful details.
- */
 export function resolveTaskErrorMessage(
   rawMessage: string | null | undefined,
   tErrors: ErrorTranslator
@@ -26,6 +22,10 @@ export function resolveTaskErrorMessage(
     return tErrors("sourceImageUnreachable");
   }
 
+  if (includesAny(message, ["has been queued", "joined the queue"])) {
+    return tErrors("serviceBusy");
+  }
+
   if (
     includesAny(message, [
       "service is temporarily busy",
@@ -34,7 +34,7 @@ export function resolveTaskErrorMessage(
       "429",
     ])
   ) {
-    return tErrors("serviceBusy");
+    return tErrors("serviceBusyRetry");
   }
 
   if (

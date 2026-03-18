@@ -60,7 +60,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     // This replaces the per-minute cron that Vercel Hobby doesn't support
     const { getQueueLength } = await import("@/lib/queue");
     const queueLen = await getQueueLength();
-    if (queueLen.high + queueLen.normal > 0) {
+    if (queueLen.urgent + queueLen.high + queueLen.normal > 0) {
       const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
       fetch(`${baseUrl}/api/worker/pipeline`, {
         method: "POST",

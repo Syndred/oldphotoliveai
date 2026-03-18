@@ -73,7 +73,11 @@ export async function resizeImage(
   tier: UserTier
 ): Promise<Buffer> {
   const config =
-    tier === "free" ? RESOLUTION_CONFIG.free : RESOLUTION_CONFIG.paid;
+    tier === "free"
+      ? RESOLUTION_CONFIG.free
+      : tier === "professional"
+        ? RESOLUTION_CONFIG.professional
+        : RESOLUTION_CONFIG.payAsYouGo;
 
   return sharp(imageBuffer)
     .resize(config.maxWidth, config.maxHeight, {

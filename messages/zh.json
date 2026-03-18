@@ -71,15 +71,18 @@
     "payAsYouGoDesc": "偶尔使用",
     "professionalDesc": "最佳性价比",
     "freeFeature1": "每天 1 张照片",
-    "freeFeature2": "低分辨率（800×600）",
-    "freeFeature3": "输出带水印",
+    "freeFeature2": "图片导出最高 800×600",
+    "freeFeature3": "480p 视频输出",
+    "freeFeature4": "图片输出带水印",
     "payFeature1": "1 次积分",
-    "payFeature2": "高分辨率（1920×1080）",
-    "payFeature3": "无水印",
+    "payFeature2": "2K 图片导出（最长边 2048px）",
+    "payFeature3": "720p 高清视频",
+    "payFeature4": "无水印",
     "proFeature1": "无限量照片",
-    "proFeature2": "高分辨率（1920×1080）",
-    "proFeature3": "无水印",
-    "proFeature4": "优先处理"
+    "proFeature2": "2K 图片导出（最长边 2048px）",
+    "proFeature3": "1080p 高级视频",
+    "proFeature4": "无水印",
+    "proFeature5": "优先处理"
   },
   "history": {
     "title": "处理历史",
@@ -136,7 +139,8 @@
     "modelConfigError": "AI 模型配置异常，请联系客服。",
     "intermediateDownloadFailed": "中间结果下载失败，请稍后重试。",
     "taskIdsRequired": "请至少选择一条记录。",
-    "taskBatchTooLarge": "单次最多可删除 50 条记录。"
+    "taskBatchTooLarge": "单次最多可删除 50 条记录。",
+    "serviceBusyRetry": "服务暂时繁忙，请稍后再试。"
   },
   "auth": {
     "signInWith": "使用 Google 登录",

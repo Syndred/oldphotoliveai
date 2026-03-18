@@ -48,6 +48,8 @@ function makeFakeTask(overrides: Partial<Task> = {}): Task {
     colorizedImageKey: "results/colorized.jpg",
     animationVideoKey: "results/animation.mp4",
     errorMessage: null,
+    internalErrorMessage: null,
+    failureStage: null,
     progress: 100,
     createdAt: "2024-01-02T00:00:00.000Z",
     completedAt: "2024-01-02T00:05:00.000Z",

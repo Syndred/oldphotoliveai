@@ -77,6 +77,8 @@ function makeFakeTask(overrides: Partial<Task> = {}): Task {
     colorizedImageKey: null,
     animationVideoKey: null,
     errorMessage: null,
+    internalErrorMessage: null,
+    failureStage: null,
     progress: 0,
     createdAt: new Date().toISOString(),
     completedAt: null,
@@ -265,10 +267,10 @@ describe("POST /api/tasks", () => {
     expect(mockCheckAndDecrementQuota).toHaveBeenCalledWith("paid-user", "pay_as_you_go");
   });
 
-  it("creates task with high priority for professional user", async () => {
+  it("creates task with urgent priority for professional user", async () => {
     mockGetToken.mockResolvedValue({ userId: "pro-user" });
     const user = makeFakeUser({ id: "pro-user", tier: "professional" });
-    const task = makeFakeTask({ id: "task-pro", priority: "high" });
+    const task = makeFakeTask({ id: "task-pro", priority: "urgent" });
     mockGetUser.mockResolvedValue(user);
     mockCreateTask.mockResolvedValue(task);
 
@@ -280,7 +282,7 @@ describe("POST /api/tasks", () => {
     expect(mockCreateTask).toHaveBeenCalledWith({
       userId: "pro-user",
       originalImageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
-      priority: "high",
+      priority: "urgent",
     });
     expect(mockCheckAndDecrementQuota).toHaveBeenCalledWith("pro-user", "professional");
   });

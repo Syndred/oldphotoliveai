@@ -61,6 +61,19 @@ beforeEach(() => {
 });
 
 describe("enqueueTask", () => {
+  it("adds an urgent-priority task with score = -1_000_000_000_000_000 + timestamp", async () => {
+    const before = Date.now();
+    await enqueueTask("task-urgent", "urgent");
+    const after = Date.now();
+
+    expect(redisMock.zadd).toHaveBeenCalledTimes(1);
+    const call = redisMock.zadd.mock.calls[0];
+    expect(call[0]).toBe("queue:tasks");
+    const score = call[1].score;
+    expect(score).toBeGreaterThanOrEqual(PRIORITY_WEIGHTS.urgent + before);
+    expect(score).toBeLessThanOrEqual(PRIORITY_WEIGHTS.urgent + after);
+  });
+
   it("adds a high-priority task with score = 0 + timestamp", async () => {
     const before = Date.now();
     await enqueueTask("task-1", "high");
@@ -85,6 +98,15 @@ describe("enqueueTask", () => {
     expect(score).toBeLessThanOrEqual(PRIORITY_WEIGHTS.normal + after);
   });
 
+  it("urgent-priority score is always less than high-priority score", async () => {
+    await enqueueTask("urgent-task", "urgent");
+    await enqueueTask("high-task", "high");
+
+    const urgentScore = redisMock.zadd.mock.calls[0][1].score;
+    const highScore = redisMock.zadd.mock.calls[1][1].score;
+    expect(urgentScore).toBeLessThan(highScore);
+  });
+
   it("high-priority score is always less than normal-priority score", async () => {
     await enqueueTask("high-task", "high");
     await enqueueTask("normal-task", "normal");
@@ -104,9 +126,10 @@ describe("dequeueTask", () => {
   it("dequeues the highest-priority (lowest score) task", async () => {
     await enqueueTask("normal-task", "normal");
     await enqueueTask("high-task", "high");
+    await enqueueTask("urgent-task", "urgent");
 
     const result = await dequeueTask();
-    expect(result).toBe("high-task");
+    expect(result).toBe("urgent-task");
   });
 
   it("dequeues tasks in FIFO order within the same priority", async () => {
@@ -120,39 +143,42 @@ describe("dequeueTask", () => {
     expect(second).toBe("task-b");
   });
 
-  it("dequeues all high-priority tasks before normal ones", async () => {
+  it("dequeues urgent, then high-priority tasks, then normal ones", async () => {
     await enqueueTask("normal-1", "normal");
     await enqueueTask("high-1", "high");
+    await enqueueTask("urgent-1", "urgent");
     await enqueueTask("normal-2", "normal");
     await enqueueTask("high-2", "high");
+    await enqueueTask("urgent-2", "urgent");
 
     const results: (string | null)[] = [];
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 6; i++) {
       results.push(await dequeueTask());
     }
 
-    // First two should be high-priority
-    expect(results[0]).toBe("high-1");
-    expect(results[1]).toBe("high-2");
-    // Last two should be normal-priority
-    expect(results[2]).toBe("normal-1");
-    expect(results[3]).toBe("normal-2");
+    expect(results[0]).toBe("urgent-1");
+    expect(results[1]).toBe("urgent-2");
+    expect(results[2]).toBe("high-1");
+    expect(results[3]).toBe("high-2");
+    expect(results[4]).toBe("normal-1");
+    expect(results[5]).toBe("normal-2");
   });
 });
 
 describe("getQueueLength", () => {
-  it("returns { high: 0, normal: 0 } for empty queue", async () => {
+  it("returns { urgent: 0, high: 0, normal: 0 } for empty queue", async () => {
     const length = await getQueueLength();
-    expect(length).toEqual({ high: 0, normal: 0 });
+    expect(length).toEqual({ urgent: 0, high: 0, normal: 0 });
   });
 
-  it("counts high and normal tasks separately", async () => {
+  it("counts urgent, high and normal tasks separately", async () => {
+    await enqueueTask("u1", "urgent");
     await enqueueTask("h1", "high");
     await enqueueTask("h2", "high");
     await enqueueTask("n1", "normal");
 
     const length = await getQueueLength();
-    expect(length).toEqual({ high: 2, normal: 1 });
+    expect(length).toEqual({ urgent: 1, high: 2, normal: 1 });
   });
 });
 
@@ -164,7 +190,7 @@ describe("removeFromQueue", () => {
     await removeFromQueue("task-1");
 
     const length = await getQueueLength();
-    expect(length).toEqual({ high: 0, normal: 1 });
+    expect(length).toEqual({ urgent: 0, high: 0, normal: 1 });
   });
 
   it("does not error when removing a non-existent task", async () => {

@@ -40,15 +40,18 @@ jest.mock("next-intl", () => ({
           payAsYouGoDesc: "For occasional use",
           professionalDesc: "Best value",
           freeFeature1: "1 photo per day",
-          freeFeature2: "Low resolution (800x600)",
-          freeFeature3: "Watermark on output",
+          freeFeature2: "Image export up to 800x600",
+          freeFeature3: "480p video output",
+          freeFeature4: "Watermark on image output",
           payFeature1: "1 credit",
-          payFeature2: "High resolution (1920x1080)",
-          payFeature3: "No watermark",
+          payFeature2: "2K image export (up to 2048px)",
+          payFeature3: "720p HD video",
+          payFeature4: "No watermark",
           proFeature1: "Unlimited photos",
-          proFeature2: "High resolution (1920x1080)",
-          proFeature3: "No watermark",
-          proFeature4: "Priority processing",
+          proFeature2: "2K image export (up to 2048px)",
+          proFeature3: "1080p premium video",
+          proFeature4: "No watermark",
+          proFeature5: "Priority processing",
         },
         errors: {
           checkoutFailed: "Checkout failed",
@@ -255,6 +258,9 @@ describe("PricingCards", () => {
     expect(screen.getByText("1 photo per day")).toBeInTheDocument();
     expect(screen.getByText("1 credit")).toBeInTheDocument();
     expect(screen.getByText("Unlimited photos")).toBeInTheDocument();
+    expect(screen.getByText("480p video output")).toBeInTheDocument();
+    expect(screen.getByText("720p HD video")).toBeInTheDocument();
+    expect(screen.getByText("1080p premium video")).toBeInTheDocument();
     expect(screen.getByText("Priority processing")).toBeInTheDocument();
   });
 

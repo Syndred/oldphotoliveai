@@ -1,8 +1,6 @@
 import sharp from "sharp";
 import { applyImageWatermark, resizeImage } from "@/lib/watermark";
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
-
 /** Create a solid-color test image of the given dimensions. */
 async function createTestImage(
   width: number,
@@ -20,10 +18,8 @@ async function createTestImage(
     .toBuffer();
 }
 
-// ── resizeImage ─────────────────────────────────────────────────────────────
-
 describe("resizeImage", () => {
-  it("resizes to within 800×600 for free tier", async () => {
+  it("resizes to within 800x600 for free tier", async () => {
     const input = await createTestImage(2000, 1500);
     const output = await resizeImage(input, "free");
 
@@ -32,30 +28,29 @@ describe("resizeImage", () => {
     expect(meta.height).toBeLessThanOrEqual(600);
   });
 
-  it("resizes to within 1920×1080 for paid tier (pay_as_you_go)", async () => {
+  it("resizes to within the 2K export cap for paid tier (pay_as_you_go)", async () => {
     const input = await createTestImage(3000, 2000);
     const output = await resizeImage(input, "pay_as_you_go");
 
     const meta = await sharp(output).metadata();
-    expect(meta.width).toBeLessThanOrEqual(1920);
-    expect(meta.height).toBeLessThanOrEqual(1080);
+    expect(meta.width).toBeLessThanOrEqual(2048);
+    expect(meta.height).toBeLessThanOrEqual(2048);
   });
 
-  it("resizes to within 1920×1080 for paid tier (professional)", async () => {
+  it("resizes to within the 2K export cap for paid tier (professional)", async () => {
     const input = await createTestImage(3000, 2000);
     const output = await resizeImage(input, "professional");
 
     const meta = await sharp(output).metadata();
-    expect(meta.width).toBeLessThanOrEqual(1920);
-    expect(meta.height).toBeLessThanOrEqual(1080);
+    expect(meta.width).toBeLessThanOrEqual(2048);
+    expect(meta.height).toBeLessThanOrEqual(2048);
   });
 
   it("maintains aspect ratio", async () => {
-    const input = await createTestImage(2000, 1000); // 2:1 ratio
+    const input = await createTestImage(2000, 1000);
     const output = await resizeImage(input, "free");
 
     const meta = await sharp(output).metadata();
-    // With fit: 'inside' and 800×600 max, a 2:1 image → 800×400
     expect(meta.width).toBe(800);
     expect(meta.height).toBe(400);
   });
@@ -69,8 +64,6 @@ describe("resizeImage", () => {
     expect(meta.height).toBe(300);
   });
 });
-
-// ── applyImageWatermark ─────────────────────────────────────────────────────
 
 describe("applyImageWatermark", () => {
   it("changes pixel content to visibly mark free-tier output", async () => {
@@ -86,7 +79,6 @@ describe("applyImageWatermark", () => {
     expect(Buffer.isBuffer(output)).toBe(true);
     expect(output.length).toBeGreaterThan(0);
 
-    // Should be parseable by sharp
     const meta = await sharp(output).metadata();
     expect(meta.width).toBe(800);
     expect(meta.height).toBe(600);

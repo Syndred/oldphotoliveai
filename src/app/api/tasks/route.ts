@@ -6,6 +6,7 @@ import { getToken } from "next-auth/jwt";
 import { createTask, getUser } from "@/lib/redis";
 import { enqueueTask } from "@/lib/queue";
 import { checkAndDecrementQuota } from "@/lib/quota";
+import { getTaskPriorityForTier } from "@/lib/taskPriority";
 import { isSafeTaskStorageKey } from "@/lib/validation";
 import type { TaskPriority, UserTier } from "@/types";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 6. Determine priority based on tier
-    const priority: TaskPriority = user.tier === "free" ? "normal" : "high";
+    const priority: TaskPriority = getTaskPriorityForTier(user.tier);
 
     // 7. Create task record in Redis (status: pending)
     const task = await createTask({

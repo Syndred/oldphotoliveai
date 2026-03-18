@@ -5,7 +5,8 @@ const enErrors: Record<string, string> = {
   sourceImageUnreachable: "Source image is unavailable.",
   modelConfigError: "AI model configuration error.",
   intermediateDownloadFailed: "Failed to download intermediate result.",
-  serviceBusy: "Service is temporarily busy.",
+  serviceBusy: "Service is temporarily busy. Your task has been queued.",
+  serviceBusyRetry: "Service is temporarily busy. Please try again in a moment.",
   taskNotFound: "Task not found.",
 };
 
@@ -38,10 +39,19 @@ describe("resolveTaskErrorMessage", () => {
   it("maps busy and throttled errors", () => {
     expect(
       resolveTaskErrorMessage("Service is temporarily busy. Please try again.", tErrors)
-    ).toBe("Service is temporarily busy.");
+    ).toBe("Service is temporarily busy. Please try again in a moment.");
     expect(resolveTaskErrorMessage("429 too many requests", tErrors)).toBe(
-      "Service is temporarily busy."
+      "Service is temporarily busy. Please try again in a moment."
     );
+  });
+
+  it("keeps queued wording for actual queued messages", () => {
+    expect(
+      resolveTaskErrorMessage(
+        "Service is temporarily busy. Your task has been queued.",
+        tErrors
+      )
+    ).toBe("Service is temporarily busy. Your task has been queued.");
   });
 
   it("maps model config errors", () => {

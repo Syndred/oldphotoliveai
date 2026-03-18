@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { findProfessionalSubscriptionByCustomerId, findStripeCustomerByEmail } from "@/lib/stripe";
 import { getQuotaInfo } from "@/lib/quota";
-import { getUser, getUserByEmail } from "@/lib/redis";
+import { getUser, getUserByEmail, getUserTasks } from "@/lib/redis";
 import { getRequestLocale } from "@/lib/i18n-api";
 import { config } from "@/lib/config";
 import type { AdminStripeSnapshot, AdminUserSnapshot } from "@/types";
@@ -60,6 +60,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
 
     const quota = await getQuotaInfo(user.id);
+    const recentTasks = (await getUserTasks(user.id)).slice(0, 10).map((task) => ({
+      id: task.id,
+      status: task.status,
+      priority: task.priority,
+      progress: task.progress,
+      createdAt: task.createdAt,
+      completedAt: task.completedAt,
+      errorMessage: task.errorMessage ?? null,
+      internalErrorMessage: task.internalErrorMessage ?? null,
+      failureStage: task.failureStage ?? null,
+    }));
     let stripe = buildEmptyStripeSnapshot();
 
     if (config.stripe.isEnabled && user.email) {
@@ -85,6 +96,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       user,
       quota,
       stripe,
+      recentTasks,
     };
 
     return NextResponse.json(snapshot, { status: 200 });

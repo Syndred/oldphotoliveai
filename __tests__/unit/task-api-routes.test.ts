@@ -47,6 +47,8 @@ function makeFakeTask(overrides: Partial<Task> = {}): Task {
     colorizedImageKey: null,
     animationVideoKey: null,
     errorMessage: null,
+    internalErrorMessage: null,
+    failureStage: null,
     progress: 0,
     createdAt: new Date().toISOString(),
     completedAt: null,
@@ -147,6 +149,8 @@ describe("GET /api/tasks/[taskId]/status", () => {
         status: "failed",
         progress: 25,
         errorMessage: "GFPGAN model timeout",
+        internalErrorMessage: "429 throttled",
+        failureStage: "animating",
       })
     );
 
@@ -158,6 +162,8 @@ describe("GET /api/tasks/[taskId]/status", () => {
     expect(body.status).toBe("failed");
     expect(body.progress).toBe(25);
     expect(body.errorMessage).toBe("GFPGAN model timeout");
+    expect(body.internalErrorMessage).toBeUndefined();
+    expect(body.failureStage).toBeUndefined();
   });
 
   it("returns 500 when task lookup throws", async () => {

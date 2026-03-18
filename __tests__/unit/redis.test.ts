@@ -181,6 +181,8 @@ describe("createTask", () => {
     expect(task.colorizedImageKey).toBeNull();
     expect(task.animationVideoKey).toBeNull();
     expect(task.errorMessage).toBeNull();
+    expect(task.internalErrorMessage).toBeNull();
+    expect(task.failureStage).toBeNull();
     expect(task.completedAt).toBeNull();
     expect(task.createdAt).toBeDefined();
   });
@@ -240,12 +242,16 @@ describe("updateTaskStatus", () => {
     await updateTaskStatus(task.id, "colorizing");
     await updateTaskStatus(task.id, "failed", {
       errorMessage: "Model error",
+      internalErrorMessage: "429 throttled",
+      failureStage: "animating",
     });
 
     const updated = await getTask(task.id);
     expect(updated!.status).toBe("failed");
     expect(updated!.progress).toBe(50); // preserved from colorizing
     expect(updated!.errorMessage).toBe("Model error");
+    expect(updated!.internalErrorMessage).toBe("429 throttled");
+    expect(updated!.failureStage).toBe("animating");
   });
 
   it("merges additional data fields", async () => {
@@ -408,12 +414,16 @@ describe("retryTask", () => {
     });
     await updateTaskStatus(task.id, "failed", {
       errorMessage: "Something broke",
+      internalErrorMessage: "Raw backend failure",
+      failureStage: "restoring",
     });
 
     const retried = await retryTask(task.id);
     expect(retried.status).toBe("queued");
     expect(retried.progress).toBe(5);
     expect(retried.errorMessage).toBeNull();
+    expect(retried.internalErrorMessage).toBeNull();
+    expect(retried.failureStage).toBeNull();
     expect(retried.completedAt).toBeNull();
   });
 

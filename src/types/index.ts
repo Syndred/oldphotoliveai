@@ -29,7 +29,8 @@ export type TaskStatus =
   | "failed"
   | "cancelled";
 
-export type TaskPriority = "normal" | "high";
+export type TaskPriority = "normal" | "high" | "urgent";
+export type TaskFailureStage = "restoring" | "colorizing" | "animating" | null;
 
 export interface Task {
   id: string;
@@ -41,6 +42,8 @@ export interface Task {
   colorizedImageKey: string | null;
   animationVideoKey: string | null;
   errorMessage: string | null;
+  internalErrorMessage: string | null;
+  failureStage: TaskFailureStage;
   progress: number;
   createdAt: string;
   completedAt: string | null;
@@ -79,10 +82,23 @@ export interface AdminStripeSnapshot {
   currentPeriodEnd: string | null;
 }
 
+export interface AdminTaskSnapshot {
+  id: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  progress: number;
+  createdAt: string;
+  completedAt: string | null;
+  errorMessage: string | null;
+  internalErrorMessage: string | null;
+  failureStage: TaskFailureStage;
+}
+
 export interface AdminUserSnapshot {
   user: User;
   quota: QuotaInfo;
   stripe: AdminStripeSnapshot;
+  recentTasks: AdminTaskSnapshot[];
 }
 
 export interface QuotaCheckResult {
@@ -108,8 +124,9 @@ export type RateLimitType = "api" | "upload";
 // ============================================================
 
 export const RESOLUTION_CONFIG = {
-  free: { maxWidth: 800, maxHeight: 600, videoQuality: "720p" },
-  paid: { maxWidth: 1920, maxHeight: 1080, videoQuality: "1080p" },
+  free: { maxWidth: 800, maxHeight: 600, videoQuality: "480p" },
+  payAsYouGo: { maxWidth: 2048, maxHeight: 2048, videoQuality: "720p" },
+  professional: { maxWidth: 2048, maxHeight: 2048, videoQuality: "1080p" },
 } as const;
 
 export const RATE_LIMITS = {
@@ -118,6 +135,7 @@ export const RATE_LIMITS = {
 } as const;
 
 export const PRIORITY_WEIGHTS = {
+  urgent: -1_000_000_000_000_000,
   high: 0,
   normal: 1_000_000_000_000_000,
 } as const;

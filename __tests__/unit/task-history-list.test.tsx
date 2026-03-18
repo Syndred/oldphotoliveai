@@ -40,6 +40,7 @@ jest.mock("next-intl", () => ({
         modelConfigError: "Model config error",
         intermediateDownloadFailed: "Intermediate download failed",
         serviceBusy: "Service is temporarily busy",
+        serviceBusyRetry: "Service is temporarily busy. Please try again in a moment.",
       },
     };
     return translations[namespace]?.[key] ?? key;

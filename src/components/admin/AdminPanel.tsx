@@ -37,7 +37,13 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
 function isAdminUserSnapshot(
   value: AdminUserSnapshot | ErrorResponse
 ): value is AdminUserSnapshot {
-  return "user" in value && "quota" in value && "stripe" in value;
+  return (
+    "user" in value &&
+    "quota" in value &&
+    "stripe" in value &&
+    "recentTasks" in value &&
+    Array.isArray(value.recentTasks)
+  );
 }
 
 function isRecentUsersResponse(
@@ -472,7 +478,8 @@ export default function AdminPanel() {
             </h1>
             <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
               Look up any user, inspect their quota and Stripe state, and switch
-              access levels for testing.
+              access levels for testing. Recent task failures include admin-only
+              internal error details for debugging.
             </p>
             {signedInEmail && (
               <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
@@ -675,6 +682,56 @@ export default function AdminPanel() {
                   {formatDate(snapshot.stripe.currentPeriodEnd)}
                 </li>
               </ul>
+            </div>
+
+            <div className="mt-6">
+              <h3 className="text-sm font-medium text-[var(--color-text-primary)]">
+                Recent Tasks
+              </h3>
+              <div className="mt-3 space-y-3">
+                {snapshot.recentTasks.length === 0 ? (
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    No tasks found for this user yet.
+                  </p>
+                ) : (
+                  snapshot.recentTasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className="rounded-2xl border border-white/10 bg-[var(--color-primary-bg)]/70 p-4"
+                    >
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-secondary)]">
+                        <span className="font-mono text-[var(--color-text-primary)]">
+                          {task.id}
+                        </span>
+                        <span>{task.status}</span>
+                        <span>{task.priority}</span>
+                        <span>{task.progress}%</span>
+                        <span>{formatDate(task.createdAt)}</span>
+                      </div>
+                      {task.failureStage && (
+                        <p className="mt-2 text-sm text-amber-300">
+                          Failed during: {task.failureStage}
+                        </p>
+                      )}
+                      {task.errorMessage && (
+                        <p className="mt-2 text-sm text-[var(--color-text-primary)]">
+                          User message: {task.errorMessage}
+                        </p>
+                      )}
+                      {task.internalErrorMessage && (
+                        <div className="mt-2">
+                          <p className="text-xs uppercase tracking-wide text-[var(--color-text-secondary)]">
+                            Internal error
+                          </p>
+                          <pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-words rounded-xl border border-red-500/20 bg-red-500/5 p-3 font-mono text-xs text-red-300">
+                            {task.internalErrorMessage}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </section>
 

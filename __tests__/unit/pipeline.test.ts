@@ -42,6 +42,8 @@ function makeTask(overrides?: Partial<Task>): Task {
     colorizedImageKey: null,
     animationVideoKey: null,
     errorMessage: null,
+    internalErrorMessage: null,
+    failureStage: null,
     progress: 5,
     createdAt: new Date().toISOString(),
     completedAt: null,
@@ -125,13 +127,18 @@ describe("executePipeline", () => {
       expect(mockRunModel).toHaveBeenCalledTimes(3);
       expect(mockRunModel.mock.calls[0][0]).toBe("restoration");
       expect(mockRunModel.mock.calls[1][0]).toBe("colorization");
-      expect(mockRunModel.mock.calls[2][0]).toBe("animation");
+      expect(mockRunModel.mock.calls[2][0]).toBe("animationFree");
 
       // Verify final status is completed with animationVideoKey
       expect(mockUpdateTaskStatus).toHaveBeenLastCalledWith(
         TASK_ID,
         "completed",
-        { animationVideoKey: `tasks/${TASK_ID}/animation.mp4` }
+        {
+          animationVideoKey: `tasks/${TASK_ID}/animation.mp4`,
+          errorMessage: null,
+          internalErrorMessage: null,
+          failureStage: null,
+        }
       );
     });
 
@@ -216,6 +223,56 @@ describe("executePipeline", () => {
   });
 
   describe("tier settings", () => {
+    it("uses the lightweight restoration model for free users", async () => {
+      setupSuccessfulPipeline();
+      mockGetUser.mockResolvedValue(makeUser({ tier: "free" }));
+
+      await executePipeline(TASK_ID);
+
+      expect(mockRunModel.mock.calls[0]).toEqual([
+        "restoration",
+        {
+          img: "https://cdn.test.com/tasks/task-123/original.jpg",
+          version: "v1.4",
+          scale: 1,
+        },
+      ]);
+    });
+
+    it("uses the premium scratch-repair restoration model for pay_as_you_go users", async () => {
+      setupSuccessfulPipeline();
+      mockGetUser.mockResolvedValue(makeUser({ tier: "pay_as_you_go" }));
+
+      await executePipeline(TASK_ID);
+
+      expect(mockRunModel.mock.calls[0]).toEqual([
+        "restorationPremium",
+        {
+          image: "https://cdn.test.com/tasks/task-123/original.jpg",
+          with_scratch: true,
+          HR: true,
+        },
+      ]);
+      expect(mockRunModel.mock.calls[2][0]).toBe("animationPaid");
+    });
+
+    it("uses the premium scratch-repair restoration model for professional users", async () => {
+      setupSuccessfulPipeline();
+      mockGetUser.mockResolvedValue(makeUser({ tier: "professional" }));
+
+      await executePipeline(TASK_ID);
+
+      expect(mockRunModel.mock.calls[0]).toEqual([
+        "restorationPremium",
+        {
+          image: "https://cdn.test.com/tasks/task-123/original.jpg",
+          with_scratch: true,
+          HR: true,
+        },
+      ]);
+      expect(mockRunModel.mock.calls[2][0]).toBe("animationPremium");
+    });
+
     it("applies watermark and resize for free users", async () => {
       setupSuccessfulPipeline();
       mockGetUser.mockResolvedValue(makeUser({ tier: "free" }));
@@ -266,6 +323,8 @@ describe("executePipeline", () => {
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "restoring");
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
         errorMessage: "Processing failed. Please try again.",
+        internalErrorMessage: "GFPGAN model failed",
+        failureStage: "restoring",
       });
       // Only restoration model was called
       expect(mockRunModel).toHaveBeenCalledTimes(1);
@@ -286,6 +345,9 @@ describe("executePipeline", () => {
 
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
         errorMessage: "AI model configuration error. Please contact support.",
+        internalErrorMessage:
+          "Request failed with status 401 Unauthorized: Unauthenticated",
+        failureStage: "restoring",
       });
     });
   });
@@ -316,6 +378,8 @@ describe("executePipeline", () => {
       expect(mockRunModel).toHaveBeenCalledTimes(2);
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
         errorMessage: "Processing failed. Please try again.",
+        internalErrorMessage: "DDColor model failed",
+        failureStage: "colorizing",
       });
       // Only restored image was uploaded (1 upload)
       expect(mockUploadToR2).toHaveBeenCalledTimes(1);
@@ -352,9 +416,116 @@ describe("executePipeline", () => {
       expect(mockRunModel).toHaveBeenCalledTimes(3);
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
         errorMessage: "Processing failed. Please try again.",
+        internalErrorMessage: "Animation model failed",
+        failureStage: "animating",
       });
       // Restored + colorized uploaded, but not animation
       expect(mockUploadToR2).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("retry resume behavior", () => {
+    it("retries from animation when a colorized image already exists", async () => {
+      mockGetTask.mockResolvedValue(
+        makeTask({
+          status: "failed",
+          restoredImageKey: `tasks/${TASK_ID}/restored.jpg`,
+          colorizedImageKey: `tasks/${TASK_ID}/colorized.jpg`,
+        })
+      );
+      mockGetUser.mockResolvedValue(makeUser({ tier: "professional" }));
+      mockGetR2CdnUrl.mockImplementation((key: string) => `https://cdn.test.com/${key}`);
+      mockUploadToR2.mockResolvedValue("key");
+
+      mockRunModel.mockResolvedValueOnce("https://replicate.com/animation.mp4");
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(fakeVideoBuffer.buffer.slice(0)),
+      });
+
+      await executePipeline(TASK_ID);
+
+      expect(mockRunModel).toHaveBeenCalledTimes(1);
+      expect(mockRunModel).toHaveBeenCalledWith("animationPremium", {
+        input_image: `https://cdn.test.com/tasks/${TASK_ID}/colorized.jpg`,
+      });
+      expect(mockResizeImage).not.toHaveBeenCalled();
+      expect(mockApplyImageWatermark).not.toHaveBeenCalled();
+      expect(mockUpdateTaskStatus.mock.calls.map((call) => call[1])).toEqual([
+        "animating",
+        "completed",
+      ]);
+      expect(mockUploadToR2).toHaveBeenCalledTimes(1);
+      expect(mockUploadToR2).toHaveBeenCalledWith(
+        expect.any(Buffer),
+        `tasks/${TASK_ID}/animation.mp4`,
+        "video/mp4"
+      );
+    });
+
+    it("retries from colorization when only the restored image already exists", async () => {
+      mockGetTask.mockResolvedValue(
+        makeTask({
+          status: "failed",
+          restoredImageKey: `tasks/${TASK_ID}/restored.jpg`,
+        })
+      );
+      mockGetUser.mockResolvedValue(makeUser({ tier: "pay_as_you_go" }));
+      mockGetR2CdnUrl.mockImplementation((key: string) => `https://cdn.test.com/${key}`);
+      mockUploadToR2.mockResolvedValue("key");
+      mockResizeImage.mockResolvedValue(fakeImageBuffer);
+      mockApplyImageWatermark.mockResolvedValue(fakeImageBuffer);
+
+      mockRunModel
+        .mockResolvedValueOnce("https://replicate.com/colorized.jpg")
+        .mockResolvedValueOnce("https://replicate.com/animation.mp4");
+
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          arrayBuffer: () => Promise.resolve(fakeImageBuffer.buffer.slice(0)),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          arrayBuffer: () => Promise.resolve(fakeVideoBuffer.buffer.slice(0)),
+        });
+
+      await executePipeline(TASK_ID);
+
+      expect(mockRunModel).toHaveBeenCalledTimes(2);
+      expect(mockRunModel.mock.calls[0]).toEqual([
+        "colorization",
+        {
+          image: `https://cdn.test.com/tasks/${TASK_ID}/restored.jpg`,
+          model_size: "large",
+        },
+      ]);
+      expect(mockRunModel.mock.calls[1]).toEqual([
+        "animationPaid",
+        {
+          input_image: `https://cdn.test.com/tasks/${TASK_ID}/colorized.jpg`,
+        },
+      ]);
+      expect(mockUpdateTaskStatus.mock.calls.map((call) => call[1])).toEqual([
+        "colorizing",
+        "animating",
+        "completed",
+      ]);
+      expect(mockResizeImage).toHaveBeenCalledTimes(1);
+      expect(mockApplyImageWatermark).not.toHaveBeenCalled();
+      expect(mockUploadToR2).toHaveBeenCalledTimes(2);
+      expect(mockUploadToR2).toHaveBeenNthCalledWith(
+        1,
+        expect.any(Buffer),
+        `tasks/${TASK_ID}/colorized.jpg`,
+        "image/jpeg"
+      );
+      expect(mockUploadToR2).toHaveBeenNthCalledWith(
+        2,
+        expect.any(Buffer),
+        `tasks/${TASK_ID}/animation.mp4`,
+        "video/mp4"
+      );
     });
   });
 
@@ -395,6 +566,9 @@ describe("executePipeline", () => {
 
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
         errorMessage: "Failed to download intermediate result. Please try again.",
+        internalErrorMessage:
+          "Failed to download from https://replicate.com/restored.jpg: invalid response",
+        failureStage: "restoring",
       });
     });
 
@@ -409,6 +583,8 @@ describe("executePipeline", () => {
 
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
         errorMessage: "Processing failed. Please try again.",
+        internalErrorMessage: "string error",
+        failureStage: "restoring",
       });
     });
 
@@ -429,6 +605,8 @@ describe("executePipeline", () => {
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
         errorMessage:
           "Source image URL is unreachable (404 Not Found). Please re-upload or check R2 bucket/domain configuration.",
+        internalErrorMessage: "SOURCE_IMAGE_UNREACHABLE:404 Not Found",
+        failureStage: "restoring",
       });
     });
   });

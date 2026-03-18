@@ -191,6 +191,8 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
     colorizedImageKey: null,
     animationVideoKey: null,
     errorMessage: null,
+    internalErrorMessage: null,
+    failureStage: null,
     progress: 0,
     createdAt: now,
     completedAt: null,
@@ -319,6 +321,8 @@ export async function retryTask(taskId: string): Promise<Task> {
   task.status = "queued";
   task.progress = STATUS_PROGRESS_MAP.queued;
   task.errorMessage = null;
+  task.internalErrorMessage = null;
+  task.failureStage = null;
   task.completedAt = null;
 
   await redis.set(keys.task(taskId), task);

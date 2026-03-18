@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server";
-import type { QuotaInfo, User } from "@/types";
+import type { QuotaInfo, Task, User } from "@/types";
 
 const mockGetUser = jest.fn<Promise<User | null>, [string]>();
 const mockGetUserByEmail = jest.fn<Promise<User | null>, [string]>();
+const mockGetUserTasks = jest.fn<Promise<Task[]>, [string]>();
 const mockGetQuotaInfo = jest.fn<Promise<QuotaInfo>, [string]>();
 const mockFindStripeCustomerByEmail = jest.fn();
 const mockFindProfessionalSubscriptionByCustomerId = jest.fn();
@@ -11,6 +12,7 @@ jest.mock("@/lib/redis", () => ({
   getUser: (...args: unknown[]) => mockGetUser(args[0] as string),
   getUserByEmail: (...args: unknown[]) =>
     mockGetUserByEmail(args[0] as string),
+  getUserTasks: (...args: unknown[]) => mockGetUserTasks(args[0] as string),
 }));
 
 jest.mock("@/lib/quota", () => ({
@@ -53,6 +55,26 @@ function makeQuota(overrides: Partial<QuotaInfo> = {}): QuotaInfo {
   };
 }
 
+function makeTask(overrides: Partial<Task> = {}): Task {
+  return {
+    id: "task-001",
+    userId: "user-001",
+    status: "failed",
+    priority: "urgent",
+    originalImageKey: "tasks/task-001/original.jpg",
+    restoredImageKey: "tasks/task-001/restored.jpg",
+    colorizedImageKey: "tasks/task-001/colorized.jpg",
+    animationVideoKey: null,
+    errorMessage: "Service is temporarily busy. Please try again in a moment.",
+    internalErrorMessage: "Replicate error: 429 Too Many Requests",
+    failureStage: "animating",
+    progress: 75,
+    createdAt: "2026-03-17T02:00:00.000Z",
+    completedAt: null,
+    ...overrides,
+  };
+}
+
 describe("admin user route", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -80,6 +102,7 @@ describe("admin user route", () => {
 
   it("returns a user snapshot by email", async () => {
     mockGetUserByEmail.mockResolvedValue(makeUser());
+    mockGetUserTasks.mockResolvedValue([makeTask()]);
     mockGetQuotaInfo.mockResolvedValue(makeQuota());
     mockFindStripeCustomerByEmail.mockResolvedValue({ id: "cus_123" });
     mockFindProfessionalSubscriptionByCustomerId.mockResolvedValue({
@@ -102,9 +125,15 @@ describe("admin user route", () => {
     expect(response.status).toBe(200);
     expect(mockGetUserByEmail).toHaveBeenCalledWith("owner@example.com");
     expect(mockGetQuotaInfo).toHaveBeenCalledWith("user-001");
+    expect(mockGetUserTasks).toHaveBeenCalledWith("user-001");
     expect(body.user.email).toBe("owner@example.com");
     expect(body.stripe.customerId).toBe("cus_123");
     expect(body.stripe.cancelAtPeriodEnd).toBe(true);
     expect(body.stripe.currentPeriodEnd).toBe("2026-04-17T00:00:00.000Z");
+    expect(body.recentTasks).toHaveLength(1);
+    expect(body.recentTasks[0].failureStage).toBe("animating");
+    expect(body.recentTasks[0].internalErrorMessage).toBe(
+      "Replicate error: 429 Too Many Requests"
+    );
   });
 });
