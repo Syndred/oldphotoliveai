@@ -180,7 +180,7 @@ export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
     <div
       role="button"
       tabIndex={0}
-      aria-label="Upload photo"
+      aria-label={t("uploadButtonAriaLabel")}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
@@ -242,7 +242,7 @@ export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
               {t("dragDrop")}
             </p>
             <p className="mt-1 text-sm text-[var(--color-text-secondary)] sm:text-xs">
-              or{" "}
+              {t("browsePrefix")}{" "}
               <span className="text-[var(--color-accent)] underline underline-offset-2">
                 {t("browse")}
               </span>

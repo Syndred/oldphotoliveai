@@ -25,7 +25,9 @@
     "title": "修复你的旧照片",
     "subtitle": "AI 一键完成修复、上色和动态化",
     "dragDrop": "将照片拖放到这里",
+    "browsePrefix": "或",
     "browse": "浏览文件",
+    "uploadButtonAriaLabel": "上传照片",
     "supportedFormats": "支持 JPEG、PNG、WebP（最大 10 MB）",
     "uploading": "上传中... {progress}%",
     "creatingTask": "正在创建任务..."

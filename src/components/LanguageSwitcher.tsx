@@ -3,8 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { usePathname, useRouter } from "@/i18n/navigation";
-import { locales, type Locale } from "@/i18n/routing";
+import { usePathname } from "@/i18n/navigation";
+import {
+  LOCALE_COOKIE,
+  locales,
+  localizePathname,
+  type Locale,
+} from "@/i18n/routing";
+import { navigateTo } from "@/lib/browser";
 
 const LOCALE_LABELS: Record<Locale, string> = {
   en: "English",
@@ -16,7 +22,6 @@ const LOCALE_LABELS: Record<Locale, string> = {
 export default function LanguageSwitcher() {
   const currentLocale = useLocale() as Locale;
   const pathname = usePathname();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -49,10 +54,16 @@ export default function LanguageSwitcher() {
       return;
     }
 
-    const query = Object.fromEntries(searchParams.entries());
-    const href = Object.keys(query).length > 0 ? { pathname, query } : pathname;
-    router.replace(href, { locale });
     setOpen(false);
+
+    const queryString = new URLSearchParams(
+      Array.from(searchParams.entries())
+    ).toString();
+    const targetPath = localizePathname(locale, pathname);
+    const targetUrl = queryString ? `${targetPath}?${queryString}` : targetPath;
+
+    document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=31536000; SameSite=Lax`;
+    navigateTo(targetUrl);
   }
 
   return (

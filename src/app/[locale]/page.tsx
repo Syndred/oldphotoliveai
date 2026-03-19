@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import HomePage from "@/app/page";
+import HomePageView from "@/components/HomePageView";
 import { PAGE_SEO_COPY } from "@/content/page-seo";
 import { isValidLocale, type Locale } from "@/i18n/routing";
 import { buildLocalizedPageMetadata } from "@/lib/seo";
@@ -31,6 +31,9 @@ export function generateMetadata({
   });
 }
 
-export default function LocalizedHomePage() {
-  return <HomePage />;
+export default function LocalizedHomePage({
+  params,
+}: LocalizedHomePageProps) {
+  const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
+  return <HomePageView locale={locale} />;
 }

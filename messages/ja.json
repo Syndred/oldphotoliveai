@@ -25,7 +25,9 @@
     "title": "古い写真を修復する",
     "subtitle": "AI が修復、カラー化、アニメーション化をワンクリックで実行",
     "dragDrop": "ここに写真をドラッグ＆ドロップ",
+    "browsePrefix": "または",
     "browse": "ファイルを選択",
+    "uploadButtonAriaLabel": "写真をアップロード",
     "supportedFormats": "JPEG、PNG、WebP に対応（最大 10 MB）",
     "uploading": "アップロード中... {progress}%",
     "creatingTask": "タスクを作成中..."

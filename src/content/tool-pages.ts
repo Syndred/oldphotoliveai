@@ -1,3 +1,8 @@
+import type { Locale } from "@/i18n/routing";
+import { TOOL_PAGE_TRANSLATIONS_ZH } from "./tool-pages.zh";
+import { TOOL_PAGE_TRANSLATIONS_ES } from "./tool-pages.es";
+import { TOOL_PAGE_TRANSLATIONS_JA } from "./tool-pages.ja";
+
 export const TOOL_PAGE_SLUGS = [
   "restore-old-photos",
   "colorize-old-photos",
@@ -49,20 +54,76 @@ export interface ToolPageDocument {
   relatedSlugs: ToolPageSlug[];
 }
 
+export type LocalizedToolPageDocument = Omit<
+  ToolPageDocument,
+  "slug" | "showcaseKind" | "relatedSlugs"
+>;
+
+export type TranslatedLocale = Exclude<Locale, "en">;
+
 export interface ToolSectionCopy {
   eyebrow: string;
   title: string;
   description: string;
+  exploreWorkflowLabel: string;
+  seePricingLabel: string;
+  comparePlansLabel: string;
+  homeLabel: string;
 }
 
-export const TOOL_SECTION_COPY: ToolSectionCopy = {
-  eyebrow: "Tool pages",
-  title: "Focused landing pages for each old-photo workflow",
-  description:
-    "Each page is built to match a specific search intent while still feeding the same upload flow, credit model, and pricing system.",
+const TOOL_SECTION_COPY_BY_LOCALE: Record<Locale, ToolSectionCopy> = {
+  en: {
+    eyebrow: "Tool pages",
+    title: "Focused landing pages for each old-photo workflow",
+    description:
+      "Each page is built to match a specific search intent while still feeding the same upload flow, credit model, and pricing system.",
+    exploreWorkflowLabel: "Explore this workflow",
+    seePricingLabel: "See pricing",
+    comparePlansLabel: "Compare plans",
+    homeLabel: "Home",
+  },
+  zh: {
+    eyebrow: "工具落地页",
+    title: "为旧照片工作流拆成更聚焦的落地页",
+    description:
+      "每个页面都对应更明确的搜索意图，但仍共用同一套上传流程、积分体系和价格系统。",
+    exploreWorkflowLabel: "查看这个工作流",
+    seePricingLabel: "查看价格",
+    comparePlansLabel: "比较方案",
+    homeLabel: "首页",
+  },
+  es: {
+    eyebrow: "Páginas de herramienta",
+    title: "Landing pages enfocadas para cada flujo de fotos antiguas",
+    description:
+      "Cada página responde a una intención de búsqueda concreta, pero mantiene el mismo flujo de subida, créditos y precios.",
+    exploreWorkflowLabel: "Ver este flujo",
+    seePricingLabel: "Ver precios",
+    comparePlansLabel: "Comparar planes",
+    homeLabel: "Inicio",
+  },
+  ja: {
+    eyebrow: "ツールページ",
+    title: "旧写真ワークフローごとの専用ランディングページ",
+    description:
+      "各ページは異なる検索意図に合わせつつ、アップロード導線、クレジット、料金体系は共通のままです。",
+    exploreWorkflowLabel: "このワークフローを見る",
+    seePricingLabel: "料金を見る",
+    comparePlansLabel: "プランを比較",
+    homeLabel: "ホーム",
+  },
 };
 
-export const TOOL_PAGES: Record<ToolPageSlug, ToolPageDocument> = {
+const TOOL_PAGE_TRANSLATIONS: Record<
+  TranslatedLocale,
+  Record<ToolPageSlug, LocalizedToolPageDocument>
+> = {
+  zh: TOOL_PAGE_TRANSLATIONS_ZH,
+  es: TOOL_PAGE_TRANSLATIONS_ES,
+  ja: TOOL_PAGE_TRANSLATIONS_JA,
+};
+
+const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
   "restore-old-photos": {
     slug: "restore-old-photos",
     title: "Restore Old Photos Online with AI",
@@ -417,14 +478,30 @@ export function isToolPageSlug(value: string): value is ToolPageSlug {
   return (TOOL_PAGE_SLUGS as readonly string[]).includes(value);
 }
 
-export function getToolPage(slug: ToolPageSlug): ToolPageDocument {
-  return TOOL_PAGES[slug];
+export function getToolSectionCopy(locale: Locale): ToolSectionCopy {
+  return TOOL_SECTION_COPY_BY_LOCALE[locale] ?? TOOL_SECTION_COPY_BY_LOCALE.en;
 }
 
-export function getToolPageSummaries() {
-  return TOOL_PAGE_SLUGS.map((slug) => TOOL_PAGES[slug]);
+export function getToolPage(
+  locale: Locale,
+  slug: ToolPageSlug
+): ToolPageDocument {
+  const basePage = TOOL_PAGES_EN[slug];
+
+  if (locale === "en") {
+    return basePage;
+  }
+
+  return {
+    ...basePage,
+    ...TOOL_PAGE_TRANSLATIONS[locale][slug],
+  };
 }
 
-export function getRelatedToolPages(slugs: ToolPageSlug[]) {
-  return slugs.map((slug) => TOOL_PAGES[slug]);
+export function getToolPageSummaries(locale: Locale) {
+  return TOOL_PAGE_SLUGS.map((slug) => getToolPage(locale, slug));
+}
+
+export function getRelatedToolPages(locale: Locale, slugs: ToolPageSlug[]) {
+  return slugs.map((slug) => getToolPage(locale, slug));
 }

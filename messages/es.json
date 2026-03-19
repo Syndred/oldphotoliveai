@@ -25,7 +25,9 @@
     "title": "Restaura tus fotos antiguas",
     "subtitle": "Restauración, colorización y animación con IA en un clic",
     "dragDrop": "Arrastra y suelta tu foto aquí",
+    "browsePrefix": "o",
     "browse": "explorar archivos",
+    "uploadButtonAriaLabel": "Subir foto",
     "supportedFormats": "Admite JPEG, PNG y WebP (máx. 10 MB)",
     "uploading": "Subiendo... {progress}%",
     "creatingTask": "Creando tarea..."

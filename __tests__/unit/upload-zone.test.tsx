@@ -5,55 +5,63 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
-// Mock validation module
 jest.mock("@/lib/validation", () => ({
   SUPPORTED_MIME_TYPES: ["image/jpeg", "image/png", "image/webp"] as const,
   MAX_FILE_SIZE: 10 * 1024 * 1024,
 }));
 
-// Mock next-intl
 jest.mock("next-intl", () => ({
-  useTranslations: (namespace: string) => (key: string, params?: Record<string, unknown>) => {
-    const translations: Record<string, Record<string, string>> = {
-      upload: { dragDrop: "Drag and drop your photo here", browse: "browse files", supportedFormats: "Supports JPEG, PNG, WebP (max 10 MB)", uploading: "Uploading… {progress}%", creatingTask: "Creating task…" },
-      errors: {
-        fileTypeNotSupported: "Please upload a JPEG, PNG, or WebP image",
-        fileTooLarge: "File size exceeds the 10MB limit",
-        uploadFailed: "Upload failed. Please try again later.",
-        uploadStorageConfigError: "Storage configuration error. Please contact support.",
-        uploadStorageAuthError: "Storage permission error. Please contact support.",
-        uploadStorageBucketMissing: "Storage bucket is unavailable. Please contact support.",
-        uploadStorageNetworkError: "Storage service is temporarily unreachable. Please try again.",
-        uploadSupportHint: "Ref: {requestId} ({code})",
-        invalidResponse: "Invalid server response",
-        networkError: "Network error. Please check your connection.",
-        uploadCancelled: "Upload was cancelled.",
-      },
-    };
-    let result = translations[namespace]?.[key] ?? key;
-    if (params) {
-      for (const [k, v] of Object.entries(params)) {
-        result = result.replace(`{${k}}`, String(v));
+  useTranslations:
+    (namespace: string) =>
+    (key: string, params?: Record<string, unknown>) => {
+      const translations: Record<string, Record<string, string>> = {
+        upload: {
+          dragDrop: "Drag and drop your photo here",
+          browsePrefix: "or",
+          browse: "browse files",
+          uploadButtonAriaLabel: "Upload photo",
+          supportedFormats: "Supports JPEG, PNG, WebP (max 10 MB)",
+          uploading: "Uploading... {progress}%",
+          creatingTask: "Creating task...",
+        },
+        errors: {
+          fileTypeNotSupported: "Please upload a JPEG, PNG, or WebP image",
+          fileTooLarge: "File size exceeds the 10MB limit",
+          uploadFailed: "Upload failed. Please try again later.",
+          uploadStorageConfigError:
+            "Storage configuration error. Please contact support.",
+          uploadStorageAuthError:
+            "Storage permission error. Please contact support.",
+          uploadStorageBucketMissing:
+            "Storage bucket is unavailable. Please contact support.",
+          uploadStorageNetworkError:
+            "Storage service is temporarily unreachable. Please try again.",
+          uploadSupportHint: "Ref: {requestId} ({code})",
+          invalidResponse: "Invalid server response",
+          networkError: "Network error. Please check your connection.",
+          uploadCancelled: "Upload was cancelled.",
+        },
+      };
+
+      let result = translations[namespace]?.[key] ?? key;
+      if (params) {
+        for (const [param, value] of Object.entries(params)) {
+          result = result.replace(`{${param}}`, String(value));
+        }
       }
-    }
-    return result;
-  },
+
+      return result;
+    },
   useLocale: () => "en",
 }));
 
 import UploadZone from "@/components/UploadZone";
 
-// Helper to create a mock File
-function createMockFile(
-  name: string,
-  size: number,
-  type: string
-): File {
+function createMockFile(name: string, size: number, type: string): File {
   const content = new ArrayBuffer(size);
   return new File([content], name, { type });
 }
 
-// Helper to mock XMLHttpRequest
 function mockXHR(options: {
   status?: number;
   response?: string;
@@ -73,37 +81,44 @@ function mockXHR(options: {
   const mockInstance = {
     open: jest.fn(),
     send: jest.fn().mockImplementation(() => {
-      // Fire progress events
-      for (const pe of progressEvents) {
-        for (const fn of uploadListeners["progress"] || []) {
-          (fn as (e: Partial<ProgressEvent>) => void)({
+      for (const progressEvent of progressEvents) {
+        for (const handler of uploadListeners.progress || []) {
+          (handler as (event: Partial<ProgressEvent>) => void)({
             lengthComputable: true,
-            loaded: pe.loaded,
-            total: pe.total,
+            loaded: progressEvent.loaded,
+            total: progressEvent.total,
           });
         }
       }
 
       if (error) {
-        for (const fn of listeners["error"] || []) {
-          (fn as () => void)();
+        for (const handler of listeners.error || []) {
+          (handler as () => void)();
         }
-      } else {
-        Object.defineProperty(mockInstance, "status", { value: status, writable: true });
-        Object.defineProperty(mockInstance, "responseText", { value: response, writable: true });
-        for (const fn of listeners["load"] || []) {
-          (fn as () => void)();
-        }
+        return;
+      }
+
+      Object.defineProperty(mockInstance, "status", {
+        value: status,
+        writable: true,
+      });
+      Object.defineProperty(mockInstance, "responseText", {
+        value: response,
+        writable: true,
+      });
+
+      for (const handler of listeners.load || []) {
+        (handler as () => void)();
       }
     }),
-    addEventListener: jest.fn((event: string, fn: EventListener) => {
+    addEventListener: jest.fn((event: string, handler: EventListener) => {
       listeners[event] = listeners[event] || [];
-      listeners[event].push(fn);
+      listeners[event].push(handler);
     }),
     upload: {
-      addEventListener: jest.fn((event: string, fn: EventListener) => {
+      addEventListener: jest.fn((event: string, handler: EventListener) => {
         uploadListeners[event] = uploadListeners[event] || [];
-        uploadListeners[event].push(fn);
+        uploadListeners[event].push(handler);
       }),
     },
     status: 0,
@@ -125,13 +140,15 @@ describe("UploadZone", () => {
     jest.restoreAllMocks();
   });
 
-  // ── Rendering ───────────────────────────────────────────────────────────
-
   it("renders the drop zone with instructions", () => {
     render(<UploadZone onUpload={mockOnUpload} />);
-    expect(screen.getByText("Drag and drop your photo here")).toBeInTheDocument();
+    expect(
+      screen.getByText("Drag and drop your photo here")
+    ).toBeInTheDocument();
     expect(screen.getByText("browse files")).toBeInTheDocument();
-    expect(screen.getByText(/Supports JPEG, PNG, WebP/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Supports JPEG, PNG, WebP/)
+    ).toBeInTheDocument();
   });
 
   it("renders with accessible role and label", () => {
@@ -147,8 +164,6 @@ describe("UploadZone", () => {
     expect(zone.className).toContain("opacity-50");
     expect(zone.className).toContain("pointer-events-none");
   });
-
-  // ── Client-side validation ──────────────────────────────────────────────
 
   it("shows error for unsupported file type", async () => {
     render(<UploadZone onUpload={mockOnUpload} />);
@@ -177,12 +192,12 @@ describe("UploadZone", () => {
     fireEvent.drop(zone, { dataTransfer });
 
     await waitFor(() => {
-      expect(screen.getByRole("alert")).toHaveTextContent(/exceeds the 10MB limit/);
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        /exceeds the 10MB limit/
+      );
     });
     expect(mockOnUpload).not.toHaveBeenCalled();
   });
-
-  // ── Drag & drop ─────────────────────────────────────────────────────────
 
   it("applies dragging style on dragOver", () => {
     render(<UploadZone onUpload={mockOnUpload} />);
@@ -202,8 +217,6 @@ describe("UploadZone", () => {
     fireEvent.dragLeave(zone);
     expect(zone.className).not.toContain("scale-[1.02]");
   });
-
-  // ── Upload flow ─────────────────────────────────────────────────────────
 
   it("uploads valid file and calls onUpload with URL", async () => {
     const xhrMock = mockXHR({
@@ -265,7 +278,9 @@ describe("UploadZone", () => {
     fireEvent.drop(zone, { dataTransfer });
 
     await waitFor(() => {
-      expect(screen.getByRole("alert")).toHaveTextContent("File type not supported");
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "File type not supported"
+      );
     });
     expect(mockOnUpload).not.toHaveBeenCalled();
   });
@@ -310,12 +325,12 @@ describe("UploadZone", () => {
     expect(mockOnUpload).not.toHaveBeenCalled();
   });
 
-  // ── Click to browse ─────────────────────────────────────────────────────
-
   it("opens file picker on click", () => {
     render(<UploadZone onUpload={mockOnUpload} />);
     const zone = screen.getByRole("button", { name: /upload photo/i });
-    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = document.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
     const clickSpy = jest.spyOn(input, "click");
 
     fireEvent.click(zone);
@@ -325,7 +340,9 @@ describe("UploadZone", () => {
   it("opens file picker on Enter key", () => {
     render(<UploadZone onUpload={mockOnUpload} />);
     const zone = screen.getByRole("button", { name: /upload photo/i });
-    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = document.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
     const clickSpy = jest.spyOn(input, "click");
 
     fireEvent.keyDown(zone, { key: "Enter" });
@@ -334,7 +351,9 @@ describe("UploadZone", () => {
 
   it("has correct accept attribute on file input", () => {
     render(<UploadZone onUpload={mockOnUpload} />);
-    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = document.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
     expect(input.accept).toBe("image/jpeg,image/png,image/webp");
   });
 });

@@ -6,7 +6,11 @@ import HowItWorksSection from "@/app/sections/HowItWorksSection";
 import FAQSection from "@/app/sections/FAQSection";
 import UploadSection from "@/app/sections/UploadSection";
 import ToolCardsSection from "@/components/tool/ToolCardsSection";
-import { getToolPage, type ToolPageSlug } from "@/content/tool-pages";
+import {
+  getToolPage,
+  getToolSectionCopy,
+  type ToolPageSlug,
+} from "@/content/tool-pages";
 import { Link } from "@/i18n/navigation";
 import {
   buildBreadcrumbJsonLd,
@@ -23,12 +27,13 @@ export default function ToolLandingPage({
   locale,
   slug,
 }: ToolLandingPageProps) {
-  const tool = getToolPage(slug);
+  const tool = getToolPage(locale, slug);
+  const sectionCopy = getToolSectionCopy(locale);
 
   const jsonLd = [
     buildBreadcrumbJsonLd(
       [
-        { name: "Home", path: "/" },
+        { name: sectionCopy.homeLabel, path: "/" },
         { name: tool.cardTitle, path: `/${tool.slug}` },
       ],
       locale
@@ -81,7 +86,7 @@ export default function ToolLandingPage({
                 href="/pricing"
                 className="inline-flex min-h-[44px] items-center rounded-full border border-white/12 px-5 py-2.5 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.05]"
               >
-                See pricing
+                {sectionCopy.seePricingLabel}
               </Link>
             </div>
           </div>
@@ -156,7 +161,7 @@ export default function ToolLandingPage({
               href="/pricing"
               className="mt-5 inline-flex min-h-[44px] items-center rounded-full border border-[var(--color-accent)]/30 bg-black/15 px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/50 hover:bg-black/25"
             >
-              Compare plans
+              {sectionCopy.comparePlansLabel}
             </Link>
           </div>
         </section>
@@ -164,6 +169,7 @@ export default function ToolLandingPage({
         <FAQSection title={tool.faqTitle} items={tool.faqs} />
 
         <ToolCardsSection
+          locale={locale}
           title={tool.relatedTitle}
           description={tool.relatedDescription}
           slugs={tool.relatedSlugs}

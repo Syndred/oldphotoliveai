@@ -25,7 +25,9 @@
     "title": "Restore Your Old Photos",
     "subtitle": "AI-powered restoration, colorization, and animation in one click",
     "dragDrop": "Drag and drop your photo here",
+    "browsePrefix": "or",
     "browse": "browse files",
+    "uploadButtonAriaLabel": "Upload photo",
     "supportedFormats": "Supports JPEG, PNG, WebP (max 10 MB)",
     "uploading": "Uploading... {progress}%",
     "creatingTask": "Creating task..."

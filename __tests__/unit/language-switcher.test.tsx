@@ -7,6 +7,7 @@ import "@testing-library/jest-dom";
 
 const mockUseLocale = jest.fn();
 const mockSearchParamsEntries = jest.fn();
+const mockNavigateTo = jest.fn();
 
 jest.mock("next-intl", () => ({
   useLocale: () => mockUseLocale(),
@@ -18,12 +19,16 @@ jest.mock("next/navigation", () => ({
   }),
 }));
 
+jest.mock("@/lib/browser", () => ({
+  navigateTo: (...args: unknown[]) => mockNavigateTo(...args),
+  reloadPage: jest.fn(),
+}));
+
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import {
   __resetI18nNavigationMocks,
   __setMockLocale,
   __setMockPathname,
-  mockRouterReplace,
 } from "../helpers/i18n-navigation";
 
 beforeEach(() => {
@@ -33,6 +38,7 @@ beforeEach(() => {
   __setMockPathname("/pricing");
   mockUseLocale.mockReturnValue("en");
   mockSearchParamsEntries.mockReturnValue([]);
+  document.cookie = "";
 });
 
 describe("LanguageSwitcher", () => {
@@ -96,9 +102,8 @@ describe("LanguageSwitcher", () => {
       screen.getByRole("menuitemradio", { name: "Espa\u00f1ol" })
     );
 
-    expect(mockRouterReplace).toHaveBeenCalledWith("/es/pricing?tab=billing", {
-      locale: "es",
-    });
+    expect(mockNavigateTo).toHaveBeenCalledWith("/es/pricing?tab=billing");
+    expect(document.cookie).toContain("NEXT_LOCALE=es");
   });
 
   it("closes the menu without navigation when clicking the current locale", () => {
@@ -107,7 +112,7 @@ describe("LanguageSwitcher", () => {
     fireEvent.click(screen.getByRole("button", { name: "Open language menu" }));
     fireEvent.click(screen.getByRole("menuitemradio", { name: "English" }));
 
-    expect(mockRouterReplace).not.toHaveBeenCalled();
+    expect(mockNavigateTo).not.toHaveBeenCalled();
     expect(
       screen.queryByRole("menu", { name: "Language options" })
     ).not.toBeInTheDocument();

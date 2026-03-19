@@ -14,7 +14,7 @@ export function generateMetadata({
   params,
 }: LocalizedToolPageProps): Metadata {
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
-  const page = getToolPage("repair-damaged-old-photos");
+  const page = getToolPage(locale, "repair-damaged-old-photos");
 
   return buildLocalizedPageMetadata({
     locale,
