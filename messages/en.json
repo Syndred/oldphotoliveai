@@ -267,7 +267,7 @@
         },
         "cookies": {
           "title": "3. Cookies, Local Storage, and Analytics",
-          "body": "We use cookies and similar storage mechanisms to keep you signed in, remember your language selection, support security features, and improve usability. We may also use analytics tools such as Google Analytics when enabled to understand site performance and product usage trends."
+          "body": "We use cookies and similar storage mechanisms to keep you signed in, remember your language selection, support security features, and improve usability. When enabled, we may also use analytics and behavior tools such as Google Analytics and Microsoft Clarity to understand site performance, product usage trends, and on-page interaction patterns."
         },
         "sharing": {
           "title": "4. How We Share Information",

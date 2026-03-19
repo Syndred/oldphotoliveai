@@ -267,7 +267,7 @@
         },
         "cookies": {
           "title": "3. Cookies, almacenamiento local y analítica",
-          "body": "Usamos cookies y mecanismos de almacenamiento similares para mantener tu sesión iniciada, recordar tu idioma, apoyar funciones de seguridad y mejorar la experiencia. Cuando esta habilitado, tambien podemos usar herramientas de analítica cómo Google Analytics para entender el rendimiento del sitio y las tendencias de uso."
+          "body": "Usamos cookies y mecanismos de almacenamiento similares para mantener tu sesion iniciada, recordar tu idioma, apoyar funciones de seguridad y mejorar la experiencia. Cuando esta habilitado, tambien podemos usar herramientas de analitica y comportamiento como Google Analytics y Microsoft Clarity para entender el rendimiento del sitio, las tendencias de uso y los patrones de interaccion en la pagina."
         },
         "sharing": {
           "title": "4. Cómo compartimos la información",
