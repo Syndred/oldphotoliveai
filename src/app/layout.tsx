@@ -19,6 +19,9 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+const GOOGLE_SITE_VERIFICATION =
+  process.env.GOOGLE_SITE_VERIFICATION?.trim() || undefined;
+
 const siteMetadata = buildPageMetadata({
   title: BRAND_NAME,
   description: SITE_DESCRIPTION,
@@ -40,6 +43,11 @@ export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
   keywords: siteMetadata.keywords,
   alternates: siteMetadata.alternates,
+  verification: GOOGLE_SITE_VERIFICATION
+    ? {
+        google: GOOGLE_SITE_VERIFICATION,
+      }
+    : undefined,
   category: "photo restoration",
   openGraph: {
     ...siteMetadata.openGraph,
