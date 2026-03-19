@@ -10,6 +10,7 @@
     "backToHome": "Back to Home",
     "pageNotFound": "Page Not Found",
     "pageNotFoundDesc": "The page you are looking for does not exist or has been moved.",
+    "videoNotSupported": "Your browser does not support the video tag.",
     "somethingWentWrong": "Something went wrong",
     "unexpectedError": "An unexpected error occurred. Please try again."
   },

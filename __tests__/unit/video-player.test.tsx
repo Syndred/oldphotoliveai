@@ -5,6 +5,20 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
+jest.mock("next-intl", () => ({
+  useTranslations:
+    (namespace: string) =>
+    (key: string) => {
+      const translations: Record<string, Record<string, string>> = {
+        common: {
+          videoNotSupported: "Your browser does not support the video tag.",
+        },
+      };
+
+      return translations[namespace]?.[key] ?? key;
+    },
+}));
+
 import VideoPlayer from "@/components/VideoPlayer";
 
 describe("VideoPlayer", () => {

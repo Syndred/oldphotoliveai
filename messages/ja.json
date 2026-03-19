@@ -10,6 +10,7 @@
     "backToHome": "ホームへ戻る",
     "pageNotFound": "ページが見つかりません",
     "pageNotFoundDesc": "お探しのページは存在しないか、移動された可能性があります。",
+    "videoNotSupported": "お使いのブラウザは video タグをサポートしていません。",
     "somethingWentWrong": "問題が発生しました",
     "unexpectedError": "予期しないエラーが発生しました。時間をおいて再度お試しください。"
   },

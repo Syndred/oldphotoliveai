@@ -10,6 +10,7 @@
     "backToHome": "Volver al inicio",
     "pageNotFound": "Página no encontrada",
     "pageNotFoundDesc": "La página que buscas no existe o se ha movido.",
+    "videoNotSupported": "Tu navegador no admite la etiqueta de video.",
     "somethingWentWrong": "Algo salió mal",
     "unexpectedError": "Ocurrió un error inesperado. Vuelve a intentarlo."
   },

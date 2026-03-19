@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 // ── Types ───────────────────────────────────────────────────────────────────
 
 export interface VideoPlayerProps {
@@ -24,6 +26,8 @@ export default function VideoPlayer({
   containerClassName,
   videoClassName,
 }: VideoPlayerProps) {
+  const t = useTranslations("common");
+
   return (
     <div
       data-testid="video-player"
@@ -37,7 +41,7 @@ export default function VideoPlayer({
         preload="metadata"
         className={`w-full rounded-lg bg-black/20 ${videoClassName ?? ""}`.trim()}
       >
-        Your browser does not support the video tag.
+        {t("videoNotSupported")}
       </video>
       {showWatermark && (
         <div
