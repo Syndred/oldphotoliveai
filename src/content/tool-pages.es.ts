@@ -27,15 +27,15 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
     heroHighlights: [
       "Repara copias descoloridas y escaneos con poco contraste",
       "Recupera rostros, texturas de ropa y detalle del fondo",
-      "Usa el mismo sistema de créditos en todos los flujos",
+      "Exporta una imagen más limpia lista para guardar o compartir",
     ],
     primaryCtaLabel: "Restaurar una foto ahora",
     uploadTitle: "Sube una foto para restaurar",
     uploadSubtitle:
-      "Empieza con una sola subida y continúa con restauración, colorización y animación dentro del mismo flujo.",
-    introTitle: "Por qué existe esta página",
+      "Sube un escaneo o una copia familiar para limpiar daños, recuperar detalle y crear una mejor imagen base en minutos.",
+    introTitle: "Recupera recuerdos desvanecidos",
     introBody:
-      "Quien busca restauración de fotos antiguas suele querer el camino más rápido desde un escaneo dañado hasta un resultado útil. Esta página deja clara la promesa: sube la foto, deja que la IA la repare y sigue en el mismo producto si además quieres color o movimiento.",
+      "Muchas fotos familiares antiguas pierden contraste, acumulan arañazos y se ven borrosas justo en las zonas más importantes. Este flujo te da una primera restauración rápida y natural para que retratos, bodas y escaneos de álbum vuelvan a ser utilizables.",
     showcaseTitle: "Ejemplos de restauración de fotos antiguas",
     showcaseSubtitle:
       "Ejemplos reales de antes y después centrados en recuperar contraste, limpiar arañazos y reparar detalle facial.",
@@ -54,23 +54,18 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
       {
         title: "Acelera la primera pasada sobre archivos familiares",
         body:
-          "Cuando tienes muchas fotos por procesar, una página enfocada como esta ayuda a convertir una necesidad amplia en una ruta más clara de conversión.",
+          "Cuando tienes muchas fotos antiguas por revisar, una restauración rápida te ayuda a decidir cuáles merece la pena guardar, imprimir o retocar más.",
       },
     ],
-    pricingTitle: "Un solo modelo de precios para todos los flujos de fotos antiguas",
+    pricingTitle: "Elige el plan según tu archivo",
     pricingBody:
-      "Esta página no crea un producto aparte. Restaurar, colorizar y animar siguen usando los mismos créditos o suscripción; tú solo eliges el plan según tu volumen.",
+      "Compra créditos para restauraciones ocasionales o elige Professional si trabajas con álbumes, archivos familiares o pedidos de clientes en mayor volumen.",
     faqTitle: "Preguntas sobre restaurar fotos antiguas",
     faqs: [
       {
-        question: "¿Esta página usa un checkout distinto al resto del sitio?",
+        question: "¿Puedo restaurar una foto sin Photoshop?",
         answer:
-          "No. Es solo una entrada más enfocada para búsqueda. Sigue usando el mismo sistema de créditos, la misma página de precios y el mismo checkout de Stripe.",
-      },
-      {
-        question: "¿Necesito Photoshop antes de usar este flujo?",
-        answer:
-          "No. La página está pensada para quien quiere una primera pasada rápida asistida por IA. Luego puedes exportar el resultado y afinarlo manualmente si hace falta.",
+          "Sí. Este flujo está pensado para darte una primera restauración rápida con IA antes de decidir si todavía hace falta retoque manual.",
       },
       {
         question: "¿Qué tipos de fotos funcionan mejor?",
@@ -78,19 +73,24 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
           "Retratos, fotos familiares, copias de boda y escaneos con daño moderado suelen beneficiarse más. Un escaneo más limpio le da más detalle al modelo.",
       },
       {
-        question: "¿Después podré colorizar y animar el resultado?",
+        question: "¿Puedo colorizar o animar la imagen restaurada después?",
         answer:
-          "Sí. El pipeline sigue permitiendo restauración, colorización y animación en conjunto. Esta página solo presenta primero la promesa de restaurar.",
+          "Sí. Cuando la imagen ya está limpia, puedes seguir con colorización o animación desde la misma cuenta.",
+      },
+      {
+        question: "¿Cómo elijo entre créditos y Professional?",
+        answer:
+          "Los créditos van bien para trabajos puntuales, mientras que Professional encaja mejor si restauras fotos con frecuencia o necesitas más volumen cada mes.",
       },
     ],
     relatedTitle: "Más flujos para fotos antiguas",
     relatedDescription:
-      "Si la intención del visitante es más específica que una restauración general, llévalo a una página más precisa en vez de mandar cada consulta a la home.",
+      "Después de restaurar, puedes seguir mejorando la misma foto con reparación de daño, colorización o animación.",
   },
   "colorize-old-photos": {
     title: "Coloriza fotos antiguas con IA",
     description:
-      "Coloriza fotos antiguas con IA. Convierte fotos familiares en blanco y negro en color natural manteniendo el mismo flujo de restauración y precios.",
+      "Coloriza fotos antiguas con IA. Convierte fotos familiares en blanco y negro en color natural con mejor detalle y tonos equilibrados.",
     keywords: [
       "colorizar fotos antiguas",
       "colorizador de fotos antiguas",
@@ -99,23 +99,23 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
     ],
     cardTitle: "Colorizar fotos antiguas",
     cardDescription:
-      "Convierte recuerdos en blanco y negro en color natural sin salir del mismo flujo de restauración y exportación.",
+      "Convierte recuerdos en blanco y negro en color natural con rostros, ropa y fondo más definidos.",
     eyebrow: "Colorización con IA",
-    heroTitle: "Coloriza fotos familiares en blanco y negro dentro del mismo flujo",
+    heroTitle: "Coloriza fotos familiares en blanco y negro de forma natural",
     heroDescription:
-      "Esta página está pensada para intención de colorización, pero el producto sigue limpiando y restaurando primero para que el resultado final se vea mejor.",
+      "Sube un retrato o una foto familiar en blanco y negro para añadir color realista sin perder detalle facial, textura de la ropa ni equilibrio de la escena.",
     heroHighlights: [
       "Lleva retratos en blanco y negro a un color natural",
       "Parte de una base restaurada en vez de colorear sobre daño",
-      "Mantén los mismos créditos, planes y checkout",
+      "Mantén creíbles los tonos de piel, la ropa y el fondo",
     ],
     primaryCtaLabel: "Colorizar una foto ahora",
     uploadTitle: "Sube una foto para colorizar",
     uploadSubtitle:
-      "La subida sigue usando el mismo pipeline, así que el color final parte de una imagen más limpia.",
-    introTitle: "Por qué existe esta página",
+      "Sube un escaneo o una copia en blanco y negro y genera un resultado más limpio y con color natural en una sola pasada.",
+    introTitle: "Añade color sin perder la sensación original",
     introBody:
-      "Quien busca colorizar fotos antiguas suele interesarse menos por una explicación genérica de restauración y más por cuánto tarda una imagen en blanco y negro en verse viva otra vez. Esta página hace esa promesa más visible sin cambiar el modelo del producto.",
+      "Las fotos antiguas necesitan algo más que un filtro. Este flujo mejora primero la imagen y después añade color con un aspecto más cercano a una copia real que a un efecto artificial.",
     showcaseTitle: "Ejemplos de colorización de fotos antiguas",
     showcaseSubtitle:
       "Antes y después centrados en tonos de piel, ropa y color ambiental en fotos familiares.",
@@ -132,20 +132,20 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
           "Como el mismo pipeline repara primero la foto, el color se añade sobre una base más sólida y no sobre un original desvaído y lleno de arañazos.",
       },
       {
-        title: "Responde a una intención de búsqueda más concreta",
+        title: "Más fácil de compartir e imprimir",
         body:
-          "Las páginas dedicadas como esta suelen convertir mejor que una única home genérica cuando la persona ya sabe que quiere colorización.",
+          "Las fotos colorizadas se comparten mejor con la familia, funcionan bien en proyectos conmemorativos y quedan mejor en álbumes o regalos impresos.",
       },
     ],
-    pricingTitle: "La colorización usa los mismos créditos y planes",
+    pricingTitle: "Elige un plan para una foto o para un lote completo",
     pricingBody:
-      "No necesitas una suscripción aparte solo para colorizar. El producto mantiene un único modelo de precios para restauración, colorización y animación.",
+      "Usa un paquete de créditos para trabajos puntuales de colorización, o elige Professional si procesas álbumes, archivos familiares o pedidos de clientes.",
     faqTitle: "Preguntas sobre colorizar fotos antiguas",
     faqs: [
       {
         question: "¿Necesito un plan separado para colorizar?",
         answer:
-          "No. Esta es una landing page enfocada, no un producto independiente. Los mismos créditos y la misma suscripción aplican en todo el sitio.",
+          "No. Cualquier plan de pago de tu cuenta puede usarse para colorizar.",
       },
       {
         question: "¿La foto se repara antes de añadir color?",
@@ -155,7 +155,7 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
       {
         question: "¿Puedo seguir descargando la imagen final y la animación?",
         answer:
-          "Sí. El checkout y el flujo de resultados son los mismos. Esta página solo cambia la forma en que el usuario entra al producto.",
+          "Sí. Puedes descargar la imagen final tras la colorización y, si quieres, continuar luego con animación.",
       },
       {
         question: "¿Qué tipo de fotos funcionan mejor aquí?",
@@ -165,12 +165,12 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
     ],
     relatedTitle: "Más flujos para fotos antiguas",
     relatedDescription:
-      "Conecta bien las páginas hermanas para que el tráfico de colorización pueda seguir hacia restauración, reparación o animación sin quedarse en un callejón sin salida.",
+      "Si la foto también necesita limpieza o movimiento, continúa con restauración, reparación de daño o animación.",
   },
   "animate-old-photos": {
     title: "Anima fotos antiguas con IA",
     description:
-      "Anima fotos antiguas con IA. Convierte retratos restaurados en clips cortos con movimiento sutil y mantén el mismo sistema de créditos y checkout.",
+      "Anima fotos antiguas con IA. Convierte retratos restaurados en clips cortos con movimiento sutil y natural.",
     keywords: [
       "animar fotos antiguas",
       "animación de fotos antiguas",
@@ -179,53 +179,53 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
     ],
     cardTitle: "Animar fotos antiguas",
     cardDescription:
-      "Convierte un retrato restaurado en un clip corto con movimiento sin cambiar a otro producto ni a otro sistema de precios.",
+      "Convierte un retrato restaurado en un clip corto con movimiento suave y un fotograma más limpio.",
     eyebrow: "Animación con IA",
     heroTitle: "Anima fotos antiguas después de limpiarlas y restaurarlas",
     heroDescription:
-      "Esta página está hecha para visitantes que ya saben que quieren movimiento. Aun así, usa el mismo pipeline para reparar y colorizar antes de generar la animación.",
+      "Sube un retrato y genera un clip corto con movimiento después de limpiar la foto y dejarla lista para animación.",
     heroHighlights: [
       "Crea clips cortos de retrato a partir de una sola subida",
       "Usa una imagen reparada y colorizada como base",
-      "Mantén la animación dentro del mismo modelo de créditos y suscripción",
+      "Crea movimiento suave que siga encajando con recuerdos familiares",
     ],
     primaryCtaLabel: "Animar una foto ahora",
     uploadTitle: "Sube una foto para animar",
     uploadSubtitle:
-      "Una sola subida sigue alimentando restauración, colorización y animación, incluso cuando la intención principal es el movimiento.",
-    introTitle: "Por qué existe esta página",
+      "Los retratos con rostros claros y sujetos centrados suelen dar el movimiento más natural.",
+    introTitle: "Convierte un retrato quieto en un recuerdo vivo",
     introBody:
-      "Quien busca animar fotos antiguas suele querer pruebas de que el resultado se verá creíble, no otra explicación genérica sobre restauración. Esta landing page pone el foco en el movimiento sin dejar de describir el flujo completo.",
+      "La animación funciona mejor cuando la foto está limpia, el sujeto se distingue bien y el movimiento final sigue siendo sutil. Los mejores clips suelen sentirse emotivos y contenidos, no exagerados.",
     showcaseTitle: "Ejemplos de fotos antiguas animadas",
     showcaseSubtitle:
       "Ejemplos breves de movimiento basados en retratos familiares restaurados y fotos antiguas.",
     benefitsTitle: "Para qué funciona mejor este flujo",
     benefits: [
       {
-        title: "Habla de movimiento, no de restauración genérica",
+        title: "Crea algo que puedas compartir al instante",
         body:
-          "Quien llega por animación suele estar más abajo en el embudo. Necesita comprobar que el resultado se siente vivo sin verse artificial.",
+          "Los clips cortos funcionan muy bien para homenajes, grupos familiares y publicaciones sociales que vuelven a poner en circulación retratos antiguos.",
       },
       {
-        title: "Usa el mismo pipeline que el resto de páginas",
+        title: "Empieza con un retrato ya reparado",
         body:
-          "La animación no se vende como una línea de producto separada. Sigue dentro del mismo flujo de subida, lógica de pago y sistema de resultados.",
+          "Cuanto más limpia esté la imagen de origen, más creíbles suelen verse los pequeños movimientos de ojos, boca y cabeza.",
       },
       {
-        title: "Captura una consulta de alta intención con una sola página",
+        title: "Mantén el movimiento sutil y creíble",
         body:
-          "Las páginas enfocadas ofrecen una promesa más limpia para SEO y reducen la distancia entre la consulta y la experiencia real de aterrizaje.",
+          "En retratos familiares antiguos suele funcionar mejor un movimiento ligero que un efecto exagerado o demasiado rápido.",
       },
     ],
-    pricingTitle: "La animación sigue formando parte del mismo producto",
+    pricingTitle: "Elige créditos o acceso Professional",
     pricingBody:
-      "Esta página no separa la animación en otro sistema de precios. El usuario sigue comprando créditos o una suscripción dentro del mismo modelo unificado.",
+      "Usa créditos para animaciones puntuales, o cambia a Professional si creas clips con frecuencia a partir de archivos familiares o trabajos de clientes.",
     faqTitle: "Preguntas sobre animar fotos antiguas",
     faqs: [
       {
-        question: "¿La animación se vende como un producto separado?",
+        question: "¿Hay que reparar la foto antes de animarla?",
         answer:
-          "No. Esta página es solo una entrada especializada para intención de búsqueda. La facturación y el checkout siguen compartidos con restauración y colorización.",
+          "Los mejores resultados llegan con una imagen limpia. Este flujo prepara la foto antes de generar movimiento para que el clip final se vea más estable.",
       },
       {
         question: "¿La imagen se restaura antes de animarla?",
@@ -238,19 +238,19 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
           "Los retratos con un rostro visible suelen funcionar mejor porque el movimiento sutil se percibe más claramente cuando el sujeto está centrado y razonablemente nítido.",
       },
       {
-        question: "¿Puedo usar los mismos créditos también en otras páginas?",
+        question: "¿Puedo usar mi acceso de pago también para animación?",
         answer:
-          "Sí. Los mismos créditos y planes valen para todo el sitio. Estas páginas son entradas distintas, no carteras distintas.",
+          "Sí. En cuanto compras un plan de pago, también puedes usarlo para animación.",
       },
     ],
     relatedTitle: "Más flujos para fotos antiguas",
     relatedDescription:
-      "Quien busca movimiento a menudo también necesita restauración o color. Mantén las páginas hermanas bien conectadas para que la sesión continúe.",
+      "Si la foto necesita limpieza o color antes de animarla, explora las herramientas de restauración, reparación y colorización.",
   },
   "repair-damaged-old-photos": {
     title: "Repara fotos antiguas dañadas con IA",
     description:
-      "Repara fotos antiguas dañadas con IA. Limpia arañazos, polvo, contraste desvaído y papel deteriorado dentro del mismo flujo de restauración, color y animación.",
+      "Repara fotos antiguas dañadas con IA. Limpia arañazos, polvo, contraste desvaído y papel deteriorado para recuperar copias familiares dañadas.",
     keywords: [
       "reparar fotos antiguas dañadas",
       "arreglar fotos antiguas descoloridas",
@@ -259,32 +259,32 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
     ],
     cardTitle: "Reparar fotos antiguas dañadas",
     cardDescription:
-      "Habla directamente de intención relacionada con arañazos, desgaste y amarilleo, pero conserva el mismo flujo de subida y pago.",
+      "Elimina arañazos, polvo, pliegues y amarilleo de copias gastadas y escaneos antiguos.",
     eyebrow: "Reparación de daño",
     heroTitle: "Repara arañazos, desgaste y daños en fotos familiares antiguas",
     heroDescription:
-      "Esta página estrecha la promesa hacia el daño físico para que el visitante entienda que el producto está hecho para copias gastadas, no solo para retratos limpios en blanco y negro.",
+      "Usa IA para reparar el daño visible en copias antiguas, incluidos arañazos superficiales, polvo, pliegues, desvanecimiento y papel amarillento.",
     heroHighlights: [
       "Corrige arañazos, polvo, pliegues y contraste lavado",
-      "Usa el mismo flujo de subida que el resto de páginas",
-      "Mantén una sola cartera de créditos para todo el producto",
+      "Recupera claridad en rostros, ropa y detalles finos",
+      "Prepara fotos dañadas para guardar, compartir o seguir restaurando",
     ],
     primaryCtaLabel: "Reparar una foto dañada",
     uploadTitle: "Sube una foto dañada",
     uploadSubtitle:
-      "Empieza con una sola subida y deja que el mismo pipeline repare la imagen antes de generar color o animación.",
-    introTitle: "Por qué existe esta página",
+      "Sube un escaneo dañado o una foto hecha con el móvil y obtén una primera reparación más limpia en pocos minutos.",
+    introTitle: "Repara el daño antes de que vaya a más",
     introBody:
-      "Algunos visitantes no buscan restauración en general, sino un problema muy concreto: arañazos, desvanecimiento, amarilleo y daño en el papel. Esta página hace explícito ese problema para que la experiencia de aterrizaje se parezca más a la búsqueda.",
+      "Las copias antiguas suelen sufrir arañazos, polvo, pliegues, desvanecimiento y desgaste del papel. Si limpias primero ese daño visible, luego resulta mucho más fácil conservar, compartir o seguir retocando la imagen.",
     showcaseTitle: "Ejemplos de reparación de daño",
     showcaseSubtitle:
       "Ejemplos centrados en contraste desvaído, defectos de superficie visibles y desgaste típico de fotos familiares.",
     benefitsTitle: "Para qué funciona mejor este flujo",
     benefits: [
       {
-        title: "Usa el lenguaje que la gente realmente busca",
+        title: "Sirve para el daño más común en copias impresas",
         body:
-          "Una página dedicada a reparación se alinea mejor con términos como foto descolorida, rayada, dañada o gastada que una home genérica.",
+          "Es especialmente útil para contraste apagado, arañazos superficiales, puntos de polvo, marcas de pliegue y desgaste habitual de álbumes y cajones.",
       },
       {
         title: "Repara primero y decide luego el trabajo manual",
@@ -292,20 +292,20 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
           "Deja que la IA haga la primera pasada sobre el daño repetitivo para que solo dediques edición manual a los casos especiales.",
       },
       {
-        title: "Mantén la misma ruta de conversión",
+        title: "Deja la foto lista para el siguiente paso",
         body:
-          "La landing es más específica, pero el modelo de negocio sigue unificado: mismos créditos, mismo checkout y misma pantalla de resultados.",
+          "Cuando desaparece el daño más evidente, la imagen queda mejor preparada para colorizar, animar, imprimir o recibir retoque manual.",
       },
     ],
-    pricingTitle: "Las páginas de reparación no necesitan otra lógica de cobro",
+    pricingTitle: "Elige un plan para unas pocas reparaciones o para un archivo completo",
     pricingBody:
-      "Esta página está pensada para intención de búsqueda, no para un nuevo nivel de precios. Mantén los mismos planes y deja que el usuario entre al flujo compartido desde una página más precisa.",
+      "Compra créditos para unas pocas copias dañadas o elige Professional si restauras álbumes, archivos familiares o colecciones de clientes.",
     faqTitle: "Preguntas sobre reparar fotos antiguas dañadas",
     faqs: [
       {
-        question: "¿Es una herramienta distinta de la página de restauración?",
+        question: "¿Sirve para copias rayadas y amarillentas?",
         answer:
-          "No a nivel de facturación. Es una entrada más específica para usuarios cuya intención gira en torno a reparar daño físico más que a restauración general.",
+          "Sí. Está pensada para problemas habituales como arañazos, desvanecimiento, amarilleo, polvo y desgaste moderado de la superficie.",
       },
       {
         question: "¿Qué tipos de daño suelen poder repararse?",
@@ -315,16 +315,16 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
       {
         question: "¿El mismo flujo también puede colorizar y animar la foto?",
         answer:
-          "Sí. El flujo sigue siendo el mismo de extremo a extremo. Esta página solo presenta primero la propuesta alrededor de la reparación.",
+          "Sí. Una vez limpio el daño visible, puedes continuar con colorización o animación.",
       },
       {
         question: "¿Tengo que comprar un paquete especial para reparar daños?",
         answer:
-          "No. Los mismos créditos y planes de suscripción aplican en todo el sitio.",
+          "No. Solo tienes que elegir el plan de pago que mejor encaje con la cantidad de fotos que quieres reparar.",
       },
     ],
     relatedTitle: "Más flujos para fotos antiguas",
     relatedDescription:
-      "Usa páginas relacionadas para llevar al usuario desde un problema muy concreto hacia el recorrido más amplio del producto sin obligarlo a volver a una home genérica.",
+      "Después de reparar el daño, puedes seguir mejorando la foto con restauración, colorización o animación.",
   },
 };

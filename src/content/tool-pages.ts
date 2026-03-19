@@ -73,40 +73,40 @@ export interface ToolSectionCopy {
 
 const TOOL_SECTION_COPY_BY_LOCALE: Record<Locale, ToolSectionCopy> = {
   en: {
-    eyebrow: "Tool pages",
-    title: "Focused landing pages for each old-photo workflow",
+    eyebrow: "Old photo tools",
+    title: "Choose the workflow that fits your photo",
     description:
-      "Each page is built to match a specific search intent while still feeding the same upload flow, credit model, and pricing system.",
+      "Restore fading, repair damage, add natural color, or turn a family portrait into a short animated memory.",
     exploreWorkflowLabel: "Explore this workflow",
     seePricingLabel: "See pricing",
     comparePlansLabel: "Compare plans",
     homeLabel: "Home",
   },
   zh: {
-    eyebrow: "工具落地页",
-    title: "为旧照片工作流拆成更聚焦的落地页",
+    eyebrow: "老照片工具",
+    title: "按照片问题选择合适的处理方式",
     description:
-      "每个页面都对应更明确的搜索意图，但仍共用同一套上传流程、积分体系和价格系统。",
+      "修复褪色、补划痕、给黑白照片上色，或把老照片生成自然微动视频。",
     exploreWorkflowLabel: "查看这个工作流",
     seePricingLabel: "查看价格",
     comparePlansLabel: "比较方案",
     homeLabel: "首页",
   },
   es: {
-    eyebrow: "Páginas de herramienta",
-    title: "Landing pages enfocadas para cada flujo de fotos antiguas",
+    eyebrow: "Herramientas",
+    title: "Elige el flujo adecuado para tu foto",
     description:
-      "Cada página responde a una intención de búsqueda concreta, pero mantiene el mismo flujo de subida, créditos y precios.",
+      "Restaura desvanecimiento, repara daños, añade color natural o convierte un retrato familiar en un clip animado.",
     exploreWorkflowLabel: "Ver este flujo",
     seePricingLabel: "Ver precios",
     comparePlansLabel: "Comparar planes",
     homeLabel: "Inicio",
   },
   ja: {
-    eyebrow: "ツールページ",
-    title: "旧写真ワークフローごとの専用ランディングページ",
+    eyebrow: "写真ツール",
+    title: "写真に合った処理を選べる",
     description:
-      "各ページは異なる検索意図に合わせつつ、アップロード導線、クレジット、料金体系は共通のままです。",
+      "色あせ補正、傷の修復、白黒写真のカラー化、自然な写真アニメーションまでまとめて選べます。",
     exploreWorkflowLabel: "このワークフローを見る",
     seePricingLabel: "料金を見る",
     comparePlansLabel: "プランを比較",
@@ -145,15 +145,15 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     heroHighlights: [
       "Repair faded prints and low-contrast scans",
       "Recover faces, clothing texture, and background detail",
-      "Use one shared credit system across every workflow",
+      "Export a cleaner image that is ready for saving or sharing",
     ],
     primaryCtaLabel: "Restore a photo now",
     uploadTitle: "Upload a photo to restore",
     uploadSubtitle:
-      "Start with one upload and get restoration, colorization, and animation from the same workflow.",
-    introTitle: "Why this page exists",
+      "Upload a scan or family print to clean damage, recover details, and create a stronger master image in minutes.",
+    introTitle: "Bring faded memories back",
     introBody:
-      "People searching for old photo restoration usually want the fastest path from a damaged scan to a usable result. This page keeps the promise simple: upload, let AI repair the image, then continue into the same product if you also want color and motion.",
+      "Old family photos often lose contrast, collect scratches, and blur in the areas people care about most. This workflow gives you a fast, natural first pass so portraits, wedding prints, and album scans look usable again.",
     showcaseTitle: "Old photo restoration examples",
     showcaseSubtitle:
       "Real before-and-after examples focused on contrast recovery, scratch cleanup, and facial detail repair.",
@@ -173,23 +173,18 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
       {
         title: "Give old family archives a faster first pass",
         body:
-          "When you have many photos to process, restoration pages like this help turn a broad demand into a focused conversion path.",
+          "When you have many old photos to sort through, a quick restoration pass helps you decide which images are ready to save, print, or refine further.",
       },
     ],
-    pricingTitle: "One pricing model across every old-photo workflow",
+    pricingTitle: "Choose the plan that fits your archive",
     pricingBody:
-      "This page does not create a separate product. Restore, colorize, and animate with the same credits or subscription, then choose the plan that fits your volume.",
+      "Buy credits for occasional repairs or choose Professional if you are restoring albums, family archives, or client work at a higher volume.",
     faqTitle: "Questions about restoring old photos",
     faqs: [
       {
-        question: "Does this page use a different checkout from the rest of the site?",
+        question: "Can I restore a photo without Photoshop?",
         answer:
-          "No. This landing page is only a focused search entry point. It still uses the same credit system, pricing page, and Stripe checkout as the rest of the product.",
-      },
-      {
-        question: "Do I need Photoshop before using this workflow?",
-        answer:
-          "No. The page is designed for users who want a faster AI-assisted first pass. You can still export the result and refine it manually later if needed.",
+          "Yes. This workflow is designed to give you a fast AI-assisted restoration pass before you decide whether any manual retouching is still needed.",
       },
       {
         question: "What kinds of photos work best?",
@@ -197,14 +192,19 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
           "Portraits, family snapshots, wedding prints, and moderately damaged scans usually benefit most. A cleaner scan gives the model more detail to work with.",
       },
       {
-        question: "Will the workflow also colorize and animate my result?",
+        question: "Can I colorize or animate the restored image afterward?",
         answer:
-          "Yes. The product pipeline still supports restoration, colorization, and animation together. This page simply frames the first promise around restoration.",
+          "Yes. Once the image has been cleaned up, you can continue with colorization or animation from the same account.",
+      },
+      {
+        question: "How do I choose between credits and Professional?",
+        answer:
+          "Credits work well for occasional jobs, while Professional is better if you restore photos frequently or need higher monthly volume.",
       },
     ],
     relatedTitle: "More old-photo workflows",
     relatedDescription:
-      "If the visitor intent is narrower than general restoration, route them into a more specific page instead of forcing every query through the homepage.",
+      "After restoration, you can keep improving the same photo with damage repair, colorization, or animation tools.",
     relatedSlugs: [
       "repair-damaged-old-photos",
       "colorize-old-photos",
@@ -215,7 +215,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     slug: "colorize-old-photos",
     title: "Colorize Old Photos with AI",
     description:
-      "Colorize old photos with AI. Turn black-and-white family pictures into natural-looking color while keeping the same restoration workflow and pricing.",
+      "Colorize old photos with AI. Turn black-and-white family pictures into natural-looking color with cleaner detail and balanced tones.",
     keywords: [
       "colorize old photos",
       "old photo colorizer",
@@ -224,23 +224,23 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     ],
     cardTitle: "Colorize old photos",
     cardDescription:
-      "Turn black-and-white memories into natural color without leaving the same restoration and export workflow.",
+      "Turn black-and-white memories into natural color with cleaner faces, clothing, and background detail.",
     eyebrow: "AI colorization",
     heroTitle: "Colorize black-and-white family photos in the same workflow",
     heroDescription:
-      "This page targets colorization intent, but the product still starts with cleanup and restoration so the final image looks stronger before color is added.",
+      "Upload a black-and-white portrait or family snapshot to add realistic color while preserving facial detail, clothing texture, and scene balance.",
     heroHighlights: [
       "Bring black-and-white portraits into natural color",
       "Start from a restored base instead of coloring damage",
-      "Keep the same credits, plans, and checkout",
+      "Keep skin tones, fabric, and background colors believable",
     ],
     primaryCtaLabel: "Colorize a photo now",
     uploadTitle: "Upload a photo to colorize",
     uploadSubtitle:
-      "Your upload still goes through the same old-photo pipeline so the final color result starts from a cleaner image.",
-    introTitle: "Why this page exists",
+      "Start with a scan or black-and-white print and generate a cleaner, naturally colored result in one pass.",
+    introTitle: "Add color without losing the original feeling",
     introBody:
-      "A user searching for old photo colorization is usually less interested in generic restoration copy and more interested in how quickly a grayscale family image can look vivid again. This page makes that promise obvious without changing the underlying product model.",
+      "Old family photos need more than a simple tint overlay. This workflow first improves the source image, then adds color that feels closer to a real print instead of a noisy filter.",
     showcaseTitle: "Old photo colorization examples",
     showcaseSubtitle:
       "Before-and-after examples focused on natural skin tones, clothing, and environmental color in family photos.",
@@ -258,20 +258,20 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
           "Because the same pipeline repairs the image first, color is added to a stronger base instead of a faded, scratch-heavy original.",
       },
       {
-        title: "Serve a narrower search intent",
+        title: "Make old memories easier to share",
         body:
-          "Dedicated tool pages like this usually convert better than a single generic homepage for people who already know they want colorization.",
+          "Colorized photos are easier to share with younger family members, include in memorial projects, and print for albums or gifts.",
       },
     ],
-    pricingTitle: "Colorization still uses the same credits and plans",
+    pricingTitle: "Pick a plan for one photo or a full batch",
     pricingBody:
-      "You do not need a separate subscription for colorization. The product keeps one shared pricing model across restoration, colorization, and animation workflows.",
+      "Use a credit pack for occasional color work, or choose Professional if you are processing albums, family archives, or client orders.",
     faqTitle: "Questions about colorizing old photos",
     faqs: [
       {
         question: "Do I need a separate plan just for colorization?",
         answer:
-          "No. This page is a targeted landing page, not a standalone product. The same credits and subscription apply everywhere on the site.",
+          "No. Any paid plan on your account can be used for colorization.",
       },
       {
         question: "Will the workflow repair the photo before adding color?",
@@ -281,7 +281,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
       {
         question: "Can I still download the final image and animation result?",
         answer:
-          "Yes. The checkout and result flow stay the same. This page only changes how the visitor enters the product.",
+          "Yes. You can download the final image after colorization, and you can continue into animation if you want a moving result.",
       },
       {
         question: "What kind of source photos work well here?",
@@ -291,7 +291,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     ],
     relatedTitle: "More old-photo workflows",
     relatedDescription:
-      "Cross-link tightly to sibling pages so colorization traffic can continue into restoration, repair, or animation without dead ends.",
+      "If the photo also needs cleanup or motion, continue with restoration, damage repair, or animation tools.",
     relatedSlugs: [
       "restore-old-photos",
       "repair-damaged-old-photos",
@@ -302,7 +302,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     slug: "animate-old-photos",
     title: "Animate Old Photos with AI",
     description:
-      "Animate old photos with AI. Turn restored portraits into short video clips with subtle motion while keeping the same credits, checkout, and result flow.",
+      "Animate old photos with AI. Turn restored portraits into short video clips with subtle, natural motion.",
     keywords: [
       "animate old photos",
       "old photo animation",
@@ -311,23 +311,23 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     ],
     cardTitle: "Animate old photos",
     cardDescription:
-      "Turn a restored portrait into a short moving clip without switching to a separate product or pricing system.",
+      "Turn a restored portrait into a short moving clip with subtle facial motion and a cleaner frame.",
     eyebrow: "AI animation",
     heroTitle: "Animate old photos after they have been cleaned and restored",
     heroDescription:
-      "This page is built for visitors who already know they want motion. It still uses the same upload pipeline so the portrait is repaired and colorized before animation output is generated.",
+      "Upload a portrait and generate a short moving clip after the photo has been cleaned up and prepared for animation.",
     heroHighlights: [
       "Create short portrait animations from one upload",
       "Use a repaired and colorized frame as the animation base",
-      "Keep animation inside the same credit and subscription model",
+      "Create gentle motion that still feels right for family memories",
     ],
     primaryCtaLabel: "Animate a photo now",
     uploadTitle: "Upload a photo to animate",
     uploadSubtitle:
-      "One upload still powers restoration, colorization, and animation together, even when the page intent is focused on motion.",
-    introTitle: "Why this page exists",
+      "Portraits with clear faces and centered subjects usually create the most natural animation results.",
+    introTitle: "Turn a still portrait into a living memory",
     introBody:
-      "Visitors searching for animated old photos usually want proof that the product can generate a believable clip, not another general explanation about photo restoration. This landing page shifts the emphasis to motion while still truthfully describing the same end-to-end workflow.",
+      "Animation works best when the source photo is clean, the subject is visible, and the final motion stays subtle. Short clips usually feel strongest when they stay emotional and restrained instead of exaggerated.",
     showcaseTitle: "Animated old photo examples",
     showcaseSubtitle:
       "Short motion examples based on restored family portraits and old photographs.",
@@ -335,30 +335,30 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     benefitsTitle: "What this workflow is best at",
     benefits: [
       {
-        title: "Lead with motion instead of generic restoration copy",
+        title: "Create something you can immediately share",
         body:
-          "Animation visitors are already deeper in the funnel. They need proof that the end result looks alive without feeling distorted.",
+          "Short animated clips work well for tribute videos, family group chats, and social posts that bring old portraits back into conversation.",
       },
       {
-        title: "Use the same pipeline as every other page",
+        title: "Start from a repaired portrait",
         body:
-          "Animation is not sold as a separate product line here. It stays inside the same upload flow, checkout logic, and result system.",
+          "Cleaner source images usually produce more believable motion around the eyes, mouth, and head position.",
       },
       {
-        title: "Use one page to capture a high-intent query",
+        title: "Keep the motion subtle and believable",
         body:
-          "Focused pages give search traffic a cleaner promise and reduce the mismatch between keyword intent and landing experience.",
+          "Gentle movement is usually more convincing for old family portraits than exaggerated effects or fast camera motion.",
       },
     ],
-    pricingTitle: "Animation still sits inside the same product",
+    pricingTitle: "Choose credits or Professional access",
     pricingBody:
-      "This page does not split animation into a different pricing structure. Users still buy credits or a subscription inside the same unified billing model.",
+      "Use credits for occasional animation projects, or upgrade if you regularly create short clips from family archives or client work.",
     faqTitle: "Questions about animating old photos",
     faqs: [
       {
-        question: "Is animation sold as a separate product?",
+        question: "Does the photo need to be repaired before animation?",
         answer:
-          "No. This page is only a specialized landing page for search intent. The billing and checkout flow remain shared with restoration and colorization.",
+          "The best results come from a clean source image. This workflow prepares the photo before generating motion so the final clip looks more stable.",
       },
       {
         question: "Does the workflow still restore the image first?",
@@ -371,14 +371,14 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
           "Portraits with a visible face usually work best because subtle motion reads more clearly when the subject is centered and reasonably sharp.",
       },
       {
-        question: "Can I use the same credits on other pages too?",
+        question: "Can I use my paid access for animation too?",
         answer:
-          "Yes. The same credits and plans apply across the entire site. These pages are separate landing experiences, not separate wallets.",
+          "Yes. Once you purchase a paid plan, you can use it for animation as well.",
       },
     ],
     relatedTitle: "More old-photo workflows",
     relatedDescription:
-      "Visitors looking for motion often still need restoration or color help. Keep the sibling pages tightly connected so the session can continue.",
+      "If the photo needs cleanup or color before animation, explore the restoration, damage repair, and colorization tools.",
     relatedSlugs: [
       "restore-old-photos",
       "colorize-old-photos",
@@ -389,7 +389,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     slug: "repair-damaged-old-photos",
     title: "Repair Damaged Old Photos with AI",
     description:
-      "Repair damaged old photos with AI. Clean scratches, faded contrast, dust, and worn paper while staying inside the same restoration, colorization, and animation workflow.",
+      "Repair damaged old photos with AI. Clean scratches, dust, faded contrast, and worn paper to recover damaged family prints.",
     keywords: [
       "repair damaged old photos",
       "fix faded old photos",
@@ -398,23 +398,23 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     ],
     cardTitle: "Repair damaged old photos",
     cardDescription:
-      "Speak directly to scratched, faded, and yellowed photo intent while still using the same upload and billing flow.",
+      "Remove scratches, dust, folds, and yellowing from worn prints and old scans.",
     eyebrow: "Damage repair",
     heroTitle: "Repair scratches, fading, and damage in old family photos",
     heroDescription:
-      "This page narrows the promise to physical damage repair so visitors know the product is built for worn prints, not only clean black-and-white portraits.",
+      "Use AI to repair visible damage in old prints, including surface scratches, dust, folds, fading, and yellowed paper.",
     heroHighlights: [
       "Fix scratches, dust marks, folds, and washed-out contrast",
-      "Use the same upload workflow as every other page",
-      "Keep one shared credit wallet for the full product",
+      "Recover facial clarity and fabric detail from worn prints",
+      "Prepare damaged photos for saving, sharing, or further restoration",
     ],
     primaryCtaLabel: "Repair a damaged photo",
     uploadTitle: "Upload a damaged photo",
     uploadSubtitle:
-      "Start with one upload and let the same pipeline repair the image before color and animation outputs are generated.",
-    introTitle: "Why this page exists",
+      "Start with a damaged scan or a phone photo of a print and get a cleaner restoration pass in minutes.",
+    introTitle: "Repair the damage before it gets worse",
     introBody:
-      "Some visitors are not searching for general restoration. They are describing a very specific problem: scratches, fading, yellowing, and paper damage. This page makes the problem statement explicit so the landing experience feels closer to the search term.",
+      "Old prints often suffer from scratches, dust, creases, fading, and paper wear. This workflow focuses on cleaning the damage first so the photo is easier to preserve, share, or restore further.",
     showcaseTitle: "Damage repair examples",
     showcaseSubtitle:
       "Examples focused on faded contrast, visible surface defects, and common family-photo wear.",
@@ -422,9 +422,9 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     benefitsTitle: "What this workflow is best at",
     benefits: [
       {
-        title: "Match the language users actually search",
+        title: "Handle the most common print damage",
         body:
-          "A dedicated repair page lines up better with terms like faded, scratched, damaged, or worn photo repair than a broad homepage ever will.",
+          "Use it for faded contrast, surface scratches, dust spots, fold marks, and everyday wear found in albums, drawers, and framed prints.",
       },
       {
         title: "Repair before you decide on manual work",
@@ -432,20 +432,20 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
           "Use AI to take the first pass on repetitive damage so you only hand-edit the special cases that truly need it.",
       },
       {
-        title: "Keep the same conversion path",
+        title: "Prepare the photo for the next step",
         body:
-          "The landing page is specific, but the business model stays unified. Same credits, same checkout, same result screen.",
+          "Once the visible damage is reduced, the image is easier to colorize, animate, print, or fine-tune with manual retouching.",
       },
     ],
-    pricingTitle: "Repair pages do not require separate billing logic",
+    pricingTitle: "Choose a plan for a few repairs or a full archive",
     pricingBody:
-      "This page is designed for search intent, not a new pricing tier. Keep the same plans and let the user enter the shared workflow from a more precise page.",
+      "Buy credits for a handful of damaged prints, or choose Professional if you are restoring albums, family archives, or client collections.",
     faqTitle: "Questions about repairing damaged old photos",
     faqs: [
       {
-        question: "Is this a different tool from the restoration page?",
+        question: "Is this good for scratched and yellowed prints?",
         answer:
-          "Not at the billing level. It is a more focused entry page for visitors whose search intent is specifically about damage repair rather than general restoration.",
+          "Yes. It is built for common print problems such as scratches, fading, yellowing, dust, and moderate surface wear.",
       },
       {
         question: "What types of damage are usually fixable?",
@@ -455,17 +455,17 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
       {
         question: "Will the same workflow also colorize and animate the photo?",
         answer:
-          "Yes. The workflow remains the same end to end. This page simply frames the offer around repair intent first.",
+          "Yes. After the visible damage has been cleaned up, you can continue into colorization or animation.",
       },
       {
         question: "Do I need to buy a special damage-repair package?",
         answer:
-          "No. The same credits and subscription plans apply throughout the site.",
+          "No. Pick the paid plan that matches how many photos you want to repair.",
       },
     ],
     relatedTitle: "More old-photo workflows",
     relatedDescription:
-      "Use related tool pages to move users from a narrow problem statement into the broader product journey without forcing a generic homepage detour.",
+      "After damage repair, keep improving the photo with restoration, colorization, or animation tools.",
     relatedSlugs: [
       "restore-old-photos",
       "colorize-old-photos",
