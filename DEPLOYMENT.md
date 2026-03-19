@@ -5,16 +5,16 @@
 ### ✅ 可以从 .env.local 直接复用
 ```bash
 # Upstash Redis（开发和生产共用）
-UPSTASH_REDIS_REST_URL=https://oriented-baboon-27035.upstash.io
-UPSTASH_REDIS_REST_TOKEN=AWmbAAIncDI5YTcxYTJlZGNjZGQ0MTMwOTVhNGExZTViMTM4NmI2N3AyMjcwMzU
+UPSTASH_REDIS_REST_URL=https://your-upstash-instance.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_rest_token
 
 # Cloudflare R2 凭证（可复用）
-R2_ACCOUNT_ID=abf9a87a1055214a87809da4e41c64fb
-R2_ACCESS_KEY_ID=1eb9f4a20e0b8754635a379712e04421
-R2_SECRET_ACCESS_KEY=f44d07d782c71b1804e129f427a307b11f68465a064008b70e42303a694c8e93
+R2_ACCOUNT_ID=your_r2_account_id
+R2_ACCESS_KEY_ID=your_r2_access_key_id
+R2_SECRET_ACCESS_KEY=your_r2_secret_access_key
 
 # Replicate API（可复用）
-REPLICATE_API_TOKEN=r8_EpTCEFpBm62neswkO2IPRiBuSx6bWrj4DhCxX
+REPLICATE_API_TOKEN=your_replicate_api_token
 ```
 
 ### ⚠️ 需要修改但可基于现有配置
@@ -22,8 +22,8 @@ REPLICATE_API_TOKEN=r8_EpTCEFpBm62neswkO2IPRiBuSx6bWrj4DhCxX
 # Google OAuth - 在现有客户端添加生产回调 URL
 # https://console.cloud.google.com/apis/credentials
 # 添加 Authorized redirect URI: https://oldphotoliveai.com/api/auth/callback/google
-GOOGLE_CLIENT_ID=341803678482-4m7nu6d259q9sdspoltjs6counhtjsjp.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your_google_client_secret
 
 # NextAuth - 修改 URL 为生产域名
 NEXTAUTH_URL=https://oldphotoliveai.com

@@ -1,25 +1,17 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { buildPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("legal.terms");
   const title = t("title");
   const description = t("description");
 
-  return {
+  return buildPageMetadata({
     title,
     description,
-    openGraph: {
-      title,
-      description,
-      url: "https://oldphotoliveai.com/terms",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-    },
-  };
+    path: "/terms",
+  });
 }
 
 export default function TermsLayout({

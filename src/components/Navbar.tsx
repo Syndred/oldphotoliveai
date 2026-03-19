@@ -2,16 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import AuthButton from "./AuthButton";
 import LanguageSwitcher from "./LanguageSwitcher";
+import { Link, usePathname } from "@/i18n/navigation";
 import type { QuotaInfo, UserTier } from "@/types";
 
 const NAV_LINKS = [
   { href: "/", labelKey: "home" },
-  { href: "/history", labelKey: "history" },
   { href: "/pricing", labelKey: "pricing" },
 ] as const;
 
@@ -77,6 +75,10 @@ export default function Navbar() {
     tierBaseLabel && paygRemaining !== null
       ? `${tierBaseLabel} | ${tQuota("remaining", { count: paygRemaining })}`
       : tierBaseLabel;
+  const navLinks =
+    status === "authenticated"
+      ? [...NAV_LINKS, { href: "/history", labelKey: "history" as const }]
+      : NAV_LINKS;
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-[var(--color-primary-bg)]/80 backdrop-blur-md">
@@ -91,20 +93,20 @@ export default function Navbar() {
 
         {/* Desktop Navigation Links */}
         <div className="hidden sm:flex items-center gap-1 sm:gap-2">
-          {NAV_LINKS.map(({ href, labelKey }) => {
+          {navLinks.map((link) => {
             const isActive =
-              href === "/" ? pathname === "/" : pathname.startsWith(href);
+              link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
             return (
               <Link
-                key={href}
-                href={href}
+                key={link.href}
+                href={link.href}
                 className={`rounded-md px-2 py-2 text-sm transition-colors min-h-[44px] flex items-center sm:px-3 ${
                   isActive
                     ? "text-white"
                     : "text-[var(--color-text-secondary)] hover:text-white"
                 }`}
               >
-                {t(labelKey)}
+                {t(link.labelKey)}
               </Link>
             );
           })}
@@ -158,13 +160,13 @@ export default function Navbar() {
           <div className="px-3 py-2">
             <LanguageSwitcher />
           </div>
-          {NAV_LINKS.map(({ href, labelKey }) => {
+          {navLinks.map((link) => {
             const isActive =
-              href === "/" ? pathname === "/" : pathname.startsWith(href);
+              link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
             return (
               <Link
-                key={href}
-                href={href}
+                key={link.href}
+                href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block rounded-md px-3 py-2.5 text-sm transition-colors min-h-[44px] ${
                   isActive
@@ -172,7 +174,7 @@ export default function Navbar() {
                     : "text-[var(--color-text-secondary)] hover:text-white"
                 }`}
               >
-                {t(labelKey)}
+                {t(link.labelKey)}
               </Link>
             );
           })}

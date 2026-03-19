@@ -129,18 +129,36 @@ function CompareRow({
   );
 }
 
-export default function ShowcaseSection() {
+interface ShowcaseSectionProps {
+  title?: string;
+  description?: string;
+  rowIds?: Array<"restoration" | "colorization">;
+}
+
+export default function ShowcaseSection({
+  title,
+  description,
+  rowIds,
+}: ShowcaseSectionProps = {}) {
   const t = useTranslations("landing.showcase");
+  const rows = rowIds
+    ? IMAGE_SHOWCASE_ROWS.filter((row) => rowIds.includes(row.id))
+    : IMAGE_SHOWCASE_ROWS;
 
   return (
     <section id="showcase-section" className="px-4 py-8 sm:py-12">
       <div className="mx-auto max-w-6xl">
         <h2 className="text-center text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">
-          {t("title")}
+          {title ?? t("title")}
         </h2>
+        {description ? (
+          <p className="mx-auto mt-3 max-w-3xl text-center text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+            {description}
+          </p>
+        ) : null}
 
         <div className="mt-8 space-y-4">
-          {IMAGE_SHOWCASE_ROWS.map((row) => (
+          {rows.map((row) => (
             <CompareRow
               key={row.id}
               title={t(row.titleKey)}

@@ -2,12 +2,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useSession, signIn } from "next-auth/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Navbar from "@/components/Navbar";
 import TaskHistoryList from "@/components/TaskHistoryList";
+import { usePathname } from "@/i18n/navigation";
+import { localizePathname, type Locale } from "@/i18n/routing";
 import type { TaskHistoryItem } from "@/components/TaskHistoryList";
 
 export default function HistoryPage() {
+  const locale = useLocale() as Locale;
+  const pathname = usePathname();
   const { status } = useSession();
   const [tasks, setTasks] = useState<TaskHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,6 +22,7 @@ export default function HistoryPage() {
   const t = useTranslations("history");
   const tAuth = useTranslations("auth");
   const tErrors = useTranslations("errors");
+  const localizedPathname = localizePathname(locale, pathname);
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -162,7 +167,9 @@ export default function HistoryPage() {
             </p>
             <button
               type="button"
-              onClick={() => signIn("google")}
+              onClick={() =>
+                signIn("google", { callbackUrl: localizedPathname })
+              }
               className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 sm:w-auto"
             >
               {tAuth("signInWith")}

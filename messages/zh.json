@@ -2,60 +2,61 @@
   "common": {
     "appName": "OldPhotoLive AI",
     "loading": "加载中...",
-    "error": "发生了错误",
+    "error": "发生错误",
     "retry": "重试",
     "download": "下载",
     "cancel": "取消",
     "tryAgain": "再试一次",
     "backToHome": "返回首页",
     "pageNotFound": "页面未找到",
-    "pageNotFoundDesc": "您访问的页面不存在或已被移动。",
+    "pageNotFoundDesc": "你访问的页面不存在或已被移动。",
     "somethingWentWrong": "出了点问题",
-    "unexpectedError": "发生了意外错误，请重试。"
+    "unexpectedError": "发生了意外错误，请稍后重试。"
   },
   "nav": {
     "home": "首页",
+    "guides": "指南",
     "history": "历史记录",
-    "pricing": "定价",
+    "pricing": "价格",
     "login": "登录",
     "logout": "退出登录"
   },
   "upload": {
-    "title": "让老照片焕发新生",
-    "subtitle": "AI 一键修复、上色、动画",
-    "dragDrop": "将照片拖放到此处",
+    "title": "修复你的旧照片",
+    "subtitle": "AI 一键完成修复、上色和动态化",
+    "dragDrop": "将照片拖放到这里",
     "browse": "浏览文件",
     "supportedFormats": "支持 JPEG、PNG、WebP（最大 10 MB）",
-    "uploading": "上传中… {progress}%",
-    "creatingTask": "正在创建任务…"
+    "uploading": "上传中... {progress}%",
+    "creatingTask": "正在创建任务..."
   },
   "processing": {
-    "title": "正在处理您的照片",
+    "title": "正在处理你的照片",
     "step1": "上传",
     "step2": "修复",
     "step3": "上色",
-    "step4": "动画",
-    "pending": "排队等待中…",
+    "step4": "动态化",
+    "pending": "排队中...",
     "completed": "处理完成",
     "connectionLost": "连接已断开",
-    "previewRestored": "修复效果",
-    "previewColorized": "上色效果",
-    "previewAnimation": "动画效果"
+    "previewRestored": "修复结果",
+    "previewColorized": "上色结果",
+    "previewAnimation": "动态效果"
   },
   "result": {
     "beforeAfter": "前后对比",
-    "animation": "动画效果",
-    "before": "修复前",
-    "after": "修复后",
+    "animation": "动态效果",
+    "before": "处理前",
+    "after": "处理后",
     "downloadImage": "下载图片",
     "downloadVideo": "下载视频",
     "failed": "处理失败",
     "retryMessage": "出了点问题，请重试。",
-    "retrying": "正在重试…"
+    "retrying": "正在重试..."
   },
   "pricing": {
-    "title": "选择您的方案",
-    "subtitle": "解锁 AI 照片修复的全部功能",
+    "title": "选择你的方案",
+    "subtitle": "解锁 AI 照片修复的完整能力",
     "free": "免费版",
     "payAsYouGo": "按次付费",
     "professional": "专业版",
@@ -66,19 +67,19 @@
     "includedInProfessional": "专业版已包含",
     "manageSubscription": "管理订阅",
     "scheduledCancellation": "已计划在 {date} 账期结束后降级为免费版。",
-    "redirecting": "正在跳转…",
-    "freeDesc": "免费体验",
-    "payAsYouGoDesc": "偶尔使用",
-    "professionalDesc": "最佳性价比",
+    "redirecting": "正在跳转...",
+    "freeDesc": "先免费试用",
+    "payAsYouGoDesc": "适合偶尔使用",
+    "professionalDesc": "性价比最高",
     "freeFeature1": "每天 1 张照片",
-    "freeFeature2": "图片导出最高 800×600",
+    "freeFeature2": "图片导出最高 800x600",
     "freeFeature3": "480p 视频输出",
-    "freeFeature4": "图片输出带水印",
-    "payFeature1": "1 次积分",
+    "freeFeature4": "图片带水印",
+    "payFeature1": "1 个积分包",
     "payFeature2": "2K 图片导出（最长边 2048px）",
     "payFeature3": "720p 高清视频",
     "payFeature4": "无水印",
-    "proFeature1": "无限量照片",
+    "proFeature1": "不限量照片",
     "proFeature2": "2K 图片导出（最长边 2048px）",
     "proFeature3": "1080p 高级视频",
     "proFeature4": "无水印",
@@ -86,12 +87,12 @@
   },
   "history": {
     "title": "处理历史",
-    "empty": "暂无处理记录",
+    "empty": "还没有处理记录",
     "delete": "删除",
-    "deleteSelected": "删除选中",
+    "deleteSelected": "删除所选",
     "selectAll": "全选",
     "deselectAll": "取消全选",
-    "confirmDelete": "确定要删除选中的 {count} 条记录吗？",
+    "confirmDelete": "确定删除选中的 {count} 个任务吗？",
     "deleting": "删除中...",
     "deleteSuccess": "删除成功",
     "deleteFailed": "删除失败",
@@ -100,143 +101,144 @@
       "queued": "排队中",
       "restoring": "修复中",
       "colorizing": "上色中",
-      "animating": "生成动画中",
+      "animating": "动态化中",
       "completed": "已完成",
       "failed": "失败",
       "cancelled": "已取消"
     }
   },
   "errors": {
-    "fileTypeNotSupported": "请上传 JPEG、PNG 或 WebP 格式的图片",
+    "fileTypeNotSupported": "请上传 JPEG、PNG 或 WebP 图片",
     "fileTooLarge": "文件大小超过 10MB 限制",
     "uploadFailed": "上传失败，请稍后重试。",
-    "uploadStorageConfigError": "存储配置异常，请联系管理员。",
-    "uploadStorageAuthError": "存储权限异常，请联系管理员。",
-    "uploadStorageBucketMissing": "存储桶不可用，请联系管理员。",
-    "uploadStorageNetworkError": "存储服务暂时不可达，请稍后重试。",
-    "uploadSupportHint": "排查编号：{requestId}（{code}）",
+    "uploadStorageConfigError": "存储配置异常，请联系支持。",
+    "uploadStorageAuthError": "存储权限异常，请联系支持。",
+    "uploadStorageBucketMissing": "存储桶不可用，请联系支持。",
+    "uploadStorageNetworkError": "暂时无法连接存储服务，请稍后重试。",
+    "uploadSupportHint": "参考编号：{requestId}（{code}）",
+    "uploadCancelled": "上传已取消。",
     "quotaExceeded": "今日免费额度已用完，请升级或明天再试。",
     "creditsExpired": "积分已过期，请重新购买。",
-    "professionalAlreadyIncludesCredits": "专业版已包含无限次修复，无需再购买积分。",
+    "professionalAlreadyIncludesCredits": "专业版已包含无限次修复，无需额外购买积分。",
     "rateLimited": "请求过于频繁，请稍后再试。",
     "paymentFailed": "支付失败：{reason}",
-    "taskNotFound": "未找到该任务",
+    "paymentUnavailable": "支付功能暂时不可用。",
+    "taskNotFound": "未找到任务",
     "cannotCancel": "该任务无法取消",
-    "unauthorized": "请先登录再继续",
+    "unauthorized": "请先登录后继续",
     "processingTimeout": "处理超时，请点击重试。",
-    "serviceBusy": "服务暂时繁忙，您的任务已加入队列。",
-    "networkError": "网络错误，请检查您的网络连接。",
+    "processingFailedGeneric": "处理失败，请稍后重试。",
+    "sourceImageUnreachable": "源图片无法访问，请重新上传后再试。",
+    "modelConfigError": "AI 模型配置异常，请联系支持。",
+    "intermediateDownloadFailed": "中间结果下载失败，请稍后重试。",
+    "serviceBusy": "服务暂时繁忙，你的任务已加入队列。",
+    "serviceBusyRetry": "服务暂时繁忙，请稍后再试。",
+    "networkError": "网络错误，请检查连接。",
     "invalidResponse": "服务器响应无效",
     "checkoutFailed": "结账失败",
-    "billingPortalFailed": "无法打开订阅管理，请稍后再试。",
+    "billingPortalFailed": "无法打开订阅管理，请稍后重试。",
     "retryFailed": "重试失败",
     "historyLoadFailed": "加载历史记录失败",
     "taskCreateFailed": "创建任务失败",
-    "uploadCancelled": "上传已取消。",
-    "paymentUnavailable": "支付功能暂时不可用。",
-    "processingFailedGeneric": "处理失败，请稍后重试。",
-    "sourceImageUnreachable": "源图片无法访问，请重新上传后再试。",
-    "modelConfigError": "AI 模型配置异常，请联系客服。",
-    "intermediateDownloadFailed": "中间结果下载失败，请稍后重试。",
-    "taskIdsRequired": "请至少选择一条记录。",
-    "taskBatchTooLarge": "单次最多可删除 50 条记录。",
-    "serviceBusyRetry": "服务暂时繁忙，请稍后再试。"
+    "taskIdsRequired": "请至少选择一个任务。",
+    "taskBatchTooLarge": "单次最多可删除 50 个任务。"
   },
   "auth": {
     "signInWith": "使用 Google 登录",
-    "signInPrompt": "登录后即可开始修复您的老照片"
+    "signInPrompt": "登录后即可开始修复你的照片"
   },
   "quota": {
     "remaining": "剩余 {count} 次",
     "resetsAt": "将于 {time} 重置",
-    "unlimited": "无限制"
+    "unlimited": "无限"
   },
   "landing": {
     "hero": {
-      "title": "让老照片重获新生",
-      "subtitle": "AI 驱动的修复、上色与动画 — 将褪色的记忆变为鲜活的瞬间",
+      "title": "让旧照片重新鲜活",
+      "subtitle": "AI 驱动的修复、上色与动态化，将褪色记忆带回眼前",
       "cta": "免费试用"
     },
     "showcase": {
-      "title": "按场景查看真实效果",
+      "title": "不同场景的真实效果",
       "categories": {
         "restoration": {
-          "title": "AI修复",
-          "subtitle": "修复破损、划痕和模糊细节"
+          "title": "AI 修复",
+          "subtitle": "修补损伤、去除划痕并恢复面部细节"
         },
         "colorization": {
-          "title": "AI上色",
-          "subtitle": "将黑白老照片还原为自然彩色"
+          "title": "AI 上色",
+          "subtitle": "把黑白回忆还原成自然鲜活的色彩"
         }
       },
       "controls": {
-        "previous": "上一条",
-        "next": "下一条",
+        "previous": "上一项",
+        "next": "下一项",
         "viewMore": "查看更多"
       }
     },
     "videoShowcase": {
-      "title": "照片动效案例",
-      "subtitle": "精选修复老照片的动效示例，点击查看更多了解全部案例。",
+      "title": "照片动态案例",
+      "subtitle": "浏览精选的旧照片动态化示例。",
       "controls": {
-        "previous": "上一条",
-        "next": "下一条",
+        "previous": "上一项",
+        "next": "下一项",
         "viewMore": "查看更多"
       }
     },
     "features": {
       "title": "强大的 AI 功能",
-      "subtitle": "三步唤醒你的珍贵记忆",
+      "subtitle": "三步唤回珍贵回忆",
       "restoration": {
         "title": "照片修复",
-        "description": "AI 智能去除划痕、修复损伤，提升照片清晰度"
+        "description": "去除划痕、修补损伤，并用 AI 提升清晰度"
       },
       "colorization": {
         "title": "智能上色",
         "description": "利用深度学习为黑白照片添加自然、鲜艳的色彩"
       },
       "animation": {
-        "title": "照片动画",
-        "description": "让静态照片动起来，呈现逼真的面部表情和微妙动作"
+        "title": "照片动态化",
+        "description": "让静态照片动起来，呈现真实表情与细微动作"
       }
     },
     "howItWorks": {
       "title": "使用流程",
-      "subtitle": "三个简单步骤，变换你的照片",
+      "subtitle": "三步完成照片焕新",
       "step1": {
         "title": "上传照片",
-        "description": "上传你的老照片或受损照片"
+        "description": "上传你的旧照片或受损照片"
       },
       "step2": {
         "title": "AI 处理",
-        "description": "AI 自动修复、上色并生成动画"
+        "description": "AI 自动完成修复、上色和动态化"
       },
       "step3": {
         "title": "下载结果",
-        "description": "下载修复后的照片和动画视频"
+        "description": "下载修复后的图片和动态视频"
       }
     },
     "faq": {
       "title": "常见问题",
       "q1": "什么类型的照片效果最好？",
-      "a1": "我们的 AI 对人像照片、家庭合影和风景照片效果最佳。原始分辨率越高，效果越好。",
-      "q2": "处理需要多长时间？",
-      "a2": "大多数照片在 1-3 分钟内处理完成。复杂的修复或动画可能需要稍长时间。",
+      "a1": "我们的 AI 对人像、家庭合影和风景照片效果较好。原始分辨率越高，结果通常越好。",
+      "q2": "处理需要多久？",
+      "a2": "大多数照片会在 1 到 3 分钟内完成处理。复杂修复或动态化可能会稍慢一些。",
       "q3": "我的数据安全吗？",
-      "a3": "是的。您的照片会被安全处理，我们会使用可信的第三方服务来完成登录、支付、存储和分析。媒体文件可能会保留在您的历史记录中，直到您手动删除，或因运营与合规原因被我们移除。详情请查看隐私政策。",
-      "q4": "我可以将结果用于商业用途吗？",
-      "a4": "可以。您拥有修复和动画版本照片的完整权利。"
+      "a3": "是的。你的照片会被安全处理，我们使用可信的服务商完成登录、支付、存储与分析。媒体文件可能会保留在历史记录中，直到你删除，或因运营和合规原因被我们移除。详情请查看隐私政策。",
+      "q4": "我可以商用处理结果吗？",
+      "a4": "可以。你拥有修复版和动态版照片的完整使用权。"
     },
     "footer": {
-      "description": "AI 驱动的照片修复、上色与动画",
+      "description": "AI 驱动的照片修复、上色与动态化",
       "links": {
         "home": "首页",
-        "pricing": "定价",
-        "history": "历史",
+        "guides": "指南",
+        "pricing": "价格",
+        "history": "历史记录",
         "privacy": "隐私政策",
         "terms": "服务条款"
       },
-      "copyright": "© 2025 OldPhotoLive AI. 保留所有权利。"
+      "copyright": "© 2025 OldPhotoLive AI。保留所有权利。"
     }
   },
   "legal": {
@@ -246,19 +248,19 @@
     "privacy": {
       "eyebrow": "隐私",
       "title": "隐私政策",
-      "description": "了解 OldPhotoLive AI 如何收集、使用、存储并保护您的信息。",
-      "intro": "本隐私政策说明了当您使用 OldPhotoLive AI 网站和服务时，我们如何收集、使用、存储、共享并保护您的信息，重点涵盖登录、支付、上传内容、生成结果与站点分析等数据流转场景。",
-      "contactTitle": "联系方式",
-      "contactBody": "如果您对本政策或隐私请求有任何疑问，请使用下方邮箱联系我们。",
+      "description": "了解 OldPhotoLive AI 如何收集、使用、存储并保护你的信息。",
+      "intro": "本隐私政策说明当你使用 OldPhotoLive AI 的网站和服务时，我们如何收集、使用、存储、共享并保护你的信息，重点涵盖登录、支付、上传内容、生成结果以及站点分析等数据流转场景。",
+      "contactTitle": "联系我们",
+      "contactBody": "如果你对本政策或隐私请求有任何问题，请使用下方邮箱联系我们。",
       "relatedLink": "查看服务条款",
       "sections": {
         "informationCollected": {
           "title": "1. 我们收集的信息",
-          "body": "我们可能会收集账号信息，例如通过 Google 登录获得的邮箱、姓名和头像；您上传的照片和生成结果；来自 Stripe 的订阅和支付元数据；以及 IP 地址、浏览器信息、请求日志和错误日志等技术数据，用于运营服务和防止滥用。"
+          "body": "我们可能会收集账户信息，例如通过 Google 登录获得的邮箱、姓名和头像；你上传的照片和生成结果；来自 Stripe 的订阅和支付元数据；以及 IP 地址、浏览器信息、请求日志和错误日志等技术信息，用于运行服务并防止滥用。"
         },
         "usage": {
           "title": "2. 信息的使用方式",
-          "body": "我们使用这些信息来提供照片修复、上色和动画服务，完成账号登录，管理订阅、积分和支付事件，排查故障，提升稳定性与产品质量，衡量服务表现，并防止欺诈、滥用和安全事件。"
+          "body": "我们使用这些信息来提供照片修复、上色和动态化服务，完成账户登录，管理订阅、积分和支付事件，排查故障，提升稳定性和产品质量，衡量服务表现，并防止欺诈、滥用和安全事件。"
         },
         "cookies": {
           "title": "3. Cookie、本地存储与分析",
@@ -266,27 +268,27 @@
         },
         "sharing": {
           "title": "4. 我们如何共享信息",
-          "body": "我们仅在运营服务所必需的范围内共享信息，例如与支持身份验证、支付、云存储、队列、计算、邮件投递和分析的服务商共享。我们也可能在法律要求、执行条款、保护权利与安全，或发生融资、并购、资产转让等交易时披露相关信息。"
+          "body": "我们仅在运行服务所必需的范围内共享信息，例如与支持身份验证、支付、云存储、队列、计算、邮件投递和分析的服务商共享。我们也可能在法律要求、执行条款、保护权利与安全，或发生融资、并购、资产转让等交易时披露相关信息。"
         },
         "storage": {
           "title": "5. 存储与保留",
-          "body": "上传内容和生成媒体会存储在云对象存储中，以便您访问历史任务和结果。账单记录、账号记录和运营日志可能会因客服、风控、安全与合规需要而保留。当这些数据不再需要、被您删除，或我们认为出于运营或法律原因应当移除时，相关媒体或日志可能会被删除。"
+          "body": "上传内容和生成媒体会存储在云对象存储中，以便你访问历史任务和结果。账单记录、账户记录和运营日志可能会因客服、安全、反欺诈与合规需要而保留。当这些数据不再需要、被你删除，或我们认为出于运营或法律原因应当移除时，相关媒体或日志可能会被删除。"
         },
         "security": {
           "title": "6. 安全措施",
-          "body": "我们会采取合理的技术和组织措施来保护个人信息，包括访问控制、由服务商提供的安全能力，以及受限制的运维访问权限。但任何在线服务都无法保证绝对安全，您也应妥善保护自己的登录凭据和邮箱账号。"
+          "body": "我们会采取合理的技术和组织措施来保护个人信息，包括访问控制、由服务商提供的安全能力，以及受限制的运维访问权限。但任何在线服务都无法保证绝对安全，你也应妥善保护自己的登录凭据和邮箱账户。"
         },
         "internationalTransfers": {
           "title": "7. 跨境传输",
-          "body": "我们的服务商可能会在多个国家或地区处理或存储信息。使用本服务即表示您理解，您的信息可能会被传输到与您所在地数据保护规则不同的司法辖区。"
+          "body": "我们的服务商可能会在多个国家或地区处理或存储信息。使用本服务即表示你理解，你的信息可能会被传输到与你所在地区数据保护规则不同的司法辖区。"
         },
         "rights": {
-          "title": "8. 您的权利与选择",
-          "body": "根据您所在地的法律，您可能享有访问、更正、删除、获取副本、反对处理或限制处理部分个人信息的权利。您也可以通过 Google 账号、支付服务商，以及我们提供的任务历史功能管理部分信息。对于合法请求，我们会在合理时间内完成审核与回复。"
+          "title": "8. 你的权利与选择",
+          "body": "根据你所在地的法律，你可能享有访问、更正、删除、获取副本、反对处理或限制处理部分个人信息的权利。你也可以通过 Google 账户、支付服务商，以及我们提供的任务历史功能管理部分信息。对于合法请求，我们会在合理时间内完成审核与回复。"
         },
         "children": {
           "title": "9. 未成年人",
-          "body": "OldPhotoLive AI 不面向 13 岁以下儿童，也不适用于在适用法律下尚无权独立同意数据处理的未成年人。如果您认为有儿童向我们提供了个人信息，请联系我们，以便我们核查并采取适当措施。"
+          "body": "OldPhotoLive AI 不面向 13 岁以下儿童，也不适用于在适用法律下尚无权独立同意数据处理的未成年人。如果你认为有儿童向我们提供了个人信息，请联系我们，以便我们核查并采取适当措施。"
         },
         "changes": {
           "title": "10. 本政策的变更",
@@ -297,47 +299,47 @@
     "terms": {
       "eyebrow": "条款",
       "title": "服务条款",
-      "description": "使用 OldPhotoLive AI 时需要遵守的规则与条件。",
-      "intro": "本服务条款适用于您访问和使用 OldPhotoLive AI 的全部行为，包括网站、定价页面、上传流程、生成结果以及相关支付功能。使用本服务即表示您同意这些条款。",
-      "contactTitle": "联系方式",
-      "contactBody": "如果您有法律或条款相关问题，请使用下方邮箱联系我们。",
+      "description": "使用 OldPhotoLive AI 时适用的规则与条件。",
+      "intro": "本服务条款适用于你访问和使用 OldPhotoLive AI 的全部行为，包括网站、价格页、上传流程、生成结果以及相关支付功能。使用本服务即表示你同意这些条款。",
+      "contactTitle": "联系我们",
+      "contactBody": "如果你有法律或条款相关问题，请使用下方邮箱联系我们。",
       "relatedLink": "查看隐私政策",
       "sections": {
         "eligibility": {
           "title": "1. 使用资格",
-          "body": "您必须具备签订具有约束力协议的法律能力，方可使用本服务。如果您代表公司、机构或其他组织使用 OldPhotoLive AI，则表示您有权使该实体受本条款约束。"
+          "body": "你必须具备签订具有约束力协议的法律能力，方可使用本服务。如果你代表公司、机构或其他组织使用 OldPhotoLive AI，则表示你有权使该实体受本条款约束。"
         },
         "serviceDescription": {
           "title": "2. 服务说明",
-          "body": "OldPhotoLive AI 提供 AI 照片修复、上色和动画功能。功能范围、限制、价格、处理速度和输出质量可能会因套餐、模型可用性、使用量以及我们无法控制的技术因素而发生变化。"
+          "body": "OldPhotoLive AI 提供 AI 照片修复、上色和动态化功能。功能范围、限制、价格、处理速度和输出质量可能会因套餐、模型可用性、使用量以及我们无法控制的技术因素而发生变化。"
         },
         "accounts": {
-          "title": "3. 账号与访问",
-          "body": "您有责任维护账号安全，并对该账号下发生的所有活动负责。您必须提供准确的账号信息，妥善保管登录方式，并在怀疑账号被盗用时及时通知我们。"
+          "title": "3. 账户与访问",
+          "body": "你有责任维护账户安全，并对该账户下发生的所有活动负责。你必须提供准确的账户信息，妥善保管登录方式，并在怀疑账户被盗用时及时通知我们。"
         },
         "acceptableUse": {
           "title": "4. 可接受使用",
-          "body": "您只能在遵守适用法律和本条款的前提下使用本服务。您不得利用本服务侵犯隐私权、肖像权或知识产权，不得冒充他人，不得制作违法或误导性内容，不得绕过额度或安全机制，不得大规模抓取服务内容，也不得干扰其他用户或我们的基础设施。"
+          "body": "你只能在遵守适用法律和本条款的前提下使用本服务。你不得利用本服务侵犯隐私权、肖像权或知识产权，不得冒充他人，不得制作违法或误导性内容，不得绕过额度或安全机制，不得大规模抓取服务内容，也不得干扰其他用户或我们的基础设施。"
         },
         "contentPermissions": {
           "title": "5. 上传内容与授权",
-          "body": "您保留对所提交照片及其他内容的权利，但这些权利仍受第三方权利约束。您声明并保证，您拥有上传、处理、动画化、上色及以其他方式使用该内容所需的全部权利和许可，包括对被拍摄人物可能需要取得的同意。您授予我们一项有限许可，仅用于托管、复制、处理和传输这些内容，以便运营、维护和改进服务。"
+          "body": "你保留对所提交照片及其他内容的权利，但这些权利仍受第三方权利约束。你声明并保证，你拥有上传、处理、动态化、上色及以其他方式使用该内容所需的全部权利和许可，包括对被拍摄人物可能需要取得的同意。你授予我们一项有限许可，仅用于托管、复制、处理和传输这些内容，以便运营、维护和改进服务。"
         },
         "aiOutputs": {
           "title": "6. AI 生成结果",
-          "body": "生成结果由自动化系统产生，可能包含不准确之处、风格化痕迹或非预期效果。您有责任在分享、发布或依赖这些结果之前进行审核，并在您的使用场景中遵守与合成媒体、修改媒体相关的披露、同意和档案保存要求。"
+          "body": "生成结果由自动化系统产生，可能包含不准确之处、风格化痕迹或非预期效果。你有责任在分享、发布或依赖这些结果之前进行审核，并在你的使用场景中遵守与合成媒体、修改媒体相关的披露、同意和存档要求。"
         },
         "payments": {
           "title": "7. 支付、积分与订阅",
-          "body": "付费套餐、积分和订阅均通过 Stripe 处理。按次付费积分目前以固定额度销售，并可能在购买时披露的期限后过期。专业版订阅会按照结账时选择的计费周期自动续费，除非您在下一次续费前取消。除法律另有要求外，已支付费用通常不予退还，您需自行承担适用税费、拒付以及未结清款项。"
+          "body": "付费套餐、积分和订阅均通过 Stripe 处理。按次付费积分目前以固定额度出售，并可能在购买时披露的期限后过期。专业版订阅会按照结账时选择的计费周期自动续费，除非你在下一次续费前取消。除法律另有要求外，已支付费用通常不予退还，你需自行承担适用税费、拒付以及未结清款项。"
         },
         "termination": {
           "title": "8. 暂停与终止",
-          "body": "如果我们合理认为您违反了本条款、带来法律或安全风险、滥用服务，或未支付应付款项，我们可以暂停或终止您对服务的访问、移除相关内容，或限制部分功能。您也可以随时停止使用本服务。按其性质应继续有效的条款，在终止后仍然有效。"
+          "body": "如果我们合理认为你违反了本条款、带来法律或安全风险、滥用服务，或未支付应付款项，我们可以暂停或终止你对服务的访问、移除相关内容，或限制部分功能。你也可以随时停止使用本服务。按其性质应继续有效的条款，在终止后仍然有效。"
         },
         "changes": {
           "title": "9. 服务与条款变更",
-          "body": "我们可能修改、暂停或停止服务的任何部分，也可能不时更新本条款。若发生重要变更，我们会更新“最后更新”日期，并在适当情况下提供额外通知。变更生效后您继续使用本服务，即表示您接受更新后的条款。"
+          "body": "我们可能修改、暂停或停止服务的任何部分，也可能不时更新本条款。若发生重要变更，我们会更新“最后更新”日期，并在适当情况下提供额外通知。变更生效后你继续使用本服务，即表示你接受更新后的条款。"
         },
         "disclaimers": {
           "title": "10. 免责声明",
@@ -345,7 +347,7 @@
         },
         "liability": {
           "title": "11. 责任限制",
-          "body": "在法律允许的最大范围内，OldPhotoLive AI 及其服务提供商不对任何间接、附带、特殊、后果性、惩罚性损害，或利润、收入、商誉、数据和商业机会损失承担责任。如法律要求设定直接损害赔偿上限，我们在导致索赔事件发生前 12 个月内就相关付费服务向您收取的金额，将构成我们的责任总上限。"
+          "body": "在法律允许的最大范围内，OldPhotoLive AI 及其服务提供商不对任何间接、附带、特殊、后果性、惩罚性损害，或利润、收入、商誉、数据和商业机会损失承担责任。如法律要求设定直接损害赔偿上限，我们在导致索赔事件发生前 12 个月内就相关付费服务向你收取的金额，将构成我们的责任总上限。"
         }
       }
     }

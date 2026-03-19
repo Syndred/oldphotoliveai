@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { PRIVATE_PAGE_ROBOTS, buildPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -6,23 +7,14 @@ export async function generateMetadata({
   params: Promise<{ taskId: string }>;
 }): Promise<Metadata> {
   const { taskId } = await params;
-  return {
+
+  return buildPageMetadata({
     title: `Result ${taskId}`,
     description:
-      "View your AI-restored photo result — compare before and after, download colorized images and animated videos.",
-    openGraph: {
-      title: `Result ${taskId}`,
-      description:
-        "View your AI-restored photo result — compare before and after, download colorized images and animated videos.",
-      url: `https://oldphotoliveai.com/result/${taskId}`,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `Result ${taskId}`,
-      description:
-        "View your AI-restored photo result — compare before and after, download colorized images and animated videos.",
-    },
-  };
+      "View your AI-restored photo result and compare before-and-after output.",
+    path: `/result/${taskId}`,
+    robots: PRIVATE_PAGE_ROBOTS,
+  });
 }
 
 export default function ResultLayout({

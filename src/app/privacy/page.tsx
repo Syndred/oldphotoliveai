@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import Navbar from "@/components/Navbar";
 import FooterSection from "@/app/sections/FooterSection";
+import { Link } from "@/i18n/navigation";
 import { SUPPORT_EMAIL } from "@/lib/site";
 
 const LAST_UPDATED = "March 14, 2026";

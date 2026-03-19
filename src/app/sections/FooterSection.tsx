@@ -1,12 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 const FOOTER_LINKS = [
   { href: "/", key: "home" as const },
   { href: "/pricing", key: "pricing" as const },
-  { href: "/history", key: "history" as const },
   { href: "/privacy", key: "privacy" as const },
   { href: "/terms", key: "terms" as const },
 ] as const;

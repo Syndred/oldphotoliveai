@@ -6,29 +6,29 @@
 
 ```bash
 # Google OAuth
-GOOGLE_CLIENT_ID=341803678482-4m7nu6d259q9sdspoltjs6counhtjsjp.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your_google_client_secret
 
 # NextAuth
-NEXTAUTH_SECRET=k7X9mPqR3vLwYdN1sFhJ8tBcZeA4uGxO6iKjMnQrTp0=
+NEXTAUTH_SECRET=your_nextauth_secret
 NEXTAUTH_URL=https://oldphotoliveai.com  # ⚠️ 必须修改
 
 # Upstash Redis
-UPSTASH_REDIS_REST_URL=https://oriented-baboon-27035.upstash.io
-UPSTASH_REDIS_REST_TOKEN=AWmbAAIncDI5YTcxYTJlZGNjZGQ0MTMwOTVhNGExZTViMTM4NmI2N3AyMjcwMzU
+UPSTASH_REDIS_REST_URL=https://your-upstash-instance.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_rest_token
 
 # Cloudflare R2
-R2_ACCOUNT_ID=abf9a87a1055214a87809da4e41c64fb
-R2_ACCESS_KEY_ID=1eb9f4a20e0b8754635a379712e04421
-R2_SECRET_ACCESS_KEY=f44d07d782c71b1804e129f427a307b11f68465a064008b70e42303a694c8e93
+R2_ACCOUNT_ID=your_r2_account_id
+R2_ACCESS_KEY_ID=your_r2_access_key_id
+R2_SECRET_ACCESS_KEY=your_r2_secret_access_key
 R2_BUCKET_NAME=oldphotolive-dev  # ⚠️ 建议改为 oldphotolive-prod
 NEXT_PUBLIC_R2_DOMAIN=https://pub-1d53303d843e4e19a071284a6933ffb6.r2.dev
 
 # Replicate
-REPLICATE_API_TOKEN=r8_EpTCEFpBm62neswkO2IPRiBuSx6bWrj4DhCxX
+REPLICATE_API_TOKEN=your_replicate_api_token
 
 # Worker Secret
-WORKER_SECRET=wkr_s3cR3t_0ldPh0t0L1v3_2024xYz
+WORKER_SECRET=your_worker_secret
 ```
 
 ### ⚠️ Stripe 配置（暂时使用占位符）

@@ -2,17 +2,22 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import Navbar from "@/components/Navbar";
+import { localizePathname, type Locale } from "@/i18n/routing";
 
 export default function LoginPage() {
+  const locale = useLocale() as Locale;
+  const searchParams = useSearchParams();
   const t = useTranslations("auth");
   const tCommon = useTranslations("common");
   const [loading, setLoading] = useState(false);
 
   function handleSignIn() {
     setLoading(true);
-    signIn("google", { callbackUrl: "/" });
+    const callbackUrl = searchParams.get("callbackUrl") ?? localizePathname(locale, "/");
+    signIn("google", { callbackUrl });
   }
 
   return (

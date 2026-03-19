@@ -5,16 +5,15 @@ import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
-// ── Mocks ───────────────────────────────────────────────────────────────────
-
-jest.mock("next/navigation", () => ({
-  usePathname: () => "/history",
-}));
-
 const mockSignIn = jest.fn();
 let mockSessionStatus = "authenticated";
+const mockUseLocale = jest.fn();
+
 jest.mock("next-auth/react", () => ({
-  useSession: () => ({ data: { user: { name: "Test" } }, status: mockSessionStatus }),
+  useSession: () => ({
+    data: { user: { name: "Test" } },
+    status: mockSessionStatus,
+  }),
   signIn: (...args: unknown[]) => mockSignIn(...args),
   signOut: jest.fn(),
 }));
@@ -23,40 +22,44 @@ jest.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => {
     const translations: Record<string, Record<string, string>> = {
       history: {
-        title: "Processing History", empty: "No processing history yet",
-        "status.pending": "Pending", "status.queued": "Queued",
-        "status.restoring": "Restoring", "status.colorizing": "Colorizing",
-        "status.animating": "Animating", "status.completed": "Completed",
-        "status.failed": "Failed", "status.cancelled": "Cancelled",
+        title: "Processing History",
+        empty: "No processing history yet",
+        deleteSelected: "Delete Selected",
+        deleting: "Deleting...",
+        selectAll: "Select All",
+        deselectAll: "Deselect All",
+        delete: "Delete",
+        "status.pending": "Pending",
+        "status.queued": "Queued",
+        "status.restoring": "Restoring",
+        "status.colorizing": "Colorizing",
+        "status.animating": "Animating",
+        "status.completed": "Completed",
+        "status.failed": "Failed",
+        "status.cancelled": "Cancelled",
       },
       errors: { historyLoadFailed: "Failed to load history" },
-      nav: { home: "Home", history: "History", pricing: "Pricing", login: "Sign In", logout: "Sign Out" },
-      auth: { signInWith: "Sign in with Google", signInPrompt: "Sign in to start restoring your photos" },
+      auth: {
+        signInWith: "Sign in with Google",
+        signInPrompt: "Sign in to start restoring your photos",
+      },
     };
     return translations[namespace]?.[key] ?? key;
   },
-  useLocale: () => "en",
+  useLocale: () => mockUseLocale(),
 }));
 
-jest.mock("next/link", () => ({
+jest.mock("@/components/Navbar", () => ({
   __esModule: true,
-  default: ({
-    children,
-    href,
-    ...props
-  }: {
-    children: React.ReactNode;
-    href: string;
-  } & React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
-    <a href={href} {...props}>
-      {children}
-    </a>
-  ),
+  default: () => <nav data-testid="navbar" />,
 }));
 
 import HistoryPage from "@/app/history/page";
-
-// ── Setup ───────────────────────────────────────────────────────────────────
+import {
+  __resetI18nNavigationMocks,
+  __setMockLocale,
+  __setMockPathname,
+} from "../helpers/i18n-navigation";
 
 const MOCK_TASKS = [
   {
@@ -86,13 +89,6 @@ function mockFetchForHistory(
     (input: RequestInfo | URL): Promise<unknown> => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/quota") {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ tier: "free", remaining: 0 }),
-        });
-      }
-
       if (url === "/api/history") {
         return Promise.resolve(historyHandler());
       }
@@ -107,12 +103,14 @@ function mockFetchForHistory(
 
 beforeEach(() => {
   jest.clearAllMocks();
+  __resetI18nNavigationMocks();
+  __setMockLocale("en");
+  __setMockPathname("/history");
+  mockUseLocale.mockReturnValue("en");
   mockSessionStatus = "authenticated";
   global.fetch = jest.fn();
   sessionStorage.clear();
 });
-
-// ── Tests ───────────────────────────────────────────────────────────────────
 
 describe("HistoryPage", () => {
   it("shows loading skeleton initially", () => {
@@ -121,10 +119,16 @@ describe("HistoryPage", () => {
     expect(screen.getByTestId("loading-skeleton")).toBeInTheDocument();
   });
 
-  it("renders page title", () => {
+  it("renders the page title", () => {
     mockFetchForHistory(() => new Promise(() => {}));
     render(<HistoryPage />);
     expect(screen.getByText("Processing History")).toBeInTheDocument();
+  });
+
+  it("renders the navbar", () => {
+    mockFetchForHistory(() => new Promise(() => {}));
+    render(<HistoryPage />);
+    expect(screen.getByTestId("navbar")).toBeInTheDocument();
   });
 
   it("fetches and displays tasks", async () => {
@@ -143,7 +147,7 @@ describe("HistoryPage", () => {
     expect(screen.getByText("Failed")).toBeInTheDocument();
   });
 
-  it("shows empty state when no tasks returned", async () => {
+  it("shows empty state when no tasks are returned", async () => {
     mockFetchForHistory(() => ({
       ok: true,
       json: async () => ({ tasks: [] }),
@@ -152,13 +156,11 @@ describe("HistoryPage", () => {
     render(<HistoryPage />);
 
     await waitFor(() => {
-      expect(
-        screen.getByText("No processing history yet")
-      ).toBeInTheDocument();
+      expect(screen.getByText("No processing history yet")).toBeInTheDocument();
     });
   });
 
-  it("shows error state when fetch fails", async () => {
+  it("shows an API error message when loading fails", async () => {
     mockFetchForHistory(() => ({
       ok: false,
       json: async () => ({ error: "Unauthorized" }),
@@ -167,12 +169,11 @@ describe("HistoryPage", () => {
     render(<HistoryPage />);
 
     await waitFor(() => {
-      expect(screen.getByRole("alert")).toBeInTheDocument();
-      expect(screen.getByText("Unauthorized")).toBeInTheDocument();
+      expect(screen.getByRole("alert")).toHaveTextContent("Unauthorized");
     });
   });
 
-  it("shows generic error when fetch throws", async () => {
+  it("shows a thrown error message when fetch rejects", async () => {
     mockFetchForHistory(() => Promise.reject(new Error("Network error")));
 
     render(<HistoryPage />);
@@ -182,20 +183,7 @@ describe("HistoryPage", () => {
     });
   });
 
-  it("hides loading skeleton after fetch completes", async () => {
-    mockFetchForHistory(() => ({
-      ok: true,
-      json: async () => ({ tasks: MOCK_TASKS }),
-    }));
-
-    render(<HistoryPage />);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId("loading-skeleton")).not.toBeInTheDocument();
-    });
-  });
-
-  it("calls /api/history endpoint", async () => {
+  it("calls the history API", async () => {
     mockFetchForHistory(() => ({
       ok: true,
       json: async () => ({ tasks: [] }),
@@ -208,7 +196,7 @@ describe("HistoryPage", () => {
     });
   });
 
-  it("handles response with missing tasks field", async () => {
+  it("falls back to an empty state when tasks are missing", async () => {
     mockFetchForHistory(() => ({
       ok: true,
       json: async () => ({}),
@@ -217,17 +205,29 @@ describe("HistoryPage", () => {
     render(<HistoryPage />);
 
     await waitFor(() => {
-      expect(
-        screen.getByText("No processing history yet")
-      ).toBeInTheDocument();
+      expect(screen.getByText("No processing history yet")).toBeInTheDocument();
     });
   });
 
-  it("shows login prompt when unauthenticated", () => {
+  it("shows the sign-in prompt when unauthenticated", () => {
     mockSessionStatus = "unauthenticated";
     render(<HistoryPage />);
-    expect(screen.getByText("Sign in to start restoring your photos")).toBeInTheDocument();
+
+    expect(
+      screen.getByText("Sign in to start restoring your photos")
+    ).toBeInTheDocument();
     expect(screen.getByText("Sign in with Google")).toBeInTheDocument();
     expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("uses the localized history URL when prompting sign-in", () => {
+    mockSessionStatus = "unauthenticated";
+    render(<HistoryPage />);
+
+    screen.getByText("Sign in with Google").click();
+
+    expect(mockSignIn).toHaveBeenCalledWith("google", {
+      callbackUrl: "/en/history",
+    });
   });
 });

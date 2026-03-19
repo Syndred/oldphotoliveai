@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { resolveTaskErrorMessage } from "@/lib/task-error";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -40,9 +40,9 @@ const STATUS_BADGE: Record<string, { labelKey: string; className: string }> = {
 
 const PROCESSING_STATUSES = new Set(["restoring", "colorizing", "animating"]);
 
-function formatDate(iso: string): string {
+function formatDate(iso: string, locale: string): string {
   try {
-    return new Date(iso).toLocaleDateString(undefined, {
+    return new Date(iso).toLocaleDateString(locale, {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -64,6 +64,7 @@ export default function TaskHistoryList({
   onDelete,
   deleting = false,
 }: TaskHistoryListProps) {
+  const locale = useLocale();
   const t = useTranslations("history");
   const tErrors = useTranslations("errors");
 
@@ -181,7 +182,7 @@ export default function TaskHistoryList({
                 </div>
 
                 <p className="mt-1 text-xs text-[var(--color-text-secondary)] sm:text-sm">
-                  {formatDate(task.createdAt)}
+                  {formatDate(task.createdAt, locale)}
                 </p>
 
                 {isProcessing && (

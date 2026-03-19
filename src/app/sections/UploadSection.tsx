@@ -1,37 +1,49 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
 import UploadZone from "@/components/UploadZone";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { localizePathname, type Locale } from "@/i18n/routing";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { getContentSafetyCopy } from "@/lib/content-safety";
 
-export default function UploadSection() {
+interface UploadSectionProps {
+  title?: string;
+  subtitle?: string;
+  analyticsSource?: string;
+}
+
+export default function UploadSection({
+  title,
+  subtitle,
+  analyticsSource = "upload_section",
+}: UploadSectionProps = {}) {
   const router = useRouter();
+  const pathname = usePathname();
   const { status } = useSession();
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState("");
-  const locale = useLocale();
+  const locale = useLocale() as Locale;
   const t = useTranslations("upload");
   const tAuth = useTranslations("auth");
   const tErrors = useTranslations("errors");
   const contentSafety = getContentSafetyCopy(locale);
+  const localizedPathname = localizePathname(locale, pathname);
 
   async function handleUpload(imageKey: string) {
     // If not logged in, redirect to login
     if (status !== "authenticated") {
       trackAnalyticsEvent("sign_in_prompted_upload", {
-        source: "upload_section",
+        source: analyticsSource,
       });
-      signIn("google");
+      signIn("google", { callbackUrl: localizedPathname });
       return;
     }
 
     trackAnalyticsEvent("task_create_started", {
-      source: "upload_section",
+      source: analyticsSource,
     });
     setIsCreating(true);
     setError("");
@@ -50,12 +62,12 @@ export default function UploadSection() {
 
       const { taskId } = await res.json();
       trackAnalyticsEvent("task_create_succeeded", {
-        source: "upload_section",
+        source: analyticsSource,
       });
       router.push(`/result/${taskId}`);
     } catch (err) {
       trackAnalyticsEvent("task_create_failed", {
-        source: "upload_section",
+        source: analyticsSource,
       });
       setError(
         err instanceof Error ? err.message : tErrors("taskCreateFailed")
@@ -71,10 +83,10 @@ export default function UploadSection() {
     >
       <div className="mx-auto w-full max-w-6xl rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-4 shadow-xl backdrop-blur-sm sm:p-10">
         <h2 className="mb-2 bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-accent)] bg-clip-text text-center text-2xl font-bold text-transparent sm:text-4xl">
-          {t("title")}
+          {title ?? t("title")}
         </h2>
         <p className="mx-auto mb-6 max-w-2xl text-center text-sm leading-relaxed text-[var(--color-text-secondary)] sm:mb-8">
-          {t("subtitle")}
+          {subtitle ?? t("subtitle")}
         </p>
 
         {/* Login prompt for unauthenticated users */}
@@ -85,7 +97,9 @@ export default function UploadSection() {
             </p>
             <button
               type="button"
-              onClick={() => signIn("google")}
+              onClick={() =>
+                signIn("google", { callbackUrl: localizedPathname })
+              }
               className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-4 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 min-h-[44px] sm:mt-2 sm:w-auto sm:py-2"
             >
               {tAuth("signInWith")}

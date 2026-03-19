@@ -2,18 +2,22 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "next-intl";
-import { locales, LOCALE_COOKIE, type Locale } from "@/i18n/routing";
-import { reloadPage } from "@/lib/browser";
+import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
+import { locales, type Locale } from "@/i18n/routing";
 
 const LOCALE_LABELS: Record<Locale, string> = {
   en: "English",
-  zh: "中文",
-  es: "Español",
-  ja: "日本語",
+  zh: "\u7b80\u4f53\u4e2d\u6587",
+  es: "Espa\u00f1ol",
+  ja: "\u65e5\u672c\u8a9e",
 };
 
 export default function LanguageSwitcher() {
   const currentLocale = useLocale() as Locale;
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -45,9 +49,10 @@ export default function LanguageSwitcher() {
       return;
     }
 
-    document.cookie =
-      `${LOCALE_COOKIE}=${locale};path=/;max-age=${365 * 24 * 60 * 60};SameSite=Lax`;
-    reloadPage();
+    const query = Object.fromEntries(searchParams.entries());
+    const href = Object.keys(query).length > 0 ? { pathname, query } : pathname;
+    router.replace(href, { locale });
+    setOpen(false);
   }
 
   return (
@@ -69,7 +74,11 @@ export default function LanguageSwitcher() {
           strokeWidth={1.8}
           aria-hidden="true"
         >
-          <path d="M5.5 7.5L10 12l4.5-4.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="M5.5 7.5L10 12l4.5-4.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       </button>
 

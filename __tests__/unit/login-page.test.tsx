@@ -13,45 +13,38 @@ jest.mock("next-auth/react", () => ({
   signOut: jest.fn(),
 }));
 
-// Mock next/navigation (Navbar dependency)
+const mockSearchParamsGet = jest.fn();
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
-  usePathname: () => "/login",
-}));
-
-// Mock next/image (AuthButton dependency)
-jest.mock("next/image", () => ({
-  __esModule: true,
-  default: (props: Record<string, unknown>) => <img {...props} />,
-}));
-
-// Mock i18n/routing (LanguageSwitcher dependency)
-jest.mock("@/i18n/routing", () => ({
-  locales: ["en", "zh"],
-  LOCALE_COOKIE: "NEXT_LOCALE",
-}));
-
-// Mock lib/browser (LanguageSwitcher dependency)
-jest.mock("@/lib/browser", () => ({
-  reloadPage: jest.fn(),
+  useSearchParams: () => ({
+    get: (key: string) => mockSearchParamsGet(key),
+  }),
 }));
 
 // Mock next-intl
+const mockUseLocale = jest.fn();
 jest.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => {
     const translations: Record<string, Record<string, string>> = {
       auth: { signInWith: "Sign in with Google", signInPrompt: "Sign in to start restoring your photos" },
       nav: { home: "Home", history: "History", pricing: "Pricing", login: "Login", logout: "Logout" },
+      common: { loading: "Loading..." },
     };
     return translations[namespace]?.[key] ?? key;
   },
-  useLocale: () => "en",
+  useLocale: () => mockUseLocale(),
+}));
+
+jest.mock("@/components/Navbar", () => ({
+  __esModule: true,
+  default: () => <nav data-testid="navbar" />,
 }));
 
 import LoginPage from "@/app/login/page";
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockUseLocale.mockReturnValue("en");
+  mockSearchParamsGet.mockReturnValue(null);
 });
 
 describe("LoginPage", () => {
@@ -79,7 +72,20 @@ describe("LoginPage", () => {
     fireEvent.click(
       screen.getByRole("button", { name: /sign in with google/i })
     );
-    expect(mockSignIn).toHaveBeenCalledWith("google", { callbackUrl: "/" });
+    expect(mockSignIn).toHaveBeenCalledWith("google", { callbackUrl: "/en" });
+  });
+
+  it("uses callbackUrl from query string when provided", () => {
+    mockSearchParamsGet.mockImplementation((key: string) =>
+      key === "callbackUrl" ? "/zh/pricing" : null
+    );
+
+    render(<LoginPage />);
+    fireEvent.click(screen.getByRole("button", { name: /sign in with google/i }));
+
+    expect(mockSignIn).toHaveBeenCalledWith("google", {
+      callbackUrl: "/zh/pricing",
+    });
   });
 
   it("uses semantic HTML with main and section elements", () => {
@@ -92,8 +98,7 @@ describe("LoginPage", () => {
   });
 
   it("renders the Navbar", () => {
-    const { container } = render(<LoginPage />);
-    const nav = container.querySelector("nav");
-    expect(nav).toBeInTheDocument();
+    render(<LoginPage />);
+    expect(screen.getByTestId("navbar")).toBeInTheDocument();
   });
 });

@@ -58,7 +58,15 @@ function ArrowButton({
   );
 }
 
-export default function VideoShowcaseSection() {
+interface VideoShowcaseSectionProps {
+  title?: string;
+  subtitle?: string;
+}
+
+export default function VideoShowcaseSection({
+  title,
+  subtitle,
+}: VideoShowcaseSectionProps = {}) {
   const t = useTranslations("landing.videoShowcase");
   const [offset, setOffset] = useState(0);
   const total = VIDEO_SHOWCASE_ITEMS.length;
@@ -79,9 +87,11 @@ export default function VideoShowcaseSection() {
           <div className="mb-4">
             <div>
               <h3 className="text-base font-semibold text-[var(--color-text-primary)] sm:text-xl">
-                {t("title")}
+                {title ?? t("title")}
               </h3>
-              <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{t("subtitle")}</p>
+              <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                {subtitle ?? t("subtitle")}
+              </p>
             </div>
           </div>
 

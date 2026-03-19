@@ -5,6 +5,13 @@ import { getLocale, getMessages } from "next-intl/server";
 import Analytics from "@/components/Analytics";
 import Providers from "@/components/Providers";
 import RouteProgress from "@/components/RouteProgress";
+import {
+  BRAND_NAME,
+  SITE_DESCRIPTION,
+  SITE_TAGLINE,
+  SITE_URL,
+} from "@/lib/site";
+import { buildPageMetadata } from "@/lib/seo";
 import "./globals.css";
 
 const inter = Inter({
@@ -12,31 +19,37 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+const siteMetadata = buildPageMetadata({
+  title: BRAND_NAME,
+  description: SITE_DESCRIPTION,
+  path: "/",
+  keywords: [
+    "ai photo restoration",
+    "restore old photos online",
+    "photo colorization ai",
+    "animate old photos",
+    "old photo restoration",
+  ],
+});
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://oldphotoliveai.com"),
-  title: { default: "OldPhotoLive AI", template: "%s | OldPhotoLive AI" },
-  description:
-    "AI-powered photo restoration, colorization, and animation - transform faded memories into vivid moments",
+  ...siteMetadata,
+  metadataBase: new URL(SITE_URL),
+  applicationName: BRAND_NAME,
+  title: { default: BRAND_NAME, template: `%s | ${BRAND_NAME}` },
+  description: SITE_DESCRIPTION,
+  keywords: siteMetadata.keywords,
+  alternates: siteMetadata.alternates,
+  category: "photo restoration",
   openGraph: {
-    title: "OldPhotoLive AI",
-    description: "AI-powered photo restoration, colorization, and animation",
-    url: "https://oldphotoliveai.com",
-    siteName: "OldPhotoLive AI",
-    images: [
-      {
-        url: "/opengraph-image",
-        width: 1200,
-        height: 630,
-        alt: "OldPhotoLive AI",
-      },
-    ],
-    type: "website",
+    ...siteMetadata.openGraph,
+    title: BRAND_NAME,
+    description: SITE_TAGLINE,
   },
   twitter: {
-    card: "summary_large_image",
-    title: "OldPhotoLive AI",
-    description: "AI-powered photo restoration, colorization, and animation",
-    images: ["/twitter-image"],
+    ...siteMetadata.twitter,
+    title: BRAND_NAME,
+    description: SITE_TAGLINE,
   },
 };
 

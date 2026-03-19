@@ -5,49 +5,22 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
-// Mock next/navigation
-const mockPush = jest.fn();
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mockPush }),
-  usePathname: () => "/",
-}));
-
-jest.mock("next/link", () => ({
-  __esModule: true,
-  default: ({
-    children,
-    href,
-    ...props
-  }: {
-    children: React.ReactNode;
-    href: string;
-  } & React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
-    <a href={href} {...props}>
-      {children}
-    </a>
-  ),
-}));
-
-// Mock next-auth (default to authenticated)
 const mockSignIn = jest.fn();
 let mockSessionStatus = "authenticated";
+const mockUseLocale = jest.fn();
+
 jest.mock("next-auth/react", () => ({
-  useSession: () => ({ data: { user: { name: "Test" } }, status: mockSessionStatus }),
+  useSession: () => ({
+    data: mockSessionStatus === "authenticated" ? { user: { name: "Test" } } : null,
+    status: mockSessionStatus,
+  }),
   signIn: (...args: unknown[]) => mockSignIn(...args),
   signOut: jest.fn(),
 }));
 
-// Mock next-intl
 jest.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => {
     const translations: Record<string, Record<string, string>> = {
-      nav: {
-        home: "Home",
-        history: "History",
-        pricing: "Pricing",
-        login: "Sign In",
-        logout: "Sign Out",
-      },
       upload: {
         title: "Restore Your Old Photos",
         subtitle:
@@ -61,6 +34,16 @@ jest.mock("next-intl", () => ({
         signInWith: "Sign in with Google",
         signInPrompt: "Sign in to start restoring your photos",
       },
+      errors: {
+        taskCreateFailed: "Failed to create task",
+      },
+      nav: {
+        home: "Home",
+        history: "History",
+        pricing: "Pricing",
+        login: "Sign In",
+        logout: "Sign Out",
+      },
       pricing: {
         currentPlan: "Current Plan",
         free: "Free",
@@ -69,16 +52,58 @@ jest.mock("next-intl", () => ({
       },
       quota: {
         remaining: "{count} remaining",
-        resetsAt: "Resets at {time}",
-        unlimited: "Unlimited",
       },
     };
     return translations[namespace]?.[key] ?? key;
   },
-  useLocale: () => "en",
+  useLocale: () => mockUseLocale(),
 }));
 
-// Mock UploadZone to control onUpload callback
+jest.mock("@/components/Navbar", () => ({
+  __esModule: true,
+  default: () => <nav data-testid="navbar" />,
+}));
+
+jest.mock("@/app/sections/HeroSection", () => ({
+  __esModule: true,
+  default: () => <section data-testid="hero-section" />,
+}));
+
+jest.mock("@/app/sections/ShowcaseSection", () => ({
+  __esModule: true,
+  default: () => <section data-testid="showcase-section" />,
+}));
+
+jest.mock("@/app/sections/VideoShowcaseSection", () => ({
+  __esModule: true,
+  default: () => <section data-testid="video-showcase-section" />,
+}));
+
+jest.mock("@/app/sections/FeaturesSection", () => ({
+  __esModule: true,
+  default: () => <section data-testid="features-section" />,
+}));
+
+jest.mock("@/components/tool/ToolCardsSection", () => ({
+  __esModule: true,
+  default: () => <section data-testid="tool-pages-section" />,
+}));
+
+jest.mock("@/app/sections/HowItWorksSection", () => ({
+  __esModule: true,
+  default: () => <section data-testid="how-it-works-section" />,
+}));
+
+jest.mock("@/app/sections/FAQSection", () => ({
+  __esModule: true,
+  default: () => <section data-testid="faq-section" />,
+}));
+
+jest.mock("@/app/sections/FooterSection", () => ({
+  __esModule: true,
+  default: () => <footer data-testid="footer-section" />,
+}));
+
 jest.mock("@/components/UploadZone", () => {
   return function MockUploadZone({
     onUpload,
@@ -102,6 +127,12 @@ jest.mock("@/components/UploadZone", () => {
 });
 
 import HomePage from "@/app/page";
+import {
+  __resetI18nNavigationMocks,
+  __setMockLocale,
+  __setMockPathname,
+  mockRouterPush,
+} from "../helpers/i18n-navigation";
 
 function getRequestUrl(input: unknown): string {
   if (typeof input === "string") return input;
@@ -119,6 +150,10 @@ function getRequestUrl(input: unknown): string {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  __resetI18nNavigationMocks();
+  __setMockLocale("en");
+  __setMockPathname("/");
+  mockUseLocale.mockReturnValue("en");
   mockSessionStatus = "authenticated";
   global.fetch = jest.fn(async (input: unknown) => {
     const url = getRequestUrl(input);
@@ -130,7 +165,7 @@ beforeEach(() => {
 });
 
 describe("HomePage", () => {
-  it("renders title and subtitle", () => {
+  it("renders the upload title and subtitle", () => {
     render(<HomePage />);
     expect(screen.getByText("Restore Your Old Photos")).toBeInTheDocument();
     expect(
@@ -138,12 +173,12 @@ describe("HomePage", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders UploadZone component", () => {
+  it("renders the upload zone", () => {
     render(<HomePage />);
     expect(screen.getByTestId("upload-zone")).toBeInTheDocument();
   });
 
-  it("shows the content safety notice and terms link", () => {
+  it("shows the content safety notice and localized terms link", () => {
     render(<HomePage />);
 
     expect(screen.getByText("Content Safety")).toBeInTheDocument();
@@ -154,10 +189,10 @@ describe("HomePage", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Read our Terms of Service" })
-    ).toHaveAttribute("href", "/terms");
+    ).toHaveAttribute("href", "/en/terms");
   });
 
-  it("creates task and navigates to result page on successful upload", async () => {
+  it("creates a task and navigates to the localized result page", async () => {
     render(<HomePage />);
     fireEvent.click(screen.getByTestId("trigger-upload"));
 
@@ -170,11 +205,11 @@ describe("HomePage", () => {
     });
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/result/task-123");
+      expect(mockRouterPush).toHaveBeenCalledWith("/en/result/task-123");
     });
   });
 
-  it("shows loading state while creating task", async () => {
+  it("shows a loading state while creating a task", async () => {
     let resolveTask!: (value: unknown) => void;
     (global.fetch as jest.Mock).mockImplementation((input: unknown) => {
       const url = getRequestUrl(input);
@@ -199,10 +234,12 @@ describe("HomePage", () => {
     );
 
     resolveTask({ ok: true, json: async () => ({ taskId: "t1" }) });
-    await waitFor(() => expect(mockPush).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(mockRouterPush).toHaveBeenCalledWith("/en/result/t1")
+    );
   });
 
-  it("shows error when task creation fails", async () => {
+  it("shows an API error when task creation fails", async () => {
     (global.fetch as jest.Mock).mockImplementation(async (input: unknown) => {
       const url = getRequestUrl(input);
       if (url.endsWith("/api/tasks")) {
@@ -222,10 +259,10 @@ describe("HomePage", () => {
       expect(screen.getByRole("alert")).toHaveTextContent("Quota exceeded");
     });
 
-    expect(mockPush).not.toHaveBeenCalled();
+    expect(mockRouterPush).not.toHaveBeenCalled();
   });
 
-  it("shows generic error when fetch throws", async () => {
+  it("shows a thrown error when fetch rejects", async () => {
     (global.fetch as jest.Mock).mockImplementation((input: unknown) => {
       const url = getRequestUrl(input);
       if (url.endsWith("/api/tasks")) {
@@ -242,18 +279,21 @@ describe("HomePage", () => {
     });
   });
 
-  it("redirects to login when unauthenticated user tries to upload", () => {
+  it("redirects unauthenticated users to sign in with a localized callback URL", () => {
     mockSessionStatus = "unauthenticated";
     render(<HomePage />);
     fireEvent.click(screen.getByTestId("trigger-upload"));
 
-    expect(mockSignIn).toHaveBeenCalledWith("google");
+    expect(mockSignIn).toHaveBeenCalledWith("google", {
+      callbackUrl: "/en",
+    });
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
-  it("shows login prompt when not authenticated", () => {
+  it("shows the login prompt when unauthenticated", () => {
     mockSessionStatus = "unauthenticated";
     render(<HomePage />);
+
     expect(
       screen.getByText("Sign in to start restoring your photos")
     ).toBeInTheDocument();

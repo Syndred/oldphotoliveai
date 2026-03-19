@@ -6,45 +6,70 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
 const mockUseLocale = jest.fn();
+const mockSearchParamsEntries = jest.fn();
+
 jest.mock("next-intl", () => ({
   useLocale: () => mockUseLocale(),
 }));
 
-const mockReload = jest.fn();
-jest.mock("@/lib/browser", () => ({
-  reloadPage: (...args: unknown[]) => mockReload(...args),
+jest.mock("next/navigation", () => ({
+  useSearchParams: () => ({
+    entries: () => mockSearchParamsEntries(),
+  }),
 }));
 
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import {
+  __resetI18nNavigationMocks,
+  __setMockLocale,
+  __setMockPathname,
+  mockRouterReplace,
+} from "../helpers/i18n-navigation";
 
 beforeEach(() => {
   jest.clearAllMocks();
-  document.cookie = "NEXT_LOCALE=; max-age=0";
+  __resetI18nNavigationMocks();
+  __setMockLocale("en");
+  __setMockPathname("/pricing");
   mockUseLocale.mockReturnValue("en");
+  mockSearchParamsEntries.mockReturnValue([]);
 });
 
 describe("LanguageSwitcher", () => {
-  it("renders current locale label", () => {
+  it("renders the current locale label", () => {
     render(<LanguageSwitcher />);
     expect(screen.getByText("English")).toBeInTheDocument();
   });
 
-  it("renders current locale label for zh", () => {
+  it("renders the zh locale label correctly", () => {
+    __setMockLocale("zh");
     mockUseLocale.mockReturnValue("zh");
+
     render(<LanguageSwitcher />);
-    expect(screen.getByText("中文")).toBeInTheDocument();
+
+    expect(screen.getByText("\u7b80\u4f53\u4e2d\u6587")).toBeInTheDocument();
   });
 
-  it("opens a themed menu with four language options", () => {
+  it("opens a menu with four language options", () => {
     render(<LanguageSwitcher />);
 
     fireEvent.click(screen.getByRole("button", { name: "Open language menu" }));
 
-    expect(screen.getByRole("menu", { name: "Language options" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("menu", { name: "Language options" })
+    ).toBeInTheDocument();
     expect(screen.getByRole("menuitemradio", { name: "English" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitemradio", { name: "中文" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitemradio", { name: "Español" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitemradio", { name: "日本語" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitemradio", {
+        name: "\u7b80\u4f53\u4e2d\u6587",
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitemradio", { name: "Espa\u00f1ol" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitemradio", { name: "\u65e5\u672c\u8a9e" })
+    ).toBeInTheDocument();
   });
 
   it("marks the current locale as selected", () => {
@@ -52,34 +77,40 @@ describe("LanguageSwitcher", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Open language menu" }));
 
-    expect(screen.getByRole("menuitemradio", { name: "English" })).toHaveAttribute(
-      "aria-checked",
-      "true"
-    );
-    expect(screen.getByRole("menuitemradio", { name: "中文" })).toHaveAttribute(
-      "aria-checked",
-      "false"
-    );
+    expect(
+      screen.getByRole("menuitemradio", { name: "English" })
+    ).toHaveAttribute("aria-checked", "true");
+    expect(
+      screen.getByRole("menuitemradio", {
+        name: "\u7b80\u4f53\u4e2d\u6587",
+      })
+    ).toHaveAttribute("aria-checked", "false");
   });
 
-  it("sets cookie and reloads when switching locale", () => {
+  it("navigates to the localized route when switching locale", () => {
+    mockSearchParamsEntries.mockReturnValue([["tab", "billing"]]);
     render(<LanguageSwitcher />);
 
     fireEvent.click(screen.getByRole("button", { name: "Open language menu" }));
-    fireEvent.click(screen.getByRole("menuitemradio", { name: "Español" }));
+    fireEvent.click(
+      screen.getByRole("menuitemradio", { name: "Espa\u00f1ol" })
+    );
 
-    expect(document.cookie).toContain("NEXT_LOCALE=es");
-    expect(mockReload).toHaveBeenCalledTimes(1);
+    expect(mockRouterReplace).toHaveBeenCalledWith("/es/pricing?tab=billing", {
+      locale: "es",
+    });
   });
 
-  it("closes the menu without reloading when clicking the current locale", () => {
+  it("closes the menu without navigation when clicking the current locale", () => {
     render(<LanguageSwitcher />);
 
     fireEvent.click(screen.getByRole("button", { name: "Open language menu" }));
     fireEvent.click(screen.getByRole("menuitemradio", { name: "English" }));
 
-    expect(mockReload).not.toHaveBeenCalled();
-    expect(screen.queryByRole("menu", { name: "Language options" })).not.toBeInTheDocument();
+    expect(mockRouterReplace).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole("menu", { name: "Language options" })
+    ).not.toBeInTheDocument();
   });
 
   it("closes the menu on outside click", () => {
@@ -91,11 +122,15 @@ describe("LanguageSwitcher", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Open language menu" }));
-    expect(screen.getByRole("menu", { name: "Language options" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("menu", { name: "Language options" })
+    ).toBeInTheDocument();
 
     fireEvent.mouseDown(screen.getByTestId("outside"));
 
-    expect(screen.queryByRole("menu", { name: "Language options" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("menu", { name: "Language options" })
+    ).not.toBeInTheDocument();
   });
 
   it("updates aria-expanded as the menu opens and closes", () => {

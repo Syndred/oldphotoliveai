@@ -1,22 +1,17 @@
 import { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: "Pricing",
   description:
-    "Choose the right plan for your photo restoration needs - free tier available, upgrade for more credits and watermark-free downloads.",
-  openGraph: {
-    title: "Pricing",
-    description:
-      "Choose the right plan for your photo restoration needs - free tier available, upgrade for more credits and watermark-free downloads.",
-    url: "https://oldphotoliveai.com/pricing",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Pricing",
-    description:
-      "Choose the right plan for your photo restoration needs - free tier available, upgrade for more credits and watermark-free downloads.",
-  },
-};
+    "Choose the right plan for AI photo restoration, colorization, and animation. Start free or upgrade for watermark-free exports and higher output quality.",
+  path: "/pricing",
+  keywords: [
+    "ai photo restoration pricing",
+    "old photo restoration online pricing",
+    "restore old photos online",
+  ],
+});
 
 export default function PricingLayout({
   children,

@@ -80,26 +80,9 @@ jest.mock("next-intl", () => ({
   useLocale: () => "en",
 }));
 
-// Mock next/navigation
-jest.mock("next/navigation", () => ({
-  usePathname: () => "/pricing",
-}));
-
-// Mock next/link
-jest.mock("next/link", () => ({
+jest.mock("@/components/Navbar", () => ({
   __esModule: true,
-  default: ({
-    children,
-    href,
-    ...props
-  }: {
-    children: React.ReactNode;
-    href: string;
-  } & React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
-    <a href={href} {...props}>
-      {children}
-    </a>
-  ),
+  default: () => <nav data-testid="navbar" />,
 }));
 
 import PricingCards from "@/components/PricingCards";
@@ -378,7 +361,7 @@ describe("PricingPage", () => {
 
   it("renders the Navbar", () => {
     render(<PricingPage />);
-    expect(screen.getByText("OldPhotoLive AI")).toBeInTheDocument();
+    expect(screen.getByTestId("navbar")).toBeInTheDocument();
   });
 
   it("renders PricingCards component", () => {

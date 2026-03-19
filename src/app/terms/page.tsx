@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import Navbar from "@/components/Navbar";
 import FooterSection from "@/app/sections/FooterSection";
+import { Link } from "@/i18n/navigation";
 import { getContentSafetyCopy } from "@/lib/content-safety";
 import { SUPPORT_EMAIL } from "@/lib/site";
 

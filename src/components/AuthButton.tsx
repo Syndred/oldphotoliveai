@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
+import { usePathname } from "@/i18n/navigation";
+import { localizePathname, type Locale } from "@/i18n/routing";
 import type { UserTier } from "@/types";
 
 function parseUserTier(value: unknown): UserTier | null {
@@ -23,10 +25,13 @@ interface AuthButtonProps {
 
 export default function AuthButton({ tierBadgeText = null }: AuthButtonProps) {
   const { data: session, status } = useSession();
+  const locale = useLocale() as Locale;
+  const pathname = usePathname();
   const t = useTranslations("nav");
   const tPricing = useTranslations("pricing");
   const [signingIn, setSigningIn] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const localizedPathname = localizePathname(locale, pathname);
   const tier = parseUserTier(
     (session?.user as Record<string, unknown> | undefined)?.tier
   );
@@ -47,7 +52,10 @@ export default function AuthButton({ tierBadgeText = null }: AuthButtonProps) {
   if (!session) {
     return (
       <button
-        onClick={() => { setSigningIn(true); signIn("google"); }}
+        onClick={() => {
+          setSigningIn(true);
+          signIn("google", { callbackUrl: localizedPathname });
+        }}
         disabled={signingIn}
         className="min-h-[44px] whitespace-nowrap rounded-md bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-3 py-2 text-xs font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60 sm:px-4 sm:text-sm"
       >

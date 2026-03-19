@@ -5,6 +5,8 @@ const config: Config = {
   testEnvironment: "node",
   roots: ["<rootDir>/src", "<rootDir>/__tests__"],
   moduleNameMapper: {
+    "^@/i18n/navigation$": "<rootDir>/__tests__/helpers/i18n-navigation.tsx",
+    "^next-intl/routing$": "<rootDir>/__tests__/helpers/next-intl-routing.ts",
     "^@/(.*)$": "<rootDir>/src/$1",
   },
   testMatch: [

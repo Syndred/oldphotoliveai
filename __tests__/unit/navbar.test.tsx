@@ -15,12 +15,6 @@ jest.mock("next-auth/react", () => ({
   signOut: (...args: unknown[]) => mockSignOut(...args),
 }));
 
-// Mock next/navigation
-const mockUsePathname = jest.fn();
-jest.mock("next/navigation", () => ({
-  usePathname: () => mockUsePathname(),
-}));
-
 // Mock next/image
 jest.mock("next/image", () => ({
   __esModule: true,
@@ -30,30 +24,20 @@ jest.mock("next/image", () => ({
   },
 }));
 
-// Mock next/link
-jest.mock("next/link", () => ({
-  __esModule: true,
-  default: ({
-    children,
-    href,
-    ...props
-  }: {
-    children: React.ReactNode;
-    href: string;
-  } & React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
-    <a href={href} {...props}>
-      {children}
-    </a>
-  ),
-}));
-
 // Mock next-intl
+const mockUseLocale = jest.fn();
 jest.mock("next-intl", () => ({
   useTranslations:
     (namespace: string) =>
     (key: string, params?: Record<string, string | number>) => {
     const translations: Record<string, Record<string, string>> = {
-      nav: { home: "Home", history: "History", pricing: "Pricing", login: "Sign In", logout: "Sign Out" },
+      nav: {
+        home: "Home",
+        history: "History",
+        pricing: "Pricing",
+        login: "Sign In",
+        logout: "Sign Out",
+      },
       pricing: { free: "Free", payAsYouGo: "Pay As You Go", professional: "Professional", currentPlan: "Current Plan" },
       quota: { remaining: "{count} remaining" },
     };
@@ -65,11 +49,16 @@ jest.mock("next-intl", () => ({
     }
     return value;
   },
-  useLocale: () => "en",
+  useLocale: () => mockUseLocale(),
 }));
 
 import AuthButton from "@/components/AuthButton";
 import Navbar from "@/components/Navbar";
+import {
+  __resetI18nNavigationMocks,
+  __setMockLocale,
+  __setMockPathname,
+} from "../helpers/i18n-navigation";
 
 function getRequestUrl(input: unknown): string {
   if (typeof input === "string") return input;
@@ -88,6 +77,10 @@ function getRequestUrl(input: unknown): string {
 describe("AuthButton", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    __resetI18nNavigationMocks();
+    __setMockLocale("en");
+    __setMockPathname("/");
+    mockUseLocale.mockReturnValue("en");
     global.fetch = jest.fn(async () => ({
       ok: true,
       json: async () => ({
@@ -119,7 +112,9 @@ describe("AuthButton", () => {
     mockUseSession.mockReturnValue({ data: null, status: "unauthenticated" });
     render(<AuthButton />);
     screen.getByText("Sign In").click();
-    expect(mockSignIn).toHaveBeenCalledWith("google");
+    expect(mockSignIn).toHaveBeenCalledWith("google", {
+      callbackUrl: "/en",
+    });
   });
 
   it("shows user info and Sign Out when authenticated", () => {
@@ -167,6 +162,10 @@ describe("AuthButton", () => {
 describe("Navbar", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    __resetI18nNavigationMocks();
+    __setMockLocale("en");
+    __setMockPathname("/");
+    mockUseLocale.mockReturnValue("en");
     mockUseSession.mockReturnValue({ data: null, status: "unauthenticated" });
     global.fetch = jest.fn(async (input: unknown) => {
       const url = getRequestUrl(input);
@@ -189,42 +188,42 @@ describe("Navbar", () => {
   });
 
   it("renders the logo text", () => {
-    mockUsePathname.mockReturnValue("/");
+    __setMockPathname("/");
     render(<Navbar />);
     expect(screen.getByText("OldPhotoLive AI")).toBeInTheDocument();
   });
 
   it("renders all navigation links", () => {
-    mockUsePathname.mockReturnValue("/");
+    __setMockPathname("/");
     render(<Navbar />);
     expect(screen.getByText("Home")).toBeInTheDocument();
-    expect(screen.getByText("History")).toBeInTheDocument();
     expect(screen.getByText("Pricing")).toBeInTheDocument();
+    expect(screen.queryByText("History")).not.toBeInTheDocument();
   });
 
   it("links point to correct routes", () => {
-    mockUsePathname.mockReturnValue("/");
+    __setMockPathname("/");
     render(<Navbar />);
-    expect(screen.getByText("Home").closest("a")).toHaveAttribute("href", "/");
-    expect(screen.getByText("History").closest("a")).toHaveAttribute(
-      "href",
-      "/history"
-    );
+    expect(screen.getByText("Home").closest("a")).toHaveAttribute("href", "/en");
     expect(screen.getByText("Pricing").closest("a")).toHaveAttribute(
       "href",
-      "/pricing"
+      "/en/pricing"
     );
   });
 
   it("highlights active Home link when on /", () => {
-    mockUsePathname.mockReturnValue("/");
+    __setMockPathname("/");
     render(<Navbar />);
     const homeLink = screen.getByText("Home").closest("a");
     expect(homeLink?.className).toContain("text-white");
   });
 
   it("highlights active History link when on /history", () => {
-    mockUsePathname.mockReturnValue("/history");
+    __setMockPathname("/history");
+    mockUseSession.mockReturnValue({
+      data: { user: { name: "History User", email: "history@example.com" } },
+      status: "authenticated",
+    });
     render(<Navbar />);
     const historyLink = screen.getByText("History").closest("a");
     // Active link has "text-white" as a standalone class (not just in hover:text-white)
@@ -235,14 +234,28 @@ describe("Navbar", () => {
   });
 
   it("includes AuthButton", () => {
-    mockUsePathname.mockReturnValue("/");
+    __setMockPathname("/");
     render(<Navbar />);
     // AuthButton renders Sign In when unauthenticated
     expect(screen.getByText("Sign In")).toBeInTheDocument();
   });
 
+  it("shows History link for authenticated users", () => {
+    __setMockPathname("/");
+    mockUseSession.mockReturnValue({
+      data: { user: { name: "Paid User", email: "paid@example.com" } },
+      status: "authenticated",
+    });
+
+    render(<Navbar />);
+    expect(screen.getByText("History").closest("a")).toHaveAttribute(
+      "href",
+      "/en/history"
+    );
+  });
+
   it("shows themed tier badge next to username for authenticated user", () => {
-    mockUsePathname.mockReturnValue("/");
+    __setMockPathname("/");
     mockUseSession.mockReturnValue({
       data: {
         user: { name: "Paid User", email: "paid@example.com", tier: "professional" },
@@ -256,7 +269,7 @@ describe("Navbar", () => {
   });
 
   it("shows tier badge in mobile menu when expanded", () => {
-    mockUsePathname.mockReturnValue("/");
+    __setMockPathname("/");
     mockUseSession.mockReturnValue({
       data: {
         user: { name: "Paid User", email: "paid@example.com", tier: "professional" },
@@ -272,7 +285,7 @@ describe("Navbar", () => {
   });
 
   it("shows pay-as-you-go remaining count in tier badge", async () => {
-    mockUsePathname.mockReturnValue("/");
+    __setMockPathname("/");
     mockUseSession.mockReturnValue({
       data: {
         user: { name: "Payg User", email: "payg@example.com", tier: "pay_as_you_go" },
@@ -308,9 +321,9 @@ describe("Navbar", () => {
   });
 
   it("logo links to home page", () => {
-    mockUsePathname.mockReturnValue("/pricing");
+    __setMockPathname("/pricing");
     render(<Navbar />);
     const logo = screen.getByText("OldPhotoLive AI").closest("a");
-    expect(logo).toHaveAttribute("href", "/");
+    expect(logo).toHaveAttribute("href", "/en");
   });
 });

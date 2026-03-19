@@ -15,6 +15,7 @@
   },
   "nav": {
     "home": "Home",
+    "guides": "Guides",
     "history": "History",
     "pricing": "Pricing",
     "login": "Sign In",
@@ -26,8 +27,8 @@
     "dragDrop": "Drag and drop your photo here",
     "browse": "browse files",
     "supportedFormats": "Supports JPEG, PNG, WebP (max 10 MB)",
-    "uploading": "Uploading… {progress}%",
-    "creatingTask": "Creating task…"
+    "uploading": "Uploading... {progress}%",
+    "creatingTask": "Creating task..."
   },
   "processing": {
     "title": "Processing Your Photo",
@@ -35,7 +36,7 @@
     "step2": "Restore",
     "step3": "Colorize",
     "step4": "Animate",
-    "pending": "Waiting in queue…",
+    "pending": "Waiting in queue...",
     "completed": "Processing complete",
     "connectionLost": "Connection lost",
     "previewRestored": "Restored",
@@ -51,7 +52,7 @@
     "downloadVideo": "Download Video",
     "failed": "Processing Failed",
     "retryMessage": "Something went wrong. Please try again.",
-    "retrying": "Retrying…"
+    "retrying": "Retrying..."
   },
   "pricing": {
     "title": "Choose Your Plan",
@@ -66,12 +67,12 @@
     "includedInProfessional": "Included in Professional",
     "manageSubscription": "Manage Subscription",
     "scheduledCancellation": "Scheduled to downgrade to Free on {date} at period end.",
-    "redirecting": "Redirecting…",
+    "redirecting": "Redirecting...",
     "freeDesc": "Try it out",
     "payAsYouGoDesc": "For occasional use",
     "professionalDesc": "Best value",
     "freeFeature1": "1 photo per day",
-    "freeFeature2": "Image export up to 800×600",
+    "freeFeature2": "Image export up to 800x600",
     "freeFeature3": "480p video output",
     "freeFeature4": "Watermark on image output",
     "payFeature1": "1 credit",
@@ -154,7 +155,7 @@
   "landing": {
     "hero": {
       "title": "Bring Your Old Photos Back to Life",
-      "subtitle": "AI-powered restoration, colorization, and animation — transform faded memories into vivid moments",
+      "subtitle": "AI-powered restoration, colorization, and animation - transform faded memories into vivid moments",
       "cta": "Try It Free"
     },
     "showcase": {
@@ -231,12 +232,13 @@
       "description": "AI-powered photo restoration, colorization, and animation",
       "links": {
         "home": "Home",
+        "guides": "Guides",
         "pricing": "Pricing",
         "history": "History",
         "privacy": "Privacy",
         "terms": "Terms"
       },
-      "copyright": "© 2025 OldPhotoLive AI. All rights reserved."
+      "copyright": "Copyright 2025 OldPhotoLive AI. All rights reserved."
     }
   },
   "legal": {
