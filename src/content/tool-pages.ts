@@ -73,41 +73,41 @@ export interface ToolSectionCopy {
 
 const TOOL_SECTION_COPY_BY_LOCALE: Record<Locale, ToolSectionCopy> = {
   en: {
-    eyebrow: "Old photo tools",
-    title: "Choose the workflow that fits your photo",
+    eyebrow: "Popular tools",
+    title: "Pick the tool you need",
     description:
-      "Restore fading, repair damage, add natural color, or turn a family portrait into a short animated memory.",
-    exploreWorkflowLabel: "Explore this workflow",
+      "Restore, repair, colorize, or animate old family photos in one place.",
+    exploreWorkflowLabel: "Open tool",
     seePricingLabel: "See pricing",
     comparePlansLabel: "Compare plans",
     homeLabel: "Home",
   },
   zh: {
-    eyebrow: "老照片工具",
-    title: "按照片问题选择合适的处理方式",
+    eyebrow: "热门工具",
+    title: "选择你现在要用的工具",
     description:
-      "修复褪色、补划痕、给黑白照片上色，或把老照片生成自然微动视频。",
-    exploreWorkflowLabel: "查看这个工作流",
+      "在一个站内完成老照片修复、补损、上色和动态化。",
+    exploreWorkflowLabel: "打开工具",
     seePricingLabel: "查看价格",
     comparePlansLabel: "比较方案",
     homeLabel: "首页",
   },
   es: {
     eyebrow: "Herramientas",
-    title: "Elige el flujo adecuado para tu foto",
+    title: "Elige la herramienta que necesitas",
     description:
-      "Restaura desvanecimiento, repara daños, añade color natural o convierte un retrato familiar en un clip animado.",
-    exploreWorkflowLabel: "Ver este flujo",
+      "Restaura, repara, coloriza o anima fotos familiares antiguas desde un solo sitio.",
+    exploreWorkflowLabel: "Abrir herramienta",
     seePricingLabel: "Ver precios",
     comparePlansLabel: "Comparar planes",
     homeLabel: "Inicio",
   },
   ja: {
-    eyebrow: "写真ツール",
-    title: "写真に合った処理を選べる",
+    eyebrow: "人気ツール",
+    title: "今使いたいツールを選べる",
     description:
-      "色あせ補正、傷の修復、白黒写真のカラー化、自然な写真アニメーションまでまとめて選べます。",
-    exploreWorkflowLabel: "このワークフローを見る",
+      "古い家族写真の修復、補修、カラー化、アニメーションを1つのサイトで行えます。",
+    exploreWorkflowLabel: "ツールを開く",
     seePricingLabel: "料金を見る",
     comparePlansLabel: "プランを比較",
     homeLabel: "ホーム",

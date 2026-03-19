@@ -92,16 +92,11 @@ export default function ToolLandingPage({
           </div>
         </section>
 
-        <section className="px-4 py-4 sm:py-6">
-          <div className="mx-auto max-w-6xl rounded-2xl border border-white/8 bg-white/[0.025] p-6">
-            <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">
-              {tool.introTitle}
-            </h2>
-            <p className="mt-3 max-w-4xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
-              {tool.introBody}
-            </p>
-          </div>
-        </section>
+        <UploadSection
+          title={tool.uploadTitle}
+          subtitle={tool.uploadSubtitle}
+          analyticsSource={tool.slug}
+        />
 
         {tool.showcaseKind === "animation" ? (
           <VideoShowcaseSection
@@ -143,26 +138,31 @@ export default function ToolLandingPage({
 
         <HowItWorksSection />
 
-        <UploadSection
-          title={tool.uploadTitle}
-          subtitle={tool.uploadSubtitle}
-          analyticsSource={tool.slug}
-        />
-
         <section className="px-4 py-4 sm:py-6">
-          <div className="mx-auto max-w-6xl rounded-2xl border border-[var(--color-accent)]/18 bg-[var(--color-accent)]/8 p-6">
-            <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">
-              {tool.pricingTitle}
-            </h2>
-            <p className="mt-3 max-w-4xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
-              {tool.pricingBody}
-            </p>
-            <Link
-              href="/pricing"
-              className="mt-5 inline-flex min-h-[44px] items-center rounded-full border border-[var(--color-accent)]/30 bg-black/15 px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/50 hover:bg-black/25"
-            >
-              {sectionCopy.comparePlansLabel}
-            </Link>
+          <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-[1.2fr,0.8fr]">
+            <div className="rounded-2xl border border-white/8 bg-white/[0.025] p-6">
+              <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">
+                {tool.introTitle}
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                {tool.introBody}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-[var(--color-accent)]/18 bg-[var(--color-accent)]/8 p-6">
+              <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">
+                {tool.pricingTitle}
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                {tool.pricingBody}
+              </p>
+              <Link
+                href="/pricing"
+                className="mt-5 inline-flex min-h-[44px] items-center rounded-full border border-[var(--color-accent)]/30 bg-black/15 px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/50 hover:bg-black/25"
+              >
+                {sectionCopy.comparePlansLabel}
+              </Link>
+            </div>
           </div>
         </section>
 
