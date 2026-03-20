@@ -5,8 +5,9 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { getUserTasks, deleteTask, getTaskOwnedByUser } from "@/lib/redis";
-import { getR2CdnUrl, deleteTaskFiles } from "@/lib/r2";
+import { deleteTaskFiles } from "@/lib/r2";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
+import { buildTaskAssetUrl } from "@/lib/task-assets";
 
 export async function GET(request: NextRequest) {
   const locale = getRequestLocale(request);
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
       createdAt: task.createdAt,
       completedAt: task.completedAt,
       thumbnailUrl: task.originalImageKey
-        ? getR2CdnUrl(task.originalImageKey)
+        ? buildTaskAssetUrl(task.id, "original")
         : null,
       errorMessage: task.status === "failed" ? task.errorMessage : null,
     }));

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import AdminPageView from "@/components/admin/AdminPageView";
 
 export const metadata: Metadata = {
-  title: "Admin Tools",
+  title: "管理面板",
   robots: {
     index: false,
     follow: false,

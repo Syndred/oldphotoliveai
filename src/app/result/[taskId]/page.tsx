@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import ProgressIndicator from "@/components/ProgressIndicator";
 import BeforeAfterCompare from "@/components/BeforeAfterCompare";
 import VideoPlayer from "@/components/VideoPlayer";
-import { buildCdnUrl } from "@/lib/url";
+import { buildTaskAssetUrl } from "@/lib/task-assets";
 import { resolveTaskErrorMessage } from "@/lib/task-error";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -110,6 +110,15 @@ export default function ResultPage() {
   }
 
   const showProgress = needsPolling && !result && !error;
+  const originalAssetUrl = buildTaskAssetUrl(taskId, "original");
+  const colorizedAssetUrl = buildTaskAssetUrl(taskId, "colorized");
+  const animationAssetUrl = buildTaskAssetUrl(taskId, "animation");
+  const colorizedDownloadUrl = buildTaskAssetUrl(taskId, "colorized", {
+    download: true,
+  });
+  const animationDownloadUrl = buildTaskAssetUrl(taskId, "animation", {
+    download: true,
+  });
 
   return (
     <div className="min-h-screen bg-[var(--color-primary-bg)]">
@@ -180,8 +189,8 @@ export default function ResultPage() {
                 {tResult("beforeAfter")}
               </h2>
               <BeforeAfterCompare
-                beforeUrl={buildCdnUrl(result.originalImageKey)}
-                afterUrl={buildCdnUrl(result.colorizedImageKey)}
+                beforeUrl={originalAssetUrl}
+                afterUrl={colorizedAssetUrl}
               />
             </section>
 
@@ -190,13 +199,13 @@ export default function ResultPage() {
               <h2 className="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">
                 {tResult("animation")}
               </h2>
-              <VideoPlayer src={buildCdnUrl(result.animationVideoKey)} showWatermark={isFreeTier} />
+              <VideoPlayer src={animationAssetUrl} showWatermark={isFreeTier} />
             </section>
 
             {/* Download buttons */}
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
               <a
-                href={buildCdnUrl(result.colorizedImageKey)}
+                href={colorizedDownloadUrl}
                 download
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 min-h-[44px]"
               >
@@ -204,7 +213,7 @@ export default function ResultPage() {
                 {tResult("downloadImage")}
               </a>
               <a
-                href={buildCdnUrl(result.animationVideoKey)}
+                href={animationDownloadUrl}
                 download
                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-accent)] px-6 py-3 text-sm font-medium text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent)]/10 min-h-[44px]"
               >

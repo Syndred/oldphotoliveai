@@ -5,12 +5,17 @@ import { uploadToR2, getR2CdnUrl } from "@/lib/r2";
 import { applyImageWatermark, resizeImage } from "@/lib/watermark";
 import type { Task, User } from "@/types";
 
+const mockUuidV4 = jest.fn();
+
 // ── Mocks ───────────────────────────────────────────────────────────────────
 
 jest.mock("@/lib/redis");
 jest.mock("@/lib/replicate");
 jest.mock("@/lib/r2");
 jest.mock("@/lib/watermark");
+jest.mock("uuid", () => ({
+  v4: () => mockUuidV4(),
+}));
 
 const mockGetTask = getTask as jest.MockedFunction<typeof getTask>;
 const mockUpdateTaskStatus = updateTaskStatus as jest.MockedFunction<typeof updateTaskStatus>;
@@ -30,6 +35,10 @@ global.fetch = mockFetch as unknown as typeof fetch;
 
 const TASK_ID = "task-123";
 const USER_ID = "user-456";
+const ASSET_UUID = "asset-uuid";
+const RESTORED_KEY = `tasks/${TASK_ID}/restored-${ASSET_UUID}.jpg`;
+const COLORIZED_KEY = `tasks/${TASK_ID}/colorized-${ASSET_UUID}.jpg`;
+const ANIMATION_KEY = `tasks/${TASK_ID}/animation-${ASSET_UUID}.mp4`;
 
 function makeTask(overrides?: Partial<Task>): Task {
   return {
@@ -112,6 +121,7 @@ function setupSuccessfulPipeline() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockUuidV4.mockReset().mockReturnValue(ASSET_UUID);
 });
 
 // ── Tests ───────────────────────────────────────────────────────────────────
@@ -134,7 +144,7 @@ describe("executePipeline", () => {
         TASK_ID,
         "completed",
         {
-          animationVideoKey: `tasks/${TASK_ID}/animation.mp4`,
+          animationVideoKey: ANIMATION_KEY,
           errorMessage: null,
           internalErrorMessage: null,
           failureStage: null,
@@ -159,19 +169,19 @@ describe("executePipeline", () => {
       // Restored image uploaded
       expect(mockUploadToR2).toHaveBeenCalledWith(
         expect.any(Buffer),
-        `tasks/${TASK_ID}/restored.jpg`,
+        RESTORED_KEY,
         "image/jpeg"
       );
       // Colorized image uploaded
       expect(mockUploadToR2).toHaveBeenCalledWith(
         expect.any(Buffer),
-        `tasks/${TASK_ID}/colorized.jpg`,
+        COLORIZED_KEY,
         "image/jpeg"
       );
       // Animation video uploaded
       expect(mockUploadToR2).toHaveBeenCalledWith(
         expect.any(Buffer),
-        `tasks/${TASK_ID}/animation.mp4`,
+        ANIMATION_KEY,
         "video/mp4"
       );
     });
@@ -184,7 +194,7 @@ describe("executePipeline", () => {
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(
         TASK_ID,
         "colorizing",
-        { restoredImageKey: `tasks/${TASK_ID}/restored.jpg` }
+        { restoredImageKey: RESTORED_KEY }
       );
     });
 
@@ -196,7 +206,7 @@ describe("executePipeline", () => {
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(
         TASK_ID,
         "animating",
-        { colorizedImageKey: `tasks/${TASK_ID}/colorized.jpg` }
+        { colorizedImageKey: COLORIZED_KEY }
       );
     });
 
@@ -206,7 +216,7 @@ describe("executePipeline", () => {
       await executePipeline(TASK_ID);
 
       expect(mockRunModel.mock.calls[1][1]).toEqual({
-        image: `https://cdn.test.com/tasks/${TASK_ID}/restored.jpg`,
+        image: `https://cdn.test.com/${RESTORED_KEY}`,
         model_size: "large",
       });
     });
@@ -217,7 +227,7 @@ describe("executePipeline", () => {
       await executePipeline(TASK_ID);
 
       expect(mockRunModel.mock.calls[2][1]).toEqual({
-        input_image: `https://cdn.test.com/tasks/${TASK_ID}/colorized.jpg`,
+        input_image: `https://cdn.test.com/${COLORIZED_KEY}`,
       });
     });
   });
@@ -429,8 +439,8 @@ describe("executePipeline", () => {
       mockGetTask.mockResolvedValue(
         makeTask({
           status: "failed",
-          restoredImageKey: `tasks/${TASK_ID}/restored.jpg`,
-          colorizedImageKey: `tasks/${TASK_ID}/colorized.jpg`,
+          restoredImageKey: RESTORED_KEY,
+          colorizedImageKey: COLORIZED_KEY,
         })
       );
       mockGetUser.mockResolvedValue(makeUser({ tier: "professional" }));
@@ -447,7 +457,7 @@ describe("executePipeline", () => {
 
       expect(mockRunModel).toHaveBeenCalledTimes(1);
       expect(mockRunModel).toHaveBeenCalledWith("animationPremium", {
-        input_image: `https://cdn.test.com/tasks/${TASK_ID}/colorized.jpg`,
+        input_image: `https://cdn.test.com/${COLORIZED_KEY}`,
       });
       expect(mockResizeImage).not.toHaveBeenCalled();
       expect(mockApplyImageWatermark).not.toHaveBeenCalled();
@@ -458,7 +468,7 @@ describe("executePipeline", () => {
       expect(mockUploadToR2).toHaveBeenCalledTimes(1);
       expect(mockUploadToR2).toHaveBeenCalledWith(
         expect.any(Buffer),
-        `tasks/${TASK_ID}/animation.mp4`,
+        ANIMATION_KEY,
         "video/mp4"
       );
     });
@@ -467,7 +477,7 @@ describe("executePipeline", () => {
       mockGetTask.mockResolvedValue(
         makeTask({
           status: "failed",
-          restoredImageKey: `tasks/${TASK_ID}/restored.jpg`,
+          restoredImageKey: RESTORED_KEY,
         })
       );
       mockGetUser.mockResolvedValue(makeUser({ tier: "pay_as_you_go" }));
@@ -496,14 +506,14 @@ describe("executePipeline", () => {
       expect(mockRunModel.mock.calls[0]).toEqual([
         "colorization",
         {
-          image: `https://cdn.test.com/tasks/${TASK_ID}/restored.jpg`,
+          image: `https://cdn.test.com/${RESTORED_KEY}`,
           model_size: "large",
         },
       ]);
       expect(mockRunModel.mock.calls[1]).toEqual([
         "animationPaid",
         {
-          input_image: `https://cdn.test.com/tasks/${TASK_ID}/colorized.jpg`,
+          input_image: `https://cdn.test.com/${COLORIZED_KEY}`,
         },
       ]);
       expect(mockUpdateTaskStatus.mock.calls.map((call) => call[1])).toEqual([
@@ -517,13 +527,13 @@ describe("executePipeline", () => {
       expect(mockUploadToR2).toHaveBeenNthCalledWith(
         1,
         expect.any(Buffer),
-        `tasks/${TASK_ID}/colorized.jpg`,
+        COLORIZED_KEY,
         "image/jpeg"
       );
       expect(mockUploadToR2).toHaveBeenNthCalledWith(
         2,
         expect.any(Buffer),
-        `tasks/${TASK_ID}/animation.mp4`,
+        ANIMATION_KEY,
         "video/mp4"
       );
     });

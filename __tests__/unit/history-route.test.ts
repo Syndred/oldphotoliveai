@@ -20,7 +20,6 @@ jest.mock("@/lib/redis", () => ({
 const mockDeleteTaskFiles = jest.fn<Promise<void>, [string, Array<string | null | undefined>]>();
 
 jest.mock("@/lib/r2", () => ({
-  getR2CdnUrl: (key: string) => `https://cdn.example.com/${key}`,
   deleteTaskFiles: (...args: unknown[]) =>
     mockDeleteTaskFiles(
       args[0] as string,
@@ -122,7 +121,7 @@ describe("GET /api/history", () => {
       progress: 100,
       createdAt: "2024-01-02T00:00:00.000Z",
       completedAt: "2024-01-02T00:05:00.000Z",
-      thumbnailUrl: "https://cdn.example.com/uploads/photo.jpg",
+      thumbnailUrl: "/api/tasks/task-001/asset?kind=original",
       errorMessage: null,
     });
   });

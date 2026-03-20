@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { TaskStatus } from "@/types";
-import { buildCdnUrl } from "@/lib/url";
+import { buildTaskAssetUrl } from "@/lib/task-assets";
 import { resolveTaskErrorMessage } from "@/lib/task-error";
 
 interface ProgressIndicatorProps {
@@ -162,7 +162,7 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
     previews.push({
       key: "restored",
       type: "image",
-      src: buildCdnUrl(intermediateResults.restoredImageKey),
+      src: buildTaskAssetUrl(taskId, "restored"),
       label: t("previewRestored"),
       testId: "preview-restored",
     });
@@ -171,7 +171,7 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
     previews.push({
       key: "colorized",
       type: "image",
-      src: buildCdnUrl(intermediateResults.colorizedImageKey),
+      src: buildTaskAssetUrl(taskId, "colorized"),
       label: t("previewColorized"),
       testId: "preview-colorized",
     });
@@ -180,7 +180,7 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
     previews.push({
       key: "animation",
       type: "video",
-      src: buildCdnUrl(intermediateResults.animationVideoKey),
+      src: buildTaskAssetUrl(taskId, "animation"),
       label: t("previewAnimation"),
       testId: "preview-animation",
     });

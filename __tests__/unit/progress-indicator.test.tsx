@@ -28,8 +28,9 @@ jest.mock("next-intl", () => ({
   useLocale: () => "en",
 }));
 
-jest.mock("@/lib/url", () => ({
-  buildCdnUrl: (key: string) => `https://cdn.test.com/${key}`,
+jest.mock("@/lib/task-assets", () => ({
+  buildTaskAssetUrl: (taskId: string, kind: string) =>
+    `/api/tasks/${taskId}/asset?kind=${kind}`,
 }));
 
 type ESListener = (event: MessageEvent | Event) => void;
@@ -318,7 +319,7 @@ describe("intermediate result previews", () => {
     await waitFor(() => {
       const preview = screen.getByTestId("preview-restored");
       expect(preview).toBeInTheDocument();
-      expect(preview).toHaveAttribute("src", "https://cdn.test.com/tasks/task-1/restored.jpg");
+      expect(preview).toHaveAttribute("src", "/api/tasks/task-1/asset?kind=restored");
     });
   });
 
@@ -332,7 +333,7 @@ describe("intermediate result previews", () => {
     await waitFor(() => {
       const preview = screen.getByTestId("preview-colorized");
       expect(preview).toBeInTheDocument();
-      expect(preview).toHaveAttribute("src", "https://cdn.test.com/tasks/task-1/colorized.jpg");
+      expect(preview).toHaveAttribute("src", "/api/tasks/task-1/asset?kind=colorized");
     });
   });
 
@@ -350,7 +351,7 @@ describe("intermediate result previews", () => {
     await waitFor(() => {
       const preview = screen.getByTestId("preview-animation");
       expect(preview).toBeInTheDocument();
-      expect(preview).toHaveAttribute("src", "https://cdn.test.com/tasks/task-1/animation.mp4");
+      expect(preview).toHaveAttribute("src", "/api/tasks/task-1/asset?kind=animation");
     });
   });
 

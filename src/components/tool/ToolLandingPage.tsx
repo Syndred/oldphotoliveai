@@ -15,6 +15,7 @@ import { Link } from "@/i18n/navigation";
 import {
   buildBreadcrumbJsonLd,
   buildFaqJsonLd,
+  buildSoftwareApplicationJsonLd,
 } from "@/lib/seo";
 import type { Locale } from "@/i18n/routing";
 
@@ -39,6 +40,13 @@ export default function ToolLandingPage({
       locale
     ),
     buildFaqJsonLd(tool.faqs),
+    buildSoftwareApplicationJsonLd({
+      name: tool.cardTitle,
+      description: tool.description,
+      path: `/${tool.slug}`,
+      locale,
+      keywords: tool.keywords,
+    }),
   ];
 
   return (
@@ -82,14 +90,41 @@ export default function ToolLandingPage({
               className="mt-8 max-w-4xl"
             />
 
-            <div className="mt-5 flex flex-wrap gap-3">
+            <nav
+              aria-label={`${tool.cardTitle} page sections`}
+              className="mt-5 flex flex-wrap gap-3"
+            >
+              <a
+                href="#upload-section"
+                className="inline-flex min-h-[44px] items-center rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent)]/90"
+              >
+                {tool.primaryCtaLabel}
+              </a>
+              <a
+                href="#showcase-section"
+                className="inline-flex min-h-[44px] items-center rounded-full border border-white/12 px-5 py-2.5 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.05]"
+              >
+                {tool.showcaseTitle}
+              </a>
+              <a
+                href="#faq-section"
+                className="inline-flex min-h-[44px] items-center rounded-full border border-white/12 px-5 py-2.5 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.05]"
+              >
+                {tool.faqTitle}
+              </a>
+              <a
+                href="#tool-pages-section"
+                className="inline-flex min-h-[44px] items-center rounded-full border border-white/12 px-5 py-2.5 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.05]"
+              >
+                {tool.relatedTitle}
+              </a>
               <Link
                 href="/pricing"
                 className="inline-flex min-h-[44px] items-center rounded-full border border-white/12 px-5 py-2.5 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.05]"
               >
                 {sectionCopy.seePricingLabel}
               </Link>
-            </div>
+            </nav>
           </div>
         </section>
 

@@ -52,6 +52,42 @@ function isRecentUsersResponse(
   return "users" in value && Array.isArray(value.users);
 }
 
+function formatTierLabel(tier: UserTier): string {
+  switch (tier) {
+    case "free":
+      return "免费版";
+    case "pay_as_you_go":
+      return "按量付费";
+    case "professional":
+      return "专业版";
+    default:
+      return tier;
+  }
+}
+
+function formatTaskStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    pending: "待处理",
+    queued: "排队中",
+    processing: "处理中",
+    completed: "已完成",
+    failed: "失败",
+    cancelled: "已取消",
+  };
+
+  return labels[status] ?? status;
+}
+
+function formatTaskPriorityLabel(priority: string): string {
+  const labels: Record<string, string> = {
+    low: "低",
+    normal: "普通",
+    high: "高",
+  };
+
+  return labels[priority] ?? priority;
+}
+
 export default function AdminPanel() {
   const { data: session } = useSession();
   const [authState, setAuthState] = useState<AuthState>("checking");
@@ -71,18 +107,18 @@ export default function AdminPanel() {
     typeof session?.user?.email === "string" ? session.user.email : "";
   const currentTier = snapshot?.user.tier ?? null;
   const lookupPlaceholder =
-    lookupMode === "email" ? "owner@example.com" : "user-uuid";
+    lookupMode === "email" ? "owner@example.com" : "输入用户 ID";
 
   const quotaSummary = useMemo(() => {
     if (!snapshot) return [];
 
     return [
-      `Tier quota: ${snapshot.quota.tier}`,
-      `Free remaining: ${snapshot.quota.remaining}`,
-      `Daily limit: ${snapshot.quota.dailyLimit ?? "--"}`,
-      `Free reset: ${formatDate(snapshot.quota.resetAt)}`,
-      `PAYG credits: ${snapshot.quota.credits}`,
-      `Credits expire: ${formatDate(snapshot.quota.creditsExpireAt)}`,
+      `套餐额度: ${formatTierLabel(snapshot.quota.tier)}`,
+      `免费剩余额度: ${snapshot.quota.remaining}`,
+      `每日上限: ${snapshot.quota.dailyLimit ?? "--"}`,
+      `免费额度重置时间: ${formatDate(snapshot.quota.resetAt)}`,
+      `按量付费积分: ${snapshot.quota.credits}`,
+      `积分到期时间: ${formatDate(snapshot.quota.creditsExpireAt)}`,
     ];
   }, [snapshot]);
 
@@ -98,7 +134,7 @@ export default function AdminPanel() {
     if (!res.ok || !isRecentUsersResponse(data)) {
       throw new Error(
         (!isRecentUsersResponse(data) && data.error) ||
-          "Failed to load recent users"
+          "加载最近用户失败"
       );
     }
 
@@ -113,7 +149,7 @@ export default function AdminPanel() {
       .then(async (data) => {
         if (!isMounted) return;
         if (!data.configured) {
-          setError("ADMIN_API_KEY is not configured.");
+          setError("未配置 ADMIN_API_KEY。");
           setAuthState("locked");
           return;
         }
@@ -124,14 +160,14 @@ export default function AdminPanel() {
             await loadRecentUsers();
           } catch {
             if (isMounted) {
-              setError("Failed to load recent users.");
+              setError("加载最近用户失败。");
             }
           }
         }
       })
       .catch(() => {
         if (!isMounted) return;
-        setError("Failed to initialize admin tools.");
+        setError("初始化管理面板失败。");
         setAuthState("locked");
       });
 
@@ -149,7 +185,7 @@ export default function AdminPanel() {
     const data = await parseJsonResponse<AdminUserSnapshot | ErrorResponse>(res);
     if (!res.ok || !isAdminUserSnapshot(data)) {
       throw new Error(
-        (!isAdminUserSnapshot(data) && data.error) || "Failed to refresh user"
+        (!isAdminUserSnapshot(data) && data.error) || "刷新用户数据失败"
       );
     }
 
@@ -159,7 +195,7 @@ export default function AdminPanel() {
 
   async function updateTierRequest(nextTier: UserTier) {
     if (!snapshot) {
-      throw new Error("Load a user first.");
+      throw new Error("请先加载一个用户。");
     }
 
     const res = await fetch("/api/internal/admin/tier", {
@@ -172,7 +208,7 @@ export default function AdminPanel() {
     });
     const data = await parseJsonResponse<ErrorResponse>(res);
     if (!res.ok) {
-      throw new Error(data.error ?? "Failed to update tier");
+      throw new Error(data.error ?? "更新套餐失败");
     }
   }
 
@@ -190,15 +226,15 @@ export default function AdminPanel() {
       });
       const data = await parseJsonResponse<ErrorResponse>(res);
       if (!res.ok) {
-        throw new Error(data.error ?? "Admin login failed");
+        throw new Error(data.error ?? "管理员登录失败");
       }
 
       setAuthState("ready");
       setAdminKey("");
       await loadRecentUsers();
-      setSuccess("Admin tools unlocked.");
+      setSuccess("管理面板已解锁。");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Admin login failed");
+      setError(err instanceof Error ? err.message : "管理员登录失败");
     } finally {
       setLoadingAction(null);
     }
@@ -214,9 +250,9 @@ export default function AdminPanel() {
       setAuthState("locked");
       setSnapshot(null);
       setRecentUsers([]);
-      setSuccess("Admin tools locked.");
+      setSuccess("管理面板已锁定。");
     } catch {
-      setError("Failed to lock admin tools.");
+      setError("锁定管理面板失败。");
     } finally {
       setLoadingAction(null);
     }
@@ -231,7 +267,7 @@ export default function AdminPanel() {
     try {
       const trimmedValue = lookupValue.trim();
       if (!trimmedValue) {
-        throw new Error("Please enter an email or user ID.");
+        throw new Error("请输入邮箱或用户 ID。");
       }
 
       const params = new URLSearchParams();
@@ -240,16 +276,16 @@ export default function AdminPanel() {
       const data = await parseJsonResponse<AdminUserSnapshot | ErrorResponse>(res);
       if (!res.ok || !isAdminUserSnapshot(data)) {
         throw new Error(
-          (!isAdminUserSnapshot(data) && data.error) || "Failed to load user"
+          (!isAdminUserSnapshot(data) && data.error) || "加载用户失败"
         );
       }
 
       setSnapshot(data);
       await loadRecentUsers();
-      setSuccess(`Loaded ${data.user.email}`);
+      setSuccess(`已加载用户：${data.user.email}`);
     } catch (err) {
       setSnapshot(null);
-      setError(err instanceof Error ? err.message : "Failed to load user");
+      setError(err instanceof Error ? err.message : "加载用户失败");
     } finally {
       setLoadingAction(null);
     }
@@ -269,14 +305,14 @@ export default function AdminPanel() {
       const data = await parseJsonResponse<AdminUserSnapshot | ErrorResponse>(res);
       if (!res.ok || !isAdminUserSnapshot(data)) {
         throw new Error(
-          (!isAdminUserSnapshot(data) && data.error) || "Failed to load user"
+          (!isAdminUserSnapshot(data) && data.error) || "加载用户失败"
         );
       }
 
       setSnapshot(data);
-      setSuccess(`Loaded ${data.user.email}`);
+      setSuccess(`已加载用户：${data.user.email}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load user");
+      setError(err instanceof Error ? err.message : "加载用户失败");
     } finally {
       setLoadingAction(null);
     }
@@ -292,9 +328,9 @@ export default function AdminPanel() {
     try {
       await updateTierRequest(nextTier);
       await refreshCurrentUser();
-      setSuccess(`Tier updated to ${nextTier}.`);
+      setSuccess(`套餐已更新为：${formatTierLabel(nextTier)}。`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update tier");
+      setError(err instanceof Error ? err.message : "更新套餐失败");
     } finally {
       setLoadingAction(null);
     }
@@ -313,10 +349,10 @@ export default function AdminPanel() {
       const days = Number.parseInt(expirationDays, 10);
 
       if (!Number.isInteger(credits) || credits <= 0) {
-        throw new Error("Credits must be a positive integer.");
+        throw new Error("积分必须是正整数。");
       }
       if (!Number.isInteger(days) || days <= 0) {
-        throw new Error("Expiration days must be a positive integer.");
+        throw new Error("有效天数必须是正整数。");
       }
 
       if (switchToPaygFirst && snapshot.user.tier !== "pay_as_you_go") {
@@ -334,13 +370,13 @@ export default function AdminPanel() {
       });
       const data = await parseJsonResponse<ErrorResponse>(res);
       if (!res.ok) {
-        throw new Error(data.error ?? "Failed to grant credits");
+        throw new Error(data.error ?? "发放积分失败");
       }
 
       await refreshCurrentUser();
-      setSuccess(`Granted ${credits} credits.`);
+      setSuccess(`已发放 ${credits} 积分。`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to grant credits");
+      setError(err instanceof Error ? err.message : "发放积分失败");
     } finally {
       setLoadingAction(null);
     }
@@ -361,13 +397,13 @@ export default function AdminPanel() {
       });
       const data = await parseJsonResponse<ErrorResponse>(res);
       if (!res.ok) {
-        throw new Error(data.error ?? "Failed to reset free quota");
+        throw new Error(data.error ?? "重置免费额度失败");
       }
 
       await refreshCurrentUser();
-      setSuccess("Free quota reset to 1 daily use.");
+      setSuccess("免费额度已重置为每日 1 次。");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to reset free quota");
+      setError(err instanceof Error ? err.message : "重置免费额度失败");
     } finally {
       setLoadingAction(null);
     }
@@ -388,13 +424,13 @@ export default function AdminPanel() {
       });
       const data = await parseJsonResponse<ErrorResponse>(res);
       if (!res.ok) {
-        throw new Error(data.error ?? "Failed to clear credits");
+        throw new Error(data.error ?? "清空按量付费积分失败");
       }
 
       await refreshCurrentUser();
-      setSuccess("PAYG credits cleared.");
+      setSuccess("按量付费积分已清空。");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to clear credits");
+      setError(err instanceof Error ? err.message : "清空按量付费积分失败");
     } finally {
       setLoadingAction(null);
     }
@@ -410,14 +446,12 @@ export default function AdminPanel() {
     try {
       await updateTierRequest("free");
       await refreshCurrentUser();
-      setSuccess(
-        "Simulated subscription cancellation by downgrading app access to free."
-      );
+      setSuccess("已模拟订阅取消，并将站内权限降级为免费版。");
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Failed to simulate subscription cancellation"
+          : "模拟订阅取消失败"
       );
     } finally {
       setLoadingAction(null);
@@ -427,7 +461,7 @@ export default function AdminPanel() {
   if (authState === "checking") {
     return (
       <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center text-sm text-[var(--color-text-secondary)]">
-        Loading admin tools...
+        正在加载管理面板...
       </div>
     );
   }
@@ -436,22 +470,22 @@ export default function AdminPanel() {
     return (
       <div className="mx-auto max-w-lg rounded-3xl border border-white/10 bg-white/[0.04] p-8">
         <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">
-          Admin Tools
+          管理面板
         </h1>
         <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
-          Enter your admin key once to unlock user lookup and permission controls.
+          输入管理员密钥后即可解锁用户查询与权限控制功能。
         </p>
         <form onSubmit={handleAdminLogin} className="mt-6 space-y-4">
           <label className="block">
             <span className="mb-2 block text-sm text-[var(--color-text-secondary)]">
-              Admin key
+              管理员密钥
             </span>
             <input
               type="password"
               value={adminKey}
               onChange={(event) => setAdminKey(event.target.value)}
               className="w-full rounded-xl border border-white/10 bg-[var(--color-primary-bg)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition-colors focus:border-[var(--color-accent)]"
-              placeholder="Paste ADMIN_API_KEY"
+              placeholder="请输入 ADMIN_API_KEY"
             />
           </label>
           <button
@@ -459,7 +493,7 @@ export default function AdminPanel() {
             disabled={loadingAction !== null}
             className="w-full rounded-xl bg-[var(--color-accent)] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent)]/90 disabled:opacity-60"
           >
-            {loadingAction === "login" ? "Unlocking..." : "Unlock Admin Tools"}
+            {loadingAction === "login" ? "解锁中..." : "解锁管理面板"}
           </button>
         </form>
         {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
@@ -474,16 +508,15 @@ export default function AdminPanel() {
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">
-              Admin Tools
+              管理面板
             </h1>
             <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
-              Look up any user, inspect their quota and Stripe state, and switch
-              access levels for testing. Recent task failures include admin-only
-              internal error details for debugging.
+              这里可以查询任意用户、查看额度与 Stripe 状态，并在测试时切换权限层级。
+              最近任务失败会展示仅管理员可见的内部报错，方便排查问题。
             </p>
             {signedInEmail && (
               <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
-                Signed in as {signedInEmail}
+                当前登录账号：{signedInEmail}
               </p>
             )}
           </div>
@@ -493,7 +526,7 @@ export default function AdminPanel() {
             disabled={loadingAction !== null}
             className="rounded-xl border border-white/15 px-4 py-2 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-white/30 hover:text-white disabled:opacity-60"
           >
-            {loadingAction === "logout" ? "Locking..." : "Lock Admin Tools"}
+            {loadingAction === "logout" ? "锁定中..." : "锁定管理面板"}
           </button>
         </div>
       </section>
@@ -505,20 +538,20 @@ export default function AdminPanel() {
         >
           <label className="block">
             <span className="mb-2 block text-sm text-[var(--color-text-secondary)]">
-              Lookup mode
+              查询方式
             </span>
             <select
               value={lookupMode}
               onChange={(event) => setLookupMode(event.target.value as LookupMode)}
               className="w-full rounded-xl border border-white/10 bg-[var(--color-primary-bg)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-accent)]"
             >
-              <option value="email">Email</option>
-              <option value="userId">User ID</option>
+              <option value="email">邮箱</option>
+              <option value="userId">用户 ID</option>
             </select>
           </label>
           <label className="block">
             <span className="mb-2 block text-sm text-[var(--color-text-secondary)]">
-              Value
+              查询值
             </span>
             <input
               value={lookupValue}
@@ -533,7 +566,7 @@ export default function AdminPanel() {
               disabled={loadingAction !== null}
               className="w-full rounded-xl bg-[var(--color-accent)] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent)]/90 disabled:opacity-60 md:w-auto"
             >
-              {loadingAction === "lookup" ? "Loading..." : "Load User"}
+              {loadingAction === "lookup" ? "加载中..." : "加载用户"}
             </button>
           </div>
         </form>
@@ -543,10 +576,10 @@ export default function AdminPanel() {
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-              Recent Users
+              最近用户
             </h2>
             <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-              Quick access to recently active accounts for faster testing.
+              快速查看最近活跃账号，便于测试和排查。
             </p>
           </div>
           <button
@@ -560,7 +593,7 @@ export default function AdminPanel() {
                 setError(
                   err instanceof Error
                     ? err.message
-                    : "Failed to load recent users"
+                    : "加载最近用户失败"
                 );
               } finally {
                 setLoadingAction(null);
@@ -569,13 +602,13 @@ export default function AdminPanel() {
             disabled={loadingAction !== null}
             className="rounded-xl border border-white/15 px-4 py-2 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-white/30 hover:text-white disabled:opacity-60"
           >
-            {loadingAction === "recent-users" ? "Refreshing..." : "Refresh List"}
+            {loadingAction === "recent-users" ? "刷新中..." : "刷新列表"}
           </button>
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           {recentUsers.length === 0 ? (
             <p className="text-sm text-[var(--color-text-secondary)]">
-              No recent users loaded yet.
+              暂无最近用户数据。
             </p>
           ) : (
             recentUsers.map((user) => (
@@ -593,7 +626,7 @@ export default function AdminPanel() {
                   {user.email}
                 </div>
                 <div className="mt-2 text-xs text-[var(--color-text-secondary)]">
-                  {user.tier} | updated {formatDate(user.updatedAt)}
+                  {formatTierLabel(user.tier)} | 更新于 {formatDate(user.updatedAt)}
                 </div>
               </button>
             ))
@@ -612,41 +645,41 @@ export default function AdminPanel() {
         <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
           <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
             <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-              User Snapshot
+              用户概览
             </h2>
             <dl className="mt-4 grid gap-3 text-sm">
               <div>
-                <dt className="text-[var(--color-text-secondary)]">Name</dt>
+                <dt className="text-[var(--color-text-secondary)]">名称</dt>
                 <dd className="text-[var(--color-text-primary)]">
                   {snapshot.user.name}
                 </dd>
               </div>
               <div>
-                <dt className="text-[var(--color-text-secondary)]">Email</dt>
+                <dt className="text-[var(--color-text-secondary)]">邮箱</dt>
                 <dd className="break-all text-[var(--color-text-primary)]">
                   {snapshot.user.email}
                 </dd>
               </div>
               <div>
-                <dt className="text-[var(--color-text-secondary)]">User ID</dt>
+                <dt className="text-[var(--color-text-secondary)]">用户 ID</dt>
                 <dd className="break-all font-mono text-[var(--color-text-primary)]">
                   {snapshot.user.id}
                 </dd>
               </div>
               <div>
-                <dt className="text-[var(--color-text-secondary)]">Current tier</dt>
+                <dt className="text-[var(--color-text-secondary)]">当前套餐</dt>
                 <dd className="text-[var(--color-text-primary)]">
-                  {snapshot.user.tier}
+                  {formatTierLabel(snapshot.user.tier)}
                 </dd>
               </div>
               <div>
-                <dt className="text-[var(--color-text-secondary)]">Created</dt>
+                <dt className="text-[var(--color-text-secondary)]">创建时间</dt>
                 <dd className="text-[var(--color-text-primary)]">
                   {formatDate(snapshot.user.createdAt)}
                 </dd>
               </div>
               <div>
-                <dt className="text-[var(--color-text-secondary)]">Updated</dt>
+                <dt className="text-[var(--color-text-secondary)]">更新时间</dt>
                 <dd className="text-[var(--color-text-primary)]">
                   {formatDate(snapshot.user.updatedAt)}
                 </dd>
@@ -655,7 +688,7 @@ export default function AdminPanel() {
 
             <div className="mt-6">
               <h3 className="text-sm font-medium text-[var(--color-text-primary)]">
-                Quota
+                额度信息
               </h3>
               <ul className="mt-3 space-y-2 text-sm text-[var(--color-text-secondary)]">
                 {quotaSummary.map((item) => (
@@ -669,29 +702,27 @@ export default function AdminPanel() {
                 Stripe
               </h3>
               <ul className="mt-3 space-y-2 text-sm text-[var(--color-text-secondary)]">
-                <li>Customer ID: {snapshot.stripe.customerId ?? "--"}</li>
+                <li>客户 ID：{snapshot.stripe.customerId ?? "--"}</li>
                 <li>
-                  Subscription status: {snapshot.stripe.subscriptionStatus ?? "--"}
+                  订阅状态：{snapshot.stripe.subscriptionStatus ?? "--"}
                 </li>
                 <li>
-                  Cancel at period end:{" "}
-                  {snapshot.stripe.cancelAtPeriodEnd ? "Yes" : "No"}
+                  到期后取消：{snapshot.stripe.cancelAtPeriodEnd ? "是" : "否"}
                 </li>
                 <li>
-                  Current period end:{" "}
-                  {formatDate(snapshot.stripe.currentPeriodEnd)}
+                  当前周期结束时间：{formatDate(snapshot.stripe.currentPeriodEnd)}
                 </li>
               </ul>
             </div>
 
             <div className="mt-6">
               <h3 className="text-sm font-medium text-[var(--color-text-primary)]">
-                Recent Tasks
+                最近任务
               </h3>
               <div className="mt-3 space-y-3">
                 {snapshot.recentTasks.length === 0 ? (
                   <p className="text-sm text-[var(--color-text-secondary)]">
-                    No tasks found for this user yet.
+                    该用户暂时没有任务记录。
                   </p>
                 ) : (
                   snapshot.recentTasks.map((task) => (
@@ -703,25 +734,25 @@ export default function AdminPanel() {
                         <span className="font-mono text-[var(--color-text-primary)]">
                           {task.id}
                         </span>
-                        <span>{task.status}</span>
-                        <span>{task.priority}</span>
+                        <span>{formatTaskStatusLabel(task.status)}</span>
+                        <span>{formatTaskPriorityLabel(task.priority)}</span>
                         <span>{task.progress}%</span>
                         <span>{formatDate(task.createdAt)}</span>
                       </div>
                       {task.failureStage && (
                         <p className="mt-2 text-sm text-amber-300">
-                          Failed during: {task.failureStage}
+                          失败阶段：{task.failureStage}
                         </p>
                       )}
                       {task.errorMessage && (
                         <p className="mt-2 text-sm text-[var(--color-text-primary)]">
-                          User message: {task.errorMessage}
+                          用户可见错误：{task.errorMessage}
                         </p>
                       )}
                       {task.internalErrorMessage && (
                         <div className="mt-2">
                           <p className="text-xs uppercase tracking-wide text-[var(--color-text-secondary)]">
-                            Internal error
+                            内部错误
                           </p>
                           <pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-words rounded-xl border border-red-500/20 bg-red-500/5 p-3 font-mono text-xs text-red-300">
                             {task.internalErrorMessage}
@@ -738,7 +769,7 @@ export default function AdminPanel() {
           <section className="space-y-6">
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
               <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-                Tier Controls
+                套餐控制
               </h2>
               <div className="mt-4 grid gap-3">
                 {(["free", "pay_as_you_go", "professional"] as UserTier[]).map(
@@ -755,20 +786,20 @@ export default function AdminPanel() {
                       }`}
                     >
                       {loadingAction === `tier:${tier}`
-                        ? "Updating..."
-                        : `Set ${tier}`}
+                        ? "更新中..."
+                        : `切换到${formatTierLabel(tier)}`}
                     </button>
                   )
                 )}
               </div>
               <p className="mt-3 text-xs text-[var(--color-text-secondary)]">
-                Setting a user to free will also reset free quota for testing.
+                将用户切换到免费版时，也会同步重置免费额度，方便测试。
               </p>
             </div>
 
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
               <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-                Quick Test Actions
+                快速测试操作
               </h2>
               <div className="mt-4 grid gap-3">
                 <button
@@ -778,8 +809,8 @@ export default function AdminPanel() {
                   className="rounded-xl bg-[var(--color-accent)] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent)]/90 disabled:opacity-60"
                 >
                   {loadingAction === "simulate-cancel"
-                    ? "Simulating..."
-                    : "Simulate Subscription Cancellation"}
+                    ? "模拟中..."
+                    : "模拟订阅取消"}
                 </button>
                 <button
                   type="button"
@@ -788,8 +819,8 @@ export default function AdminPanel() {
                   className="rounded-xl border border-white/15 px-4 py-3 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-white/30 hover:text-white disabled:opacity-60"
                 >
                   {loadingAction === "reset-free-quota"
-                    ? "Resetting..."
-                    : "Reset Free Quota"}
+                    ? "重置中..."
+                    : "重置免费额度"}
                 </button>
                 <button
                   type="button"
@@ -798,25 +829,24 @@ export default function AdminPanel() {
                   className="rounded-xl border border-white/15 px-4 py-3 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-white/30 hover:text-white disabled:opacity-60"
                 >
                   {loadingAction === "clear-credits"
-                    ? "Clearing..."
-                    : "Clear PAYG Credits"}
+                    ? "清空中..."
+                    : "清空按量付费积分"}
                 </button>
               </div>
               <p className="mt-3 text-xs text-[var(--color-text-secondary)]">
-                The cancellation shortcut is app-side only. It downgrades access to
-                free without changing the real Stripe subscription.
+                这个“模拟取消”只会修改站内权限，不会变更 Stripe 里的真实订阅状态。
               </p>
             </div>
 
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
               <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-                PAYG Credits
+                按量付费积分
               </h2>
               <form onSubmit={handleGrantCredits} className="mt-4 space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block">
                     <span className="mb-2 block text-sm text-[var(--color-text-secondary)]">
-                      Credits to grant
+                      发放积分数
                     </span>
                     <input
                       type="number"
@@ -828,7 +858,7 @@ export default function AdminPanel() {
                   </label>
                   <label className="block">
                     <span className="mb-2 block text-sm text-[var(--color-text-secondary)]">
-                      Expiration days
+                      有效天数
                     </span>
                     <input
                       type="number"
@@ -846,14 +876,14 @@ export default function AdminPanel() {
                     onChange={(event) => setSwitchToPaygFirst(event.target.checked)}
                     className="h-4 w-4 rounded border-white/20 bg-[var(--color-primary-bg)]"
                   />
-                  Switch tier to `pay_as_you_go` before granting credits
+                  发放积分前先切换到“按量付费”套餐
                 </label>
                 <button
                   type="submit"
                   disabled={loadingAction !== null}
                   className="w-full rounded-xl bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-4 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
                 >
-                  {loadingAction === "credits" ? "Granting..." : "Grant Credits"}
+                  {loadingAction === "credits" ? "发放中..." : "发放积分"}
                 </button>
               </form>
             </div>

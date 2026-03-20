@@ -6,6 +6,8 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
   ListObjectsV2Command,
+  GetObjectCommand,
+  type GetObjectCommandOutput,
 } from "@aws-sdk/client-s3";
 import { config } from "./config";
 
@@ -132,4 +134,86 @@ export async function deleteTaskFiles(
   await Promise.all(
     Array.from(keys).map((key) => deleteFromR2(key))
   );
+}
+
+export async function getObjectFromR2(
+  key: string,
+  options: { range?: string } = {}
+): Promise<GetObjectCommandOutput> {
+  const client = getS3Client();
+  return client.send(
+    new GetObjectCommand({
+      Bucket: config.r2.bucketName,
+      Key: key,
+      ...(options.range ? { Range: options.range } : {}),
+    })
+  );
+}
+
+export function r2BodyToWebStream(
+  body: unknown
+): ReadableStream<Uint8Array> | null {
+  if (!body) return null;
+
+  if (
+    typeof body === "object" &&
+    body !== null &&
+    "transformToWebStream" in body &&
+    typeof body.transformToWebStream === "function"
+  ) {
+    return body.transformToWebStream() as ReadableStream<Uint8Array>;
+  }
+
+  if (body instanceof Uint8Array) {
+    return new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(body);
+        controller.close();
+      },
+    });
+  }
+
+  if (typeof body === "string") {
+    const encoded = new TextEncoder().encode(body);
+    return new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(encoded);
+        controller.close();
+      },
+    });
+  }
+
+  if (
+    typeof body === "object" &&
+    body !== null &&
+    Symbol.asyncIterator in body
+  ) {
+    const iterable = body as AsyncIterable<unknown>;
+    const iterator = iterable[Symbol.asyncIterator]();
+
+    return new ReadableStream<Uint8Array>({
+      async pull(controller) {
+        const { value, done } = await iterator.next();
+
+        if (done) {
+          controller.close();
+          return;
+        }
+
+        if (value instanceof Uint8Array) {
+          controller.enqueue(value);
+          return;
+        }
+
+        if (typeof value === "string") {
+          controller.enqueue(new TextEncoder().encode(value));
+          return;
+        }
+
+        controller.error(new Error("Unsupported R2 stream chunk type."));
+      },
+    });
+  }
+
+  return null;
 }

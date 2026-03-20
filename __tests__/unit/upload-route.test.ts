@@ -4,11 +4,9 @@ import { NextRequest } from "next/server";
 // ── Mock dependencies ───────────────────────────────────────────────────────
 
 const mockUploadToR2 = jest.fn().mockResolvedValue("tasks/uuid/photo.jpg");
-const mockGetR2CdnUrl = jest.fn().mockReturnValue("https://cdn.example.com/tasks/uuid/photo.jpg");
 
 jest.mock("@/lib/r2", () => ({
   uploadToR2: (...args: unknown[]) => mockUploadToR2(...args),
-  getR2CdnUrl: (...args: unknown[]) => mockGetR2CdnUrl(...args),
 }));
 
 jest.mock("@/lib/config", () => ({
@@ -55,7 +53,6 @@ function createNamedError(name: string, message: string): Error {
 
 beforeEach(() => {
   mockUploadToR2.mockReset().mockResolvedValue("tasks/uuid/photo.jpg");
-  mockGetR2CdnUrl.mockReset().mockReturnValue("https://cdn.example.com/tasks/uuid/photo.jpg");
 });
 
 describe("POST /api/upload", () => {
@@ -88,17 +85,19 @@ describe("POST /api/upload", () => {
     expect(body.error).toBe("File size exceeds the 10MB limit");
   });
 
-  it("returns 200 with url and key for valid JPEG upload", async () => {
+  it("returns 200 with only the storage key for valid JPEG upload", async () => {
     const file = createTestFile("photo.jpg", "image/jpeg", 5000);
     const req = createFileRequest(file);
     const res = await POST(req);
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body).toHaveProperty("url");
-    expect(body).toHaveProperty("key");
+    expect(body).toEqual({
+      key: expect.stringMatching(
+        /^tasks\/[0-9a-f-]{36}\/original\.jpg$/
+      ),
+    });
     expect(mockUploadToR2).toHaveBeenCalledTimes(1);
-    expect(mockGetR2CdnUrl).toHaveBeenCalledTimes(1);
   });
 
   it("returns 200 for valid PNG upload", async () => {

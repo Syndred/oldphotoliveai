@@ -81,7 +81,7 @@ export default function VideoShowcaseSection({
   };
 
   return (
-    <section id="video-showcase-section" className="px-4 pt-0 pb-8 sm:pb-12">
+    <section id="showcase-section" className="px-4 pt-0 pb-8 sm:pb-12">
       <div className="mx-auto max-w-6xl">
         <article className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-4 sm:p-5">
           <div className="mb-4">

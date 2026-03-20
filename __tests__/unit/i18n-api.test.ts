@@ -78,7 +78,7 @@ describe("getErrorMessage", () => {
       "Sube una imagen JPEG, PNG o WebP"
     );
     expect(getErrorMessage("fileTypeNotSupported", "ja")).toBe(
-      "JPEG、PNG、WebP画像をアップロードしてください"
+      "JPEG、PNG、WebP 画像をアップロードしてください"
     );
     expect(getErrorMessage("fileTypeNotSupported", "zh")).not.toBe(
       "fileTypeNotSupported"
@@ -90,7 +90,7 @@ describe("getErrorMessage", () => {
       "Payment failed: Card declined"
     );
     expect(getErrorMessage("paymentFailed", "es", { reason: "Tarjeta rechazada" })).toBe(
-      "El pago fallo: Tarjeta rechazada"
+      "El pago falló: Tarjeta rechazada"
     );
     expect(getErrorMessage("paymentFailed", "ja", { reason: "カードが拒否されました" })).toBe(
       "支払いに失敗しました: カードが拒否されました"

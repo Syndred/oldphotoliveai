@@ -2,6 +2,7 @@ import { getTask, updateTaskStatus, getUser } from "./redis";
 import { runModel } from "./replicate";
 import { uploadToR2, getR2CdnUrl } from "./r2";
 import { applyImageWatermark, resizeImage } from "./watermark";
+import { v4 as uuidv4 } from "uuid";
 import type { TaskFailureStage, UserTier } from "@/types";
 
 const DOWNLOAD_TIMEOUT_MS = 30_000;
@@ -243,6 +244,14 @@ function getTierModelConfig(tier: UserTier): TierModelConfig {
   return TIER_MODEL_CONFIG[tier];
 }
 
+function createDerivedAssetKey(
+  taskId: string,
+  label: "restored" | "colorized" | "animation",
+  extension: "jpg" | "mp4"
+): string {
+  return `tasks/${taskId}/${label}-${uuidv4()}.${extension}`;
+}
+
 async function applyImageTierSettings(
   imageBuffer: Buffer,
   tier: UserTier
@@ -289,7 +298,7 @@ export async function executePipeline(taskId: string): Promise<void> {
 
       const restoredBuffer = await downloadBuffer(restoredOutputUrl);
       const processedRestored = await applyImageTierSettings(restoredBuffer, tier);
-      restoredKey = `tasks/${taskId}/restored.jpg`;
+      restoredKey = createDerivedAssetKey(taskId, "restored", "jpg");
       await uploadToR2(processedRestored, restoredKey, "image/jpeg");
       restoredCdnUrl = getR2CdnUrl(restoredKey);
     }
@@ -314,7 +323,7 @@ export async function executePipeline(taskId: string): Promise<void> {
 
       const colorizedBuffer = await downloadBuffer(colorizedOutputUrl);
       const processedColorized = await applyImageTierSettings(colorizedBuffer, tier);
-      colorizedKey = `tasks/${taskId}/colorized.jpg`;
+      colorizedKey = createDerivedAssetKey(taskId, "colorized", "jpg");
       await uploadToR2(processedColorized, colorizedKey, "image/jpeg");
       colorizedCdnUrl = getR2CdnUrl(colorizedKey);
     }
@@ -334,7 +343,7 @@ export async function executePipeline(taskId: string): Promise<void> {
     );
 
     const animationBuffer = await downloadBuffer(animationOutputUrl);
-    const animationKey = `tasks/${taskId}/animation.mp4`;
+    const animationKey = createDerivedAssetKey(taskId, "animation", "mp4");
     await uploadToR2(animationBuffer, animationKey, "video/mp4");
 
     await updateTaskStatus(taskId, "completed", {

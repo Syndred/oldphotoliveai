@@ -91,7 +91,7 @@ jest.mock("@/components/Navbar", () => {
 });
 
 import ResultPage from "@/app/result/[taskId]/page";
-import { buildCdnUrl } from "@/lib/url";
+import { buildTaskAssetUrl } from "@/lib/task-assets";
 
 // ── Setup ───────────────────────────────────────────────────────────────────
 
@@ -136,22 +136,17 @@ afterAll(() => {
 
 // ── Tests ───────────────────────────────────────────────────────────────────
 
-describe("buildCdnUrl", () => {
-  it("constructs URL from R2 domain and key", () => {
-    expect(buildCdnUrl("uploads/test.jpg")).toBe(
-      "https://cdn.example.com/uploads/test.jpg"
+describe("buildTaskAssetUrl", () => {
+  it("constructs the internal media endpoint", () => {
+    expect(buildTaskAssetUrl(mockTaskId, "colorized")).toBe(
+      `/api/tasks/${mockTaskId}/asset?kind=colorized`
     );
   });
 
-  it("URL-encodes unsafe filename characters", () => {
-    expect(buildCdnUrl("tasks/abc/my image (1).jfif")).toBe(
-      "https://cdn.example.com/tasks/abc/my%20image%20(1).jfif"
+  it("adds the download flag when requested", () => {
+    expect(buildTaskAssetUrl(mockTaskId, "animation", { download: true })).toBe(
+      `/api/tasks/${mockTaskId}/asset?kind=animation&download=1`
     );
-  });
-
-  it("handles missing domain gracefully", () => {
-    delete process.env.NEXT_PUBLIC_R2_DOMAIN;
-    expect(buildCdnUrl("key.jpg")).toBe("https:///key.jpg");
   });
 });
 
@@ -197,11 +192,11 @@ describe("ResultPage", () => {
     const compare = screen.getByTestId("before-after-compare");
     expect(compare).toHaveAttribute(
       "data-before",
-      "https://cdn.example.com/uploads/original.jpg"
+      `/api/tasks/${mockTaskId}/asset?kind=original`
     );
     expect(compare).toHaveAttribute(
       "data-after",
-      "https://cdn.example.com/results/colorized.jpg"
+      `/api/tasks/${mockTaskId}/asset?kind=colorized`
     );
   });
 
@@ -215,7 +210,7 @@ describe("ResultPage", () => {
 
     expect(screen.getByTestId("video-player")).toHaveAttribute(
       "data-src",
-      "https://cdn.example.com/results/animation.mp4"
+      `/api/tasks/${mockTaskId}/asset?kind=animation`
     );
   });
 
@@ -230,9 +225,15 @@ describe("ResultPage", () => {
     const imageLink = screen.getByText("Download Image").closest("a");
     const videoLink = screen.getByText("Download Video").closest("a");
 
-    expect(imageLink).toHaveAttribute("href", "https://cdn.example.com/results/colorized.jpg");
+    expect(imageLink).toHaveAttribute(
+      "href",
+      `/api/tasks/${mockTaskId}/asset?kind=colorized&download=1`
+    );
     expect(imageLink).toHaveAttribute("download");
-    expect(videoLink).toHaveAttribute("href", "https://cdn.example.com/results/animation.mp4");
+    expect(videoLink).toHaveAttribute(
+      "href",
+      `/api/tasks/${mockTaskId}/asset?kind=animation&download=1`
+    );
     expect(videoLink).toHaveAttribute("download");
   });
 

@@ -46,6 +46,18 @@ interface FaqJsonLdItem {
   answer: string;
 }
 
+interface SoftwareApplicationJsonLdOptions {
+  name: string;
+  description: string;
+  path: string;
+  locale?: Locale;
+  keywords?: string[];
+  applicationCategory?: string;
+  operatingSystem?: string;
+  price?: string;
+  priceCurrency?: string;
+}
+
 export const PRIVATE_PAGE_ROBOTS: Metadata["robots"] = {
   index: false,
   follow: false,
@@ -243,5 +255,33 @@ export function buildFaqJsonLd(items: FaqJsonLdItem[]) {
         text: item.answer,
       },
     })),
+  };
+}
+
+export function buildSoftwareApplicationJsonLd({
+  name,
+  description,
+  path,
+  locale,
+  keywords,
+  applicationCategory = "MultimediaApplication",
+  operatingSystem = "Web",
+  price = "0",
+  priceCurrency = "USD",
+}: SoftwareApplicationJsonLdOptions) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name,
+    description,
+    url: locale ? absoluteLocalizedUrl(locale, path) : absoluteUrl(path),
+    applicationCategory,
+    operatingSystem,
+    offers: {
+      "@type": "Offer",
+      price,
+      priceCurrency,
+    },
+    ...(keywords?.length ? { keywords: keywords.join(", ") } : {}),
   };
 }

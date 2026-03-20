@@ -3,7 +3,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { validateFile, generateStorageKey } from "@/lib/validation";
-import { uploadToR2, getR2CdnUrl } from "@/lib/r2";
+import { uploadToR2 } from "@/lib/r2";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 
 type UploadErrorKey =
@@ -165,9 +165,8 @@ export async function POST(request: NextRequest) {
 
     await uploadToR2(buffer, key, file.type);
 
-    // 5. Return CDN URL and key
-    const url = getR2CdnUrl(key);
-    return NextResponse.json({ url, key }, { status: 200 });
+    // 5. Return only the storage key so the browser never receives raw object URLs.
+    return NextResponse.json({ key }, { status: 200 });
   } catch (error) {
     const classified = classifyUploadError(error);
     const requestId = buildRequestId();
