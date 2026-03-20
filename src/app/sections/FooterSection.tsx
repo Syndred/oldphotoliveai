@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import BrandLogo from "@/components/BrandLogo";
 
 const FOOTER_LINKS = [
   { href: "/", key: "home" as const },
@@ -17,9 +18,7 @@ export default function FooterSection() {
     <footer className="border-t border-[var(--color-border)] px-4 py-10">
       <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-left">
         <div>
-          <p className="bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-accent)] bg-clip-text text-lg font-bold text-transparent">
-            OldPhotoLive AI
-          </p>
+          <BrandLogo textClassName="text-lg" iconClassName="h-9 w-9" />
           <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
             {t("description")}
           </p>

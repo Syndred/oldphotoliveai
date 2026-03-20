@@ -10,6 +10,7 @@ import FooterSection from "@/app/sections/FooterSection";
 import ToolCardsSection from "@/components/tool/ToolCardsSection";
 import {
   BRAND_NAME,
+  BRAND_ICON,
   SITE_DESCRIPTION,
   SITE_URL,
 } from "@/lib/site";
@@ -30,7 +31,7 @@ export default function HomePageView({
       name: BRAND_NAME,
       url: SITE_URL,
       email: "support@oldphotoliveai.com",
-      logo: absoluteUrl("/opengraph-image"),
+      logo: absoluteUrl(BRAND_ICON),
     },
     {
       "@context": "https://schema.org",

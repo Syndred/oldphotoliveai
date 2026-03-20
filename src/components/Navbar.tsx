@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import AuthButton from "./AuthButton";
+import BrandLogo from "./BrandLogo";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { Link, usePathname } from "@/i18n/navigation";
 import type { QuotaInfo, UserTier } from "@/types";
@@ -86,9 +87,14 @@ export default function Navbar() {
         {/* Logo */}
         <Link
           href="/"
-          className="block min-w-0 max-w-[46vw] truncate bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-accent)] bg-clip-text text-base font-bold text-transparent sm:max-w-none sm:text-lg"
+          className="block min-w-0 max-w-[58vw] sm:max-w-none"
         >
-          OldPhotoLive AI
+          <BrandLogo
+            priority
+            textClassName="text-base sm:text-lg"
+            className="max-w-full"
+            iconClassName="h-9 w-9 sm:h-10 sm:w-10"
+          />
         </Link>
 
         {/* Desktop Navigation Links */}

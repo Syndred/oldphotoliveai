@@ -7,3 +7,5 @@ export const SITE_TAGLINE =
   "AI photo restoration, colorization, and animation for old family photos.";
 export const DEFAULT_OG_IMAGE = "/opengraph-image";
 export const DEFAULT_TWITTER_IMAGE = "/twitter-image";
+export const BRAND_ICON = "/brand-icon.png";
+export const APPLE_TOUCH_ICON = "/apple-touch-icon.png";

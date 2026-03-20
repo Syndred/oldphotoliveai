@@ -6,7 +6,9 @@ import Analytics from "@/components/Analytics";
 import Providers from "@/components/Providers";
 import RouteProgress from "@/components/RouteProgress";
 import {
+  APPLE_TOUCH_ICON,
   BRAND_NAME,
+  BRAND_ICON,
   SITE_DESCRIPTION,
   SITE_TAGLINE,
   SITE_URL,
@@ -43,6 +45,14 @@ export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
   keywords: siteMetadata.keywords,
   alternates: siteMetadata.alternates,
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: BRAND_ICON, type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: APPLE_TOUCH_ICON, type: "image/png", sizes: "180x180" }],
+    shortcut: ["/favicon.ico"],
+  },
   verification: GOOGLE_SITE_VERIFICATION
     ? {
         google: GOOGLE_SITE_VERIFICATION,
