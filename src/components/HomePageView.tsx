@@ -64,13 +64,19 @@ export default function HomePageView({
       <Navbar />
 
       <main>
-        <HeroSection />
+        <HeroSection>
+          <UploadSection
+            variant="embedded"
+            showHeader={false}
+            analyticsSource="home_hero"
+            className="mt-8 max-w-4xl"
+          />
+        </HeroSection>
         <ShowcaseSection />
         <VideoShowcaseSection />
         <FeaturesSection />
         <ToolCardsSection locale={locale} />
         <HowItWorksSection />
-        <UploadSection />
         <FAQSection />
       </main>
 

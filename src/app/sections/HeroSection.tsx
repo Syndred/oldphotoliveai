@@ -1,15 +1,14 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
-export default function HeroSection() {
-  const t = useTranslations("landing.hero");
+interface HeroSectionProps {
+  children?: ReactNode;
+}
 
-  const scrollToUpload = () => {
-    document
-      .getElementById("upload-section")
-      ?.scrollIntoView({ behavior: "smooth" });
-  };
+export default function HeroSection({ children }: HeroSectionProps) {
+  const t = useTranslations("landing.hero");
 
   return (
     <section
@@ -22,12 +21,7 @@ export default function HeroSection() {
       <p className="mt-4 max-w-xl text-sm leading-relaxed text-[var(--color-text-secondary)] sm:text-lg">
         {t("subtitle")}
       </p>
-      <button
-        onClick={scrollToUpload}
-        className="mt-8 min-h-[44px] w-full max-w-xs rounded-full bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-8 py-3 text-sm font-semibold text-[var(--color-primary-bg)] transition-opacity hover:opacity-90 sm:w-auto sm:text-base"
-      >
-        {t("cta")}
-      </button>
+      {children}
     </section>
   );
 }

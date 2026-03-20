@@ -66,7 +66,9 @@ jest.mock("@/components/Navbar", () => ({
 
 jest.mock("@/app/sections/HeroSection", () => ({
   __esModule: true,
-  default: () => <section data-testid="hero-section" />,
+  default: ({ children }: { children?: React.ReactNode }) => (
+    <section data-testid="hero-section">{children}</section>
+  ),
 }));
 
 jest.mock("@/app/sections/ShowcaseSection", () => ({
@@ -165,12 +167,10 @@ beforeEach(() => {
 });
 
 describe("HomePage", () => {
-  it("renders the upload title and subtitle", () => {
+  it("renders the upload zone inside the hero section", () => {
     render(<HomePage />);
-    expect(screen.getByText("Restore Your Old Photos")).toBeInTheDocument();
-    expect(
-      screen.getByText(/AI-powered restoration, colorization, and animation/)
-    ).toBeInTheDocument();
+    const hero = screen.getByTestId("hero-section");
+    expect(hero).toContainElement(screen.getByTestId("upload-zone"));
   });
 
   it("renders the upload zone", () => {

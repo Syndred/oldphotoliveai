@@ -9,6 +9,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default function AdminPage() {
+export default function LocalizedAdminPage() {
   return <AdminPageView />;
 }

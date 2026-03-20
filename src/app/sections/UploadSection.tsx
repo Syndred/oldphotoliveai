@@ -13,12 +13,18 @@ interface UploadSectionProps {
   title?: string;
   subtitle?: string;
   analyticsSource?: string;
+  variant?: "default" | "embedded";
+  showHeader?: boolean;
+  className?: string;
 }
 
 export default function UploadSection({
   title,
   subtitle,
   analyticsSource = "upload_section",
+  variant = "default",
+  showHeader = true,
+  className = "",
 }: UploadSectionProps = {}) {
   const router = useRouter();
   const pathname = usePathname();
@@ -31,6 +37,15 @@ export default function UploadSection({
   const tErrors = useTranslations("errors");
   const contentSafety = getContentSafetyCopy(locale);
   const localizedPathname = localizePathname(locale, pathname);
+  const isEmbedded = variant === "embedded";
+
+  const containerClasses = isEmbedded
+    ? "w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-4 shadow-xl backdrop-blur-sm sm:p-6"
+    : "mx-auto w-full max-w-6xl rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-4 shadow-xl backdrop-blur-sm sm:p-10";
+
+  const wrapperClasses = isEmbedded
+    ? `w-full ${className}`.trim()
+    : `px-3 py-8 sm:px-4 sm:py-14 ${className}`.trim();
 
   async function handleUpload(imageKey: string) {
     // If not logged in, redirect to login
@@ -76,69 +91,82 @@ export default function UploadSection({
     }
   }
 
-  return (
-    <section
-      id="upload-section"
-      className="px-3 py-8 sm:px-4 sm:py-14"
-    >
-      <div className="mx-auto w-full max-w-6xl rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-4 shadow-xl backdrop-blur-sm sm:p-10">
-        <h2 className="mb-2 bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-accent)] bg-clip-text text-center text-2xl font-bold text-transparent sm:text-4xl">
-          {title ?? t("title")}
-        </h2>
-        <p className="mx-auto mb-6 max-w-2xl text-center text-sm leading-relaxed text-[var(--color-text-secondary)] sm:mb-8">
-          {subtitle ?? t("subtitle")}
-        </p>
-
-        {/* Login prompt for unauthenticated users */}
-        {status !== "authenticated" && status !== "loading" && (
-          <div className="mb-4 rounded-xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 p-4 text-center">
-            <p className="text-sm text-[var(--color-text-secondary)]">
-              {tAuth("signInPrompt")}
-            </p>
-            <button
-              type="button"
-              onClick={() =>
-                signIn("google", { callbackUrl: localizedPathname })
-              }
-              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-4 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 min-h-[44px] sm:mt-2 sm:w-auto sm:py-2"
-            >
-              {tAuth("signInWith")}
-            </button>
-          </div>
-        )}
-
-        <UploadZone onUpload={handleUpload} disabled={isCreating} />
-
-        <div className="mt-4 rounded-xl border border-[var(--color-accent)]/20 bg-[var(--color-accent)]/6 p-4 text-left">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">
-            {contentSafety.uploadTitle}
+  const content = (
+    <div className={containerClasses}>
+      {showHeader ? (
+        <>
+          <h2 className="mb-2 bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-accent)] bg-clip-text text-center text-2xl font-bold text-transparent sm:text-4xl">
+            {title ?? t("title")}
+          </h2>
+          <p className="mx-auto mb-6 max-w-2xl text-center text-sm leading-relaxed text-[var(--color-text-secondary)] sm:mb-8">
+            {subtitle ?? t("subtitle")}
           </p>
-          <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
-            {contentSafety.uploadNotice}
+        </>
+      ) : null}
+
+      {/* Login prompt for unauthenticated users */}
+      {status !== "authenticated" && status !== "loading" && (
+        <div className="mb-4 rounded-xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 p-4 text-center">
+          <p className="text-sm text-[var(--color-text-secondary)]">
+            {tAuth("signInPrompt")}
           </p>
-          <Link
-            href="/terms"
-            className="mt-3 inline-flex min-h-[44px] items-center rounded-full border border-white/12 bg-white/[0.03] px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.06] hover:text-white"
+          <button
+            type="button"
+            onClick={() =>
+              signIn("google", { callbackUrl: localizedPathname })
+            }
+            className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-4 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 min-h-[44px] sm:mt-2 sm:w-auto sm:py-2"
           >
-            {contentSafety.linkLabel}
-          </Link>
+            {tAuth("signInWith")}
+          </button>
         </div>
+      )}
 
-        {isCreating && (
-          <div className="mt-4 flex items-center justify-center gap-2">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--color-accent)] border-t-transparent" />
-            <p className="text-sm text-[var(--color-text-secondary)]">
-              {t("creatingTask")}
-            </p>
-          </div>
-        )}
+      <UploadZone onUpload={handleUpload} disabled={isCreating} />
 
-        {error && (
-          <p className="mt-4 text-center text-sm text-red-400" role="alert">
-            {error}
-          </p>
-        )}
+      <div className="mt-4 rounded-xl border border-[var(--color-accent)]/20 bg-[var(--color-accent)]/6 p-4 text-left">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">
+          {contentSafety.uploadTitle}
+        </p>
+        <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
+          {contentSafety.uploadNotice}
+        </p>
+        <Link
+          href="/terms"
+          className="mt-3 inline-flex min-h-[44px] items-center rounded-full border border-white/12 bg-white/[0.03] px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.06] hover:text-white"
+        >
+          {contentSafety.linkLabel}
+        </Link>
       </div>
+
+      {isCreating && (
+        <div className="mt-4 flex items-center justify-center gap-2">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--color-accent)] border-t-transparent" />
+          <p className="text-sm text-[var(--color-text-secondary)]">
+            {t("creatingTask")}
+          </p>
+        </div>
+      )}
+
+      {error && (
+        <p className="mt-4 text-center text-sm text-red-400" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+
+  if (isEmbedded) {
+    return (
+      <div id="upload-section" className={wrapperClasses}>
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <section id="upload-section" className={wrapperClasses}>
+      {content}
     </section>
   );
 }

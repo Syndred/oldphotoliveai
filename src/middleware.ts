@@ -26,7 +26,7 @@ const PROTECTED_API_ROUTES = [
   "/api/stripe/subscription",
 ];
 
-const PROTECTED_PAGE_ROUTES = ["/history", "/result", "/admin"];
+const PROTECTED_PAGE_ROUTES = ["/history", "/result"];
 const UPLOAD_ROUTES = ["/api/upload"];
 const handleI18nRouting = createIntlMiddleware(routing);
 

@@ -75,13 +75,14 @@ export default function ToolLandingPage({
               ))}
             </div>
 
-            <div className="mt-6 flex flex-wrap gap-3">
-              <a
-                href="#upload-section"
-                className="inline-flex min-h-[44px] items-center rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent)]/90"
-              >
-                {tool.primaryCtaLabel}
-              </a>
+            <UploadSection
+              analyticsSource={tool.slug}
+              variant="embedded"
+              showHeader={false}
+              className="mt-8 max-w-4xl"
+            />
+
+            <div className="mt-5 flex flex-wrap gap-3">
               <Link
                 href="/pricing"
                 className="inline-flex min-h-[44px] items-center rounded-full border border-white/12 px-5 py-2.5 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.05]"
@@ -91,12 +92,6 @@ export default function ToolLandingPage({
             </div>
           </div>
         </section>
-
-        <UploadSection
-          title={tool.uploadTitle}
-          subtitle={tool.uploadSubtitle}
-          analyticsSource={tool.slug}
-        />
 
         {tool.showcaseKind === "animation" ? (
           <VideoShowcaseSection
