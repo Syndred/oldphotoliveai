@@ -90,7 +90,6 @@ export default function Navbar() {
           className="block min-w-0 max-w-[58vw] sm:max-w-none"
         >
           <BrandLogo
-            priority
             textClassName="text-base sm:text-lg"
             className="max-w-full"
             iconClassName="h-9 w-9 sm:h-10 sm:w-10"

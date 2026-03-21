@@ -1,11 +1,9 @@
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
-const distDir = process.env.NEXT_BUILD_DIST_DIR;
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  ...(distDir ? { distDir } : {}),
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**.googleusercontent.com' },
