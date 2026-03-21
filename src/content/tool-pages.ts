@@ -474,10 +474,6 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
   },
 };
 
-export function isToolPageSlug(value: string): value is ToolPageSlug {
-  return (TOOL_PAGE_SLUGS as readonly string[]).includes(value);
-}
-
 export function getToolSectionCopy(locale: Locale): ToolSectionCopy {
   return TOOL_SECTION_COPY_BY_LOCALE[locale] ?? TOOL_SECTION_COPY_BY_LOCALE.en;
 }

@@ -31,16 +31,6 @@ interface BreadcrumbItem {
   path: string;
 }
 
-interface ArticleJsonLdOptions {
-  title: string;
-  description: string;
-  path: string;
-  publishedTime: string;
-  modifiedTime: string;
-  keywords?: string[];
-  locale?: Locale;
-}
-
 interface FaqJsonLdItem {
   question: string;
   answer: string;
@@ -202,44 +192,6 @@ export function buildBreadcrumbJsonLd(
         ? absoluteLocalizedUrl(locale, item.path)
         : absoluteUrl(item.path),
     })),
-  };
-}
-
-export function buildArticleJsonLd({
-  title,
-  description,
-  path,
-  publishedTime,
-  modifiedTime,
-  keywords,
-  locale,
-}: ArticleJsonLdOptions) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: title,
-    description,
-    author: {
-      "@type": "Organization",
-      name: BRAND_NAME,
-    },
-    publisher: {
-      "@type": "Organization",
-      name: BRAND_NAME,
-      url: SITE_URL,
-      logo: {
-        "@type": "ImageObject",
-        url: absoluteUrl(DEFAULT_OG_IMAGE),
-      },
-    },
-    mainEntityOfPage: locale
-      ? absoluteLocalizedUrl(locale, path)
-      : absoluteUrl(path),
-    inLanguage: locale ? HREFLANG_BY_LOCALE[locale] : HREFLANG_BY_LOCALE.en,
-    datePublished: publishedTime,
-    dateModified: modifiedTime,
-    image: [absoluteUrl(DEFAULT_OG_IMAGE)],
-    keywords,
   };
 }
 
