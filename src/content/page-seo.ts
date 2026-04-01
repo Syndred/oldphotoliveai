@@ -11,6 +11,7 @@ interface SeoDictionary {
   login: PageSeoContent;
   history: PageSeoContent;
   result: PageSeoContent;
+  about: PageSeoContent;
   privacy: PageSeoContent;
   terms: PageSeoContent;
 }
@@ -42,6 +43,11 @@ export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
       description:
         "Review your photo restoration result, compare before and after, and download image or video outputs.",
     },
+    about: {
+      title: "About OldPhotoLive AI",
+      description:
+        "Learn who operates OldPhotoLive AI, how to contact the business, and how internal advertising operations support the service.",
+    },
     privacy: {
       title: "Privacy Policy",
       description:
@@ -56,7 +62,7 @@ export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
     home: {
       title: "AI 旧照片修复与上色",
       description:
-        "使用 AI 修复、上色和动态化旧照片。上传褪色的家庭老照片，快速修补损伤，让记忆重新鲜活起来。",
+        "使用 AI 修复、上色和动态化旧照片。上传褪色的家庭老照片，快速修补损伤，让回忆重新鲜活起来。",
     },
     pricing: {
       title: "价格",
@@ -76,6 +82,11 @@ export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
       title: "处理结果",
       description:
         "查看旧照片修复结果，比较前后效果，并下载图片或视频输出。",
+    },
+    about: {
+      title: "关于 OldPhotoLive AI",
+      description:
+        "了解 OldPhotoLive AI 的运营者、联系邮箱、业务地址与内部广告运营说明。",
     },
     privacy: {
       title: "隐私政策",
@@ -112,6 +123,11 @@ export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
       description:
         "Revisa el resultado de restauración, compara el antes y el después y descarga la imagen o el video.",
     },
+    about: {
+      title: "Acerca de OldPhotoLive AI",
+      description:
+        "Conoce quién opera OldPhotoLive AI, cómo contactar con el negocio y cómo funcionan las operaciones publicitarias internas.",
+    },
     privacy: {
       title: "Política de privacidad",
       description:
@@ -147,6 +163,11 @@ export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
       title: "処理結果",
       description:
         "写真修復の結果を確認し、ビフォーアフターを比較して、画像や動画をダウンロードできます。",
+    },
+    about: {
+      title: "OldPhotoLive AI について",
+      description:
+        "OldPhotoLive AI の運営者、連絡先、内部広告運用の概要を案内します。",
     },
     privacy: {
       title: "プライバシーポリシー",

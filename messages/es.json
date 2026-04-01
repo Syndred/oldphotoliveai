@@ -239,7 +239,8 @@
         "pricing": "Precios",
         "history": "Historial",
         "privacy": "Privacidad",
-        "terms": "Términos"
+        "terms": "Términos",
+        "about": "Acerca de"
       },
       "copyright": "Copyright 2025 OldPhotoLive AI. Todos los derechos reservados."
     }
@@ -353,6 +354,22 @@
           "body": "En la máxima medida permitida por la ley, OldPhotoLive AI y sus proveedores no serán responsables de daños indirectos, incidentales, especiales, consecuentes, ejemplares o punitivos, ni de la pérdida de beneficios, ingresos, fondo de comercio, datos u oportunidades de negocio. Si la ley exige un límite de responsabilidad directa, nuestra responsabilidad agregada no superará el importe que nos hayas pagado por el servicio de pago correspondiente durante los 12 meses anteriores al hecho que originó la reclamación."
         }
       }
+    },
+    "about": {
+      "eyebrow": "Acerca de",
+      "title": "Acerca de OldPhotoLive AI",
+      "description": "Conoce qui?n opera OldPhotoLive AI y c?mo contactar con el negocio.",
+      "intro": "OldPhotoLive AI es un servicio de restauraci?n de fotos antiguas con IA para usuarios internacionales que quieren restaurar, colorear y animar recuerdos familiares en l?nea.",
+      "operatorTitle": "Operador",
+      "operatorBody": "OldPhotoLive AI est? operado por Syndred Young como propietario y operador ?nico del servicio.",
+      "contactTitle": "Contacto del negocio",
+      "contactBody": "Para consultas de negocio, soporte o cumplimiento, utiliza los datos de contacto oficiales que aparecen a continuaci?n.",
+      "emailLabel": "Correo oficial",
+      "addressLabel": "Direcci?n comercial",
+      "adsTitle": "Operaciones publicitarias internas",
+      "adsBody": "Usamos un flujo interno de Google Ads para investigaci?n de palabras clave, preparaci?n de campa?as y reportes de rendimiento para OldPhotoLive AI. Este flujo no se ofrece a terceros.",
+      "privacyLink": "Ver Pol?tica de privacidad",
+      "termsLink": "Ver T?rminos del servicio"
     }
   }
 }

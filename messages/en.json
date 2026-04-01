@@ -234,6 +234,7 @@
     "footer": {
       "description": "AI-powered photo restoration, colorization, and animation",
       "links": {
+        "about": "About",
         "home": "Home",
         "guides": "Guides",
         "pricing": "Pricing",
@@ -247,6 +248,22 @@
   "legal": {
     "shared": {
       "lastUpdated": "Last updated"
+    },
+    "about": {
+      "eyebrow": "About",
+      "title": "About OldPhotoLive AI",
+      "description": "Learn who operates OldPhotoLive AI and how to contact the business.",
+      "intro": "OldPhotoLive AI is an AI-powered old photo restoration service for overseas users who want to restore, colorize, and animate old family photos online.",
+      "operatorTitle": "Operator",
+      "operatorBody": "OldPhotoLive AI is operated by Syndred Young, the sole owner and operator of the service.",
+      "contactTitle": "Business Contact",
+      "contactBody": "For business, customer support, or compliance inquiries, please use the official contact details below.",
+      "emailLabel": "Official Email",
+      "addressLabel": "Business Address",
+      "adsTitle": "Internal Advertising Operations",
+      "adsBody": "We use an internal-only Google Ads workflow for keyword research, campaign setup support, and performance reporting for OldPhotoLive AI. This workflow is not offered to third parties.",
+      "privacyLink": "View Privacy Policy",
+      "termsLink": "View Terms of Service"
     },
     "privacy": {
       "eyebrow": "Privacy",

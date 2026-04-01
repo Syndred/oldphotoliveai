@@ -6,6 +6,7 @@ import BrandLogo from "@/components/BrandLogo";
 
 const FOOTER_LINKS = [
   { href: "/", key: "home" as const },
+  { href: "/about", key: "about" as const },
   { href: "/pricing", key: "pricing" as const },
   { href: "/privacy", key: "privacy" as const },
   { href: "/terms", key: "terms" as const },

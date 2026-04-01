@@ -10,13 +10,29 @@ let mockLocale = "en";
 const translations = {
   en: {
     "landing.footer.description": "AI-powered photo restoration",
+    "landing.footer.links.about": "About",
     "landing.footer.links.home": "Home",
     "landing.footer.links.guides": "Guides",
     "landing.footer.links.pricing": "Pricing",
+    "landing.footer.links.history": "History",
     "landing.footer.links.privacy": "Privacy",
     "landing.footer.links.terms": "Terms",
     "landing.footer.copyright": "Copyright",
     "legal.shared.lastUpdated": "Last updated",
+    "legal.about.eyebrow": "About",
+    "legal.about.title": "About OldPhotoLive AI",
+    "legal.about.description":
+      "Learn who operates OldPhotoLive AI and how to contact the business.",
+    "legal.about.intro": "About intro",
+    "legal.about.operatorTitle": "Operator",
+    "legal.about.operatorBody": "Operator body",
+    "legal.about.contactTitle": "Business Contact",
+    "legal.about.contactBody":
+      "For business, customer support, or compliance inquiries, please use the official email below.",
+    "legal.about.adsTitle": "Internal Advertising Operations",
+    "legal.about.adsBody":
+      "We use an internal-only Google Ads workflow for keyword research, campaign setup support, and performance reporting for OldPhotoLive AI. This workflow is not offered to third parties.",
+    "legal.about.privacyLink": "View Privacy Policy",
     "legal.privacy.eyebrow": "Privacy",
     "legal.privacy.title": "Privacy Policy",
     "legal.privacy.description":
@@ -84,87 +100,6 @@ const translations = {
     "legal.terms.sections.liability.title": "11. Limitation of Liability",
     "legal.terms.sections.liability.body": "Liability body",
   },
-  zh: {
-    "landing.footer.description": "AI 老照片修复",
-    "landing.footer.links.home": "首页",
-    "landing.footer.links.guides": "指南",
-    "landing.footer.links.pricing": "价格",
-    "landing.footer.links.privacy": "隐私政策",
-    "landing.footer.links.terms": "服务条款",
-    "landing.footer.copyright": "版权",
-    "legal.shared.lastUpdated": "最后更新",
-    "legal.privacy.eyebrow": "隐私",
-    "legal.privacy.title": "隐私政策",
-    "legal.privacy.description":
-      "了解 OldPhotoLive AI 如何收集、使用和保护你的信息。",
-    "legal.privacy.intro": "隐私说明",
-    "legal.privacy.contactTitle": "联系我们",
-    "legal.privacy.contactBody":
-      "如果你对本政策或隐私请求有任何问题，请使用下方邮箱联系我们。",
-    "legal.privacy.relatedLink": "查看服务条款",
-    "legal.privacy.sections.informationCollected.title": "1. 我们收集的信息",
-    "legal.privacy.sections.informationCollected.body": "信息说明",
-    "legal.privacy.sections.usage.title": "2. 信息的使用方式",
-    "legal.privacy.sections.usage.body": "用途说明",
-    "legal.privacy.sections.cookies.title": "3. Cookie、本地存储与分析",
-    "legal.privacy.sections.cookies.body": "Cookie 说明",
-    "legal.privacy.sections.sharing.title": "4. 我们如何共享信息",
-    "legal.privacy.sections.sharing.body": "共享说明",
-    "legal.privacy.sections.storage.title": "5. 存储与保留",
-    "legal.privacy.sections.storage.body": "存储说明",
-    "legal.privacy.sections.security.title": "6. 安全措施",
-    "legal.privacy.sections.security.body": "安全说明",
-    "legal.privacy.sections.internationalTransfers.title": "7. 跨境传输",
-    "legal.privacy.sections.internationalTransfers.body": "跨境说明",
-    "legal.privacy.sections.rights.title": "8. 你的权利与选择",
-    "legal.privacy.sections.rights.body": "权利说明",
-    "legal.privacy.sections.children.title": "9. 未成年人",
-    "legal.privacy.sections.children.body": "未成年人说明",
-    "legal.privacy.sections.changes.title": "10. 本政策的变更",
-    "legal.privacy.sections.changes.body": "政策变更说明",
-  },
-  ja: {
-    "landing.footer.description": "AI による写真修復",
-    "landing.footer.links.home": "ホーム",
-    "landing.footer.links.guides": "ガイド",
-    "landing.footer.links.pricing": "料金",
-    "landing.footer.links.privacy": "プライバシー",
-    "landing.footer.links.terms": "利用規約",
-    "landing.footer.copyright": "Copyright",
-    "legal.shared.lastUpdated": "最終更新",
-    "legal.terms.eyebrow": "規約",
-    "legal.terms.title": "利用規約",
-    "legal.terms.description":
-      "OldPhotoLive AI を利用する際のルールと条件です。",
-    "legal.terms.intro": "規約説明",
-    "legal.terms.contactTitle": "お問い合わせ",
-    "legal.terms.contactBody":
-      "法務または規約に関するお問い合わせは、以下のメールアドレスをご利用ください。",
-    "legal.terms.relatedLink": "プライバシーポリシーを見る",
-    "legal.terms.sections.eligibility.title": "1. 利用資格",
-    "legal.terms.sections.eligibility.body": "利用資格の説明",
-    "legal.terms.sections.serviceDescription.title": "2. サービス内容",
-    "legal.terms.sections.serviceDescription.body": "サービス説明",
-    "legal.terms.sections.accounts.title": "3. アカウントとアクセス",
-    "legal.terms.sections.accounts.body": "アカウント説明",
-    "legal.terms.sections.acceptableUse.title": "4. 許容される利用",
-    "legal.terms.sections.acceptableUse.body": "利用ルールの説明",
-    "legal.terms.sections.contentPermissions.title":
-      "5. アップロードされたコンテンツと権限",
-    "legal.terms.sections.contentPermissions.body": "権限の説明",
-    "legal.terms.sections.aiOutputs.title": "6. AI 出力",
-    "legal.terms.sections.aiOutputs.body": "AI 出力の説明",
-    "legal.terms.sections.payments.title": "7. 支払い、クレジット、サブスク",
-    "legal.terms.sections.payments.body": "支払いの説明",
-    "legal.terms.sections.termination.title": "8. 停止と終了",
-    "legal.terms.sections.termination.body": "停止の説明",
-    "legal.terms.sections.changes.title": "9. サービスと規約の変更",
-    "legal.terms.sections.changes.body": "変更の説明",
-    "legal.terms.sections.disclaimers.title": "10. 免責事項",
-    "legal.terms.sections.disclaimers.body": "免責事項の説明",
-    "legal.terms.sections.liability.title": "11. 責任の制限",
-    "legal.terms.sections.liability.body": "責任制限の説明",
-  },
 } as const;
 
 function getTranslation(
@@ -195,6 +130,7 @@ jest.mock("@/components/Navbar", () => ({
 }));
 
 import FooterSection from "@/app/sections/FooterSection";
+import AboutPage from "@/app/about/page";
 import PrivacyPolicyPage from "@/app/privacy/page";
 import TermsOfServicePage from "@/app/terms/page";
 import {
@@ -209,69 +145,84 @@ beforeEach(() => {
 });
 
 describe("FooterSection", () => {
-  it("renders locale-prefixed privacy and terms links", () => {
-    mockLocale = "zh";
-    __setMockLocale("zh");
+  it("renders locale-prefixed about, privacy, and terms links", () => {
     render(<FooterSection />);
 
-    expect(screen.getByText("隐私政策").closest("a")).toHaveAttribute(
+    expect(screen.getByText("About").closest("a")).toHaveAttribute(
       "href",
-      "/zh/privacy"
+      "/en/about"
     );
-    expect(screen.getByText("服务条款").closest("a")).toHaveAttribute(
+    expect(screen.getByText("Privacy").closest("a")).toHaveAttribute(
       "href",
-      "/zh/terms"
+      "/en/privacy"
+    );
+    expect(screen.getByText("Terms").closest("a")).toHaveAttribute(
+      "href",
+      "/en/terms"
     );
   });
 });
 
 describe("legal pages", () => {
+  it("renders the about page with operator, support email, and business address", async () => {
+    render((await AboutPage()) as React.ReactElement);
+
+    expect(
+      screen.getByRole("heading", { name: "About OldPhotoLive AI" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Syndred Young")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "support@oldphotoliveai.com" })
+    ).toHaveAttribute("href", "mailto:support@oldphotoliveai.com");
+    expect(
+      screen.getByText(
+        "Yifu Building, Area 45, Bao'an District, Shenzhen, Guangdong Province, China"
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/internal-only Google Ads workflow/i)
+    ).toBeInTheDocument();
+  });
+
   it("renders the privacy page with translated content and support email", async () => {
-    mockLocale = "zh";
-    __setMockLocale("zh");
     render((await PrivacyPolicyPage()) as React.ReactElement);
 
     expect(
-      screen.getByRole("heading", { name: "隐私政策" })
+      screen.getByRole("heading", { name: "Privacy Policy" })
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "如果你对本政策或隐私请求有任何问题，请使用下方邮箱联系我们。"
+        "Questions about this policy or privacy requests can be sent to the email below."
       )
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "查看服务条款" })).toHaveAttribute(
-      "href",
-      "/zh/terms"
-    );
+    expect(
+      screen.getByRole("link", { name: "View Terms of Service" })
+    ).toHaveAttribute("href", "/en/terms");
     expect(
       screen.getByRole("link", { name: "support@oldphotoliveai.com" })
     ).toHaveAttribute("href", "mailto:support@oldphotoliveai.com");
   });
 
   it("renders the terms page with translated content and support email", async () => {
-    mockLocale = "ja";
-    __setMockLocale("ja");
     render((await TermsOfServicePage()) as React.ReactElement);
 
     expect(
-      screen.getByRole("heading", { name: "利用規約" })
+      screen.getByRole("heading", { name: "Terms of Service" })
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "法務または規約に関するお問い合わせは、以下のメールアドレスをご利用ください。"
+        "For legal or terms-related inquiries, please use the email below."
       )
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "プライバシーポリシーを見る" })
-    ).toHaveAttribute("href", "/ja/privacy");
+      screen.getByRole("link", { name: "View Privacy Policy" })
+    ).toHaveAttribute("href", "/en/privacy");
     expect(
       screen.getByRole("link", { name: "support@oldphotoliveai.com" })
     ).toHaveAttribute("href", "mailto:support@oldphotoliveai.com");
   });
 
   it("renders an explicit NSFW prohibition on the terms page", async () => {
-    mockLocale = "en";
-    __setMockLocale("en");
     render((await TermsOfServicePage()) as React.ReactElement);
 
     expect(
