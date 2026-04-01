@@ -234,7 +234,7 @@
     "footer": {
       "description": "AI 驱动的照片修复、上色与动态化",
       "links": {
-        "about": "????",
+        "about": "关于",
         "home": "首页",
         "guides": "指南",
         "pricing": "价格",
@@ -250,20 +250,20 @@
       "lastUpdated": "最后更新"
     },
     "about": {
-      "eyebrow": "??",
-      "title": "?? OldPhotoLive AI",
-      "description": "?? OldPhotoLive AI ?????????????",
-      "intro": "OldPhotoLive AI ?????????? AI ??????????????????????????",
-      "operatorTitle": "???",
-      "operatorBody": "OldPhotoLive AI ? Syndred Young ????????????",
-      "contactTitle": "??????",
-      "contactBody": "???????????????????????????",
-      "emailLabel": "????",
-      "addressLabel": "????",
-      "adsTitle": "??????",
-      "adsBody": "??????????? Google Ads ?????????????????????????????????",
-      "privacyLink": "??????",
-      "termsLink": "??????"
+      "eyebrow": "关于",
+      "title": "关于 OldPhotoLive AI",
+      "description": "了解谁在运营 OldPhotoLive AI 以及如何联系该业务。",
+      "intro": "OldPhotoLive AI 是一项面向海外用户的 AI 老照片修复服务，帮助用户在线修复、上色并动态化珍贵的家庭旧照。",
+      "operatorTitle": "运营者",
+      "operatorBody": "OldPhotoLive AI 由 Syndred Young 作为服务的唯一所有者和运营者负责运营。",
+      "contactTitle": "业务联系",
+      "contactBody": "如有业务、客户支持或合规相关咨询，请使用下方官方联系方式。",
+      "emailLabel": "官方邮箱",
+      "addressLabel": "营业地址",
+      "adsTitle": "内部广告运营",
+      "adsBody": "我们使用仅供内部使用的 Google Ads 工作流，为 OldPhotoLive AI 进行关键词研究、广告活动准备支持和效果报告。该工作流不向第三方提供。",
+      "privacyLink": "查看隐私政策",
+      "termsLink": "查看服务条款"
     },
     "privacy": {
       "eyebrow": "隐私",
@@ -315,8 +315,8 @@
           "body": "我们可能会因产品变化、法律要求或运营需要而更新本隐私政策。若发生重要更新，我们会修改“最后更新”日期，并在适当情况下提供额外通知。"
         }
       },
-      "businessInfoTitle": "????",
-      "businessInfoBody": "OldPhotoLive AI ? Syndred Young ?????????????????????????"
+      "businessInfoTitle": "业务信息",
+      "businessInfoBody": "OldPhotoLive AI 由 Syndred Young 运营。以下联系方式用于业务、客户支持和合规请求。"
     },
     "terms": {
       "eyebrow": "条款",
@@ -372,8 +372,8 @@
           "body": "在法律允许的最大范围内，OldPhotoLive AI 及其服务提供商不对任何间接、附带、特殊、后果性、惩罚性损害，或利润、收入、商誉、数据和商业机会损失承担责任。如法律要求设定直接损害赔偿上限，我们在导致索赔事件发生前 12 个月内就相关付费服务向你收取的金额，将构成我们的责任总上限。"
         }
       },
-      "businessInfoTitle": "????",
-      "businessInfoBody": "OldPhotoLive AI ? Syndred Young ?????????????????????????"
+      "businessInfoTitle": "业务信息",
+      "businessInfoBody": "OldPhotoLive AI 由 Syndred Young 运营。以下联系方式适用于法律、业务和合规事项。"
     }
   }
 }
