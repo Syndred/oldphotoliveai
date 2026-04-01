@@ -41,6 +41,9 @@ const translations = {
     "legal.privacy.contactTitle": "Contact",
     "legal.privacy.contactBody":
       "Questions about this policy or privacy requests can be sent to the email below.",
+    "legal.privacy.businessInfoTitle": "Business Information",
+    "legal.privacy.businessInfoBody":
+      "OldPhotoLive AI is operated by Syndred Young. The following contact details are provided for business, customer support, and compliance requests.",
     "legal.privacy.relatedLink": "View Terms of Service",
     "legal.privacy.sections.informationCollected.title":
       "1. Information We Collect",
@@ -73,6 +76,9 @@ const translations = {
     "legal.terms.contactTitle": "Contact",
     "legal.terms.contactBody":
       "For legal or terms-related inquiries, please use the email below.",
+    "legal.terms.businessInfoTitle": "Business Information",
+    "legal.terms.businessInfoBody":
+      "OldPhotoLive AI is operated by Syndred Young. The following contact details apply to legal, business, and compliance matters.",
     "legal.terms.relatedLink": "View Privacy Policy",
     "legal.terms.sections.eligibility.title": "1. Eligibility",
     "legal.terms.sections.eligibility.body": "Eligibility body",
@@ -199,8 +205,24 @@ describe("legal pages", () => {
       screen.getByRole("link", { name: "View Terms of Service" })
     ).toHaveAttribute("href", "/en/terms");
     expect(
-      screen.getByRole("link", { name: "support@oldphotoliveai.com" })
-    ).toHaveAttribute("href", "mailto:support@oldphotoliveai.com");
+      screen
+        .getAllByRole("link", { name: "support@oldphotoliveai.com" })
+        .every((link) => link.getAttribute("href") === "mailto:support@oldphotoliveai.com")
+    ).toBe(true);
+  });
+
+  it("renders business information on the privacy page", async () => {
+    render((await PrivacyPolicyPage()) as React.ReactElement);
+
+    expect(
+      screen.getByRole("heading", { name: "Business Information" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Syndred Young")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Yifu Building, Area 45, Bao'an District, Shenzhen, Guangdong Province, China"
+      )
+    ).toBeInTheDocument();
   });
 
   it("renders the terms page with translated content and support email", async () => {
@@ -218,8 +240,24 @@ describe("legal pages", () => {
       screen.getByRole("link", { name: "View Privacy Policy" })
     ).toHaveAttribute("href", "/en/privacy");
     expect(
-      screen.getByRole("link", { name: "support@oldphotoliveai.com" })
-    ).toHaveAttribute("href", "mailto:support@oldphotoliveai.com");
+      screen
+        .getAllByRole("link", { name: "support@oldphotoliveai.com" })
+        .every((link) => link.getAttribute("href") === "mailto:support@oldphotoliveai.com")
+    ).toBe(true);
+  });
+
+  it("renders business information on the terms page", async () => {
+    render((await TermsOfServicePage()) as React.ReactElement);
+
+    expect(
+      screen.getAllByRole("heading", { name: "Business Information" }).length
+    ).toBeGreaterThan(0);
+    expect(screen.getByText("Syndred Young")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Yifu Building, Area 45, Bao'an District, Shenzhen, Guangdong Province, China"
+      )
+    ).toBeInTheDocument();
   });
 
   it("renders an explicit NSFW prohibition on the terms page", async () => {

@@ -2,7 +2,11 @@ import { getTranslations } from "next-intl/server";
 import Navbar from "@/components/Navbar";
 import FooterSection from "@/app/sections/FooterSection";
 import { Link } from "@/i18n/navigation";
-import { SUPPORT_EMAIL } from "@/lib/site";
+import {
+  BUSINESS_ADDRESS,
+  BUSINESS_OPERATOR,
+  SUPPORT_EMAIL,
+} from "@/lib/site";
 
 const LAST_UPDATED = "March 14, 2026";
 
@@ -79,6 +83,27 @@ export default async function PrivacyPolicyPage() {
                 >
                   {SUPPORT_EMAIL}
                 </a>
+              </section>
+
+              <section className="rounded-2xl border border-white/8 bg-white/[0.025] p-5 sm:p-6">
+                <h2 className="text-lg font-semibold text-[var(--color-text-primary)] sm:text-xl">
+                  {t("businessInfoTitle")}
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                  {t("businessInfoBody")}
+                </p>
+                <p className="mt-4 text-sm font-medium text-[var(--color-text-primary)]">
+                  {BUSINESS_OPERATOR}
+                </p>
+                <a
+                  className="mt-3 inline-flex min-h-[44px] items-center rounded-full border border-white/12 bg-white/[0.03] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.06] hover:text-white"
+                  href={`mailto:${SUPPORT_EMAIL}`}
+                >
+                  {SUPPORT_EMAIL}
+                </a>
+                <p className="mt-4 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                  {BUSINESS_ADDRESS}
+                </p>
               </section>
 
               <div className="flex justify-start border-t border-white/10 pt-2">
