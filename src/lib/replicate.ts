@@ -26,7 +26,7 @@ export const MODELS = {
 // Fixed animation parameters - readonly, not overridable (Req 16.2)
 // Keep animation short and stable for natural micro-expressions.
 export const ANIMATION_PARAMS = {
-  duration: 2,
+  duration: 4,
   fps: 24,
   camera_fixed: true,
   prompt:

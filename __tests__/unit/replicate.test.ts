@@ -62,7 +62,7 @@ describe("MODELS constant", () => {
 describe("ANIMATION_PARAMS constant", () => {
   it("has the correct fixed values", () => {
     expect(ANIMATION_PARAMS).toEqual({
-      duration: 2,
+      duration: 4,
       fps: 24,
       camera_fixed: true,
       prompt:
@@ -152,7 +152,7 @@ describe("runModel", () => {
       {
         input: {
           image: "https://input.url/photo.jpg",
-          duration: 2,
+          duration: 4,
           fps: 24,
           resolution: "720p",
           camera_fixed: true,
@@ -175,7 +175,7 @@ describe("runModel", () => {
       expect.objectContaining({
         input: expect.objectContaining({
           image: "https://input.url/photo.jpg",
-          duration: 2,
+          duration: 4,
           resolution: "1080p",
         }),
       })
