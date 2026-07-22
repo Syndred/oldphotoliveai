@@ -1,11 +1,11 @@
 import { POST } from "@/app/api/tasks/route";
 import { NextRequest } from "next/server";
-import type { User, Task } from "@/types";
+import type { CreateTaskInput, User, Task } from "@/types";
 
 // ── Mock dependencies ───────────────────────────────────────────────────────
 
 const mockGetUser = jest.fn<Promise<User | null>, [string]>();
-const mockCreateTask = jest.fn<Promise<Task>, [{ userId: string; originalImageKey: string; priority: string }]>();
+const mockCreateTask = jest.fn<Promise<Task>, [CreateTaskInput]>();
 const mockGetToken = jest.fn();
 const mockCheckAndDecrementQuota = jest.fn();
 const mockEnqueueTask = jest.fn().mockResolvedValue(undefined);
@@ -16,7 +16,7 @@ jest.mock("next-auth/jwt", () => ({
 
 jest.mock("@/lib/redis", () => ({
   getUser: (...args: unknown[]) => mockGetUser(args[0] as string),
-  createTask: (...args: unknown[]) => mockCreateTask(args[0] as { userId: string; originalImageKey: string; priority: string }),
+  createTask: (...args: unknown[]) => mockCreateTask(args[0] as CreateTaskInput),
 }));
 
 jest.mock("@/lib/queue", () => ({
@@ -242,8 +242,30 @@ describe("POST /api/tasks", () => {
       userId: "test-user-001",
       originalImageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
       priority: "normal",
+      workflow: "full",
     });
     expect(mockCheckAndDecrementQuota).toHaveBeenCalledWith("test-user-001", "free");
+  });
+
+  it("passes a valid workflow through to createTask", async () => {
+    const user = makeFakeUser({ tier: "free" });
+    const task = makeFakeTask({ workflow: "colorize" });
+    mockGetUser.mockResolvedValue(user);
+    mockCreateTask.mockResolvedValue(task);
+
+    const req = createJsonRequest({
+      imageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
+      workflow: "colorize",
+    });
+    const res = await POST(req);
+
+    expect(res.status).toBe(201);
+    expect(mockCreateTask).toHaveBeenCalledWith({
+      userId: "test-user-001",
+      originalImageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
+      priority: "normal",
+      workflow: "colorize",
+    });
   });
 
   it("creates task with high priority for pay_as_you_go user", async () => {
@@ -263,6 +285,7 @@ describe("POST /api/tasks", () => {
       userId: "paid-user",
       originalImageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
       priority: "high",
+      workflow: "full",
     });
     expect(mockCheckAndDecrementQuota).toHaveBeenCalledWith("paid-user", "pay_as_you_go");
   });
@@ -283,6 +306,7 @@ describe("POST /api/tasks", () => {
       userId: "pro-user",
       originalImageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
       priority: "urgent",
+      workflow: "full",
     });
     expect(mockCheckAndDecrementQuota).toHaveBeenCalledWith("pro-user", "professional");
   });

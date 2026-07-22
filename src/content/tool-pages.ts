@@ -179,9 +179,9 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
           "Use AI to handle fading, washed-out contrast, small scratches, and soft facial detail before you spend time on manual retouching.",
       },
       {
-        title: "Keep the same job in one product",
+        title: "Choose the exact job you need",
         body:
-          "You do not need a separate tool for restoration, a different one for colorization, and a third one for animation. The workflow stays connected.",
+          "Use restoration by itself when you only need a cleaner image, then move to colorization or animation later if the photo calls for it.",
       },
       {
         title: "Give old family archives a faster first pass",
@@ -214,7 +214,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
       {
         question: "What is the best way to restore old photos online?",
         answer:
-          "Scan or photograph the original print as clearly as possible, then upload it to OldPhotoLive AI. The restoration workflow repairs fading, scratches, low contrast, and soft facial detail before you download or continue into colorization.",
+          "Scan or photograph the original print as clearly as possible, then upload it to OldPhotoLive AI. The restoration tool repairs fading, scratches, low contrast, and soft facial detail before you download the cleaner image.",
       },
       {
         question: "Can faded black and white photos be restored?",
@@ -296,7 +296,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
       {
         title: "Start with a cleaner source image",
         body:
-          "Because the same pipeline repairs the image first, color is added to a stronger base instead of a faded, scratch-heavy original.",
+          "This colorization tool repairs the image first, so color is added to a stronger base instead of a faded, scratch-heavy original.",
       },
       {
         title: "Make old memories easier to share",
@@ -339,7 +339,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
       {
         question: "Will the workflow repair the photo before adding color?",
         answer:
-          "Yes. The pipeline restores the image first so the final colorized result has cleaner structure and fewer visible defects.",
+          "Yes. This colorization entry restores the image first so the final result has cleaner structure and fewer visible defects.",
       },
       {
         question: "What kind of source photos work well here?",
@@ -354,7 +354,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
       {
         question: "Can I animate the colorized photo afterward?",
         answer:
-          "Yes. After colorization, you can continue into the animation workflow if the photo has a clear portrait subject.",
+          "Yes. After downloading the colorized result, you can use the animation tool if the photo has a clear portrait subject.",
       },
     ],
     relatedTitle: "More old-photo workflows",
@@ -448,7 +448,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
       {
         question: "Does the workflow still restore the image first?",
         answer:
-          "Yes. The pipeline still repairs and improves the image before generating the animation result, which usually produces a stronger final clip.",
+          "Yes. The animation entry repairs and improves the image before generating motion, which usually produces a stronger final clip.",
       },
       {
         question: "What kind of photos animate best?",
@@ -555,9 +555,9 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
           "Fading, low contrast, dust, scratches, and moderate surface wear are the most common cases. Very severe loss of detail may still need manual retouching after the AI pass.",
       },
       {
-        question: "Will the same workflow also colorize and animate the photo?",
+        question: "Can I colorize or animate the repaired photo afterward?",
         answer:
-          "Yes. After the visible damage has been cleaned up, you can continue into colorization or animation.",
+          "Yes. This repair page focuses on cleanup first; after that, you can use the colorization or animation tools if you want another result.",
       },
       {
         question: "Do I need to buy a special damage-repair package?",

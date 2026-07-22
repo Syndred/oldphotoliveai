@@ -18,37 +18,37 @@ const PAY_AS_YOU_GO = {
 
 const STARTER_PACK = {
   productName: `${APP_NAME} Starter Pack`,
-  lookupKey: `${APP_ID}_starter_pack_5_credits_usd_v1`,
+  lookupKey: `${APP_ID}_starter_pack_10_credits_usd_v1`,
   unitAmount: 499,
   currency: "usd",
   metadata: {
     app: APP_ID,
     plan: "starter_pack",
-    credits: "5",
+    credits: "10",
   },
 };
 
 const FAMILY_PACK = {
   productName: `${APP_NAME} Family Pack`,
-  lookupKey: `${APP_ID}_family_pack_12_credits_usd_v1`,
+  lookupKey: `${APP_ID}_family_pack_25_credits_usd_v1`,
   unitAmount: 999,
   currency: "usd",
   metadata: {
     app: APP_ID,
     plan: "family_pack",
-    credits: "12",
+    credits: "25",
   },
 };
 
 const ARCHIVE_PACK = {
   productName: `${APP_NAME} Archive Pack`,
-  lookupKey: `${APP_ID}_archive_pack_30_credits_usd_v1`,
+  lookupKey: `${APP_ID}_archive_pack_60_credits_usd_v1`,
   unitAmount: 1999,
   currency: "usd",
   metadata: {
     app: APP_ID,
     plan: "archive_pack",
-    credits: "30",
+    credits: "60",
   },
 };
 

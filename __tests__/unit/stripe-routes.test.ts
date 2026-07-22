@@ -201,7 +201,7 @@ describe("Stripe checkout route", () => {
                 name: "OldPhotoLive AI Family Pack",
                 metadata: {
                   plan: "family_pack",
-                  credits: "12",
+                  credits: "25",
                 },
               },
             },
@@ -210,7 +210,7 @@ describe("Stripe checkout route", () => {
         metadata: {
           userId: "user-123",
           plan: "family_pack",
-          credits: "12",
+          credits: "25",
         },
       })
     );
@@ -390,7 +390,7 @@ describe("Stripe webhook route", () => {
           metadata: {
             userId: "user-123",
             plan: "family_pack",
-            credits: "12",
+            credits: "25",
           },
           customer_details: {
             email: "owner@example.com",
@@ -412,7 +412,7 @@ describe("Stripe webhook route", () => {
     const response = await webhookPost(request);
 
     expect(response.status).toBe(200);
-    expect(mockAddCredits).toHaveBeenCalledWith("user-123", 12, 365);
+    expect(mockAddCredits).toHaveBeenCalledWith("user-123", 25, 365);
     expect(mockUpdateUserTier).toHaveBeenCalledWith("user-123", "pay_as_you_go");
   });
 

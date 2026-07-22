@@ -19,11 +19,19 @@ import {
   buildSoftwareApplicationJsonLd,
 } from "@/lib/seo";
 import type { Locale } from "@/i18n/routing";
+import type { TaskWorkflow } from "@/types";
 
 interface ToolLandingPageProps {
   locale: Locale;
   slug: ToolPageSlug;
 }
+
+const TOOL_WORKFLOWS: Record<ToolPageSlug, TaskWorkflow> = {
+  "restore-old-photos": "restore",
+  "colorize-old-photos": "colorize",
+  "animate-old-photos": "animate",
+  "repair-damaged-old-photos": "restore",
+};
 
 export default function ToolLandingPage({
   locale,
@@ -91,6 +99,7 @@ export default function ToolLandingPage({
                 variant="embedded"
                 showHeader={false}
                 className="h-full"
+                workflow={TOOL_WORKFLOWS[tool.slug]}
               />
             </div>
 

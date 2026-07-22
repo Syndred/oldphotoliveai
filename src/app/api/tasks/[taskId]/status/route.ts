@@ -38,6 +38,7 @@ export async function GET(
     const response: Record<string, unknown> = {
       status: task.status,
       progress: task.progress,
+      workflow: task.workflow ?? "full",
     };
 
     if (task.errorMessage) {

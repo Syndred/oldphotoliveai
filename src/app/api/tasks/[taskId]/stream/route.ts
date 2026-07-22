@@ -76,6 +76,7 @@ export async function GET(
           const eventData: Record<string, unknown> = {
             status: task.status,
             progress: task.progress,
+            workflow: task.workflow ?? "full",
           };
 
           if (task.errorMessage) {

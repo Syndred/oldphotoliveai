@@ -67,15 +67,15 @@ jest.mock("next-intl", () => ({
           freeFeature2: "Image export up to 800x600",
           freeFeature3: "480p video output",
           freeFeature4: "Watermark on image output",
-          starterPackFeature1: "5 paid credits",
+          starterPackFeature1: "10 paid credits",
           starterPackFeature2: "2K image export (up to 2048px)",
           starterPackFeature3: "720p HD video",
           starterPackFeature4: "Watermark-free downloads",
-          familyPackFeature1: "12 paid credits",
+          familyPackFeature1: "25 paid credits",
           familyPackFeature2: "2K image export (up to 2048px)",
           familyPackFeature3: "720p HD video",
           familyPackFeature4: "Watermark-free downloads",
-          archivePackFeature1: "30 paid credits",
+          archivePackFeature1: "60 paid credits",
           archivePackFeature2: "2K image export (up to 2048px)",
           archivePackFeature3: "720p HD video",
           archivePackFeature4: "Watermark-free downloads",
@@ -278,9 +278,9 @@ describe("PricingCards", () => {
   it("displays features for each plan", () => {
     render(<PricingCards />);
     expect(screen.getByText("1 photo per day")).toBeInTheDocument();
-    expect(screen.getByText("5 paid credits")).toBeInTheDocument();
-    expect(screen.getByText("12 paid credits")).toBeInTheDocument();
-    expect(screen.getByText("30 paid credits")).toBeInTheDocument();
+    expect(screen.getByText("10 paid credits")).toBeInTheDocument();
+    expect(screen.getByText("25 paid credits")).toBeInTheDocument();
+    expect(screen.getByText("60 paid credits")).toBeInTheDocument();
     expect(screen.getByText("480p video output")).toBeInTheDocument();
     expect(screen.getAllByText("720p HD video")).toHaveLength(3);
   });

@@ -31,12 +31,14 @@ export type TaskStatus =
 
 export type TaskPriority = "normal" | "high" | "urgent";
 export type TaskFailureStage = "restoring" | "colorizing" | "animating" | null;
+export type TaskWorkflow = "full" | "restore" | "colorize" | "animate";
 
 export interface Task {
   id: string;
   userId: string;
   status: TaskStatus;
   priority: TaskPriority;
+  workflow?: TaskWorkflow;
   originalImageKey: string;
   restoredImageKey: string | null;
   colorizedImageKey: string | null;
@@ -53,6 +55,7 @@ export interface CreateTaskInput {
   userId: string;
   originalImageKey: string;
   priority: TaskPriority;
+  workflow?: TaskWorkflow;
 }
 
 // ============================================================

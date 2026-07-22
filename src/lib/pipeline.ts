@@ -3,7 +3,7 @@ import { runModel } from "./replicate";
 import { uploadToR2, getR2CdnUrl } from "./r2";
 import { applyImageWatermark, resizeImage } from "./watermark";
 import { v4 as uuidv4 } from "uuid";
-import type { TaskFailureStage, UserTier } from "@/types";
+import type { TaskFailureStage, TaskWorkflow, UserTier } from "@/types";
 
 const DOWNLOAD_TIMEOUT_MS = 30_000;
 const DOWNLOAD_MAX_RETRIES = 2;
@@ -240,6 +240,18 @@ function isFreeTier(tier: UserTier): boolean {
   return tier === "free";
 }
 
+function getTaskWorkflow(workflow: TaskWorkflow | undefined): TaskWorkflow {
+  return workflow ?? "full";
+}
+
+function needsColorization(workflow: TaskWorkflow): boolean {
+  return workflow === "full" || workflow === "colorize";
+}
+
+function needsAnimation(workflow: TaskWorkflow): boolean {
+  return workflow === "full" || workflow === "animate";
+}
+
 function getTierModelConfig(tier: UserTier): TierModelConfig {
   return TIER_MODEL_CONFIG[tier];
 }
@@ -279,6 +291,7 @@ export async function executePipeline(taskId: string): Promise<void> {
 
   const tier = user.tier;
   const tierModelConfig = getTierModelConfig(tier);
+  const workflow = getTaskWorkflow(task.workflow);
   let failureStage: TaskFailureStage = null;
 
   try {
@@ -307,10 +320,23 @@ export async function executePipeline(taskId: string): Promise<void> {
       throw new Error("Restored image missing after restoration step.");
     }
 
+    const shouldColorize = needsColorization(workflow);
+    const shouldAnimate = needsAnimation(workflow);
+
+    if (!shouldColorize && !shouldAnimate) {
+      await updateTaskStatus(taskId, "completed", {
+        restoredImageKey: restoredKey,
+        errorMessage: null,
+        internalErrorMessage: null,
+        failureStage: null,
+      });
+      return;
+    }
+
     let colorizedKey = task.colorizedImageKey;
     let colorizedCdnUrl: string | null = colorizedKey ? getR2CdnUrl(colorizedKey) : null;
 
-    if (!colorizedKey || !colorizedCdnUrl) {
+    if (shouldColorize && (!colorizedKey || !colorizedCdnUrl)) {
       failureStage = "colorizing";
       await updateTaskStatus(taskId, "colorizing", {
         restoredImageKey: restoredKey,
@@ -328,18 +354,31 @@ export async function executePipeline(taskId: string): Promise<void> {
       colorizedCdnUrl = getR2CdnUrl(colorizedKey);
     }
 
-    if (!colorizedKey || !colorizedCdnUrl) {
+    if (shouldColorize && (!colorizedKey || !colorizedCdnUrl)) {
       throw new Error("Colorized image missing after colorization step.");
+    }
+
+    if (!shouldAnimate) {
+      await updateTaskStatus(taskId, "completed", {
+        restoredImageKey: restoredKey,
+        colorizedImageKey: colorizedKey,
+        errorMessage: null,
+        internalErrorMessage: null,
+        failureStage: null,
+      });
+      return;
     }
 
     failureStage = "animating";
     await updateTaskStatus(taskId, "animating", {
-      colorizedImageKey: colorizedKey,
+      restoredImageKey: restoredKey,
+      ...(colorizedKey ? { colorizedImageKey: colorizedKey } : {}),
     });
 
+    const animationInputUrl = colorizedCdnUrl ?? restoredCdnUrl;
     const animationOutputUrl = await runModel(
       tierModelConfig.animation.modelKey,
-      tierModelConfig.animation.createInput(colorizedCdnUrl)
+      tierModelConfig.animation.createInput(animationInputUrl)
     );
 
     const animationBuffer = await downloadBuffer(animationOutputUrl);
@@ -347,6 +386,8 @@ export async function executePipeline(taskId: string): Promise<void> {
     await uploadToR2(animationBuffer, animationKey, "video/mp4");
 
     await updateTaskStatus(taskId, "completed", {
+      restoredImageKey: restoredKey,
+      ...(colorizedKey ? { colorizedImageKey: colorizedKey } : {}),
       animationVideoKey: animationKey,
       errorMessage: null,
       internalErrorMessage: null,

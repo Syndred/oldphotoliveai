@@ -186,6 +186,7 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
     userId: input.userId,
     status: "pending",
     priority: input.priority,
+    workflow: input.workflow ?? "full",
     originalImageKey: input.originalImageKey,
     restoredImageKey: null,
     colorizedImageKey: null,

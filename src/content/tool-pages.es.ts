@@ -23,7 +23,7 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
     eyebrow: "Restauración con IA",
     heroTitle: "Restaura fotos antiguas sin reconstruir la imagen a mano",
     heroDescription:
-      "Sube una foto familiar dañada y deja que el mismo flujo recupere detalle, mejore el contraste y prepare la imagen para color y animación.",
+      "Sube una foto familiar dañada para recuperar detalle, mejorar el contraste y obtener una imagen más limpia para guardar o seguir editando.",
     heroHighlights: [
       "Repara copias descoloridas y escaneos con poco contraste",
       "Recupera rostros, texturas de ropa y detalle del fondo",
@@ -47,9 +47,9 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
           "Usa IA para tratar desvanecimiento, contraste lavado, pequeños arañazos y detalle facial suave antes de invertir tiempo en retoque manual.",
       },
       {
-        title: "Haz todo dentro del mismo producto",
+        title: "Elige solo la tarea que necesitas",
         body:
-          "No necesitas una herramienta para restaurar, otra para colorizar y una tercera para animar. El flujo sigue conectado.",
+          "Puedes restaurar la foto por sí sola y, si luego quieres color o movimiento, seguir con las herramientas de colorización o animación.",
       },
       {
         title: "Acelera la primera pasada sobre archivos familiares",
@@ -75,7 +75,7 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
       {
         question: "¿Puedo colorizar o animar la imagen restaurada después?",
         answer:
-          "Sí. Cuando la imagen ya está limpia, puedes seguir con colorización o animación desde la misma cuenta.",
+          "Sí. Esta página se centra en restaurar; cuando la imagen ya está limpia, puedes usar las herramientas de colorización o animación desde la misma cuenta.",
       },
       {
         question: "¿Cómo elijo entre paquetes de créditos?",
@@ -129,7 +129,7 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
       {
         title: "Empieza con una imagen más limpia",
         body:
-          "Como el mismo pipeline repara primero la foto, el color se añade sobre una base más sólida y no sobre un original desvaído y lleno de arañazos.",
+          "La herramienta de colorización repara primero la foto, así que el color se añade sobre una base más sólida y no sobre un original desvaído y lleno de arañazos.",
       },
       {
         title: "Más fácil de compartir e imprimir",
@@ -150,12 +150,12 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
       {
         question: "¿La foto se repara antes de añadir color?",
         answer:
-          "Sí. El flujo restaura primero la imagen para que el resultado final tenga mejor estructura y menos defectos visibles.",
+          "Sí. La entrada de colorización restaura primero la imagen para que el resultado final tenga mejor estructura y menos defectos visibles.",
       },
       {
         question: "¿Puedo seguir descargando la imagen final y la animación?",
         answer:
-          "Sí. Puedes descargar la imagen final tras la colorización y, si quieres, continuar luego con animación.",
+          "Sí. Puedes descargar la imagen final tras la colorización y, si quieres movimiento, usar después la herramienta de animación.",
       },
       {
         question: "¿Qué tipo de fotos funcionan mejor aquí?",
@@ -230,7 +230,7 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
       {
         question: "¿La imagen se restaura antes de animarla?",
         answer:
-          "Sí. El pipeline sigue reparando y mejorando la imagen antes de generar la animación, lo que normalmente da un clip final más sólido.",
+          "Sí. La entrada de animación repara y mejora la imagen antes de generar movimiento, lo que normalmente da un clip final más sólido.",
       },
       {
         question: "¿Qué fotos se animan mejor?",
@@ -313,9 +313,9 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
           "Desvanecimiento, contraste bajo, polvo, arañazos y desgaste moderado de superficie son los casos más comunes. La pérdida severa de detalle puede requerir retoque manual después del paso de IA.",
       },
       {
-        question: "¿El mismo flujo también puede colorizar y animar la foto?",
+        question: "¿Puedo colorizar o animar la foto reparada después?",
         answer:
-          "Sí. Una vez limpio el daño visible, puedes continuar con colorización o animación.",
+          "Sí. Esta página se centra en reparar el daño visible; después puedes usar las herramientas de colorización o animación.",
       },
       {
         question: "¿Tengo que comprar un paquete especial para reparar daños?",

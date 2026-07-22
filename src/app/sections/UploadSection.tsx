@@ -8,6 +8,7 @@ import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { localizePathname, type Locale } from "@/i18n/routing";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { getContentSafetyCopy } from "@/lib/content-safety";
+import type { TaskWorkflow } from "@/types";
 
 interface UploadSectionProps {
   title?: string;
@@ -16,6 +17,7 @@ interface UploadSectionProps {
   variant?: "default" | "embedded";
   showHeader?: boolean;
   className?: string;
+  workflow?: TaskWorkflow;
 }
 
 export default function UploadSection({
@@ -25,6 +27,7 @@ export default function UploadSection({
   variant = "default",
   showHeader = true,
   className = "",
+  workflow = "full",
 }: UploadSectionProps = {}) {
   const router = useRouter();
   const pathname = usePathname();
@@ -67,7 +70,7 @@ export default function UploadSection({
       const res = await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageKey }),
+        body: JSON.stringify({ imageKey, workflow }),
       });
 
       if (!res.ok) {

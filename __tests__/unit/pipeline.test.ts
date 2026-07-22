@@ -85,8 +85,8 @@ function mockSourceImageAccessible() {
   });
 }
 
-function setupSuccessfulPipeline() {
-  mockGetTask.mockResolvedValue(makeTask());
+function setupSuccessfulPipeline(taskOverrides?: Partial<Task>) {
+  mockGetTask.mockResolvedValue(makeTask(taskOverrides));
   mockGetUser.mockResolvedValue(makeUser());
   mockGetR2CdnUrl.mockImplementation((key: string) => `https://cdn.test.com/${key}`);
   mockUploadToR2.mockResolvedValue("key");
@@ -120,7 +120,15 @@ function setupSuccessfulPipeline() {
 // ── Setup / Teardown ────────────────────────────────────────────────────────
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  mockGetTask.mockReset();
+  mockUpdateTaskStatus.mockReset();
+  mockGetUser.mockReset();
+  mockRunModel.mockReset();
+  mockUploadToR2.mockReset();
+  mockGetR2CdnUrl.mockReset();
+  mockApplyImageWatermark.mockReset();
+  mockResizeImage.mockReset();
+  mockFetch.mockReset();
   mockUuidV4.mockReset().mockReturnValue(ASSET_UUID);
 });
 
@@ -144,6 +152,8 @@ describe("executePipeline", () => {
         TASK_ID,
         "completed",
         {
+          restoredImageKey: RESTORED_KEY,
+          colorizedImageKey: COLORIZED_KEY,
           animationVideoKey: ANIMATION_KEY,
           errorMessage: null,
           internalErrorMessage: null,
@@ -206,7 +216,7 @@ describe("executePipeline", () => {
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(
         TASK_ID,
         "animating",
-        { colorizedImageKey: COLORIZED_KEY }
+        { restoredImageKey: RESTORED_KEY, colorizedImageKey: COLORIZED_KEY }
       );
     });
 
@@ -229,6 +239,80 @@ describe("executePipeline", () => {
       expect(mockRunModel.mock.calls[2][1]).toEqual({
         input_image: `https://cdn.test.com/${COLORIZED_KEY}`,
       });
+    });
+
+    it("runs only restoration for restore workflow tasks", async () => {
+      setupSuccessfulPipeline({ workflow: "restore" });
+
+      await executePipeline(TASK_ID);
+
+      expect(mockRunModel).toHaveBeenCalledTimes(1);
+      expect(mockRunModel.mock.calls[0][0]).toBe("restoration");
+      expect(mockUpdateTaskStatus.mock.calls.map((call) => call[1])).toEqual([
+        "restoring",
+        "completed",
+      ]);
+      expect(mockUpdateTaskStatus).toHaveBeenLastCalledWith(TASK_ID, "completed", {
+        restoredImageKey: RESTORED_KEY,
+        errorMessage: null,
+        internalErrorMessage: null,
+        failureStage: null,
+      });
+      expect(mockUploadToR2).toHaveBeenCalledTimes(1);
+      expect(mockUploadToR2).toHaveBeenCalledWith(
+        expect.any(Buffer),
+        RESTORED_KEY,
+        "image/jpeg"
+      );
+    });
+
+    it("runs restoration and colorization for colorize workflow tasks", async () => {
+      setupSuccessfulPipeline({ workflow: "colorize" });
+
+      await executePipeline(TASK_ID);
+
+      expect(mockRunModel).toHaveBeenCalledTimes(2);
+      expect(mockRunModel.mock.calls[0][0]).toBe("restoration");
+      expect(mockRunModel.mock.calls[1][0]).toBe("colorization");
+      expect(mockUpdateTaskStatus.mock.calls.map((call) => call[1])).toEqual([
+        "restoring",
+        "colorizing",
+        "completed",
+      ]);
+      expect(mockUpdateTaskStatus).toHaveBeenLastCalledWith(TASK_ID, "completed", {
+        restoredImageKey: RESTORED_KEY,
+        colorizedImageKey: COLORIZED_KEY,
+        errorMessage: null,
+        internalErrorMessage: null,
+        failureStage: null,
+      });
+      expect(mockUploadToR2).toHaveBeenCalledTimes(2);
+    });
+
+    it("runs restoration and animation for animate workflow tasks", async () => {
+      setupSuccessfulPipeline({ workflow: "animate" });
+
+      await executePipeline(TASK_ID);
+
+      expect(mockRunModel).toHaveBeenCalledTimes(2);
+      expect(mockRunModel.mock.calls[0][0]).toBe("restoration");
+      expect(mockRunModel.mock.calls[1][0]).toBe("animationFree");
+      expect(mockRunModel.mock.calls[1][1]).toEqual({
+        input_image: `https://cdn.test.com/${RESTORED_KEY}`,
+      });
+      expect(mockUpdateTaskStatus.mock.calls.map((call) => call[1])).toEqual([
+        "restoring",
+        "animating",
+        "completed",
+      ]);
+      expect(mockUpdateTaskStatus).toHaveBeenLastCalledWith(TASK_ID, "completed", {
+        restoredImageKey: RESTORED_KEY,
+        animationVideoKey: ANIMATION_KEY,
+        errorMessage: null,
+        internalErrorMessage: null,
+        failureStage: null,
+      });
+      expect(mockUploadToR2).toHaveBeenCalledTimes(2);
     });
   });
 

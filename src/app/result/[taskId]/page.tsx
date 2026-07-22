@@ -14,8 +14,30 @@ import { resolveTaskErrorMessage } from "@/lib/task-error";
 
 interface TaskResult {
   originalImageKey: string;
-  colorizedImageKey: string;
-  animationVideoKey: string;
+  restoredImageKey?: string;
+  colorizedImageKey?: string;
+  animationVideoKey?: string;
+}
+
+function getTaskResult(data: Record<string, unknown>): TaskResult | null {
+  const restoredImageKey =
+    typeof data.restoredImageKey === "string" ? data.restoredImageKey : undefined;
+  const colorizedImageKey =
+    typeof data.colorizedImageKey === "string" ? data.colorizedImageKey : undefined;
+  const animationVideoKey =
+    typeof data.animationVideoKey === "string" ? data.animationVideoKey : undefined;
+
+  if (!restoredImageKey && !colorizedImageKey && !animationVideoKey) {
+    return null;
+  }
+
+  return {
+    originalImageKey:
+      typeof data.originalImageKey === "string" ? data.originalImageKey : "",
+    ...(restoredImageKey ? { restoredImageKey } : {}),
+    ...(colorizedImageKey ? { colorizedImageKey } : {}),
+    ...(animationVideoKey ? { animationVideoKey } : {}),
+  };
 }
 
 // ── Component ───────────────────────────────────────────────────────────────
@@ -52,12 +74,13 @@ export default function ResultPage() {
         res.ok ? res.json() : Promise.reject(new Error(tErrors("taskNotFound")))
       )
       .then((data) => {
-        if (data.status === "completed" && data.colorizedImageKey && data.animationVideoKey) {
-          setResult({
-            originalImageKey: data.originalImageKey ?? "",
-            colorizedImageKey: data.colorizedImageKey,
-            animationVideoKey: data.animationVideoKey,
-          });
+        const completedResult =
+          data.status === "completed"
+            ? getTaskResult(data as Record<string, unknown>)
+            : null;
+
+        if (completedResult) {
+          setResult(completedResult);
         } else if (data.status === "failed") {
           setError(resolveTaskErrorMessage(data.errorMessage, tErrors));
         } else {
@@ -74,11 +97,7 @@ export default function ResultPage() {
 
   const handleComplete = useCallback(
     (data: { status: string; progress: number; [key: string]: unknown }) => {
-      setResult({
-        originalImageKey: (data.originalImageKey as string) ?? "",
-        colorizedImageKey: data.colorizedImageKey as string,
-        animationVideoKey: data.animationVideoKey as string,
-      });
+      setResult(getTaskResult(data) ?? null);
       setError(null);
     },
     [],
@@ -111,14 +130,23 @@ export default function ResultPage() {
 
   const showProgress = needsPolling && !result && !error;
   const originalAssetUrl = buildTaskAssetUrl(taskId, "original");
-  const colorizedAssetUrl = buildTaskAssetUrl(taskId, "colorized");
-  const animationAssetUrl = buildTaskAssetUrl(taskId, "animation");
-  const colorizedDownloadUrl = buildTaskAssetUrl(taskId, "colorized", {
-    download: true,
-  });
-  const animationDownloadUrl = buildTaskAssetUrl(taskId, "animation", {
-    download: true,
-  });
+  const imageResultKind = result?.colorizedImageKey
+    ? "colorized"
+    : result?.restoredImageKey
+    ? "restored"
+    : null;
+  const imageAssetUrl = imageResultKind
+    ? buildTaskAssetUrl(taskId, imageResultKind)
+    : "";
+  const imageDownloadUrl = imageResultKind
+    ? buildTaskAssetUrl(taskId, imageResultKind, { download: true })
+    : "";
+  const animationAssetUrl = result?.animationVideoKey
+    ? buildTaskAssetUrl(taskId, "animation")
+    : "";
+  const animationDownloadUrl = result?.animationVideoKey
+    ? buildTaskAssetUrl(taskId, "animation", { download: true })
+    : "";
 
   return (
     <div className="min-h-screen bg-[var(--color-primary-bg)]">
@@ -184,42 +212,50 @@ export default function ResultPage() {
         {!initialLoading && result && (
           <div className="space-y-8">
             {/* Before / After */}
-            <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm sm:p-6">
-              <h2 className="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">
-                {tResult("beforeAfter")}
-              </h2>
-              <BeforeAfterCompare
-                beforeUrl={originalAssetUrl}
-                afterUrl={colorizedAssetUrl}
-              />
-            </section>
+            {imageResultKind && (
+              <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm sm:p-6">
+                <h2 className="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">
+                  {tResult("beforeAfter")}
+                </h2>
+                <BeforeAfterCompare
+                  beforeUrl={originalAssetUrl}
+                  afterUrl={imageAssetUrl}
+                />
+              </section>
+            )}
 
             {/* Video */}
-            <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm sm:p-6">
-              <h2 className="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">
-                {tResult("animation")}
-              </h2>
-              <VideoPlayer src={animationAssetUrl} showWatermark={isFreeTier} />
-            </section>
+            {result.animationVideoKey && (
+              <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm sm:p-6">
+                <h2 className="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">
+                  {tResult("animation")}
+                </h2>
+                <VideoPlayer src={animationAssetUrl} showWatermark={isFreeTier} />
+              </section>
+            )}
 
             {/* Download buttons */}
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <a
-                href={colorizedDownloadUrl}
-                download
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 min-h-[44px]"
-              >
-                <DownloadIcon />
-                {tResult("downloadImage")}
-              </a>
-              <a
-                href={animationDownloadUrl}
-                download
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-accent)] px-6 py-3 text-sm font-medium text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent)]/10 min-h-[44px]"
-              >
-                <DownloadIcon />
-                {tResult("downloadVideo")}
-              </a>
+              {imageResultKind && (
+                <a
+                  href={imageDownloadUrl}
+                  download
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 min-h-[44px]"
+                >
+                  <DownloadIcon />
+                  {tResult("downloadImage")}
+                </a>
+              )}
+              {result.animationVideoKey && (
+                <a
+                  href={animationDownloadUrl}
+                  download
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-accent)] px-6 py-3 text-sm font-medium text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent)]/10 min-h-[44px]"
+                >
+                  <DownloadIcon />
+                  {tResult("downloadVideo")}
+                </a>
+              )}
             </div>
           </div>
         )}

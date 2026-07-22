@@ -8,8 +8,21 @@ import { enqueueTask } from "@/lib/queue";
 import { checkAndDecrementQuota } from "@/lib/quota";
 import { getTaskPriorityForTier } from "@/lib/taskPriority";
 import { isSafeTaskStorageKey } from "@/lib/validation";
-import type { TaskPriority, UserTier } from "@/types";
+import type { TaskPriority, TaskWorkflow, UserTier } from "@/types";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
+
+const TASK_WORKFLOWS: readonly TaskWorkflow[] = [
+  "full",
+  "restore",
+  "colorize",
+  "animate",
+];
+
+function parseTaskWorkflow(value: unknown): TaskWorkflow {
+  return TASK_WORKFLOWS.includes(value as TaskWorkflow)
+    ? (value as TaskWorkflow)
+    : "full";
+}
 
 function resolveQuotaErrorKey(reason: string | undefined, tier: UserTier): string {
   if (reason === "No credits remaining") {
@@ -56,7 +69,11 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { imageKey } = body as { imageKey?: string };
+    const { imageKey, workflow: requestedWorkflow } = body as {
+      imageKey?: string;
+      workflow?: unknown;
+    };
+    const workflow = parseTaskWorkflow(requestedWorkflow);
 
     // 3. Validate required fields
     if (!imageKey || typeof imageKey !== "string" || imageKey.trim() === "") {
@@ -100,6 +117,7 @@ export async function POST(request: NextRequest) {
       userId,
       originalImageKey: normalizedImageKey,
       priority,
+      workflow,
     });
 
     // 8. Enqueue task for processing
