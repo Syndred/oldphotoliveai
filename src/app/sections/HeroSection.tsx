@@ -9,6 +9,7 @@ interface HeroSectionProps {
 
 export default function HeroSection({ children }: HeroSectionProps) {
   const t = useTranslations("landing.hero");
+  const signals = ["signal1", "signal2", "signal3", "signal4"];
 
   return (
     <section
@@ -21,6 +22,16 @@ export default function HeroSection({ children }: HeroSectionProps) {
       <p className="mt-4 max-w-xl text-sm leading-relaxed text-[var(--color-text-secondary)] sm:text-lg">
         {t("subtitle")}
       </p>
+      <div className="mt-5 flex max-w-3xl flex-wrap justify-center gap-2">
+        {signals.map((signal) => (
+          <span
+            key={signal}
+            className="rounded-full border border-white/12 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] sm:text-sm"
+          >
+            {t(signal)}
+          </span>
+        ))}
+      </div>
       {children}
     </section>
   );

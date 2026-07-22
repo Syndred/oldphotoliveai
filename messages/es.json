@@ -194,8 +194,12 @@
   },
   "landing": {
     "hero": {
-      "title": "Coloriza, restaura y anima fotos antiguas con IA",
-      "subtitle": "Coloriza fotos en blanco y negro, restaura copias dañadas y anima retratos antiguos en un solo flujo",
+      "title": "OldPhotoLive AI: restaura, coloriza y anima fotos antiguas",
+      "subtitle": "Sube una foto antigua y elige el resultado que necesitas: reparar daño, colorizar blanco y negro o crear un clip corto de retrato.",
+      "signal1": "Solo restaurar, colorizar o animar",
+      "signal2": "Prueba diaria gratis",
+      "signal3": "Resultados en minutos",
+      "signal4": "Exportaciones HD con paquetes pagos",
       "cta": "Pruébalo gratis"
     },
     "showcase": {
@@ -250,7 +254,7 @@
       },
       "step2": {
         "title": "Procesamiento con IA",
-        "description": "Nuestra IA restaura, coloriza y anima tu foto"
+        "description": "Elige restauración, colorización, animación o el flujo completo"
       },
       "step3": {
         "title": "Descarga",

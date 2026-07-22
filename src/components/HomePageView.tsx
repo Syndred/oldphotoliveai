@@ -89,6 +89,18 @@ export default function HomePageView({
             >
               {homeSeo.restoreCta}
             </Link>
+            <Link
+              href="/animate"
+              className="inline-flex min-h-[44px] items-center rounded-full border border-white/12 bg-black/10 px-5 py-2.5 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.05]"
+            >
+              {homeSeo.animateCta}
+            </Link>
+            <Link
+              href="/repair-damaged-old-photos"
+              className="inline-flex min-h-[44px] items-center rounded-full border border-white/12 bg-black/10 px-5 py-2.5 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.05]"
+            >
+              {homeSeo.repairCta}
+            </Link>
           </div>
         </HeroSection>
         <ToolCardsSection locale={locale} />

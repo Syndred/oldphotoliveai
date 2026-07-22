@@ -194,8 +194,12 @@
   },
   "landing": {
     "hero": {
-      "title": "Colorize, Restore & Animate Old Photos with AI",
-      "subtitle": "Colorize black and white photos, restore damaged prints, and animate vintage portraits in one AI workflow",
+      "title": "OldPhotoLive AI: Restore, Colorize & Animate Old Photos",
+      "subtitle": "Upload an old photo and choose the result you need: repair damage, colorize black-and-white pictures, or create a short portrait animation.",
+      "signal1": "Restore only, colorize only, or animate",
+      "signal2": "Free daily trial",
+      "signal3": "Results in minutes",
+      "signal4": "HD exports on paid packs",
       "cta": "Try It Free"
     },
     "showcase": {
@@ -250,7 +254,7 @@
       },
       "step2": {
         "title": "AI Processing",
-        "description": "Our AI restores, colorizes, and animates your photo"
+        "description": "Choose restoration, colorization, animation, or the full workflow"
       },
       "step3": {
         "title": "Download",

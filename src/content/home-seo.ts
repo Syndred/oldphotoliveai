@@ -11,13 +11,15 @@ interface HomeSeoContent {
   contentParagraphs: string[];
   colorizeCta: string;
   restoreCta: string;
+  animateCta: string;
+  repairCta: string;
   faqItems: HomeFaqItem[];
 }
 
 export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
   en: {
     contentEyebrow: "AI old photo tools",
-    contentTitle: "Colorize, restore, and animate old photos in one workflow",
+    contentTitle: "Choose the right AI tool for each old-photo job",
     contentParagraphs: [
       "OldPhotoLive AI is built for family photos, genealogy projects, memorial albums, and historical images that deserve more than a quick filter. Start with a faded scan, a black-and-white portrait, or a damaged print, then choose the workflow that matches the result you want: colorize black and white photos, restore old photos online, repair visible scratches, or animate a restored portrait.",
       "The best results usually start with a clear upload. Scan the original print when possible, keep faces in focus, and avoid heavy glare from phone photos. The AI restoration pass improves contrast, cleans common damage, and prepares the image before colorization or animation, so the final photo keeps more facial detail, fabric texture, and background structure.",
@@ -25,6 +27,8 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
     ],
     colorizeCta: "Colorize B&W photos",
     restoreCta: "Restore old photos",
+    animateCta: "Animate portraits",
+    repairCta: "Repair damaged photos",
     faqItems: [
       {
         question: "Can I colorize black and white photos for free?",
@@ -39,7 +43,7 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
       {
         question: "Can faded black and white photos be restored and colorized?",
         answer:
-          "Yes. The workflow can improve faded black-and-white photos first, then add natural color so portraits, clothing, and backgrounds look more believable.",
+          "Yes. Use restoration to improve faded black-and-white photos first, then use colorization to add natural color so portraits, clothing, and backgrounds look more believable.",
       },
       {
         question: "How long does AI photo restoration take?",
@@ -70,7 +74,7 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
   },
   zh: {
     contentEyebrow: "AI 旧照片工具",
-    contentTitle: "在一个流程里完成旧照片上色、修复和动态化",
+    contentTitle: "按照片需求选择合适的 AI 旧照片工具",
     contentParagraphs: [
       "OldPhotoLive AI 面向家庭老照片、家谱资料、纪念相册和历史影像。你可以上传褪色扫描件、黑白人像或破损照片，然后选择对应工具：给黑白照片上色、在线修复旧照片、修补划痕折痕，或把修复后的人像生成短视频。",
       "更好的输入通常会带来更好的结果。尽量使用清晰扫描件，保证人脸对焦，避免手机翻拍时的强反光。AI 会先改善对比度、清理常见损伤，并为后续上色或动态化准备更干净的图像。",
@@ -78,6 +82,8 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
     ],
     colorizeCta: "给黑白照片上色",
     restoreCta: "修复旧照片",
+    animateCta: "让人像动起来",
+    repairCta: "修补破损照片",
     faqItems: [
       {
         question: "可以免费给黑白照片上色吗？",
@@ -92,7 +98,7 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
       {
         question: "褪色黑白照片可以先修复再上色吗？",
         answer:
-          "可以。流程会先改善旧照片质量，再添加更自然的颜色，让人像、衣物和背景更可信。",
+          "可以。先用修复工具改善旧照片质量，再使用上色工具添加更自然的颜色，让人像、衣物和背景更可信。",
       },
       {
         question: "AI 修复旧照片需要多久？",
@@ -123,7 +129,7 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
   },
   es: {
     contentEyebrow: "Herramientas de fotos antiguas con IA",
-    contentTitle: "Coloriza, restaura y anima fotos antiguas en un solo flujo",
+    contentTitle: "Elige la herramienta de IA adecuada para cada foto antigua",
     contentParagraphs: [
       "OldPhotoLive AI está pensado para fotos familiares, genealogía, álbumes conmemorativos e imágenes históricas. Sube un escaneo desvaído, un retrato en blanco y negro o una foto dañada, y elige si quieres colorizar, restaurar, reparar arañazos o animar el retrato.",
       "Los mejores resultados empiezan con una imagen clara. Escanea la copia original cuando sea posible, mantén los rostros enfocados y evita reflejos fuertes. La IA mejora el contraste, limpia daños comunes y prepara la imagen antes de la colorización o animación.",
@@ -131,6 +137,8 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
     ],
     colorizeCta: "Colorizar fotos B&N",
     restoreCta: "Restaurar fotos antiguas",
+    animateCta: "Animar retratos",
+    repairCta: "Reparar fotos dañadas",
     faqItems: [
       {
         question: "¿Puedo colorizar fotos en blanco y negro gratis?",
@@ -145,7 +153,7 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
       {
         question: "¿Se pueden restaurar y colorizar fotos antiguas desvaídas?",
         answer:
-          "Sí. El flujo puede mejorar primero la foto y después añadir color natural a rostros, ropa y fondos.",
+          "Sí. Puedes restaurar primero la foto y después usar la colorización para añadir color natural a rostros, ropa y fondos.",
       },
       {
         question: "¿Cuánto tarda la restauración con IA?",
@@ -176,7 +184,7 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
   },
   ja: {
     contentEyebrow: "AI 古写真ツール",
-    contentTitle: "古い写真のカラー化、修復、アニメーションを1つの流れで",
+    contentTitle: "古い写真ごとに合うAIツールを選べます",
     contentParagraphs: [
       "OldPhotoLive AI は、家族写真、系譜調査、追悼アルバム、歴史写真のためのツールです。色あせたスキャン、白黒のポートレート、傷んだプリントをアップロードし、カラー化、修復、傷や折れ目の補修、アニメーション化を選べます。",
       "良い結果には、できるだけ鮮明な元画像が重要です。可能なら原本をスキャンし、顔にピントを合わせ、スマホ撮影の強い反射を避けてください。AI はコントラストを改善し、よくある損傷を整え、カラー化やアニメーションの前に画像を準備します。",
@@ -184,6 +192,8 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
     ],
     colorizeCta: "白黒写真をカラー化",
     restoreCta: "古い写真を修復",
+    animateCta: "人物写真を動かす",
+    repairCta: "傷んだ写真を補修",
     faqItems: [
       {
         question: "白黒写真を無料でカラー化できますか？",
@@ -198,7 +208,7 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
       {
         question: "色あせた白黒写真も修復してカラー化できますか？",
         answer:
-          "はい。まず写真を改善し、その後で人物、服、背景に自然な色を加えることができます。",
+          "はい。まず修復ツールで写真を改善し、その後カラー化ツールで人物、服、背景に自然な色を加えることができます。",
       },
       {
         question: "AI 写真修復にはどのくらい時間がかかりますか？",

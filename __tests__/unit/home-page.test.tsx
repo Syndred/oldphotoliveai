@@ -200,7 +200,10 @@ describe("HomePage", () => {
       expect(global.fetch).toHaveBeenCalledWith("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageKey: "https://cdn.example.com/test.jpg" }),
+        body: JSON.stringify({
+          imageKey: "https://cdn.example.com/test.jpg",
+          workflow: "full",
+        }),
       });
     });
 
