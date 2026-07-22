@@ -17,6 +17,7 @@
   "nav": {
     "home": "Home",
     "products": "Products",
+    "blog": "Blog",
     "guides": "Guides",
     "history": "History",
     "pricing": "Pricing",
@@ -236,6 +237,7 @@
       "description": "AI-powered photo restoration, colorization, and animation",
       "links": {
         "about": "About",
+        "blog": "Blog",
         "home": "Home",
         "guides": "Guides",
         "pricing": "Pricing",

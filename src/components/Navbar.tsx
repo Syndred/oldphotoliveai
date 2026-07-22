@@ -13,6 +13,7 @@ import type { QuotaInfo, UserTier } from "@/types";
 
 const NAV_LINKS = [
   { href: "/", labelKey: "home" },
+  { href: "/blog", labelKey: "blog" },
   { href: "/pricing", labelKey: "pricing" },
 ] as const;
 

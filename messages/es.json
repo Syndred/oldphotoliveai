@@ -17,6 +17,7 @@
   "nav": {
     "home": "Inicio",
     "products": "Productos",
+    "blog": "Blog",
     "guides": "Guías",
     "history": "Historial",
     "pricing": "Precios",
@@ -236,6 +237,7 @@
       "description": "Restauración, colorización y animación de fotos con IA",
       "links": {
         "home": "Inicio",
+        "blog": "Blog",
         "guides": "Guías",
         "pricing": "Precios",
         "history": "Historial",

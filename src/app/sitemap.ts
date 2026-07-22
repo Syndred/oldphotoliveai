@@ -1,4 +1,5 @@
 import { MetadataRoute } from "next";
+import { getBlogPosts } from "@/content/blog";
 import { TOOL_PAGE_SLUGS, getToolPagePath } from "@/content/tool-pages";
 import { locales, type Locale } from "@/i18n/routing";
 import {
@@ -27,6 +28,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      path: "/blog",
+      lastModified: new Date("2026-07-22T00:00:00.000Z"),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
       path: "/privacy",
       lastModified: new Date("2026-03-14T00:00:00.000Z"),
       changeFrequency: "yearly",
@@ -47,7 +54,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.9,
   }));
 
-  const allRoutes = [...staticRoutes, ...toolRoutes];
+  const blogRoutes = getBlogPosts().map((post) => ({
+    path: `/blog/${post.slug}`,
+    lastModified: new Date(post.updatedAt),
+    changeFrequency: "monthly" as const,
+    priority: 0.75,
+  }));
+
+  const allRoutes = [...staticRoutes, ...toolRoutes, ...blogRoutes];
 
   return locales.flatMap((locale) =>
     allRoutes.map((route) => ({

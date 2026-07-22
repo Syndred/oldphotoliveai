@@ -17,6 +17,7 @@
   "nav": {
     "home": "首页",
     "products": "工具",
+    "blog": "博客",
     "guides": "指南",
     "history": "历史记录",
     "pricing": "价格",
@@ -236,6 +237,7 @@
       "description": "AI 驱动的照片修复、上色与动态化",
       "links": {
         "about": "关于",
+        "blog": "博客",
         "home": "首页",
         "guides": "指南",
         "pricing": "价格",

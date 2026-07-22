@@ -17,6 +17,7 @@
   "nav": {
     "home": "ホーム",
     "products": "ツール",
+    "blog": "ブログ",
     "guides": "ガイド",
     "history": "履歴",
     "pricing": "料金",
@@ -236,6 +237,7 @@
       "description": "AI による写真修復、カラー化、アニメーション",
       "links": {
         "home": "ホーム",
+        "blog": "ブログ",
         "guides": "ガイド",
         "pricing": "料金",
         "history": "履歴",
