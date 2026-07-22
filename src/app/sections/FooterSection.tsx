@@ -39,7 +39,17 @@ export default function FooterSection() {
         </nav>
       </div>
 
-      <p className="mt-6 text-center text-xs text-[var(--color-text-secondary)]">
+      <div className="mt-6 flex justify-center">
+        <a href="https://neeed.directory" target="_blank" rel="noopener">
+          <img
+            src="https://neeed.directory/badges/neeed-badge-light.svg"
+            alt="Featured on neeed.directory"
+            width="139"
+          />
+        </a>
+      </div>
+
+      <p className="mt-4 text-center text-xs text-[var(--color-text-secondary)]">
         {t("copyright")}
       </p>
     </footer>
