@@ -88,7 +88,7 @@ export default function PricingPage() {
     <div className="min-h-screen bg-[var(--color-primary-bg)]">
       <Navbar />
 
-      <main className="mx-auto max-w-5xl px-4 py-10 sm:py-16">
+      <main className="mx-auto max-w-6xl px-4 py-10 sm:py-16">
         <section aria-labelledby="pricing-title">
           <p className="text-center text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
             {t("eyebrow")}

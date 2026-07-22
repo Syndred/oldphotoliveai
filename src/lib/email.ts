@@ -19,11 +19,28 @@ function escapeHtml(input: string): string {
     .replace(/'/g, "&#039;");
 }
 
+function formatPlanLabel(plan?: string | null): string {
+  switch (plan) {
+    case "starter_pack":
+      return "Starter Pack";
+    case "family_pack":
+      return "Family Pack";
+    case "archive_pack":
+      return "Archive Pack";
+    case "pay_as_you_go":
+      return "Pay As You Go";
+    case "professional":
+      return "Professional";
+    default:
+      return plan || "your plan";
+  }
+}
+
 function buildEmailContent(params: SendPaymentEmailParams): {
   subject: string;
   html: string;
 } {
-  const safePlan = params.plan ? escapeHtml(params.plan) : "your plan";
+  const safePlan = escapeHtml(formatPlanLabel(params.plan));
   const pricingUrl = `${SITE_URL}/pricing`;
   const safeSupportEmail = escapeHtml(SUPPORT_EMAIL);
 

@@ -61,6 +61,9 @@ jest.mock("@/lib/config", () => ({
       webhookSecret: "whsec_test_123",
       priceIds: {
         payAsYouGo: "price_payg_123",
+        starterPack: "price_starter_123",
+        familyPack: "price_family_123",
+        archivePack: "price_archive_123",
         professional: "price_pro_123",
       },
     },
@@ -161,7 +164,44 @@ describe("Stripe checkout route", () => {
     });
   });
 
-  it("blocks pay-as-you-go checkout for professional users", async () => {
+  it("creates a one-time checkout session for a credit pack", async () => {
+    mockGetToken.mockResolvedValue({
+      userId: "user-123",
+      email: "owner@example.com",
+      name: "Owner Example",
+    });
+    mockGetOrCreateStripeCustomer.mockResolvedValue({
+      id: "cus_123",
+    });
+    mockCheckoutCreate.mockResolvedValue({
+      url: "https://checkout.stripe.com/c/pay/pack-test",
+    });
+
+    const request = new NextRequest("http://localhost/api/stripe/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan: "family_pack" }),
+    });
+
+    const response = await checkoutPost(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.url).toBe("https://checkout.stripe.com/c/pay/pack-test");
+    expect(mockCheckoutCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mode: "payment",
+        line_items: [{ price: "price_family_123", quantity: 1 }],
+        metadata: {
+          userId: "user-123",
+          plan: "family_pack",
+          credits: "12",
+        },
+      })
+    );
+  });
+
+  it("blocks credit-pack checkout for professional users", async () => {
     mockGetToken.mockResolvedValue({
       userId: "user-123",
       email: "owner@example.com",
@@ -175,7 +215,7 @@ describe("Stripe checkout route", () => {
     const request = new NextRequest("http://localhost/api/stripe/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan: "pay_as_you_go" }),
+      body: JSON.stringify({ plan: "starter_pack" }),
     });
 
     const response = await checkoutPost(request);
@@ -323,6 +363,42 @@ describe("Stripe webhook route", () => {
     expect(mockUpdateUserTier).toHaveBeenCalledTimes(1);
     expect(mockUpdateUserTier).toHaveBeenCalledWith("user-123", "pay_as_you_go");
     expect(mockSendPaymentEmail).toHaveBeenCalledTimes(1);
+  });
+
+  it("grants the configured credit-pack amount from checkout metadata", async () => {
+    mockConstructEvent.mockReturnValue({
+      id: "evt_pack_123",
+      type: "checkout.session.completed",
+      data: {
+        object: {
+          id: "cs_pack_123",
+          metadata: {
+            userId: "user-123",
+            plan: "family_pack",
+            credits: "12",
+          },
+          customer_details: {
+            email: "owner@example.com",
+          },
+        },
+      },
+    });
+    mockRedisSet
+      .mockResolvedValueOnce("OK")
+      .mockResolvedValueOnce("OK")
+      .mockResolvedValueOnce("OK");
+
+    const request = new NextRequest("http://localhost/api/stripe/webhook", {
+      method: "POST",
+      headers: { "stripe-signature": "sig_test" },
+      body: JSON.stringify({ any: "payload" }),
+    });
+
+    const response = await webhookPost(request);
+
+    expect(response.status).toBe(200);
+    expect(mockAddCredits).toHaveBeenCalledWith("user-123", 12, 365);
+    expect(mockUpdateUserTier).toHaveBeenCalledWith("user-123", "pay_as_you_go");
   });
 
   it("waits for async checkout payments before fulfilling credits", async () => {

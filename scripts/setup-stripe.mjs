@@ -16,6 +16,42 @@ const PAY_AS_YOU_GO = {
   },
 };
 
+const STARTER_PACK = {
+  productName: `${APP_NAME} Starter Pack`,
+  lookupKey: `${APP_ID}_starter_pack_5_credits_usd_v1`,
+  unitAmount: 499,
+  currency: "usd",
+  metadata: {
+    app: APP_ID,
+    plan: "starter_pack",
+    credits: "5",
+  },
+};
+
+const FAMILY_PACK = {
+  productName: `${APP_NAME} Family Pack`,
+  lookupKey: `${APP_ID}_family_pack_12_credits_usd_v1`,
+  unitAmount: 999,
+  currency: "usd",
+  metadata: {
+    app: APP_ID,
+    plan: "family_pack",
+    credits: "12",
+  },
+};
+
+const ARCHIVE_PACK = {
+  productName: `${APP_NAME} Archive Pack`,
+  lookupKey: `${APP_ID}_archive_pack_30_credits_usd_v1`,
+  unitAmount: 1999,
+  currency: "usd",
+  metadata: {
+    app: APP_ID,
+    plan: "archive_pack",
+    credits: "30",
+  },
+};
+
 const PROFESSIONAL = {
   productName: `${APP_NAME} Professional`,
   lookupKey: `${APP_ID}_professional_monthly_usd_v2`,
@@ -146,8 +182,11 @@ async function main() {
     apiVersion: API_VERSION,
   });
 
-  const [payAsYouGo, professional, webhook] = await Promise.all([
+  const [payAsYouGo, starterPack, familyPack, archivePack, professional, webhook] = await Promise.all([
     ensurePrice(stripe, PAY_AS_YOU_GO),
+    ensurePrice(stripe, STARTER_PACK),
+    ensurePrice(stripe, FAMILY_PACK),
+    ensurePrice(stripe, ARCHIVE_PACK),
     ensurePrice(stripe, PROFESSIONAL),
     ensureWebhookEndpoint(stripe, webhookUrl),
   ]);
@@ -178,6 +217,9 @@ async function main() {
   console.log("");
   console.log("Environment values:");
   console.log(`STRIPE_PRICE_PAY_AS_YOU_GO=${payAsYouGo.price.id}`);
+  console.log(`STRIPE_PRICE_STARTER_PACK=${starterPack.price.id}`);
+  console.log(`STRIPE_PRICE_FAMILY_PACK=${familyPack.price.id}`);
+  console.log(`STRIPE_PRICE_ARCHIVE_PACK=${archivePack.price.id}`);
   console.log(`STRIPE_PRICE_PROFESSIONAL=${professional.price.id}`);
 
   if (webhook.secret) {

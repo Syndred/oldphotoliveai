@@ -21,14 +21,12 @@ const REQUIRED_ENV_VARS = [
   "WORKER_SECRET",
 ] as const;
 
-/**
- * Optional environment variables (Stripe - can be placeholder values if payment is disabled)
- */
-const OPTIONAL_ENV_VARS = [
+const REQUIRED_STRIPE_PAYMENT_ENV_VARS = [
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
-  "STRIPE_PRICE_PAY_AS_YOU_GO",
-  "STRIPE_PRICE_PROFESSIONAL",
+  "STRIPE_PRICE_STARTER_PACK",
+  "STRIPE_PRICE_FAMILY_PACK",
+  "STRIPE_PRICE_ARCHIVE_PACK",
 ] as const;
 
 /**
@@ -47,14 +45,14 @@ export function validateEnvVars(): void {
     );
   }
 
-  // Check optional Stripe variables - warn but don't fail
-  const missingOptional = OPTIONAL_ENV_VARS.filter(
+  // Check Stripe variables - warn but don't fail, so local non-payment tasks work.
+  const missingPaymentConfig = REQUIRED_STRIPE_PAYMENT_ENV_VARS.filter(
     (name) => !process.env[name] || process.env[name]?.includes("placeholder")
   );
 
-  if (missingOptional.length > 0) {
+  if (missingPaymentConfig.length > 0) {
     console.warn(
-      `⚠️  Stripe payment is disabled. Missing or placeholder values for: ${missingOptional.join(", ")}`
+      `⚠️  Stripe payment is disabled. Missing or placeholder values for: ${missingPaymentConfig.join(", ")}`
     );
   }
 }
@@ -99,8 +97,17 @@ export const config = {
     const secretKey = process.env.STRIPE_SECRET_KEY || "";
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
     const payAsYouGo = process.env.STRIPE_PRICE_PAY_AS_YOU_GO || "";
+    const starterPack = process.env.STRIPE_PRICE_STARTER_PACK || "";
+    const familyPack = process.env.STRIPE_PRICE_FAMILY_PACK || "";
+    const archivePack = process.env.STRIPE_PRICE_ARCHIVE_PACK || "";
     const professional = process.env.STRIPE_PRICE_PROFESSIONAL || "";
-    const isConfigured = [secretKey, webhookSecret, payAsYouGo, professional]
+    const isConfigured = [
+      secretKey,
+      webhookSecret,
+      starterPack,
+      familyPack,
+      archivePack,
+    ]
       .every((value) => value && !value.includes("placeholder"));
     
     return {
@@ -108,6 +115,9 @@ export const config = {
       webhookSecret,
       priceIds: {
         payAsYouGo,
+        starterPack,
+        familyPack,
+        archivePack,
         professional,
       },
       isEnabled: isConfigured, // Helper flag to check if Stripe is fully configured

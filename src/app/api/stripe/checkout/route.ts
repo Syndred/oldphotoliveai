@@ -8,12 +8,30 @@ import { getStripeClient, getOrCreateStripeCustomer } from "@/lib/stripe";
 import { config } from "@/lib/config";
 import { getUser } from "@/lib/redis";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
+import {
+  CREDIT_PACK_PLAN_IDS,
+  getCreditPack,
+  isCreditPackPlan,
+} from "@/lib/billing";
 
-const VALID_PLANS = ["pay_as_you_go", "professional"] as const;
+const VALID_PLANS = [...CREDIT_PACK_PLAN_IDS, "professional"] as const;
 type Plan = (typeof VALID_PLANS)[number];
 
 function isValidPlan(plan: string): plan is Plan {
   return VALID_PLANS.includes(plan as Plan);
+}
+
+function getPriceId(plan: Plan): string {
+  if (plan === "starter_pack") {
+    return config.stripe.priceIds.starterPack;
+  }
+  if (plan === "family_pack") {
+    return config.stripe.priceIds.familyPack;
+  }
+  if (plan === "archive_pack") {
+    return config.stripe.priceIds.archivePack;
+  }
+  return config.stripe.priceIds.professional;
 }
 
 export async function POST(request: NextRequest) {
@@ -61,7 +79,7 @@ export async function POST(request: NextRequest) {
     }
 
     const user = await getUser(userId);
-    if (plan === "pay_as_you_go" && user?.tier === "professional") {
+    if (isCreditPackPlan(plan) && user?.tier === "professional") {
       return NextResponse.json(
         {
           error: getErrorMessage(
@@ -74,10 +92,14 @@ export async function POST(request: NextRequest) {
     }
 
     const stripe = getStripeClient();
-    const priceId =
-      plan === "pay_as_you_go"
-        ? config.stripe.priceIds.payAsYouGo
-        : config.stripe.priceIds.professional;
+    const priceId = getPriceId(plan);
+
+    if (!priceId) {
+      return NextResponse.json(
+        { error: getErrorMessage("paymentUnavailable", locale) },
+        { status: 503 }
+      );
+    }
 
     const mode = plan === "professional" ? "subscription" : "payment";
     const customer = customerEmail
@@ -100,6 +122,9 @@ export async function POST(request: NextRequest) {
       metadata: {
         userId,
         plan,
+        ...(isCreditPackPlan(plan)
+          ? { credits: String(getCreditPack(plan).credits) }
+          : {}),
       },
       ...(mode === "subscription"
         ? {

@@ -59,7 +59,7 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
     ],
     pricingTitle: "Elige el plan según tu archivo",
     pricingBody:
-      "Compra créditos para restauraciones ocasionales o elige Professional si trabajas con álbumes, archivos familiares o pedidos de clientes en mayor volumen.",
+      "Compra un paquete pequeno para restauraciones puntuales, o elige un paquete mayor si trabajas con albumes, archivos familiares o pedidos de clientes.",
     faqTitle: "Preguntas sobre restaurar fotos antiguas",
     faqs: [
       {
@@ -78,9 +78,9 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
           "Sí. Cuando la imagen ya está limpia, puedes seguir con colorización o animación desde la misma cuenta.",
       },
       {
-        question: "¿Cómo elijo entre créditos y Professional?",
+        question: "¿Cómo elijo entre paquetes de créditos?",
         answer:
-          "Los créditos van bien para trabajos puntuales, mientras que Professional encaja mejor si restauras fotos con frecuencia o necesitas más volumen cada mes.",
+          "Los paquetes pequenos van bien para trabajos puntuales; los paquetes mayores encajan mejor si restauras fotos con frecuencia o necesitas mas volumen.",
       },
     ],
     relatedTitle: "Más flujos para fotos antiguas",
@@ -139,7 +139,7 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
     ],
     pricingTitle: "Elige un plan para una foto o para un lote completo",
     pricingBody:
-      "Usa un paquete de créditos para trabajos puntuales de colorización, o elige Professional si procesas álbumes, archivos familiares o pedidos de clientes.",
+      "Usa un paquete pequeno para trabajos puntuales de colorizacion, o elige un paquete mayor si procesas albumes, archivos familiares o pedidos de clientes.",
     faqTitle: "Preguntas sobre colorizar fotos antiguas",
     faqs: [
       {
@@ -217,9 +217,9 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
           "En retratos familiares antiguos suele funcionar mejor un movimiento ligero que un efecto exagerado o demasiado rápido.",
       },
     ],
-    pricingTitle: "Elige créditos o acceso Professional",
+    pricingTitle: "Elige el paquete de creditos adecuado",
     pricingBody:
-      "Usa créditos para animaciones puntuales, o cambia a Professional si creas clips con frecuencia a partir de archivos familiares o trabajos de clientes.",
+      "Usa un paquete pequeno para animaciones puntuales, o elige un paquete mayor si creas clips con frecuencia a partir de archivos familiares o trabajos de clientes.",
     faqTitle: "Preguntas sobre animar fotos antiguas",
     faqs: [
       {
@@ -299,7 +299,7 @@ export const TOOL_PAGE_TRANSLATIONS_ES: Record<
     ],
     pricingTitle: "Elige un plan para unas pocas reparaciones o para un archivo completo",
     pricingBody:
-      "Compra créditos para unas pocas copias dañadas o elige Professional si restauras álbumes, archivos familiares o colecciones de clientes.",
+      "Compra creditos para unas pocas copias danadas, o elige un paquete mayor si restauras albumes, archivos familiares o colecciones de clientes.",
     faqTitle: "Preguntas sobre reparar fotos antiguas dañadas",
     faqs: [
       {

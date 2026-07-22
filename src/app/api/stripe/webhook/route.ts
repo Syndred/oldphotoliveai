@@ -10,7 +10,12 @@ import { getRedisClient, getUserByEmail, updateUserTier } from "@/lib/redis";
 import { addCredits, initializeFreeQuota } from "@/lib/quota";
 import { sendPaymentEmail } from "@/lib/email";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
-import { PAY_AS_YOU_GO_CREDITS } from "@/lib/billing";
+import {
+  CREDIT_PACK_EXPIRATION_DAYS,
+  getCreditPack,
+  isCreditPackPlan,
+  LEGACY_PAY_AS_YOU_GO_CREDITS,
+} from "@/lib/billing";
 
 const EMAIL_EVENT_TTL_SECONDS = 3 * 24 * 60 * 60;
 const PROCESSED_EVENT_TTL_SECONDS = 7 * 24 * 60 * 60;
@@ -93,9 +98,13 @@ async function fulfillCheckoutSession(
   }
 
   try {
-    if (plan === "pay_as_you_go") {
-      // Add pay-as-you-go credits with a 30-day expiration window.
-      await addCredits(userId, PAY_AS_YOU_GO_CREDITS, 30);
+    if (isCreditPackPlan(plan)) {
+      const pack = getCreditPack(plan);
+      await addCredits(userId, pack.credits, CREDIT_PACK_EXPIRATION_DAYS);
+      await updateUserTier(userId, "pay_as_you_go");
+    } else if (plan === "pay_as_you_go") {
+      // Legacy one-credit purchases created before credit packs existed.
+      await addCredits(userId, LEGACY_PAY_AS_YOU_GO_CREDITS, 30);
       await updateUserTier(userId, "pay_as_you_go");
     } else if (plan === "professional") {
       // Set tier to professional (Req 6.6)

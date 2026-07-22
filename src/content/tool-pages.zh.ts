@@ -54,7 +54,7 @@ export const TOOL_PAGE_TRANSLATIONS_ZH: Record<
     ],
     pricingTitle: "按照片数量选择合适方案",
     pricingBody:
-      "偶尔修几张可以直接买积分，需要批量处理家庭相册、档案照片或客户订单时再看 Professional 方案。",
+      "偶尔修几张可以选择小点数包；需要批量处理家庭相册、档案照片或客户订单时，选择更大的点数包更划算。",
     faqTitle: "关于修复旧照片的常见问题",
     faqs: [
       {
@@ -75,7 +75,7 @@ export const TOOL_PAGE_TRANSLATIONS_ZH: Record<
       {
         question: "积分和 Professional 怎么选？",
         answer:
-          "偶尔处理少量照片时买积分更合适；如果你经常修复照片或处理量更大，可以考虑 Professional。",
+          "偶尔处理少量照片时买小点数包更合适；如果处理量更大，可以直接选家庭包或相册包。",
       },
     ],
     relatedTitle: "更多旧照片工作流",
@@ -129,7 +129,7 @@ export const TOOL_PAGE_TRANSLATIONS_ZH: Record<
     ],
     pricingTitle: "按单张或整批照片选择方案",
     pricingBody:
-      "偶尔给几张照片上色可以直接买积分；如果你要处理整本相册、家庭档案或客户订单，再选择 Professional 更合适。",
+      "偶尔给几张照片上色可以选择小点数包；如果要处理整本相册、家庭档案或客户订单，选择家庭包或相册包更合适。",
     faqTitle: "关于旧照片上色的常见问题",
     faqs: [
       {
@@ -203,7 +203,7 @@ export const TOOL_PAGE_TRANSLATIONS_ZH: Record<
     ],
     pricingTitle: "按偶尔使用或高频创作来选方案",
     pricingBody:
-      "偶尔做几段动态可以直接买积分；如果你经常处理家庭档案、纪念项目或客户内容，再考虑 Professional。",
+      "偶尔做几段动态可以选择小点数包；如果经常处理家庭档案、纪念项目或客户内容，选择更大的点数包更省心。",
     faqTitle: "关于旧照片动态化的常见问题",
     faqs: [
       {
@@ -278,7 +278,7 @@ export const TOOL_PAGE_TRANSLATIONS_ZH: Record<
     ],
     pricingTitle: "几张零散修补和整批档案处理都能选",
     pricingBody:
-      "只修少量受损照片可以直接买积分；如果你要处理整本相册、家庭档案或客户收藏，再看 Professional 方案。",
+      "只修少量受损照片可以选择小点数包；如果要处理整本相册、家庭档案或客户收藏，选择更大的点数包更划算。",
     faqTitle: "关于修补受损旧照片的常见问题",
     faqs: [
       {

@@ -6,13 +6,13 @@ import { useTranslations } from "next-intl";
 import type { UserTier } from "@/types";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import {
-  PAY_AS_YOU_GO_CREDITS,
-  PAY_AS_YOU_GO_DISPLAY_PRICE,
+  CREDIT_PACKS,
+  type CreditPackPlan,
   PROFESSIONAL_MONTHLY_DISPLAY_PRICE,
 } from "@/lib/billing";
 
 interface PricingPlan {
-  id: "free" | "pay_as_you_go" | "professional";
+  id: "free" | CreditPackPlan | "professional";
   nameKey: string;
   badgeKey: string;
   price: string;
@@ -23,7 +23,8 @@ interface PricingPlan {
   featureKeys: string[];
   ctaKey: string;
   highlighted: boolean;
-  plan?: "pay_as_you_go" | "professional";
+  checkoutPlan?: CreditPackPlan | "professional";
+  hiddenUnlessCurrent?: boolean;
 }
 
 interface PricingCardsProps {
@@ -60,23 +61,61 @@ const PLANS: PricingPlan[] = [
     highlighted: false,
   },
   {
-    id: "pay_as_you_go",
-    nameKey: "payAsYouGo",
-    badgeKey: "payAsYouGoBadge",
-    price: PAY_AS_YOU_GO_DISPLAY_PRICE,
-    periodKey: "payAsYouGoPeriod",
-    periodValues: { count: PAY_AS_YOU_GO_CREDITS },
-    priceNoteKey: "payAsYouGoPriceNote",
-    descKey: "payAsYouGoDesc",
+    id: "starter_pack",
+    nameKey: "starterPack",
+    badgeKey: "starterPackBadge",
+    price: CREDIT_PACKS.starter_pack.displayPrice,
+    periodKey: "creditPackPeriod",
+    periodValues: { count: CREDIT_PACKS.starter_pack.credits },
+    priceNoteKey: "starterPackPriceNote",
+    descKey: "starterPackDesc",
     featureKeys: [
-      "payFeature1",
-      "payFeature2",
-      "payFeature3",
-      "payFeature4",
+      "starterPackFeature1",
+      "starterPackFeature2",
+      "starterPackFeature3",
+      "starterPackFeature4",
     ],
-    ctaKey: "buyCredits",
+    ctaKey: "buyPack",
     highlighted: false,
-    plan: "pay_as_you_go",
+    checkoutPlan: "starter_pack",
+  },
+  {
+    id: "family_pack",
+    nameKey: "familyPack",
+    badgeKey: "familyPackBadge",
+    price: CREDIT_PACKS.family_pack.displayPrice,
+    periodKey: "creditPackPeriod",
+    periodValues: { count: CREDIT_PACKS.family_pack.credits },
+    priceNoteKey: "familyPackPriceNote",
+    descKey: "familyPackDesc",
+    featureKeys: [
+      "familyPackFeature1",
+      "familyPackFeature2",
+      "familyPackFeature3",
+      "familyPackFeature4",
+    ],
+    ctaKey: "buyPack",
+    highlighted: true,
+    checkoutPlan: "family_pack",
+  },
+  {
+    id: "archive_pack",
+    nameKey: "archivePack",
+    badgeKey: "archivePackBadge",
+    price: CREDIT_PACKS.archive_pack.displayPrice,
+    periodKey: "creditPackPeriod",
+    periodValues: { count: CREDIT_PACKS.archive_pack.credits },
+    priceNoteKey: "archivePackPriceNote",
+    descKey: "archivePackDesc",
+    featureKeys: [
+      "archivePackFeature1",
+      "archivePackFeature2",
+      "archivePackFeature3",
+      "archivePackFeature4",
+    ],
+    ctaKey: "buyPack",
+    highlighted: false,
+    checkoutPlan: "archive_pack",
   },
   {
     id: "professional",
@@ -95,7 +134,8 @@ const PLANS: PricingPlan[] = [
     ],
     ctaKey: "subscribe",
     highlighted: true,
-    plan: "professional",
+    checkoutPlan: "professional",
+    hiddenUnlessCurrent: true,
   },
 ];
 
@@ -113,11 +153,11 @@ export default function PricingCards({
     (session?.user as Record<string, unknown> | undefined)?.tier
   );
   const currentTier = currentTierProp ?? sessionTier;
-  const currentPlanId: PricingPlan["id"] = currentTier ?? "free";
+  const currentPlanId = currentTier ?? "free";
   const professionalIncludesCredits = currentPlanId === "professional";
 
-  async function handleCheckout(plan: "pay_as_you_go" | "professional") {
-    if (plan === "pay_as_you_go" && professionalIncludesCredits) {
+  async function handleCheckout(plan: CreditPackPlan | "professional") {
+    if (plan !== "professional" && professionalIncludesCredits) {
       setError(tErrors("professionalAlreadyIncludesCredits"));
       return;
     }
@@ -182,18 +222,20 @@ export default function PricingCards({
 
   return (
     <div>
-      <div className="grid gap-5 md:grid-cols-3">
-        {PLANS.map((p) => {
-          const isCurrentPlan = p.id === currentPlanId;
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        {PLANS.filter(
+          (p) => !p.hiddenUnlessCurrent || p.id === currentPlanId
+        ).map((p) => {
+          const isCurrentPlan =
+            (p.id === "free" && currentPlanId === "free") ||
+            (p.id === "professional" && currentPlanId === "professional");
           const isHighlighted = p.highlighted || isCurrentPlan;
-          const checkoutPlan = p.plan;
+          const checkoutPlan = p.checkoutPlan;
           const periodLabel = p.periodKey
             ? t(p.periodKey, p.periodValues)
             : "";
-          const canBuyMoreCredits =
-            p.id === "pay_as_you_go" && currentPlanId === "pay_as_you_go";
           const isPaygBlockedForProfessional =
-            p.id === "pay_as_you_go" && professionalIncludesCredits;
+            checkoutPlan !== "professional" && professionalIncludesCredits;
 
           return (
             <div
@@ -250,7 +292,7 @@ export default function PricingCards({
               </ul>
 
               <div className="mt-6">
-                {isCurrentPlan && !canBuyMoreCredits ? (
+                {isCurrentPlan ? (
                   p.id === "professional" && hasActiveStripeSubscription ? (
                     <div className="space-y-3">
                       <span className="block w-full rounded-lg border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 px-3 py-3 text-center text-sm text-[var(--color-text-primary)] min-h-[44px]">
@@ -277,11 +319,6 @@ export default function PricingCards({
                   </span>
                 ) : checkoutPlan ? (
                   <div className="space-y-3">
-                    {canBuyMoreCredits && (
-                      <span className="block w-full rounded-lg border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 px-3 py-3 text-center text-sm text-[var(--color-text-primary)] min-h-[44px]">
-                        <span className="block">{t("currentPlan")}</span>
-                      </span>
-                    )}
                     <button
                       onClick={() => handleCheckout(checkoutPlan)}
                       disabled={loadingPlan !== null}

@@ -54,7 +54,7 @@ export const TOOL_PAGE_TRANSLATIONS_JA: Record<
     ],
     pricingTitle: "写真枚数に合わせてプランを選べる",
     pricingBody:
-      "たまに数枚だけ直すならクレジット、家族アルバムやアーカイブ、クライアント案件をまとめて処理するなら Professional が向いています。",
+      "たまに数枚だけ直すなら小さなクレジットパック、家族アルバムやアーカイブ、クライアント案件をまとめて処理するなら大きなパックが向いています。",
     faqTitle: "古い写真の修復に関するよくある質問",
     faqs: [
       {
@@ -73,9 +73,9 @@ export const TOOL_PAGE_TRANSLATIONS_JA: Record<
           "はい。写真をきれいにしたあと、そのままカラー化やアニメーションへ進めます。",
       },
       {
-        question: "クレジットと Professional はどう選べばいいですか？",
+        question: "クレジットパックはどう選べばいいですか？",
         answer:
-          "たまに少量だけ処理するならクレジット、継続的に写真を修復するなら Professional のほうが使いやすいです。",
+          "たまに少量だけ処理するなら小さなパック、継続的に写真を修復するなら大きなパックのほうが使いやすいです。",
       },
     ],
     relatedTitle: "ほかの旧写真ワークフロー",
@@ -129,7 +129,7 @@ export const TOOL_PAGE_TRANSLATIONS_JA: Record<
     ],
     pricingTitle: "1枚用にもまとめ処理にも合うプラン",
     pricingBody:
-      "数枚だけカラー化するならクレジット、アルバムや家族アーカイブ、クライアント案件をまとめて処理するなら Professional が向いています。",
+      "数枚だけカラー化するなら小さなパック、アルバムや家族アーカイブ、クライアント案件をまとめて処理するなら大きなパックが向いています。",
     faqTitle: "古い写真のカラー化に関するよくある質問",
     faqs: [
       {
@@ -203,7 +203,7 @@ export const TOOL_PAGE_TRANSLATIONS_JA: Record<
     ],
     pricingTitle: "単発利用か継続利用かで選べる",
     pricingBody:
-      "たまに数本だけ作るならクレジット、家族アーカイブやクライアント用に継続的に制作するなら Professional が向いています。",
+      "たまに数本だけ作るなら小さなパック、家族アーカイブやクライアント用に継続的に制作するなら大きなパックが向いています。",
     faqTitle: "古い写真のアニメーションに関するよくある質問",
     faqs: [
       {
@@ -278,7 +278,7 @@ export const TOOL_PAGE_TRANSLATIONS_JA: Record<
     ],
     pricingTitle: "数枚の補修にも、まとめ整理にも対応",
     pricingBody:
-      "少量の補修ならクレジット、家族アルバムやアーカイブ、クライアントの写真をまとめて整えるなら Professional を選べます。",
+      "少量の補修なら小さなパック、家族アルバムやアーカイブ、クライアントの写真をまとめて整えるなら大きなパックを選べます。",
     faqTitle: "傷んだ古い写真の補修に関するよくある質問",
     faqs: [
       {

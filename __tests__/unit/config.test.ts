@@ -22,6 +22,9 @@ const OPTIONAL_STRIPE_VARS = [
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
   "STRIPE_PRICE_PAY_AS_YOU_GO",
+  "STRIPE_PRICE_STARTER_PACK",
+  "STRIPE_PRICE_FAMILY_PACK",
+  "STRIPE_PRICE_ARCHIVE_PACK",
   "STRIPE_PRICE_PROFESSIONAL",
 ];
 
@@ -162,6 +165,9 @@ describe("config object", () => {
     expect(config.stripe.secretKey).toBe("test-value-STRIPE_SECRET_KEY");
     expect(config.stripe.webhookSecret).toBe("test-value-STRIPE_WEBHOOK_SECRET");
     expect(config.stripe.priceIds.payAsYouGo).toBe("test-value-STRIPE_PRICE_PAY_AS_YOU_GO");
+    expect(config.stripe.priceIds.starterPack).toBe("test-value-STRIPE_PRICE_STARTER_PACK");
+    expect(config.stripe.priceIds.familyPack).toBe("test-value-STRIPE_PRICE_FAMILY_PACK");
+    expect(config.stripe.priceIds.archivePack).toBe("test-value-STRIPE_PRICE_ARCHIVE_PACK");
     expect(config.stripe.priceIds.professional).toBe("test-value-STRIPE_PRICE_PROFESSIONAL");
   });
 

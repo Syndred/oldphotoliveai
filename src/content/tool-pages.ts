@@ -208,7 +208,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     ],
     pricingTitle: "Choose the plan that fits your archive",
     pricingBody:
-      "Buy credits for occasional repairs or choose Professional if you are restoring albums, family archives, or client work at a higher volume.",
+      "Buy a small credit pack for occasional repairs, or choose a larger pack when you are restoring albums, family archives, or client work.",
     faqTitle: "Questions about restoring old photos",
     faqs: [
       {
@@ -323,7 +323,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     ],
     pricingTitle: "Pick a plan for one photo or a full batch",
     pricingBody:
-      "Use a credit pack for occasional color work, or choose Professional if you are processing albums, family archives, or client orders.",
+      "Use a small credit pack for occasional color work, or choose a larger pack when you are processing albums, family archives, or client orders.",
     faqTitle: "Questions about colorizing old photos",
     faqs: [
       {
@@ -435,9 +435,9 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
           "Centered portraits generally animate better than full-body photos, crowded scenes, or images with hidden faces. Very blurry eyes, missing facial regions, or strong glare can limit the quality of motion. If the first result is not ideal, try a cleaner crop or restore the photo again before creating the animation.",
       },
     ],
-    pricingTitle: "Choose credits or Professional access",
+    pricingTitle: "Choose the right credit pack",
     pricingBody:
-      "Use credits for occasional animation projects, or upgrade if you regularly create short clips from family archives or client work.",
+      "Use a small credit pack for occasional animation projects, or choose a larger pack when creating clips from family archives or client work.",
     faqTitle: "Questions about animating old photos",
     faqs: [
       {
@@ -541,7 +541,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     ],
     pricingTitle: "Choose a plan for a few repairs or a full archive",
     pricingBody:
-      "Buy credits for a handful of damaged prints, or choose Professional if you are restoring albums, family archives, or client collections.",
+      "Buy credits for a handful of damaged prints, or choose a larger pack when restoring albums, family archives, or client collections.",
     faqTitle: "Questions about repairing damaged old photos",
     faqs: [
       {

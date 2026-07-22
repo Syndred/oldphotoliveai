@@ -22,27 +22,63 @@ jest.mock("next-intl", () => ({
     (key: string, params?: Record<string, string | number>) => {
       const translations: Record<string, Record<string, string>> = {
         pricing: {
-          title: "Choose Your Plan",
-          subtitle: "Unlock the full power of AI photo restoration",
+          eyebrow: "One-time credit packs",
+          title: "Pay Once, Restore When You Need",
+          subtitle:
+            "Start free, then buy credits only when a result is worth keeping.",
+          valueProp1: "Free daily trial",
+          valueProp2: "HD exports",
+          valueProp3: "Credits valid for 1 year",
           free: "Free",
           payAsYouGo: "Pay As You Go",
           professional: "Professional",
+          starterPack: "Starter Pack",
+          familyPack: "Family Pack",
+          archivePack: "Archive Pack",
           recommended: "Recommended",
           currentPlan: "Current Plan",
           subscribe: "Subscribe",
           buyCredits: "Buy Credits",
+          buyPack: "Buy Credits",
           includedInProfessional: "Included in Professional",
           manageSubscription: "Manage Subscription",
           scheduledCancellation:
             "Scheduled to downgrade to Free on {date} at period end.",
           redirecting: "Redirecting...",
-          freeDesc: "Try it out",
-          payAsYouGoDesc: "For occasional use",
+          freeBadge: "Start here",
+          starterPackBadge: "Try a few",
+          familyPackBadge: "Most popular",
+          archivePackBadge: "Best value",
+          professionalBadge: "Best for archives",
+          creditPackPeriod: "/ {count} credits",
+          freePriceNote: "Daily free credit for testing the workflow.",
+          starterPackPriceNote: "Good for testing a few important photos.",
+          familyPackPriceNote: "Lower friction for a small family album.",
+          archivePackPriceNote: "Best per-photo value for batches.",
+          professionalPriceNote:
+            "Monthly plan for albums, batches, and client work.",
+          freeDesc: "Preview the restoration workflow before paying.",
+          starterPackDesc: "A low-risk pack for first purchases.",
+          familyPackDesc: "Enough credits for a keepsake set or gift.",
+          archivePackDesc:
+            "Process a larger batch at a lower per-credit cost.",
           professionalDesc: "Best value",
           freeFeature1: "1 photo per day",
           freeFeature2: "Image export up to 800x600",
           freeFeature3: "480p video output",
           freeFeature4: "Watermark on image output",
+          starterPackFeature1: "5 paid credits",
+          starterPackFeature2: "2K image export (up to 2048px)",
+          starterPackFeature3: "720p HD video",
+          starterPackFeature4: "Watermark-free downloads",
+          familyPackFeature1: "12 paid credits",
+          familyPackFeature2: "2K image export (up to 2048px)",
+          familyPackFeature3: "720p HD video",
+          familyPackFeature4: "Watermark-free downloads",
+          archivePackFeature1: "30 paid credits",
+          archivePackFeature2: "2K image export (up to 2048px)",
+          archivePackFeature3: "720p HD video",
+          archivePackFeature4: "Watermark-free downloads",
           payFeature1: "1 credit",
           payFeature2: "2K image export (up to 2048px)",
           payFeature3: "720p HD video",
@@ -113,28 +149,32 @@ describe("PricingCards", () => {
     mockUseSession.mockReturnValue({ data: null, status: "unauthenticated" });
   });
 
-  it("renders three pricing plans", () => {
+  it("renders free and credit-pack pricing plans", () => {
     render(<PricingCards />);
     expect(screen.getByTestId("plan-free")).toBeInTheDocument();
-    expect(screen.getByTestId("plan-pay_as_you_go")).toBeInTheDocument();
-    expect(screen.getByTestId("plan-professional")).toBeInTheDocument();
+    expect(screen.getByTestId("plan-starter_pack")).toBeInTheDocument();
+    expect(screen.getByTestId("plan-family_pack")).toBeInTheDocument();
+    expect(screen.getByTestId("plan-archive_pack")).toBeInTheDocument();
+    expect(screen.queryByTestId("plan-professional")).not.toBeInTheDocument();
   });
 
   it("displays correct plan names", () => {
     render(<PricingCards />);
     expect(screen.getByText("Free")).toBeInTheDocument();
-    expect(screen.getByText("Pay As You Go")).toBeInTheDocument();
-    expect(screen.getByText("Professional")).toBeInTheDocument();
+    expect(screen.getByText("Starter Pack")).toBeInTheDocument();
+    expect(screen.getByText("Family Pack")).toBeInTheDocument();
+    expect(screen.getByText("Archive Pack")).toBeInTheDocument();
   });
 
   it("displays correct prices", () => {
     render(<PricingCards />);
     expect(screen.getByText("$0")).toBeInTheDocument();
-    expect(screen.getByText("$0.99")).toBeInTheDocument();
+    expect(screen.getByText("$4.99")).toBeInTheDocument();
+    expect(screen.getByText("$9.99")).toBeInTheDocument();
     expect(screen.getByText("$19.99")).toBeInTheDocument();
   });
 
-  it("shows Recommended badge on Professional plan", () => {
+  it("shows Recommended badge on Family Pack", () => {
     render(<PricingCards />);
     expect(screen.getByText("Recommended")).toBeInTheDocument();
   });
@@ -159,7 +199,7 @@ describe("PricingCards", () => {
     expect(screen.queryByText("Subscribe")).not.toBeInTheDocument();
   });
 
-  it("does not show Buy Credits for professional users", () => {
+  it("does not show credit purchase buttons for professional users", () => {
     mockUseSession.mockReturnValue({
       data: { user: { name: "Pro User", tier: "professional" } },
       status: "authenticated",
@@ -167,8 +207,8 @@ describe("PricingCards", () => {
 
     render(<PricingCards />);
 
-    const paygCard = screen.getByTestId("plan-pay_as_you_go");
-    expect(paygCard).toHaveTextContent("Included in Professional");
+    const starterCard = screen.getByTestId("plan-starter_pack");
+    expect(starterCard).toHaveTextContent("Included in Professional");
     expect(screen.queryByText("Buy Credits")).not.toBeInTheDocument();
   });
 
@@ -195,7 +235,7 @@ describe("PricingCards", () => {
     });
   });
 
-  it("still shows Buy Credits for pay-as-you-go users on their current plan", async () => {
+  it("still shows credit packs for pay-as-you-go users", async () => {
     mockUseSession.mockReturnValue({
       data: { user: { name: "Payg User", tier: "pay_as_you_go" } },
       status: "authenticated",
@@ -207,78 +247,58 @@ describe("PricingCards", () => {
 
     render(<PricingCards />);
 
-    const paygCard = screen.getByTestId("plan-pay_as_you_go");
-    expect(paygCard).toHaveTextContent("Current Plan");
-    expect(paygCard).not.toHaveTextContent("2 remaining");
+    const familyPack = screen.getByTestId("plan-family_pack");
+    expect(familyPack).not.toHaveTextContent("Current Plan");
 
     await act(async () => {
-      fireEvent.click(screen.getByText("Buy Credits"));
+      fireEvent.click(screen.getAllByText("Buy Credits")[1]);
     });
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: "pay_as_you_go" }),
+        body: JSON.stringify({ plan: "family_pack" }),
       });
     });
   });
 
-  it("shows Buy Credits button for pay-as-you-go", () => {
+  it("shows Buy Credits buttons for credit packs", () => {
     render(<PricingCards />);
-    const btn = screen.getByText("Buy Credits");
-    expect(btn.tagName).toBe("BUTTON");
+    const buttons = screen.getAllByText("Buy Credits");
+    expect(buttons).toHaveLength(3);
+    expect(buttons[0].tagName).toBe("BUTTON");
   });
 
-  it("shows Subscribe button for professional", () => {
+  it("hides Subscribe button for new users", () => {
     render(<PricingCards />);
-    const btn = screen.getByText("Subscribe");
-    expect(btn.tagName).toBe("BUTTON");
+    expect(screen.queryByText("Subscribe")).not.toBeInTheDocument();
   });
 
   it("displays features for each plan", () => {
     render(<PricingCards />);
     expect(screen.getByText("1 photo per day")).toBeInTheDocument();
-    expect(screen.getByText("1 credit")).toBeInTheDocument();
-    expect(screen.getByText("Unlimited photos")).toBeInTheDocument();
+    expect(screen.getByText("5 paid credits")).toBeInTheDocument();
+    expect(screen.getByText("12 paid credits")).toBeInTheDocument();
+    expect(screen.getByText("30 paid credits")).toBeInTheDocument();
     expect(screen.getByText("480p video output")).toBeInTheDocument();
-    expect(screen.getByText("720p HD video")).toBeInTheDocument();
-    expect(screen.getByText("1080p premium video")).toBeInTheDocument();
-    expect(screen.getByText("Priority processing")).toBeInTheDocument();
+    expect(screen.getAllByText("720p HD video")).toHaveLength(3);
   });
 
-  it("calls checkout API with correct plan when Buy Credits is clicked", async () => {
+  it("calls checkout API with the selected credit pack", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ url: "https://checkout.stripe.com/session123" }),
     });
 
     render(<PricingCards />);
-    fireEvent.click(screen.getByText("Buy Credits"));
+    fireEvent.click(screen.getAllByText("Buy Credits")[0]);
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: "pay_as_you_go" }),
-      });
-    });
-  });
-
-  it("calls checkout API with professional plan when Subscribe is clicked", async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ url: "https://checkout.stripe.com/session456" }),
-    });
-
-    render(<PricingCards />);
-    fireEvent.click(screen.getByText("Subscribe"));
-
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: "professional" }),
+        body: JSON.stringify({ plan: "starter_pack" }),
       });
     });
   });
@@ -292,7 +312,7 @@ describe("PricingCards", () => {
     render(<PricingCards />);
 
     await act(async () => {
-      fireEvent.click(screen.getByText("Subscribe"));
+      fireEvent.click(screen.getAllByText("Buy Credits")[0]);
     });
 
     await waitFor(() => {
@@ -308,7 +328,7 @@ describe("PricingCards", () => {
     mockFetch.mockReturnValueOnce(promise);
 
     render(<PricingCards />);
-    fireEvent.click(screen.getByText("Subscribe"));
+    fireEvent.click(screen.getAllByText("Buy Credits")[0]);
 
     expect(screen.getByText("Redirecting...")).toBeInTheDocument();
 
@@ -356,7 +376,7 @@ describe("PricingPage", () => {
 
   it("renders the page title", () => {
     render(<PricingPage />);
-    expect(screen.getByText("Choose Your Plan")).toBeInTheDocument();
+    expect(screen.getByText("Pay Once, Restore When You Need")).toBeInTheDocument();
   });
 
   it("renders the Navbar", () => {
@@ -367,13 +387,15 @@ describe("PricingPage", () => {
   it("renders PricingCards component", () => {
     render(<PricingPage />);
     expect(screen.getByTestId("plan-free")).toBeInTheDocument();
-    expect(screen.getByTestId("plan-professional")).toBeInTheDocument();
+    expect(screen.getByTestId("plan-family_pack")).toBeInTheDocument();
   });
 
   it("renders subtitle text", () => {
     render(<PricingPage />);
     expect(
-      screen.getByText("Unlock the full power of AI photo restoration")
+      screen.getByText(
+        "Start free, then buy credits only when a result is worth keeping."
+      )
     ).toBeInTheDocument();
   });
 
@@ -510,7 +532,7 @@ describe("PricingPage", () => {
     });
   });
 
-  it("uses the latest quota tier to hide pay-as-you-go purchase for professional users", async () => {
+  it("uses the latest quota tier to hide credit purchases for professional users", async () => {
     mockUseSession.mockReturnValue({
       data: { user: { name: "Pro User", tier: "free" } },
       status: "authenticated",
@@ -547,8 +569,8 @@ describe("PricingPage", () => {
     render(<PricingPage />);
 
     await waitFor(() => {
-      const paygCard = screen.getByTestId("plan-pay_as_you_go");
-      expect(paygCard).toHaveTextContent("Included in Professional");
+      const starterCard = screen.getByTestId("plan-starter_pack");
+      expect(starterCard).toHaveTextContent("Included in Professional");
     });
     expect(screen.queryByText("Buy Credits")).not.toBeInTheDocument();
   });
