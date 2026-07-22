@@ -19,9 +19,9 @@ interface SeoDictionary {
 export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
   en: {
     home: {
-      title: "AI Photo Restoration & Colorization",
+      title: "Colorize & Restore Old Photos with AI - Free Online | OldPhotoLive",
       description:
-        "Restore, colorize, and animate your old photos with AI. Upload faded family photos, repair damage, and bring memories back to life in seconds.",
+        "Colorize black and white photos, restore damaged old pictures, and animate vintage portraits with AI. Free to try with no signup needed.",
     },
     pricing: {
       title: "Pricing",
@@ -60,9 +60,9 @@ export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
   },
   zh: {
     home: {
-      title: "AI 旧照片修复与上色",
+      title: "AI 旧照片上色、修复与动态化 - OldPhotoLive",
       description:
-        "使用 AI 修复、上色和动态化旧照片。上传褪色的家庭老照片，快速修补损伤，让回忆重新鲜活起来。",
+        "使用 AI 给黑白照片上色、修复破损旧照片，并将复古人像动态化。可免费试用，无需先注册即可开始。",
     },
     pricing: {
       title: "价格",
@@ -99,9 +99,9 @@ export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
   },
   es: {
     home: {
-      title: "Restauración y colorización de fotos con IA",
+      title: "Coloriza y restaura fotos antiguas con IA - OldPhotoLive",
       description:
-        "Restaura, colorea y anima tus fotos antiguas con IA. Sube fotos familiares desvaídas, repara daños y devuelve la vida a tus recuerdos en segundos.",
+        "Coloriza fotos en blanco y negro, restaura imágenes antiguas dañadas y anima retratos vintage con IA. Gratis para probar, sin registro inicial.",
     },
     pricing: {
       title: "Precios",
@@ -140,9 +140,9 @@ export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
   },
   ja: {
     home: {
-      title: "AI 写真修復とカラー化",
+      title: "AI で古い写真をカラー化・修復・アニメーション化 - OldPhotoLive",
       description:
-        "AI で古い写真を修復、カラー化、アニメーション化します。色あせた家族写真をアップロードして、傷みを修復し、思い出をよみがえらせましょう。",
+        "AI で白黒写真をカラー化し、傷んだ古い写真を修復し、ビンテージポートレートをアニメーション化できます。無料で試せます。",
     },
     pricing: {
       title: "料金",

@@ -10,6 +10,8 @@ export interface BeforeAfterCompareProps {
   afterUrl: string;
   beforeLabel?: string;
   afterLabel?: string;
+  beforeAlt?: string;
+  afterAlt?: string;
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -31,6 +33,8 @@ export default function BeforeAfterCompare({
   afterUrl,
   beforeLabel,
   afterLabel,
+  beforeAlt,
+  afterAlt,
 }: BeforeAfterCompareProps) {
   const t = useTranslations("result");
   const resolvedBeforeLabel = beforeLabel ?? t("before");
@@ -91,7 +95,7 @@ export default function BeforeAfterCompare({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={afterUrl}
-          alt={resolvedAfterLabel}
+          alt={afterAlt ?? resolvedAfterLabel}
           className="absolute inset-0 h-full w-full object-contain"
         />
 
@@ -103,7 +107,7 @@ export default function BeforeAfterCompare({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={beforeUrl}
-            alt={resolvedBeforeLabel}
+            alt={beforeAlt ?? resolvedBeforeLabel}
             className="absolute inset-0 h-full w-full object-contain"
           />
         </div>

@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { TOOL_PAGE_SLUGS } from "@/content/tool-pages";
+import { TOOL_PAGE_SLUGS, getToolPagePath } from "@/content/tool-pages";
 import { locales, type Locale } from "@/i18n/routing";
 import {
   absoluteLocalizedUrl,
@@ -41,7 +41,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ] as const;
 
   const toolRoutes = TOOL_PAGE_SLUGS.map((slug) => ({
-    path: `/${slug}`,
+    path: getToolPagePath(slug),
     lastModified: new Date("2026-03-18T00:00:00.000Z"),
     changeFrequency: "weekly" as const,
     priority: 0.9,

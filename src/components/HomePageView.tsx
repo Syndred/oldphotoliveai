@@ -14,8 +14,10 @@ import {
   SITE_DESCRIPTION,
   SITE_URL,
 } from "@/lib/site";
-import { absoluteUrl } from "@/lib/seo";
+import { absoluteUrl, buildFaqJsonLd } from "@/lib/seo";
 import { defaultLocale, type Locale } from "@/i18n/routing";
+import { HOME_SEO_CONTENT } from "@/content/home-seo";
+import { Link } from "@/i18n/navigation";
 
 interface HomePageViewProps {
   locale?: Locale;
@@ -24,6 +26,7 @@ interface HomePageViewProps {
 export default function HomePageView({
   locale = defaultLocale,
 }: HomePageViewProps) {
+  const homeSeo = HOME_SEO_CONTENT[locale] ?? HOME_SEO_CONTENT.en;
   const jsonLd = [
     {
       "@context": "https://schema.org",
@@ -54,6 +57,7 @@ export default function HomePageView({
         priceCurrency: "USD",
       },
     },
+    buildFaqJsonLd(homeSeo.faqItems),
   ];
 
   return (
@@ -72,13 +76,56 @@ export default function HomePageView({
             analyticsSource="home_hero"
             className="mt-8 max-w-4xl"
           />
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/colorize"
+              className="inline-flex min-h-[44px] items-center rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent)]/90"
+            >
+              {homeSeo.colorizeCta}
+            </Link>
+            <Link
+              href="/restore"
+              className="inline-flex min-h-[44px] items-center rounded-full border border-white/12 bg-black/10 px-5 py-2.5 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.05]"
+            >
+              {homeSeo.restoreCta}
+            </Link>
+          </div>
         </HeroSection>
+        <ToolCardsSection locale={locale} />
         <ShowcaseSection />
         <VideoShowcaseSection />
         <FeaturesSection />
-        <ToolCardsSection locale={locale} />
+        <section className="px-4 py-10 sm:py-14">
+          <div className="mx-auto max-w-5xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
+              {homeSeo.contentEyebrow}
+            </p>
+            <h2 className="mt-3 max-w-4xl text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">
+              {homeSeo.contentTitle}
+            </h2>
+            <div className="mt-6 space-y-4 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+              {homeSeo.contentParagraphs.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link
+                href="/colorize"
+                className="inline-flex min-h-[44px] items-center rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent)]/90"
+              >
+                {homeSeo.colorizeCta}
+              </Link>
+              <Link
+                href="/restore"
+                className="inline-flex min-h-[44px] items-center rounded-full border border-white/12 px-5 py-2.5 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.05]"
+              >
+                {homeSeo.restoreCta}
+              </Link>
+            </div>
+          </div>
+        </section>
         <HowItWorksSection />
-        <FAQSection />
+        <FAQSection items={homeSeo.faqItems} />
       </main>
 
       <FooterSection />

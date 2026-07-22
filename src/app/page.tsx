@@ -2,11 +2,13 @@ import { Metadata } from "next";
 import HomePageView from "@/components/HomePageView";
 import { buildPageMetadata } from "@/lib/seo";
 import { defaultLocale } from "@/i18n/routing";
+import { PAGE_SEO_COPY } from "@/content/page-seo";
+
+const homeSeo = PAGE_SEO_COPY[defaultLocale].home;
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "AI Photo Restoration & Colorization",
-  description:
-    "Restore, colorize, and animate your old photos with AI. Upload faded family photos, repair damage, and bring memories back to life in seconds.",
+  title: homeSeo.title,
+  description: homeSeo.description,
   path: "/",
   keywords: [
     "ai photo restoration",

@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import AuthButton from "./AuthButton";
 import BrandLogo from "./BrandLogo";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { Link, usePathname } from "@/i18n/navigation";
+import { getToolPagePath, getToolPageSummaries } from "@/content/tool-pages";
+import type { Locale } from "@/i18n/routing";
 import type { QuotaInfo, UserTier } from "@/types";
 
 const NAV_LINKS = [
@@ -27,6 +29,7 @@ function parseUserTier(value: unknown): UserTier | null {
 
 export default function Navbar() {
   const pathname = usePathname();
+  const locale = useLocale() as Locale;
   const { data: session, status } = useSession();
   const t = useTranslations("nav");
   const tPricing = useTranslations("pricing");
@@ -80,6 +83,10 @@ export default function Navbar() {
     status === "authenticated"
       ? [...NAV_LINKS, { href: "/history", labelKey: "history" as const }]
       : NAV_LINKS;
+  const productLinks = getToolPageSummaries(locale);
+  const hasActiveProduct = productLinks.some((tool) =>
+    pathname.startsWith(getToolPagePath(tool.slug))
+  );
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-[var(--color-primary-bg)]/80 backdrop-blur-md">
@@ -98,6 +105,53 @@ export default function Navbar() {
 
         {/* Desktop Navigation Links */}
         <div className="hidden sm:flex items-center gap-1 sm:gap-2">
+          <div className="group relative">
+            <button
+              type="button"
+              className={`flex min-h-[44px] items-center gap-1 rounded-md px-3 py-2 text-sm transition-colors ${
+                hasActiveProduct
+                  ? "text-white"
+                  : "text-[var(--color-text-secondary)] hover:text-white"
+              }`}
+              aria-haspopup="true"
+            >
+              {t("products")}
+              <svg
+                className="h-4 w-4 transition-transform group-hover:rotate-180 group-focus-within:rotate-180"
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                aria-hidden="true"
+              >
+                <path d="M5 7.5 10 12l5-4.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <div className="invisible absolute left-0 top-full z-50 w-72 translate-y-2 rounded-xl border border-white/10 bg-[var(--color-primary-bg)]/95 p-2 opacity-0 shadow-[0_18px_45px_rgba(0,0,0,0.35)] backdrop-blur-md transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
+              {productLinks.map((tool) => {
+                const href = getToolPagePath(tool.slug);
+                const isActive = pathname.startsWith(href);
+                return (
+                  <Link
+                    key={tool.slug}
+                    href={href}
+                    className={`block rounded-lg px-3 py-2.5 transition-colors ${
+                      isActive
+                        ? "bg-white/[0.08] text-white"
+                        : "text-[var(--color-text-secondary)] hover:bg-white/[0.05] hover:text-white"
+                    }`}
+                  >
+                    <span className="block text-sm font-medium">
+                      {tool.cardTitle}
+                    </span>
+                    <span className="mt-1 block text-xs leading-5 text-[var(--color-text-secondary)]">
+                      {tool.eyebrow}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
           {navLinks.map((link) => {
             const isActive =
               link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
@@ -165,6 +219,27 @@ export default function Navbar() {
           <div className="px-3 py-2">
             <LanguageSwitcher />
           </div>
+          <div className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-accent)]">
+            {t("products")}
+          </div>
+          {productLinks.map((tool) => {
+            const href = getToolPagePath(tool.slug);
+            const isActive = pathname.startsWith(href);
+            return (
+              <Link
+                key={tool.slug}
+                href={href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block rounded-md px-3 py-2.5 text-sm transition-colors min-h-[44px] ${
+                  isActive
+                    ? "text-white"
+                    : "text-[var(--color-text-secondary)] hover:text-white"
+                }`}
+              >
+                {tool.cardTitle}
+              </Link>
+            );
+          })}
           {navLinks.map((link) => {
             const isActive =
               link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
@@ -188,4 +263,3 @@ export default function Navbar() {
     </nav>
   );
 }
-

@@ -8,6 +8,7 @@ import UploadSection from "@/app/sections/UploadSection";
 import ToolCardsSection from "@/components/tool/ToolCardsSection";
 import {
   getToolPage,
+  getToolPagePath,
   getToolSectionCopy,
   type ToolPageSlug,
 } from "@/content/tool-pages";
@@ -29,13 +30,14 @@ export default function ToolLandingPage({
   slug,
 }: ToolLandingPageProps) {
   const tool = getToolPage(locale, slug);
+  const toolPath = getToolPagePath(slug);
   const sectionCopy = getToolSectionCopy(locale);
 
   const jsonLd = [
     buildBreadcrumbJsonLd(
       [
         { name: sectionCopy.homeLabel, path: "/" },
-        { name: tool.cardTitle, path: `/${tool.slug}` },
+        { name: tool.cardTitle, path: toolPath },
       ],
       locale
     ),
@@ -43,7 +45,7 @@ export default function ToolLandingPage({
     buildSoftwareApplicationJsonLd({
       name: tool.cardTitle,
       description: tool.description,
-      path: `/${tool.slug}`,
+      path: toolPath,
       locale,
       keywords: tool.keywords,
     }),
@@ -165,6 +167,25 @@ export default function ToolLandingPage({
             </div>
           </div>
         </section>
+
+        {locale === "en" && tool.guideSections?.length ? (
+          <section className="px-4 py-10 sm:py-14">
+            <div className="mx-auto max-w-5xl">
+              <div className="space-y-8">
+                {tool.guideSections.map((section) => (
+                  <article key={section.title}>
+                    <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">
+                      {section.title}
+                    </h2>
+                    <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                      {section.body}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         <HowItWorksSection />
 

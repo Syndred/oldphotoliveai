@@ -16,6 +16,7 @@
   },
   "nav": {
     "home": "Inicio",
+    "products": "Productos",
     "guides": "Guías",
     "history": "Historial",
     "pricing": "Precios",
@@ -157,8 +158,8 @@
   },
   "landing": {
     "hero": {
-      "title": "Devuelve la vida a tus fotos antiguas",
-      "subtitle": "Restauración, colorización y animación con IA: transforma recuerdos desvanecidos en momentos llenos de vida",
+      "title": "Coloriza, restaura y anima fotos antiguas con IA",
+      "subtitle": "Coloriza fotos en blanco y negro, restaura copias dañadas y anima retratos antiguos en un solo flujo",
       "cta": "Pruébalo gratis"
     },
     "showcase": {

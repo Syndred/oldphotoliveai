@@ -22,6 +22,24 @@ function getVisibleItems<T>(items: T[], offset: number, count: number): T[] {
   return Array.from({ length: size }, (_, i) => items[(offset + i) % items.length]);
 }
 
+function getShowcaseAltText(rowId: "restoration" | "colorization") {
+  if (rowId === "colorization") {
+    return {
+      beforeAlt:
+        "Original black and white family photo before AI colorization",
+      afterAlt:
+        "Before and after: colorize black and white family portrait with AI",
+    };
+  }
+
+  return {
+    beforeAlt:
+      "Damaged old family photo before AI restoration and scratch repair",
+    afterAlt:
+      "Before and after: restore old damaged photo with AI restoration",
+  };
+}
+
 function ArrowButton({
   label,
   direction,
@@ -59,12 +77,14 @@ function ArrowButton({
 }
 
 function CompareRow({
+  rowId,
   title,
   subtitle,
   items,
   previousLabel,
   nextLabel,
 }: {
+  rowId: "restoration" | "colorization";
   title: string;
   subtitle: string;
   items: CompareShowcaseItem[];
@@ -74,6 +94,7 @@ function CompareRow({
   const [offset, setOffset] = useState(0);
   const total = items.length;
   const visibleItems = getVisibleItems(items, offset, VISIBLE_COUNT);
+  const altText = getShowcaseAltText(rowId);
 
   const handlePrevious = () => {
     setOffset((prev) => wrapIndex(prev - 1, total));
@@ -106,6 +127,8 @@ function CompareRow({
               <BeforeAfterCompare
                 beforeUrl={resolveShowcaseAssetUrl(item.beforeKey, item.version)}
                 afterUrl={resolveShowcaseAssetUrl(item.afterKey, item.version)}
+                beforeAlt={altText.beforeAlt}
+                afterAlt={altText.afterAlt}
               />
             </div>
           ))}
@@ -161,6 +184,7 @@ export default function ShowcaseSection({
           {rows.map((row) => (
             <CompareRow
               key={row.id}
+              rowId={row.id}
               title={t(row.titleKey)}
               subtitle={t(row.subtitleKey)}
               items={row.items}

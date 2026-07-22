@@ -16,6 +16,7 @@
   },
   "nav": {
     "home": "Home",
+    "products": "Products",
     "guides": "Guides",
     "history": "History",
     "pricing": "Pricing",
@@ -157,8 +158,8 @@
   },
   "landing": {
     "hero": {
-      "title": "Bring Your Old Photos Back to Life",
-      "subtitle": "AI-powered restoration, colorization, and animation - transform faded memories into vivid moments",
+      "title": "Colorize, Restore & Animate Old Photos with AI",
+      "subtitle": "Colorize black and white photos, restore damaged prints, and animate vintage portraits in one AI workflow",
       "cta": "Try It Free"
     },
     "showcase": {

@@ -12,6 +12,13 @@ export const TOOL_PAGE_SLUGS = [
 
 export type ToolPageSlug = (typeof TOOL_PAGE_SLUGS)[number];
 
+const TOOL_PAGE_PATHS: Record<ToolPageSlug, string> = {
+  "restore-old-photos": "/restore",
+  "colorize-old-photos": "/colorize",
+  "animate-old-photos": "/animate",
+  "repair-damaged-old-photos": "/repair-damaged-old-photos",
+};
+
 export type ToolShowcaseKind = "restoration" | "colorization" | "animation";
 
 export interface ToolBenefit {
@@ -22,6 +29,11 @@ export interface ToolBenefit {
 export interface ToolFaq {
   question: string;
   answer: string;
+}
+
+export interface ToolGuideSection {
+  title: string;
+  body: string;
 }
 
 export interface ToolPageDocument {
@@ -45,6 +57,7 @@ export interface ToolPageDocument {
   showcaseKind: ToolShowcaseKind;
   benefitsTitle: string;
   benefits: ToolBenefit[];
+  guideSections?: ToolGuideSection[];
   pricingTitle: string;
   pricingBody: string;
   faqTitle: string;
@@ -126,9 +139,9 @@ const TOOL_PAGE_TRANSLATIONS: Record<
 const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
   "restore-old-photos": {
     slug: "restore-old-photos",
-    title: "Restore Old Photos Online with AI",
+    title: "Restore Old Photos Online Free - AI Photo Restoration | OldPhotoLive",
     description:
-      "Restore old photos online with AI. Repair faded prints, recover facial details, clean scratches, and bring family memories back with one upload.",
+      "Restore old damaged photos online with AI. Remove scratches, tears, and fading, recover facial details, and try old photo restoration for free.",
     keywords: [
       "restore old photos",
       "restore old photos online",
@@ -139,9 +152,9 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     cardDescription:
       "Repair faded family prints, recover details, and produce a cleaner master image before color and animation.",
     eyebrow: "AI restoration",
-    heroTitle: "Restore old photos without rebuilding the image by hand",
+    heroTitle: "Restore old photos with AI - repair scratches and recover details",
     heroDescription:
-      "Upload one damaged family photo and let the same workflow restore detail, improve contrast, and prepare the image for color and animation.",
+      "Upload one damaged family photo and let AI restore detail, improve contrast, remove visible wear, and prepare the image for colorization or animation.",
     heroHighlights: [
       "Repair faded prints and low-contrast scans",
       "Recover faces, clothing texture, and background detail",
@@ -153,7 +166,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
       "Upload a scan or family print to clean damage, recover details, and create a stronger master image in minutes.",
     introTitle: "Bring faded memories back",
     introBody:
-      "Old family photos often lose contrast, collect scratches, and blur in the areas people care about most. This workflow gives you a fast, natural first pass so portraits, wedding prints, and album scans look usable again.",
+      "Old family photos often lose contrast, collect scratches, and blur in the areas people care about most. This AI photo restoration workflow gives you a fast, natural first pass for portraits, wedding prints, genealogy records, memorial albums, and scanned family archives. Start with the clearest scan you have, restore old photos online, then decide whether to download the restored image, colorize it, or animate the portrait.",
     showcaseTitle: "Old photo restoration examples",
     showcaseSubtitle:
       "Real before-and-after examples focused on contrast recovery, scratch cleanup, and facial detail repair.",
@@ -176,30 +189,57 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
           "When you have many old photos to sort through, a quick restoration pass helps you decide which images are ready to save, print, or refine further.",
       },
     ],
+    guideSections: [
+      {
+        title: "What AI photo restoration can repair",
+        body:
+          "AI photo restoration works best on the common problems found in family albums: faded contrast, soft facial detail, small scratches, dust, and paper wear. It can make old portraits easier to recognize, recover clothing and background texture, and create a cleaner image for printing or sharing. Severe missing areas may still need manual retouching, but an AI first pass usually saves time and gives you a stronger version to work from.",
+      },
+      {
+        title: "Use cases for family archives and genealogy",
+        body:
+          "People often restore old photos for memorial videos, genealogy profiles, anniversary gifts, family trees, local history collections, and scanned albums. A restored image is easier to identify, tag, and preserve. If the photo is a portrait, you can also use the restored version as the base for natural colorization or a short animation clip.",
+      },
+      {
+        title: "Tips for better restoration results",
+        body:
+          "Use the highest-resolution scan you can, crop away empty borders only after scanning, and avoid photographing glossy prints under direct light. If a photo is extremely dark, try a scan that preserves as much detail as possible instead of over-brightening it before upload. The more real detail the AI can see, the better it can restore old photos online.",
+      },
+    ],
     pricingTitle: "Choose the plan that fits your archive",
     pricingBody:
       "Buy credits for occasional repairs or choose Professional if you are restoring albums, family archives, or client work at a higher volume.",
     faqTitle: "Questions about restoring old photos",
     faqs: [
       {
-        question: "Can I restore a photo without Photoshop?",
+        question: "What is the best way to restore old photos online?",
         answer:
-          "Yes. This workflow is designed to give you a fast AI-assisted restoration pass before you decide whether any manual retouching is still needed.",
+          "Scan or photograph the original print as clearly as possible, then upload it to OldPhotoLive AI. The restoration workflow repairs fading, scratches, low contrast, and soft facial detail before you download or continue into colorization.",
       },
       {
-        question: "What kinds of photos work best?",
+        question: "Can faded black and white photos be restored?",
         answer:
-          "Portraits, family snapshots, wedding prints, and moderately damaged scans usually benefit most. A cleaner scan gives the model more detail to work with.",
+          "Yes. Faded black-and-white photos can often be improved by restoring contrast, sharpening important details, and cleaning visible surface damage before optional colorization.",
+      },
+      {
+        question: "Can I remove scratches and creases from old photos?",
+        answer:
+          "Yes. The repair workflow can reduce common print damage such as scratches, creases, dust spots, fading, yellowing, and moderate paper wear.",
+      },
+      {
+        question: "How long does it take to restore an old photo?",
+        answer:
+          "Most photos are processed in a few minutes. Larger files, higher-resolution outputs, or animation jobs may take longer when the queue is busy.",
       },
       {
         question: "Can I colorize or animate the restored image afterward?",
         answer:
-          "Yes. Once the image has been cleaned up, you can continue with colorization or animation from the same account.",
+          "Yes. Once the image has been cleaned up, you can continue with AI colorization or animation from the same account.",
       },
       {
-        question: "How do I choose between credits and Professional?",
+        question: "Do I need Photoshop to restore old photos?",
         answer:
-          "Credits work well for occasional jobs, while Professional is better if you restore photos frequently or need higher monthly volume.",
+          "No. OldPhotoLive AI is designed to give you an AI-assisted restoration pass online before you decide whether any manual retouching is still needed.",
       },
     ],
     relatedTitle: "More old-photo workflows",
@@ -213,10 +253,11 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
   },
   "colorize-old-photos": {
     slug: "colorize-old-photos",
-    title: "Colorize Old Photos with AI",
+    title: "Colorize Black and White Photos Online Free - AI Photo Colorizer | OldPhotoLive",
     description:
-      "Colorize old photos with AI. Turn black-and-white family pictures into natural-looking color with cleaner detail and balanced tones.",
+      "Colorize black and white photos online free with AI. Turn vintage B&W family portraits into vivid, natural colors with no signup needed to try.",
     keywords: [
+      "colorize black and white photos",
       "colorize old photos",
       "old photo colorizer",
       "black and white photo colorizer",
@@ -226,7 +267,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     cardDescription:
       "Turn black-and-white memories into natural color with cleaner faces, clothing, and background detail.",
     eyebrow: "AI colorization",
-    heroTitle: "Colorize black-and-white family photos in the same workflow",
+    heroTitle: "Colorize black and white photos with AI - natural colors in seconds",
     heroDescription:
       "Upload a black-and-white portrait or family snapshot to add realistic color while preserving facial detail, clothing texture, and scene balance.",
     heroHighlights: [
@@ -240,7 +281,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
       "Start with a scan or black-and-white print and generate a cleaner, naturally colored result in one pass.",
     introTitle: "Add color without losing the original feeling",
     introBody:
-      "Old family photos need more than a simple tint overlay. This workflow first improves the source image, then adds color that feels closer to a real print instead of a noisy filter.",
+      "Old family photos need more than a simple tint overlay. This AI photo colorizer first improves the source image, then predicts natural colors for skin tones, clothing, skies, foliage, rooms, and outdoor backgrounds. Use it for family portraits, genealogy projects, school photos, wedding prints, and historical images when you want a black-and-white photo to feel easier to share without losing the original mood.",
     showcaseTitle: "Old photo colorization examples",
     showcaseSubtitle:
       "Before-and-after examples focused on natural skin tones, clothing, and environmental color in family photos.",
@@ -263,30 +304,57 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
           "Colorized photos are easier to share with younger family members, include in memorial projects, and print for albums or gifts.",
       },
     ],
+    guideSections: [
+      {
+        title: "Natural AI colorization for black and white photos",
+        body:
+          "The goal of AI photo colorization is believable color, not a neon filter. OldPhotoLive AI looks for visual clues in faces, clothing, skies, plants, interiors, and street scenes, then adds color that fits the photo's era and lighting. The result is especially useful for family portraits, wedding prints, school photos, genealogy records, and black-and-white snapshots that younger relatives may connect with more easily in color.",
+      },
+      {
+        title: "Why restore before adding color",
+        body:
+          "Many black-and-white photos are also faded, dusty, or scratched. If you add color directly onto damage, the final image can look noisy. This workflow improves the source first, then colorizes the cleaner image so skin tones, fabric, and background colors have a stronger base. That is why the colorizer sits inside the broader old-photo workflow instead of acting like a simple tint overlay.",
+      },
+      {
+        title: "Best practices for colorizing old family photos",
+        body:
+          "Start with a clear scan, keep the subject centered, and avoid heavy compression from messaging apps. Portraits with visible eyes and clothing usually colorize best. For group photos, larger files help preserve enough detail across every face. After colorization, compare the result with the original and download the version that feels most faithful to the memory.",
+      },
+    ],
     pricingTitle: "Pick a plan for one photo or a full batch",
     pricingBody:
       "Use a credit pack for occasional color work, or choose Professional if you are processing albums, family archives, or client orders.",
     faqTitle: "Questions about colorizing old photos",
     faqs: [
       {
-        question: "Do I need a separate plan just for colorization?",
+        question: "Can I colorize black and white photos for free?",
         answer:
-          "No. Any paid plan on your account can be used for colorization.",
+          "Yes. You can use your free daily quota to try AI colorization, then upgrade if you need more credits, higher-resolution exports, or watermark-free results.",
+      },
+      {
+        question: "How does AI photo colorization work?",
+        answer:
+          "The AI analyzes the black-and-white image and predicts realistic colors for faces, clothing, objects, and backgrounds based on visual patterns learned from color photos.",
       },
       {
         question: "Will the workflow repair the photo before adding color?",
         answer:
-          "Yes. The pipeline still restores the image first so the final color result has cleaner structure and fewer visible defects.",
-      },
-      {
-        question: "Can I still download the final image and animation result?",
-        answer:
-          "Yes. You can download the final image after colorization, and you can continue into animation if you want a moving result.",
+          "Yes. The pipeline restores the image first so the final colorized result has cleaner structure and fewer visible defects.",
       },
       {
         question: "What kind of source photos work well here?",
         answer:
           "Black-and-white portraits, family snapshots, and moderately faded prints usually perform best. A better scan usually leads to better color decisions.",
+      },
+      {
+        question: "Can old color photos be restored too?",
+        answer:
+          "Yes. If your photo already has color but looks faded or damaged, use the restoration workflow to improve contrast, repair wear, and recover clearer detail.",
+      },
+      {
+        question: "Can I animate the colorized photo afterward?",
+        answer:
+          "Yes. After colorization, you can continue into the animation workflow if the photo has a clear portrait subject.",
       },
     ],
     relatedTitle: "More old-photo workflows",
@@ -348,6 +416,23 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
         title: "Keep the motion subtle and believable",
         body:
           "Gentle movement is usually more convincing for old family portraits than exaggerated effects or fast camera motion.",
+      },
+    ],
+    guideSections: [
+      {
+        title: "When old photo animation works best",
+        body:
+          "Animation works best on portraits with a clear face, good framing, and a restored source image. Subtle movement around the eyes, mouth, and head usually feels more respectful and believable than dramatic effects. For old family photos, the strongest result is often a short clip that feels like a living portrait rather than a flashy video effect.",
+      },
+      {
+        title: "Prepare the image before generating motion",
+        body:
+          "A clean image gives the animation model fewer defects to track. Restore scratches, improve contrast, and colorize the portrait first when needed. This helps the final clip keep the subject stable, reduces distracting artifacts, and makes the movement easier to share in memorial slideshows, family chats, and social posts.",
+      },
+      {
+        title: "Good animation inputs and realistic expectations",
+        body:
+          "Centered portraits generally animate better than full-body photos, crowded scenes, or images with hidden faces. Very blurry eyes, missing facial regions, or strong glare can limit the quality of motion. If the first result is not ideal, try a cleaner crop or restore the photo again before creating the animation.",
       },
     ],
     pricingTitle: "Choose credits or Professional access",
@@ -437,6 +522,23 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
           "Once the visible damage is reduced, the image is easier to colorize, animate, print, or fine-tune with manual retouching.",
       },
     ],
+    guideSections: [
+      {
+        title: "Repair common old-photo damage before restoration",
+        body:
+          "Many old prints show the same problems: scratches, dust, fold marks, yellowing, water stains, and faded contrast. Damage repair focuses on reducing those visible defects so the important parts of the image are easier to see. It is a practical first step before you create a final restored image, colorize the photo, or animate a portrait.",
+      },
+      {
+        title: "What damage repair can and cannot do",
+        body:
+          "AI can often reduce surface wear and improve damaged areas that still contain visual context. It cannot perfectly recreate information that is completely missing from a destroyed section of the print. For severe damage, use the AI result as a cleaner draft, then decide whether manual retouching is worth the extra effort.",
+      },
+      {
+        title: "How to scan damaged photos for better repair",
+        body:
+          "Scan at a high resolution when possible, keep the print flat, and avoid reflections across glossy paper. If you only have a phone camera, place the photo near soft window light and shoot straight down. A stable, evenly lit input gives the repair model a better chance to remove scratches and creases naturally.",
+      },
+    ],
     pricingTitle: "Choose a plan for a few repairs or a full archive",
     pricingBody:
       "Buy credits for a handful of damaged prints, or choose Professional if you are restoring albums, family archives, or client collections.",
@@ -500,4 +602,8 @@ export function getToolPageSummaries(locale: Locale) {
 
 export function getRelatedToolPages(locale: Locale, slugs: ToolPageSlug[]) {
   return slugs.map((slug) => getToolPage(locale, slug));
+}
+
+export function getToolPagePath(slug: ToolPageSlug): string {
+  return TOOL_PAGE_PATHS[slug];
 }
