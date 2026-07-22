@@ -88,16 +88,29 @@ export default function PricingPage() {
     <div className="min-h-screen bg-[var(--color-primary-bg)]">
       <Navbar />
 
-      <main className="mx-auto max-w-4xl px-4 py-10 sm:py-16">
+      <main className="mx-auto max-w-5xl px-4 py-10 sm:py-16">
         <section aria-labelledby="pricing-title">
-          <h1 id="pricing-title" className="mb-2 text-center text-3xl font-bold text-[var(--color-text-primary)]">
+          <p className="text-center text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
+            {t("eyebrow")}
+          </p>
+          <h1 id="pricing-title" className="mt-3 text-center text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">
             {t("title")}
           </h1>
-          <p className="mb-3 text-center text-[var(--color-text-secondary)]">
+          <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
             {t("subtitle")}
           </p>
+          <div className="mx-auto mt-6 grid max-w-3xl gap-3 sm:grid-cols-3">
+            {["valueProp1", "valueProp2", "valueProp3"].map((key) => (
+              <div
+                key={key}
+                className="rounded-full border border-white/10 bg-white/[0.035] px-4 py-2 text-center text-xs font-medium text-[var(--color-text-secondary)]"
+              >
+                {t(key)}
+              </div>
+            ))}
+          </div>
           {planLabel && (
-            <div className="mb-8 space-y-2 text-center">
+            <div className="mt-6 space-y-2 text-center">
               <p
                 data-testid="current-plan-summary"
                 className="text-sm leading-relaxed text-[var(--color-text-secondary)] sm:text-base"
@@ -125,12 +138,14 @@ export default function PricingPage() {
             </div>
           )}
 
-          <PricingCards
-            currentTier={tier}
-            hasActiveStripeSubscription={Boolean(
-              subscriptionStatus?.hasActiveSubscription
-            )}
-          />
+          <div className="mt-8">
+            <PricingCards
+              currentTier={tier}
+              hasActiveStripeSubscription={Boolean(
+                subscriptionStatus?.hasActiveSubscription
+              )}
+            />
+          </div>
         </section>
       </main>
     </div>

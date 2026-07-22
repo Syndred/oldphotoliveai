@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import FooterSection from "@/app/sections/FooterSection";
-import { getBlogPost, getBlogPostSlugs } from "@/content/blog";
+import {
+  getBlogDateLocale,
+  getBlogPost,
+  getBlogPostSlugs,
+} from "@/content/blog";
 import { Link } from "@/i18n/navigation";
 import { isValidLocale, type Locale } from "@/i18n/routing";
 import {
@@ -26,7 +30,7 @@ export function generateMetadata({
   params,
 }: BlogPostPageProps): Metadata {
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
-  const post = getBlogPost(params.slug);
+  const post = getBlogPost(locale, params.slug);
 
   if (!post) {
     return {};
@@ -47,11 +51,12 @@ export function generateMetadata({
 
 export default function BlogPostPage({ params }: BlogPostPageProps) {
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
-  const post = getBlogPost(params.slug);
+  const post = getBlogPost(locale, params.slug);
 
   if (!post) {
     notFound();
   }
+  const dateLocale = getBlogDateLocale(locale);
 
   const articleJsonLd = {
     "@context": "https://schema.org",
@@ -87,10 +92,10 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
             href="/blog"
             className="text-sm font-medium text-[var(--color-accent)] hover:text-[var(--color-accent)]/85"
           >
-            Back to blog
+            {post.backLabel}
           </Link>
           <p className="mt-8 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
-            AI photo colorization guide
+            {post.eyebrow}
           </p>
           <h1 className="mt-4 text-4xl font-bold leading-tight text-[var(--color-text-primary)] sm:text-5xl">
             {post.title}
@@ -99,7 +104,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
             {post.description}
           </p>
           <p className="mt-4 text-xs text-[var(--color-text-secondary)]">
-            {new Date(post.publishedAt).toLocaleDateString("en-US", {
+            {new Date(post.publishedAt).toLocaleDateString(dateLocale, {
               month: "long",
               day: "numeric",
               year: "numeric",
@@ -139,7 +144,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
 
           <section className="mt-12 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-6">
             <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">
-              Quick answers
+              {post.faqTitle}
             </h2>
             <div className="mt-5 space-y-5">
               {post.faqs.map((faq) => (

@@ -9,6 +9,7 @@ import { trackAnalyticsEvent } from "@/lib/analytics";
 interface UploadZoneProps {
   onUpload: (imageKey: string) => void;
   disabled?: boolean;
+  compact?: boolean;
 }
 
 type UploadState = "idle" | "dragging" | "uploading" | "error";
@@ -46,7 +47,11 @@ function buildUploadErrorMessage(
   return base;
 }
 
-export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
+export default function UploadZone({
+  onUpload,
+  disabled,
+  compact = false,
+}: UploadZoneProps) {
   const [state, setState] = useState<UploadState>("idle");
   const [progress, setProgress] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
@@ -175,6 +180,9 @@ export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
   );
 
   const isUploading = state === "uploading";
+  const zoneSizingClasses = compact
+    ? "min-h-[220px] px-4 py-8 sm:min-h-[240px] sm:p-8"
+    : "min-h-[280px] px-4 py-8 sm:min-h-[320px] sm:p-12";
 
   return (
     <div
@@ -190,8 +198,7 @@ export default function UploadZone({ onUpload, disabled }: UploadZoneProps) {
       }}
       className={`
         relative flex flex-col items-center justify-center gap-4
-        rounded-2xl border-2 border-dashed px-4 py-8 sm:p-12
-        min-h-[280px] sm:min-h-[320px]
+        rounded-2xl border-2 border-dashed ${zoneSizingClasses}
         transition-all duration-300 ease-out cursor-pointer
         focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50
         ${

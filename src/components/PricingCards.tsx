@@ -14,8 +14,11 @@ import {
 interface PricingPlan {
   id: "free" | "pay_as_you_go" | "professional";
   nameKey: string;
+  badgeKey: string;
   price: string;
-  period: string;
+  periodKey?: string;
+  periodValues?: Record<string, number>;
+  priceNoteKey: string;
   descKey: string;
   featureKeys: string[];
   ctaKey: string;
@@ -43,8 +46,9 @@ const PLANS: PricingPlan[] = [
   {
     id: "free",
     nameKey: "free",
+    badgeKey: "freeBadge",
     price: "$0",
-    period: "",
+    priceNoteKey: "freePriceNote",
     descKey: "freeDesc",
     featureKeys: [
       "freeFeature1",
@@ -58,10 +62,11 @@ const PLANS: PricingPlan[] = [
   {
     id: "pay_as_you_go",
     nameKey: "payAsYouGo",
+    badgeKey: "payAsYouGoBadge",
     price: PAY_AS_YOU_GO_DISPLAY_PRICE,
-    period: `/ ${PAY_AS_YOU_GO_CREDITS} ${
-      PAY_AS_YOU_GO_CREDITS === 1 ? "credit" : "credits"
-    }`,
+    periodKey: "payAsYouGoPeriod",
+    periodValues: { count: PAY_AS_YOU_GO_CREDITS },
+    priceNoteKey: "payAsYouGoPriceNote",
     descKey: "payAsYouGoDesc",
     featureKeys: [
       "payFeature1",
@@ -76,8 +81,10 @@ const PLANS: PricingPlan[] = [
   {
     id: "professional",
     nameKey: "professional",
+    badgeKey: "professionalBadge",
     price: PROFESSIONAL_MONTHLY_DISPLAY_PRICE,
-    period: "/ month",
+    periodKey: "professionalPeriod",
+    priceNoteKey: "professionalPriceNote",
     descKey: "professionalDesc",
     featureKeys: [
       "proFeature1",
@@ -175,11 +182,14 @@ export default function PricingCards({
 
   return (
     <div>
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-5 md:grid-cols-3">
         {PLANS.map((p) => {
           const isCurrentPlan = p.id === currentPlanId;
           const isHighlighted = p.highlighted || isCurrentPlan;
           const checkoutPlan = p.plan;
+          const periodLabel = p.periodKey
+            ? t(p.periodKey, p.periodValues)
+            : "";
           const canBuyMoreCredits =
             p.id === "pay_as_you_go" && currentPlanId === "pay_as_you_go";
           const isPaygBlockedForProfessional =
@@ -189,7 +199,7 @@ export default function PricingCards({
             <div
               key={p.id}
               data-testid={`plan-${p.id}`}
-              className={`relative rounded-2xl border p-6 transition-shadow ${
+              className={`relative flex min-h-full flex-col rounded-2xl border p-6 transition-shadow ${
                 isHighlighted
                   ? "border-[var(--color-accent)] bg-gradient-to-b from-[var(--color-accent)]/10 to-transparent shadow-lg shadow-[var(--color-accent)]/10"
                   : "border-white/10 bg-white/[0.03]"
@@ -201,9 +211,14 @@ export default function PricingCards({
                 </span>
               )}
 
-              <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-                {t(p.nameKey)}
-              </h2>
+              <div className="flex min-h-[32px] items-start justify-between gap-3">
+                <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                  {t(p.nameKey)}
+                </h2>
+                <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-medium text-[var(--color-text-secondary)]">
+                  {t(p.badgeKey)}
+                </span>
+              </div>
               <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
                 {t(p.descKey)}
               </p>
@@ -212,14 +227,17 @@ export default function PricingCards({
                 <span className="text-3xl font-bold text-[var(--color-text-primary)]">
                   {p.price}
                 </span>
-                {p.period && (
+                {periodLabel && (
                   <span className="text-sm text-[var(--color-text-secondary)]">
-                    {p.period}
+                    {periodLabel}
                   </span>
                 )}
               </div>
+              <p className="mt-2 text-xs leading-5 text-[var(--color-text-secondary)]">
+                {t(p.priceNoteKey)}
+              </p>
 
-              <ul className="mt-6 space-y-2">
+              <ul className="mt-6 flex-1 space-y-2">
                 {p.featureKeys.map((fk) => (
                   <li
                     key={fk}

@@ -40,7 +40,7 @@ export default function UploadSection({
   const isEmbedded = variant === "embedded";
 
   const containerClasses = isEmbedded
-    ? "w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-4 shadow-xl backdrop-blur-sm sm:p-6"
+    ? "w-full rounded-[22px] border border-white/10 bg-white/[0.045] p-4 shadow-[0_18px_44px_rgba(0,0,0,0.22)] backdrop-blur-sm sm:p-5"
     : "mx-auto w-full max-w-6xl rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-4 shadow-xl backdrop-blur-sm sm:p-10";
 
   const wrapperClasses = isEmbedded
@@ -106,8 +106,8 @@ export default function UploadSection({
 
       {/* Login prompt for unauthenticated users */}
       {status !== "authenticated" && status !== "loading" && (
-        <div className="mb-4 rounded-xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 p-4 text-center">
-          <p className="text-sm text-[var(--color-text-secondary)]">
+        <div className="mb-4 flex flex-col items-center justify-between gap-3 rounded-xl border border-[var(--color-accent)]/25 bg-[var(--color-accent)]/10 p-4 text-center sm:flex-row sm:text-left">
+          <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
             {tAuth("signInPrompt")}
           </p>
           <button
@@ -115,28 +115,36 @@ export default function UploadSection({
             onClick={() =>
               signIn("google", { callbackUrl: localizedPathname })
             }
-            className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-4 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 min-h-[44px] sm:mt-2 sm:w-auto sm:py-2"
+            className="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-4 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 sm:w-auto sm:py-2"
           >
             {tAuth("signInWith")}
           </button>
         </div>
       )}
 
-      <UploadZone onUpload={handleUpload} disabled={isCreating} />
+      <UploadZone
+        onUpload={handleUpload}
+        disabled={isCreating}
+        compact={isEmbedded}
+      />
 
-      <div className="mt-4 rounded-xl border border-[var(--color-accent)]/20 bg-[var(--color-accent)]/6 p-4 text-left">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">
-          {contentSafety.uploadTitle}
-        </p>
-        <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
-          {contentSafety.uploadNotice}
-        </p>
-        <Link
-          href="/terms"
-          className="mt-3 inline-flex min-h-[44px] items-center rounded-full border border-white/12 bg-white/[0.03] px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.06] hover:text-white"
-        >
-          {contentSafety.linkLabel}
-        </Link>
+      <div className="mt-4 rounded-xl border border-white/10 bg-black/10 p-4 text-left">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">
+              {contentSafety.uploadTitle}
+            </p>
+            <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
+              {contentSafety.uploadNotice}
+            </p>
+          </div>
+          <Link
+            href="/terms"
+            className="inline-flex min-h-[40px] shrink-0 items-center justify-center rounded-full border border-white/12 bg-white/[0.03] px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.06] hover:text-white"
+          >
+            {contentSafety.linkLabel}
+          </Link>
+        </div>
       </div>
 
       {isCreating && (

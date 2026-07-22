@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import FooterSection from "@/app/sections/FooterSection";
-import { getBlogPosts } from "@/content/blog";
+import {
+  getBlogDateLocale,
+  getBlogIndexCopy,
+  getBlogPosts,
+} from "@/content/blog";
 import { Link } from "@/i18n/navigation";
 import { isValidLocale, type Locale } from "@/i18n/routing";
 import { buildLocalizedPageMetadata } from "@/lib/seo";
@@ -16,19 +20,14 @@ export function generateMetadata({
   params,
 }: BlogIndexPageProps): Metadata {
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
+  const copy = getBlogIndexCopy(locale);
 
   return buildLocalizedPageMetadata({
     locale,
-    title: "AI Photo Restoration Blog",
-    description:
-      "Guides for AI photo restoration, colorizing black and white photos, repairing damaged family pictures, and animating old portraits.",
+    title: copy.metadataTitle,
+    description: copy.metadataDescription,
     path: "/blog",
-    keywords: [
-      "AI photo restoration blog",
-      "colorize black and white photos guide",
-      "restore old family photos",
-      "old photo colorizer",
-    ],
+    keywords: copy.metadataKeywords,
   });
 }
 
@@ -37,7 +36,10 @@ export default function BlogIndexPage({ params }: BlogIndexPageProps) {
     return null;
   }
 
-  const posts = getBlogPosts();
+  const locale = params.locale as Locale;
+  const copy = getBlogIndexCopy(locale);
+  const posts = getBlogPosts(locale);
+  const dateLocale = getBlogDateLocale(locale);
 
   return (
     <div className="min-h-screen bg-[var(--color-primary-bg)]">
@@ -45,15 +47,13 @@ export default function BlogIndexPage({ params }: BlogIndexPageProps) {
       <main className="px-4 py-12 sm:py-16">
         <section className="mx-auto max-w-5xl">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
-            OldPhotoLive guides
+            {copy.eyebrow}
           </p>
           <h1 className="mt-4 max-w-4xl text-4xl font-bold text-[var(--color-text-primary)] sm:text-5xl">
-            AI Photo Restoration Blog
+            {copy.title}
           </h1>
           <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
-            Practical guides for restoring old family photos, colorizing black
-            and white portraits, repairing damaged prints, and preparing images
-            for animation.
+            {copy.description}
           </p>
 
           <div className="mt-10 grid gap-5">
@@ -63,7 +63,7 @@ export default function BlogIndexPage({ params }: BlogIndexPageProps) {
                 className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-6 transition-colors hover:border-[var(--color-accent)]/40"
               >
                 <p className="text-xs text-[var(--color-text-secondary)]">
-                  {new Date(post.publishedAt).toLocaleDateString("en-US", {
+                  {new Date(post.publishedAt).toLocaleDateString(dateLocale, {
                     month: "long",
                     day: "numeric",
                     year: "numeric",
@@ -85,7 +85,7 @@ export default function BlogIndexPage({ params }: BlogIndexPageProps) {
                   href={`/blog/${post.slug}`}
                   className="mt-5 inline-flex min-h-[44px] items-center rounded-full border border-[var(--color-accent)]/30 px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/60 hover:bg-[var(--color-accent)]/10"
                 >
-                  Read guide
+                  {copy.readGuideLabel}
                 </Link>
               </article>
             ))}
