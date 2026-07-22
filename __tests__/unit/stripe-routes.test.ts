@@ -191,7 +191,22 @@ describe("Stripe checkout route", () => {
     expect(mockCheckoutCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         mode: "payment",
-        line_items: [{ price: "price_family_123", quantity: 1 }],
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: "usd",
+              unit_amount: 999,
+              product_data: {
+                name: "OldPhotoLive AI Family Pack",
+                metadata: {
+                  plan: "family_pack",
+                  credits: "12",
+                },
+              },
+            },
+          },
+        ],
         metadata: {
           userId: "user-123",
           plan: "family_pack",

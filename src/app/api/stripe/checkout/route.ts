@@ -3,6 +3,7 @@
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import type Stripe from "stripe";
 import { getToken } from "next-auth/jwt";
 import { getStripeClient, getOrCreateStripeCustomer } from "@/lib/stripe";
 import { config } from "@/lib/config";
@@ -21,17 +22,30 @@ function isValidPlan(plan: string): plan is Plan {
   return VALID_PLANS.includes(plan as Plan);
 }
 
-function getPriceId(plan: Plan): string {
-  if (plan === "starter_pack") {
-    return config.stripe.priceIds.starterPack;
-  }
-  if (plan === "family_pack") {
-    return config.stripe.priceIds.familyPack;
-  }
-  if (plan === "archive_pack") {
-    return config.stripe.priceIds.archivePack;
-  }
+function getProfessionalPriceId(): string {
   return config.stripe.priceIds.professional;
+}
+
+function getLineItem(plan: Plan): Stripe.Checkout.SessionCreateParams.LineItem {
+  if (isCreditPackPlan(plan)) {
+    const pack = getCreditPack(plan);
+    return {
+      quantity: 1,
+      price_data: {
+        currency: pack.currency,
+        unit_amount: pack.unitAmount,
+        product_data: {
+          name: pack.name,
+          metadata: {
+            plan,
+            credits: String(pack.credits),
+          },
+        },
+      },
+    };
+  }
+
+  return { price: getProfessionalPriceId(), quantity: 1 };
 }
 
 export async function POST(request: NextRequest) {
@@ -92,9 +106,9 @@ export async function POST(request: NextRequest) {
     }
 
     const stripe = getStripeClient();
-    const priceId = getPriceId(plan);
+    const priceId = getProfessionalPriceId();
 
-    if (!priceId) {
+    if (plan === "professional" && !priceId) {
       return NextResponse.json(
         { error: getErrorMessage("paymentUnavailable", locale) },
         { status: 503 }
@@ -112,7 +126,7 @@ export async function POST(request: NextRequest) {
 
     const session = await stripe.checkout.sessions.create({
       mode,
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [getLineItem(plan)],
       success_url: `${config.nextauth.url}/pricing?success=true`,
       cancel_url: `${config.nextauth.url}/pricing?cancelled=true`,
       client_reference_id: userId,

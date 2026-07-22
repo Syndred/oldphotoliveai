@@ -2,18 +2,27 @@ export const CREDIT_PACK_EXPIRATION_DAYS = 365;
 
 export const CREDIT_PACKS = {
   starter_pack: {
+    name: "OldPhotoLive AI Starter Pack",
     credits: 5,
     displayPrice: "$4.99",
+    unitAmount: 499,
+    currency: "usd",
     lookupKey: "oldphotoliveai_starter_pack_5_credits_usd_v1",
   },
   family_pack: {
+    name: "OldPhotoLive AI Family Pack",
     credits: 12,
     displayPrice: "$9.99",
+    unitAmount: 999,
+    currency: "usd",
     lookupKey: "oldphotoliveai_family_pack_12_credits_usd_v1",
   },
   archive_pack: {
+    name: "OldPhotoLive AI Archive Pack",
     credits: 30,
     displayPrice: "$19.99",
+    unitAmount: 1999,
+    currency: "usd",
     lookupKey: "oldphotoliveai_archive_pack_30_credits_usd_v1",
   },
 } as const;

@@ -24,9 +24,6 @@ const REQUIRED_ENV_VARS = [
 const REQUIRED_STRIPE_PAYMENT_ENV_VARS = [
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
-  "STRIPE_PRICE_STARTER_PACK",
-  "STRIPE_PRICE_FAMILY_PACK",
-  "STRIPE_PRICE_ARCHIVE_PACK",
 ] as const;
 
 /**
@@ -104,9 +101,6 @@ export const config = {
     const isConfigured = [
       secretKey,
       webhookSecret,
-      starterPack,
-      familyPack,
-      archivePack,
     ]
       .every((value) => value && !value.includes("placeholder"));
     
