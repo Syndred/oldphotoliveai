@@ -10,6 +10,7 @@ interface UploadZoneProps {
   onUpload: (imageKey: string) => void;
   disabled?: boolean;
   compact?: boolean;
+  className?: string;
 }
 
 type UploadState = "idle" | "dragging" | "uploading" | "error";
@@ -51,6 +52,7 @@ export default function UploadZone({
   onUpload,
   disabled,
   compact = false,
+  className = "",
 }: UploadZoneProps) {
   const [state, setState] = useState<UploadState>("idle");
   const [progress, setProgress] = useState(0);
@@ -210,6 +212,7 @@ export default function UploadZone({
             ? "border-red-400/60 bg-red-400/5 hover:border-red-400/80"
             : "border-white/20 bg-white/5 hover:border-[var(--color-gradient-from)]/60 hover:bg-white/[0.07]"
         }
+        ${className}
       `}
     >
       <svg

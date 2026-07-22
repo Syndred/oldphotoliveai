@@ -40,7 +40,7 @@ export default function UploadSection({
   const isEmbedded = variant === "embedded";
 
   const containerClasses = isEmbedded
-    ? "w-full rounded-[22px] border border-white/10 bg-white/[0.045] p-4 shadow-[0_18px_44px_rgba(0,0,0,0.22)] backdrop-blur-sm sm:p-5"
+    ? "flex h-full w-full flex-col rounded-[22px] border border-white/10 bg-white/[0.045] p-4 shadow-[0_18px_44px_rgba(0,0,0,0.22)] backdrop-blur-sm sm:p-5"
     : "mx-auto w-full max-w-6xl rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-4 shadow-xl backdrop-blur-sm sm:p-10";
 
   const wrapperClasses = isEmbedded
@@ -126,6 +126,7 @@ export default function UploadSection({
         onUpload={handleUpload}
         disabled={isCreating}
         compact={isEmbedded}
+        className={isEmbedded ? "flex-1" : ""}
       />
 
       <div className="mt-4 rounded-xl border border-white/10 bg-black/10 p-4 text-left">

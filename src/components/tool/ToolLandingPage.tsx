@@ -62,8 +62,8 @@ export default function ToolLandingPage({
       <main>
         <section className="px-4 py-8 sm:py-12">
           <div className="mx-auto max-w-7xl rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.025))] px-5 py-8 shadow-[0_24px_60px_rgba(0,0,0,0.28)] backdrop-blur-sm sm:px-8 sm:py-10">
-            <div className="grid items-start gap-8 lg:grid-cols-[0.9fr,1.1fr]">
-              <div>
+            <div className="grid items-stretch gap-8 lg:grid-cols-[0.9fr,1.1fr]">
+              <div className="flex h-full flex-col">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
                   {tool.eyebrow}
                 </p>
@@ -90,7 +90,7 @@ export default function ToolLandingPage({
                 analyticsSource={tool.slug}
                 variant="embedded"
                 showHeader={false}
-                className="lg:pt-1"
+                className="h-full"
               />
             </div>
 
