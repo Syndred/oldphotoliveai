@@ -19,7 +19,7 @@ interface SeoDictionary {
 export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
   en: {
     home: {
-      title: "OldPhotoLive AI | Restore & Colorize Old Photos",
+      title: "Restore & Colorize Old Photos",
       description:
         "Use OldPhotoLive AI to restore damaged old photos, colorize black and white pictures, and animate vintage portraits online.",
     },
@@ -60,7 +60,7 @@ export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
   },
   zh: {
     home: {
-      title: "OldPhotoLive AI | 老照片修复与上色",
+      title: "老照片修复与上色",
       description:
         "使用 AI 给黑白照片上色、修复破损旧照片，并将复古人像动态化。可免费试用，无需先注册即可开始。",
     },
@@ -99,7 +99,7 @@ export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
   },
   es: {
     home: {
-      title: "OldPhotoLive AI | Restaura y coloriza fotos",
+      title: "Restaura y coloriza fotos",
       description:
         "Coloriza fotos en blanco y negro, restaura imágenes antiguas dañadas y anima retratos vintage con IA. Gratis para probar, sin registro inicial.",
     },
@@ -140,7 +140,7 @@ export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
   },
   ja: {
     home: {
-      title: "OldPhotoLive AI | 古い写真の修復とカラー化",
+      title: "古い写真の修復とカラー化",
       description:
         "AI で白黒写真をカラー化し、傷んだ古い写真を修復し、ビンテージポートレートをアニメーション化できます。無料で試せます。",
     },
