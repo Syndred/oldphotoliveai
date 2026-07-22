@@ -19,6 +19,10 @@ function getProcessedWebhookKey(eventId: string): string {
   return `stripe:webhook:processed:${eventId}`;
 }
 
+function getFulfilledCheckoutSessionKey(sessionId: string): string {
+  return `stripe:checkout:fulfilled:${sessionId}`;
+}
+
 async function claimWebhookEvent(eventId: string): Promise<boolean> {
   const redis = getRedisClient();
   const result = await redis.set(getProcessedWebhookKey(eventId), "1", {
@@ -31,6 +35,24 @@ async function claimWebhookEvent(eventId: string): Promise<boolean> {
 async function releaseWebhookEventClaim(eventId: string): Promise<void> {
   const redis = getRedisClient();
   await redis.del(getProcessedWebhookKey(eventId));
+}
+
+async function claimCheckoutSessionFulfillment(
+  sessionId: string
+): Promise<boolean> {
+  const redis = getRedisClient();
+  const result = await redis.set(getFulfilledCheckoutSessionKey(sessionId), "1", {
+    nx: true,
+    ex: PROCESSED_EVENT_TTL_SECONDS,
+  });
+  return result === "OK";
+}
+
+async function releaseCheckoutSessionFulfillmentClaim(
+  sessionId: string
+): Promise<void> {
+  const redis = getRedisClient();
+  await redis.del(getFulfilledCheckoutSessionKey(sessionId));
 }
 
 async function shouldSendWebhookEmail(eventId: string): Promise<boolean> {
@@ -46,6 +68,55 @@ async function shouldSendWebhookEmail(eventId: string): Promise<boolean> {
 async function downgradeUserToFreePlan(userId: string): Promise<void> {
   await updateUserTier(userId, "free");
   await initializeFreeQuota(userId);
+}
+
+async function fulfillCheckoutSession(
+  eventId: string,
+  session: Stripe.Checkout.Session
+): Promise<void> {
+  const userId = session.metadata?.userId;
+  const plan = session.metadata?.plan;
+
+  if (!userId || !plan) {
+    console.error("Missing metadata in checkout session:", session.id);
+    return;
+  }
+
+  if (session.payment_status && session.payment_status !== "paid") {
+    console.warn("Skipping unpaid checkout session:", session.id);
+    return;
+  }
+
+  const shouldFulfill = await claimCheckoutSessionFulfillment(session.id);
+  if (!shouldFulfill) {
+    return;
+  }
+
+  try {
+    if (plan === "pay_as_you_go") {
+      // Add pay-as-you-go credits with a 30-day expiration window.
+      await addCredits(userId, PAY_AS_YOU_GO_CREDITS, 30);
+      await updateUserTier(userId, "pay_as_you_go");
+    } else if (plan === "professional") {
+      // Set tier to professional (Req 6.6)
+      await updateUserTier(userId, "professional");
+    }
+
+    const email =
+      session.customer_details?.email ?? session.customer_email ?? null;
+    if (email && (await shouldSendWebhookEmail(eventId))) {
+      sendPaymentEmail({
+        to: email,
+        type: "payment_success",
+        plan,
+      }).catch((error) => {
+        console.error("Failed to send payment success email:", error);
+      });
+    }
+  } catch (error) {
+    await releaseCheckoutSessionFulfillmentClaim(session.id);
+    throw error;
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -93,34 +164,26 @@ export async function POST(request: NextRequest) {
     }
 
     switch (event.type) {
-      case "checkout.session.completed": {
+      case "checkout.session.completed":
+      case "checkout.session.async_payment_succeeded": {
         const session = event.data.object as Stripe.Checkout.Session;
-        const userId = session.metadata?.userId;
-        const plan = session.metadata?.plan;
+        await fulfillCheckoutSession(event.id, session);
+        break;
+      }
 
-        if (!userId || !plan) {
-          console.error("Missing metadata in checkout session:", session.id);
-          break;
-        }
-
-        if (plan === "pay_as_you_go") {
-          // Add pay-as-you-go credits with a 30-day expiration window.
-          await addCredits(userId, PAY_AS_YOU_GO_CREDITS, 30);
-          await updateUserTier(userId, "pay_as_you_go");
-        } else if (plan === "professional") {
-          // Set tier to professional (Req 6.6)
-          await updateUserTier(userId, "professional");
-        }
-
+      case "checkout.session.async_payment_failed": {
+        const session = event.data.object as Stripe.Checkout.Session;
         const email =
           session.customer_details?.email ?? session.customer_email ?? null;
+        const plan = session.metadata?.plan ?? "pay_as_you_go";
+
         if (email && (await shouldSendWebhookEmail(event.id))) {
           sendPaymentEmail({
             to: email,
-            type: "payment_success",
+            type: "payment_failed",
             plan,
           }).catch((error) => {
-            console.error("Failed to send payment success email:", error);
+            console.error("Failed to send payment failure email:", error);
           });
         }
 

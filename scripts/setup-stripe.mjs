@@ -2,7 +2,7 @@ import Stripe from "stripe";
 
 const APP_NAME = "OldPhotoLive AI";
 const APP_ID = "oldphotoliveai";
-const API_VERSION = "2025-05-28.basil";
+const API_VERSION = "2026-01-28.clover";
 
 const PAY_AS_YOU_GO = {
   productName: `${APP_NAME} Pay As You Go`,
@@ -33,6 +33,8 @@ const PROFESSIONAL = {
 
 const ENABLED_EVENTS = [
   "checkout.session.completed",
+  "checkout.session.async_payment_succeeded",
+  "checkout.session.async_payment_failed",
   "invoice.payment_failed",
   "customer.subscription.deleted",
 ];
@@ -112,6 +114,7 @@ async function ensureWebhookEndpoint(stripe, webhookUrl) {
       secret: null,
       created: false,
       updated: needsUpdate,
+      needsApiVersionUpdate: existing.api_version !== API_VERSION,
     };
   }
 
@@ -129,6 +132,7 @@ async function ensureWebhookEndpoint(stripe, webhookUrl) {
     secret: endpoint.secret,
     created: true,
     updated: false,
+    needsApiVersionUpdate: false,
   };
 }
 
@@ -165,6 +169,11 @@ async function main() {
         ? `Updated webhook endpoint: ${webhook.endpoint.id}`
         : `Reused webhook endpoint: ${webhook.endpoint.id}`
   );
+  if (webhook.needsApiVersionUpdate) {
+    console.log(
+      `# Webhook endpoint API version is ${webhook.endpoint.api_version ?? "account default"}; update it to ${API_VERSION} in Stripe Dashboard if you are upgrading webhook versions.`
+    );
+  }
 
   console.log("");
   console.log("Environment values:");

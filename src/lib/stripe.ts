@@ -9,8 +9,7 @@ let stripeInstance: Stripe | null = null;
 export function getStripeClient(): Stripe {
   if (!stripeInstance) {
     stripeInstance = new Stripe(config.stripe.secretKey, {
-      // @ts-expect-error -- installed Stripe SDK expects newer API version
-      apiVersion: "2025-05-28.basil",
+      apiVersion: "2026-01-28.clover",
       typescript: true,
     });
   }

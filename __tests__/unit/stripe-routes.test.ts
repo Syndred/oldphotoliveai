@@ -137,7 +137,6 @@ describe("Stripe checkout route", () => {
     expect(mockCheckoutCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         mode: "subscription",
-        payment_method_types: ["card"],
         line_items: [{ price: "price_pro_123", quantity: 1 }],
         success_url: "https://oldphotoliveai.com/pricing?success=true",
         cancel_url: "https://oldphotoliveai.com/pricing?cancelled=true",
@@ -300,6 +299,7 @@ describe("Stripe webhook route", () => {
     mockRedisSet
       .mockResolvedValueOnce("OK")
       .mockResolvedValueOnce("OK")
+      .mockResolvedValueOnce("OK")
       .mockResolvedValueOnce(null);
 
     const firstRequest = new NextRequest("http://localhost/api/stripe/webhook", {
@@ -321,6 +321,80 @@ describe("Stripe webhook route", () => {
     expect(mockAddCredits).toHaveBeenCalledTimes(1);
     expect(mockAddCredits).toHaveBeenCalledWith("user-123", 1, 30);
     expect(mockUpdateUserTier).toHaveBeenCalledTimes(1);
+    expect(mockUpdateUserTier).toHaveBeenCalledWith("user-123", "pay_as_you_go");
+    expect(mockSendPaymentEmail).toHaveBeenCalledTimes(1);
+  });
+
+  it("waits for async checkout payments before fulfilling credits", async () => {
+    mockConstructEvent.mockReturnValueOnce({
+      id: "evt_completed_123",
+      type: "checkout.session.completed",
+      data: {
+        object: {
+          id: "cs_async_123",
+          payment_status: "unpaid",
+          metadata: {
+            userId: "user-123",
+            plan: "pay_as_you_go",
+          },
+          customer_details: {
+            email: "owner@example.com",
+          },
+        },
+      },
+    });
+    mockRedisSet.mockResolvedValueOnce("OK");
+
+    const completedRequest = new NextRequest(
+      "http://localhost/api/stripe/webhook",
+      {
+        method: "POST",
+        headers: { "stripe-signature": "sig_test" },
+        body: JSON.stringify({ any: "payload" }),
+      }
+    );
+
+    const completedResponse = await webhookPost(completedRequest);
+
+    expect(completedResponse.status).toBe(200);
+    expect(mockAddCredits).not.toHaveBeenCalled();
+    expect(mockUpdateUserTier).not.toHaveBeenCalled();
+
+    mockConstructEvent.mockReturnValueOnce({
+      id: "evt_async_success_123",
+      type: "checkout.session.async_payment_succeeded",
+      data: {
+        object: {
+          id: "cs_async_123",
+          payment_status: "paid",
+          metadata: {
+            userId: "user-123",
+            plan: "pay_as_you_go",
+          },
+          customer_details: {
+            email: "owner@example.com",
+          },
+        },
+      },
+    });
+    mockRedisSet
+      .mockResolvedValueOnce("OK")
+      .mockResolvedValueOnce("OK")
+      .mockResolvedValueOnce("OK");
+
+    const succeededRequest = new NextRequest(
+      "http://localhost/api/stripe/webhook",
+      {
+        method: "POST",
+        headers: { "stripe-signature": "sig_test" },
+        body: JSON.stringify({ any: "payload" }),
+      }
+    );
+
+    const succeededResponse = await webhookPost(succeededRequest);
+
+    expect(succeededResponse.status).toBe(200);
+    expect(mockAddCredits).toHaveBeenCalledWith("user-123", 1, 30);
     expect(mockUpdateUserTier).toHaveBeenCalledWith("user-123", "pay_as_you_go");
     expect(mockSendPaymentEmail).toHaveBeenCalledTimes(1);
   });
