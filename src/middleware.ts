@@ -29,6 +29,7 @@ const PROTECTED_API_ROUTES = [
 const PROTECTED_PAGE_ROUTES = ["/history", "/result"];
 const UPLOAD_ROUTES = ["/api/upload"];
 const handleI18nRouting = createIntlMiddleware(routing);
+const PUBLIC_TRIAL_API_ROUTES = ["/api/upload", "/api/anonymous-tasks"];
 
 function isProtectedApiRoute(pathname: string): boolean {
   return PROTECTED_API_ROUTES.some((route) => pathname.startsWith(route));
@@ -38,8 +39,23 @@ function isProtectedPageRoute(pathname: string): boolean {
   return PROTECTED_PAGE_ROUTES.some((route) => pathname.startsWith(route));
 }
 
+function isAnonymousResultPage(request: NextRequest, pathname: string): boolean {
+  return (
+    pathname.startsWith("/result") &&
+    Boolean(request.cookies.get("opla_anon_visitor")?.value)
+  );
+}
+
 function isUploadRoute(pathname: string): boolean {
   return UPLOAD_ROUTES.some((route) => pathname.startsWith(route));
+}
+
+function isPublicTrialApiRoute(pathname: string): boolean {
+  if (PUBLIC_TRIAL_API_ROUTES.some((route) => pathname.startsWith(route))) {
+    return true;
+  }
+
+  return /^\/api\/tasks\/[^/]+\/(status|stream|asset)$/.test(pathname);
 }
 
 function parseAcceptLanguage(header: string | null): Locale | null {
@@ -111,7 +127,10 @@ export async function middleware(request: NextRequest) {
     const locale = detectLocale(request);
     const normalizedPathname = stripLocaleFromPathname(pathname);
 
-    if (isProtectedPageRoute(normalizedPathname)) {
+    if (
+      isProtectedPageRoute(normalizedPathname) &&
+      !isAnonymousResultPage(request, normalizedPathname)
+    ) {
       const authRedirect = await ensureAuthenticated(request, locale);
       if (authRedirect) {
         return authRedirect;
@@ -123,7 +142,9 @@ export async function middleware(request: NextRequest) {
 
   const locale = detectLocale(request);
 
-  if (!isProtectedApiRoute(pathname)) {
+  const isPublicTrialRoute = isPublicTrialApiRoute(pathname);
+
+  if (!isProtectedApiRoute(pathname) && !isPublicTrialRoute) {
     return NextResponse.next();
   }
 
@@ -132,24 +153,25 @@ export async function middleware(request: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  if (!token) {
+  if (!token && !isPublicTrialRoute) {
     return NextResponse.json(
       { error: getErrorMessage("unauthorized", locale) },
       { status: 401 }
     );
   }
 
-  const userId =
-    (typeof token.userId === "string" && token.userId) ||
-    token.sub ||
-    (typeof token.email === "string" && token.email) ||
-    "";
   const forwardedFor = request.headers.get("x-forwarded-for");
   const clientIp =
     request.ip ||
     (forwardedFor ? forwardedFor.split(",")[0].trim() : "") ||
     "unknown";
-  const rateLimitIdentifier = userId || `ip:${clientIp}`;
+  const visitorId = request.cookies.get("opla_anon_visitor")?.value;
+  const userId =
+    (typeof token?.userId === "string" && token.userId) ||
+    token?.sub ||
+    (typeof token?.email === "string" && token.email) ||
+    "";
+  const rateLimitIdentifier = userId || visitorId || `ip:${clientIp}`;
   const rateLimitBucket = getRateLimitBucket(pathname, request.method);
   const rateLimitType: RateLimitType = isUploadRoute(pathname) ? "upload" : "api";
 

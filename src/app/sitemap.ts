@@ -34,6 +34,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      path: "/no-login",
+      lastModified: new Date("2026-07-23T00:00:00.000Z"),
+      changeFrequency: "weekly",
+      priority: 0.95,
+    },
+    {
       path: "/privacy",
       lastModified: new Date("2026-03-14T00:00:00.000Z"),
       changeFrequency: "yearly",

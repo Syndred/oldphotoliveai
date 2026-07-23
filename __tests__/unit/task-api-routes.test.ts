@@ -82,15 +82,15 @@ beforeEach(() => {
 });
 
 describe("GET /api/tasks/[taskId]/status", () => {
-  it("returns 401 when unauthenticated", async () => {
+  it("returns 404 when unauthenticated and no anonymous trial owns the task", async () => {
     mockGetToken.mockResolvedValue(null);
 
     const req = makeGetRequest("task-001");
     const res = await getStatus(req, routeParams("task-001"));
     const body = await res.json();
 
-    expect(res.status).toBe(401);
-    expect(body.error).toBe("Please sign in to continue");
+    expect(res.status).toBe(404);
+    expect(body.error).toBe("Task not found");
   });
 
   it("returns 404 when task not found", async () => {

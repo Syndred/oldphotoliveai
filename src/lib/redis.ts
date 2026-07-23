@@ -12,6 +12,7 @@ import type {
   CreateTaskInput,
 } from "@/types";
 import { STATUS_PROGRESS_MAP } from "@/types";
+import { buildAnonymousUserId } from "@/lib/anonymous";
 
 // ── Redis Client ────────────────────────────────────────────────────────────
 
@@ -35,6 +36,7 @@ const keys = {
   userEmail: (email: string) => `user:email:${email}`,
   task: (taskId: string) => `task:${taskId}`,
   userTasks: (userId: string) => `user:${userId}:tasks`,
+  anonymousTrial: (visitorId: string) => `anonymous:${visitorId}:trial`,
 };
 
 function normalizeEmail(email: string): string {
@@ -126,6 +128,30 @@ export async function getUser(userId: string): Promise<User | null> {
   const redis = getRedisClient();
   const data = await redis.get<User>(keys.user(userId));
   return data ?? null;
+}
+
+export async function createOrGetAnonymousUser(
+  visitorId: string
+): Promise<User> {
+  const redis = getRedisClient();
+  const userId = buildAnonymousUserId(visitorId);
+  const existing = await redis.get<User>(keys.user(userId));
+  if (existing) return existing;
+
+  const now = new Date().toISOString();
+  const user: User = {
+    id: userId,
+    googleId: userId,
+    email: `${visitorId}@anonymous.oldphotoliveai.local`,
+    name: "Anonymous visitor",
+    avatarUrl: null,
+    tier: "free",
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await redis.set(keys.user(user.id), user);
+  return user;
 }
 
 export async function listRecentUsers(limit = 10): Promise<User[]> {
@@ -257,6 +283,44 @@ export async function getTaskOwnedByUser(
   if (!task || task.userId !== userId) {
     return null;
   }
+  return task;
+}
+
+export async function getAnonymousTrialTaskId(
+  visitorId: string
+): Promise<string | null> {
+  const redis = getRedisClient();
+  const taskId = await redis.get<string>(keys.anonymousTrial(visitorId));
+  return taskId ?? null;
+}
+
+export async function claimAnonymousTrial(visitorId: string): Promise<boolean> {
+  const redis = getRedisClient();
+  const result = await redis.set(keys.anonymousTrial(visitorId), "claimed", {
+    nx: true,
+  });
+  return result === "OK";
+}
+
+export async function recordAnonymousTrialTask(
+  visitorId: string,
+  taskId: string
+): Promise<void> {
+  const redis = getRedisClient();
+  await redis.set(keys.anonymousTrial(visitorId), taskId);
+}
+
+export async function getAnonymousTaskOwnedByVisitor(
+  taskId: string,
+  visitorId: string
+): Promise<Task | null> {
+  const recordedTaskId = await getAnonymousTrialTaskId(visitorId);
+  if (recordedTaskId !== taskId) return null;
+
+  const task = await getTask(taskId);
+  const anonymousUserId = buildAnonymousUserId(visitorId);
+  if (!task || task.userId !== anonymousUserId) return null;
+
   return task;
 }
 

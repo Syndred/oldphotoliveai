@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import Navbar from "@/components/Navbar";
 import ProgressIndicator from "@/components/ProgressIndicator";
@@ -48,6 +49,8 @@ export default function ResultPage() {
   const [error, setError] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
   const [isFreeTier, setIsFreeTier] = useState(true);
+  const [isAnonymousResult, setIsAnonymousResult] = useState(false);
+  const [showAnonymousUpgrade, setShowAnonymousUpgrade] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [needsPolling, setNeedsPolling] = useState(false);
   const tResult = useTranslations("result");
@@ -74,6 +77,13 @@ export default function ResultPage() {
         res.ok ? res.json() : Promise.reject(new Error(tErrors("taskNotFound")))
       )
       .then((data) => {
+        const accessMode =
+          typeof data.accessMode === "string" ? data.accessMode : "";
+        setIsAnonymousResult(accessMode === "anonymous");
+        if (accessMode === "anonymous") {
+          setIsFreeTier(true);
+        }
+
         const completedResult =
           data.status === "completed"
             ? getTaskResult(data as Record<string, unknown>)
@@ -81,6 +91,9 @@ export default function ResultPage() {
 
         if (completedResult) {
           setResult(completedResult);
+          if (accessMode === "anonymous") {
+            setShowAnonymousUpgrade(true);
+          }
         } else if (data.status === "failed") {
           setError(resolveTaskErrorMessage(data.errorMessage, tErrors));
         } else {
@@ -97,6 +110,11 @@ export default function ResultPage() {
 
   const handleComplete = useCallback(
     (data: { status: string; progress: number; [key: string]: unknown }) => {
+      if (data.accessMode === "anonymous") {
+        setIsAnonymousResult(true);
+        setIsFreeTier(true);
+        setShowAnonymousUpgrade(true);
+      }
       setResult(getTaskResult(data) ?? null);
       setError(null);
     },
@@ -211,6 +229,35 @@ export default function ResultPage() {
         {/* Results */}
         {!initialLoading && result && (
           <div className="space-y-8">
+            {isAnonymousResult && showAnonymousUpgrade ? (
+              <section className="rounded-2xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/10 p-5 text-center">
+                <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
+                  Want HD + unlimited?
+                </h2>
+                <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--color-text-secondary)]">
+                  Your no-login preview is ready with a watermark and lower
+                  resolution. Sign up to create more animations, save your
+                  history, and unlock higher-quality exports.
+                </p>
+                <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={() => signIn("google", { callbackUrl: "/" })}
+                    className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90"
+                  >
+                    Sign up for HD
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAnonymousUpgrade(false)}
+                    className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-white/12 px-6 py-3 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.05] hover:text-white"
+                  >
+                    Keep preview
+                  </button>
+                </div>
+              </section>
+            ) : null}
+
             {/* Before / After */}
             {imageResultKind && (
               <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm sm:p-6">

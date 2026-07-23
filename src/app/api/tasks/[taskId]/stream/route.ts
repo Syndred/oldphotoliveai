@@ -3,9 +3,8 @@
 
 import { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
-import { getTaskOwnedByUser } from "@/lib/redis";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
+import { getAccessibleTask, type TaskAccessMode } from "@/lib/task-access";
 
 const POLL_INTERVAL_MS = 2000;
 const HEARTBEAT_INTERVAL_MS = 15000;
@@ -16,26 +15,14 @@ export async function GET(
 ) {
   const { taskId } = params;
   const locale = getRequestLocale(request);
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
-  const userId = token?.userId as string | undefined;
-
-  if (!userId) {
-    return NextResponse.json(
-      { error: getErrorMessage("unauthorized", locale) },
-      { status: 401 }
-    );
-  }
-
-  const initialTask = await getTaskOwnedByUser(taskId, userId);
-  if (!initialTask) {
+  const initialAccessibleTask = await getAccessibleTask(request, taskId);
+  if (!initialAccessibleTask) {
     return NextResponse.json(
       { error: getErrorMessage("taskNotFound", locale) },
       { status: 404 }
     );
   }
+  const accessMode: TaskAccessMode = initialAccessibleTask.mode;
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -67,16 +54,18 @@ export async function GET(
 
       const poll = async (): Promise<boolean> => {
         try {
-          const task = await getTaskOwnedByUser(taskId, userId);
-          if (!task) {
+          const accessibleTask = await getAccessibleTask(request, taskId);
+          if (!accessibleTask) {
             sendEvent({ error: getErrorMessage("taskNotFound", locale) });
             return true; // stop polling
           }
+          const { task } = accessibleTask;
 
           const eventData: Record<string, unknown> = {
             status: task.status,
             progress: task.progress,
             workflow: task.workflow ?? "full",
+            accessMode,
           };
 
           if (task.errorMessage) {

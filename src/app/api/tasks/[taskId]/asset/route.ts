@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
-import { getTaskOwnedByUser } from "@/lib/redis";
 import { getObjectFromR2, r2BodyToWebStream } from "@/lib/r2";
 import {
   getTaskAssetFilename,
@@ -8,6 +6,7 @@ import {
   resolveTaskAssetKey,
 } from "@/lib/task-assets";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
+import { getAccessibleTask } from "@/lib/task-access";
 
 export const runtime = "nodejs";
 
@@ -33,18 +32,6 @@ export async function GET(
   { params }: TaskAssetRouteContext
 ) {
   const locale = getRequestLocale(request);
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
-  const userId = token?.userId as string | undefined;
-
-  if (!userId) {
-    return NextResponse.json(
-      { error: getErrorMessage("unauthorized", locale) },
-      { status: 401 }
-    );
-  }
 
   const kindParam = request.nextUrl.searchParams.get("kind")?.trim() ?? "";
   if (!isTaskAssetKind(kindParam)) {
@@ -54,13 +41,14 @@ export async function GET(
     );
   }
 
-  const task = await getTaskOwnedByUser(params.taskId, userId);
-  if (!task) {
+  const accessibleTask = await getAccessibleTask(request, params.taskId);
+  if (!accessibleTask) {
     return NextResponse.json(
       { error: getErrorMessage("taskNotFound", locale) },
       { status: 404 }
     );
   }
+  const { task } = accessibleTask;
 
   const key = resolveTaskAssetKey(task, kindParam);
   if (!key) {

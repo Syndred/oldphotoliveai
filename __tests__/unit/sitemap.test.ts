@@ -22,4 +22,18 @@ describe("sitemap", () => {
       "https://oldphotoliveai.com/en/about"
     );
   });
+
+  it("includes localized no-login tool pages", () => {
+    const entries = sitemap();
+    const noLoginUrls = entries
+      .map((entry) => entry.url)
+      .filter((url) => /\/(en|zh|es|ja)\/no-login$/.test(url));
+
+    expect(noLoginUrls).toEqual([
+      "https://oldphotoliveai.com/en/no-login",
+      "https://oldphotoliveai.com/zh/no-login",
+      "https://oldphotoliveai.com/es/no-login",
+      "https://oldphotoliveai.com/ja/no-login",
+    ]);
+  });
 });
