@@ -16,7 +16,7 @@ export function generateMetadata({
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
   const seo = PAGE_SEO_COPY[locale].home;
 
-  return buildLocalizedPageMetadata({
+  const metadata = buildLocalizedPageMetadata({
     locale,
     title: seo.title,
     description: seo.description,
@@ -29,6 +29,8 @@ export function generateMetadata({
       "animate old photos",
     ],
   });
+
+  return { ...metadata, title: { absolute: seo.title } };
 }
 
 export default function LocalizedHomePage({

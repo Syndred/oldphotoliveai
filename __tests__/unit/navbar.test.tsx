@@ -201,6 +201,42 @@ describe("Navbar", () => {
     expect(screen.queryByText("History")).not.toBeInTheDocument();
   });
 
+  it("links to the animation search tools from the primary navigation", () => {
+    __setMockPathname("/");
+    render(<Navbar />);
+
+    expect(screen.getByRole("link", { name: "Animate Photos" })).toHaveAttribute(
+      "href",
+      "/en/animate"
+    );
+    expect(screen.getByRole("link", { name: "No Login" })).toHaveAttribute(
+      "href",
+      "/en/no-login"
+    );
+    expect(screen.getByRole("link", { name: "Free Animation" })).toHaveAttribute(
+      "href",
+      "/en/animate-free"
+    );
+    expect(screen.getByRole("link", { name: "Bring to Life" })).toHaveAttribute(
+      "href",
+      "/en/bring-to-life"
+    );
+    expect(screen.getByRole("link", { name: "Photo to Video" })).toHaveAttribute(
+      "href",
+      "/en/to-video"
+    );
+  });
+
+  it("does not show English-only SEO links in a non-English navigation", () => {
+    __setMockLocale("zh");
+    __setMockPathname("/");
+    mockUseLocale.mockReturnValue("zh");
+    render(<Navbar />);
+
+    expect(screen.queryByRole("link", { name: "Free Animation" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Bring to Life" })).not.toBeInTheDocument();
+  });
+
   it("links point to correct routes", () => {
     __setMockPathname("/");
     render(<Navbar />);

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
@@ -37,10 +37,48 @@ const siteMetadata = buildPageMetadata({
   ],
 });
 
+const siteJsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: BRAND_NAME,
+    url: SITE_URL,
+    logo: new URL(BRAND_ICON, SITE_URL).toString(),
+    email: "support@oldphotoliveai.com",
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: BRAND_NAME,
+    url: SITE_URL,
+    description: SITE_DESCRIPTION,
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: BRAND_NAME,
+    url: SITE_URL,
+    description: SITE_DESCRIPTION,
+    applicationCategory: "MultimediaApplication",
+    operatingSystem: "Web",
+    offers: {
+      "@type": "Offer",
+      price: "0.00",
+      priceCurrency: "USD",
+    },
+  },
+];
+
 export const metadata: Metadata = {
   ...siteMetadata,
   metadataBase: new URL(SITE_URL),
   applicationName: BRAND_NAME,
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: BRAND_NAME,
+  },
   title: { default: BRAND_NAME, template: `%s | ${BRAND_NAME}` },
   description: SITE_DESCRIPTION,
   keywords: siteMetadata.keywords,
@@ -71,6 +109,10 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: "#111827",
+};
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -81,6 +123,12 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
+        />
+      </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <NextIntlClientProvider messages={messages}>
           <Providers>

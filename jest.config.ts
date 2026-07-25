@@ -8,6 +8,7 @@ const config: Config = {
     "^@/i18n/navigation$": "<rootDir>/__tests__/helpers/i18n-navigation.tsx",
     "^next-intl/routing$": "<rootDir>/__tests__/helpers/next-intl-routing.ts",
     "^@/(.*)$": "<rootDir>/src/$1",
+    "^.+\\.css$": "<rootDir>/__mocks__/styleMock.ts",
   },
   testMatch: [
     "**/__tests__/**/*.test.ts",

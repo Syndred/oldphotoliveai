@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
 import { getBlogPosts } from "@/content/blog";
+import { ANIMATION_LANDING_PAGE_SLUGS, getAnimationLandingPage } from "@/content/animation-landing-pages";
 import { TOOL_PAGE_SLUGS, getToolPagePath } from "@/content/tool-pages";
 import { locales, type Locale } from "@/i18n/routing";
 import {
@@ -53,7 +54,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ] as const;
 
-  const toolRoutes = TOOL_PAGE_SLUGS.map((slug) => ({
+  const toolRoutes = TOOL_PAGE_SLUGS.filter(
+    (slug) => getToolPagePath(slug) !== "/animate"
+  ).map((slug) => ({
     path: getToolPagePath(slug),
     lastModified: new Date("2026-03-18T00:00:00.000Z"),
     changeFrequency: "weekly" as const,
@@ -69,7 +72,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const allRoutes = [...staticRoutes, ...toolRoutes, ...blogRoutes];
 
-  return locales.flatMap((locale) =>
+  const englishAnimationRoutes = ANIMATION_LANDING_PAGE_SLUGS.map((slug) => {
+    const page = getAnimationLandingPage(slug);
+    return {
+      url: absoluteLocalizedUrl("en", page.path),
+      lastModified: new Date("2026-07-25T00:00:00.000Z"),
+      changeFrequency: "weekly" as const,
+      priority: 0.9,
+      alternates: {
+        languages: {
+          en: absoluteLocalizedUrl("en", page.path),
+          "x-default": absoluteLocalizedUrl("en", page.path),
+        },
+      },
+    };
+  });
+
+  return [
+    ...locales.flatMap((locale) =>
     allRoutes.map((route) => ({
       url: absoluteLocalizedUrl(locale as Locale, route.path),
       lastModified: route.lastModified,
@@ -79,5 +99,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         languages: buildLanguageAlternates(route.path),
       },
     }))
-  );
+    ),
+    ...englishAnimationRoutes,
+  ];
 }

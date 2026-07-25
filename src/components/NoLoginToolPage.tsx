@@ -49,6 +49,24 @@ const RELATED_TOOLS = [
       "Use the full AI animation workflow when you want more control and saved results.",
   },
   {
+    href: "/animate-free",
+    title: "Animate old photos with AI free",
+    body:
+      "Start a free AI animation preview from a clear old family portrait.",
+  },
+  {
+    href: "/bring-to-life",
+    title: "Bring old photos to life",
+    body:
+      "Create a gentle memory video for family stories, slideshows, and memorials.",
+  },
+  {
+    href: "/to-video",
+    title: "Old photo to video AI",
+    body:
+      "Convert an old portrait to a short AI video online and review the preview first.",
+  },
+  {
     href: "/restore",
     title: "Restore old photos before animation",
     body:

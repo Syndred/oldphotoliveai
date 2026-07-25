@@ -8,6 +8,7 @@ import UploadSection from "@/app/sections/UploadSection";
 import FAQSection from "@/app/sections/FAQSection";
 import FooterSection from "@/app/sections/FooterSection";
 import ToolCardsSection from "@/components/tool/ToolCardsSection";
+import AnimationRelatedToolsSection from "@/components/AnimationRelatedToolsSection";
 import {
   BRAND_NAME,
   BRAND_ICON,
@@ -104,6 +105,7 @@ export default function HomePageView({
           </div>
         </HeroSection>
         <ToolCardsSection locale={locale} />
+        {locale === "en" ? <AnimationRelatedToolsSection /> : null}
         <ShowcaseSection />
         <VideoShowcaseSection />
         <FeaturesSection />

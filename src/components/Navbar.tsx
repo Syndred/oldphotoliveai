@@ -17,6 +17,14 @@ const NAV_LINKS = [
   { href: "/pricing", labelKey: "pricing" },
 ] as const;
 
+const SEO_NAV_LINKS = [
+  { href: "/animate", label: "Animate Photos" },
+  { href: "/no-login", label: "No Login" },
+  { href: "/animate-free", label: "Free Animation" },
+  { href: "/bring-to-life", label: "Bring to Life" },
+  { href: "/to-video", label: "Photo to Video" },
+] as const;
+
 function parseUserTier(value: unknown): UserTier | null {
   if (
     value === "free" ||
@@ -153,6 +161,26 @@ export default function Navbar() {
               })}
             </div>
           </div>
+          {locale === "en" ? (
+            <div className="hidden 2xl:flex items-center gap-1">
+              {SEO_NAV_LINKS.map((link) => {
+                const isActive = pathname.startsWith(link.href);
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`min-h-[44px] rounded-md px-2 py-2 text-sm transition-colors ${
+                      isActive
+                        ? "text-white"
+                        : "text-[var(--color-text-secondary)] hover:text-white"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </div>
+          ) : null}
           {navLinks.map((link) => {
             const isActive =
               link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
@@ -241,6 +269,30 @@ export default function Navbar() {
               </Link>
             );
           })}
+          {locale === "en" ? (
+            <>
+              <div className="mt-2 border-t border-white/10 px-3 pb-1 pt-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-accent)]">
+                AI animation
+              </div>
+              {SEO_NAV_LINKS.map((link) => {
+                const isActive = pathname.startsWith(link.href);
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`block min-h-[44px] rounded-md px-3 py-2.5 text-sm transition-colors ${
+                      isActive
+                        ? "text-white"
+                        : "text-[var(--color-text-secondary)] hover:text-white"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </>
+          ) : null}
           {navLinks.map((link) => {
             const isActive =
               link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);

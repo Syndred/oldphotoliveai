@@ -36,4 +36,26 @@ describe("sitemap", () => {
       "https://oldphotoliveai.com/ja/no-login",
     ]);
   });
+
+  it("includes the four English animation search landing pages", () => {
+    const entries = sitemap();
+    const urls = entries.map((entry) => entry.url);
+
+    expect(urls).toEqual(
+      expect.arrayContaining([
+        "https://oldphotoliveai.com/en/animate-free",
+        "https://oldphotoliveai.com/en/bring-to-life",
+        "https://oldphotoliveai.com/en/to-video",
+        "https://oldphotoliveai.com/en/animate",
+      ])
+    );
+
+    expect(urls).not.toEqual(
+      expect.arrayContaining([
+        "https://oldphotoliveai.com/zh/animate-free",
+        "https://oldphotoliveai.com/es/bring-to-life",
+        "https://oldphotoliveai.com/ja/to-video",
+      ])
+    );
+  });
 });

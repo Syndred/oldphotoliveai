@@ -4,17 +4,13 @@ import { getAnimationLandingPage } from "@/content/animation-landing-pages";
 import { isValidLocale, type Locale } from "@/i18n/routing";
 import { absoluteLocalizedUrl, buildLocalizedPageMetadata } from "@/lib/seo";
 
-interface LocalizedToolPageProps {
-  params: {
-    locale: string;
-  };
+interface PageProps {
+  params: { locale: string };
 }
 
-export function generateMetadata({
-  params,
-}: LocalizedToolPageProps): Metadata {
+export function generateMetadata({ params }: PageProps): Metadata {
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
-  const page = getAnimationLandingPage("animate");
+  const page = getAnimationLandingPage("to-video");
 
   const metadata = buildLocalizedPageMetadata({
     locale,
@@ -38,9 +34,7 @@ export function generateMetadata({
   };
 }
 
-export default function LocalizedAnimatePage({
-  params,
-}: LocalizedToolPageProps) {
+export default function ToVideoPage({ params }: PageProps) {
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
-  return <AnimationLandingPage locale={locale} slug="animate" />;
+  return <AnimationLandingPage locale={locale} slug="to-video" />;
 }

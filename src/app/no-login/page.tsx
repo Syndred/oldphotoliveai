@@ -3,7 +3,7 @@ import NoLoginToolPage from "@/components/NoLoginToolPage";
 import { defaultLocale } from "@/i18n/routing";
 import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = buildPageMetadata({
+const noLoginMetadata = buildPageMetadata({
   title:
     "Old Photo to Video AI Free Without Login — No Sign Up | OldPhotoLiveAI",
   description:
@@ -15,6 +15,14 @@ export const metadata: Metadata = buildPageMetadata({
     "animate old photos online free",
   ],
 });
+
+export const metadata: Metadata = {
+  ...noLoginMetadata,
+  title: {
+    absolute:
+      "Old Photo to Video AI Free Without Login - No Sign Up | OldPhotoLiveAI",
+  },
+};
 
 export default function NoLoginPage() {
   return <NoLoginToolPage locale={defaultLocale} />;

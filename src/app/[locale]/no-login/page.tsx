@@ -14,7 +14,7 @@ export function generateMetadata({
 }: LocalizedNoLoginPageProps): Metadata {
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
 
-  return buildLocalizedPageMetadata({
+  const metadata = buildLocalizedPageMetadata({
     locale,
     title:
       "Old Photo to Video AI Free Without Login — No Sign Up | OldPhotoLiveAI",
@@ -27,6 +27,14 @@ export function generateMetadata({
       "animate old photos online free",
     ],
   });
+
+  return {
+    ...metadata,
+    title: {
+      absolute:
+        "Old Photo to Video AI Free Without Login - No Sign Up | OldPhotoLiveAI",
+    },
+  };
 }
 
 export default function LocalizedNoLoginPage({

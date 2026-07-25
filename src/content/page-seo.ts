@@ -19,7 +19,7 @@ interface SeoDictionary {
 export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
   en: {
     home: {
-      title: "Restore & Colorize Old Photos",
+      title: "Old Photo Live AI - Animate Old Photos & Bring Memories to Life Free",
       description:
         "Use OldPhotoLive AI to restore damaged old photos, colorize black and white pictures, and animate vintage portraits online.",
     },
