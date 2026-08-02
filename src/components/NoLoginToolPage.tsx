@@ -43,6 +43,12 @@ const FAQS = [
 
 const RELATED_TOOLS = [
   {
+    href: "/to-video",
+    title: "Old photo to video AI",
+    body:
+      "Use the full online photo-to-video workflow when you want more export options.",
+  },
+  {
     href: "/animate",
     title: "Animate old photos online",
     body:
@@ -61,22 +67,10 @@ const RELATED_TOOLS = [
       "Create a gentle memory video for family stories, slideshows, and memorials.",
   },
   {
-    href: "/to-video",
-    title: "Old photo to video AI",
-    body:
-      "Convert an old portrait to a short AI video online and review the preview first.",
-  },
-  {
     href: "/restore",
     title: "Restore old photos before animation",
     body:
       "Clean fading, scratches, and soft details before creating a more natural video.",
-  },
-  {
-    href: "/colorize",
-    title: "Colorize black and white photos",
-    body:
-      "Add natural color to vintage portraits before turning them into short AI videos.",
   },
 ];
 

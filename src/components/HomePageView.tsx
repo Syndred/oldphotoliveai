@@ -24,6 +24,14 @@ interface HomePageViewProps {
   locale?: Locale;
 }
 
+const HOME_TOOL_NAV_LINKS = [
+  { href: "/", label: "Animate Photos" },
+  { href: "/no-login", label: "No Login" },
+  { href: "/animate-free", label: "Free Animation" },
+  { href: "/bring-to-life", label: "Bring to Life" },
+  { href: "/to-video", label: "Photo to Video" },
+] as const;
+
 export default function HomePageView({
   locale = defaultLocale,
 }: HomePageViewProps) {
@@ -46,7 +54,7 @@ export default function HomePageView({
     },
     {
       "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
+      "@type": "WebApplication",
       name: BRAND_NAME,
       description: SITE_DESCRIPTION,
       url: SITE_URL,
@@ -54,9 +62,15 @@ export default function HomePageView({
       operatingSystem: "Web",
       offers: {
         "@type": "Offer",
-        price: "0",
+        price: "0.00",
         priceCurrency: "USD",
       },
+      featureList: [
+        "Restore old photos online",
+        "Colorize black and white photos",
+        "Animate old photos",
+        "Convert old photos to AI videos",
+      ],
     },
     buildFaqJsonLd(homeSeo.faqItems),
   ];
@@ -103,6 +117,20 @@ export default function HomePageView({
               {homeSeo.repairCta}
             </Link>
           </div>
+          <nav
+            aria-label="OldPhotoLiveAI tool navigation"
+            className="mt-5 flex flex-wrap justify-center gap-2"
+          >
+            {HOME_TOOL_NAV_LINKS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="inline-flex min-h-[40px] items-center rounded-full border border-white/12 bg-black/10 px-4 py-2 text-xs font-medium text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.05] hover:text-white sm:text-sm"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
         </HeroSection>
         <ToolCardsSection locale={locale} />
         {locale === "en" ? <AnimationRelatedToolsSection /> : null}

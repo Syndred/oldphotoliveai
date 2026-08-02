@@ -178,6 +178,35 @@ describe("HomePage", () => {
     expect(screen.getByTestId("upload-zone")).toBeInTheDocument();
   });
 
+  it("renders SEO tool navigation and related tool links", () => {
+    render(<HomePage />);
+
+    expect(screen.getByRole("navigation", {
+      name: "OldPhotoLiveAI tool navigation",
+    })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "No Login" })).toHaveAttribute(
+      "href",
+      "/en/no-login"
+    );
+    expect(screen.getByRole("link", { name: "Free Animation" })).toHaveAttribute(
+      "href",
+      "/en/animate-free"
+    );
+    expect(screen.getByRole("link", { name: "Bring to Life" })).toHaveAttribute(
+      "href",
+      "/en/bring-to-life"
+    );
+    expect(screen.getByRole("link", { name: "Photo to Video" })).toHaveAttribute(
+      "href",
+      "/en/to-video"
+    );
+    expect(
+      screen.getByRole("link", {
+        name: /Old photo to video AI/i,
+      })
+    ).toHaveAttribute("href", "/en/to-video");
+  });
+
   it("shows the content safety notice and localized terms link", () => {
     render(<HomePage />);
 
