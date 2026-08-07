@@ -88,6 +88,17 @@ export const config = {
   get replicate() {
     return {
       apiToken: process.env.REPLICATE_API_TOKEN!,
+      monthlySpendLimitUsd: Number(
+        process.env.REPLICATE_MONTHLY_SPEND_LIMIT_USD || "50"
+      ),
+      spendGuardEnabled:
+        process.env.REPLICATE_SPEND_GUARD_ENABLED !== "0" &&
+        process.env.REPLICATE_SPEND_GUARD_ENABLED?.toLowerCase() !== "false",
+    };
+  },
+  get openai() {
+    return {
+      apiKey: process.env.OPENAI_API_KEY || "",
     };
   },
   get stripe() {

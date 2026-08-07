@@ -1,38 +1,106 @@
 const CONTENT_SAFETY_COPY = {
   en: {
-    termsTitle: "4A. Content Safety and Moderation",
+    termsTitle: "4A. Content Restrictions",
+    termsIntro:
+      "You agree not to use our Service to generate, upload, or share any content that:",
+    termsItems: [
+      "Is sexually explicit, pornographic, or NSFW (Not Safe For Work)",
+      "Depicts nudity, sexual acts, or sexually suggestive material",
+      "Exploits, harms, or endangers minors in any way",
+      "Violates the acceptable use policies of our payment processors or AI model providers",
+    ],
+    termsReserveIntro: "We reserve the right to:",
+    termsReserveItems: [
+      "Refuse any generation request at our sole discretion",
+      "Remove generated content that violates these terms",
+      "NOT issue refunds for credits used on rejected or removed content",
+      "Terminate accounts that repeatedly violate these restrictions",
+    ],
+    termsFooter:
+      "All prompts and generated outputs are subject to automated content moderation. By using our Service, you consent to this screening process.",
+    /** Legacy single-paragraph body kept for upload notices / tests that scan plain text. */
     termsBody:
-      "You may not use OldPhotoLive AI to upload, generate, restore, animate, edit, transform, or distribute NSFW, nude, sexually explicit, pornographic, fetish, or exploitative content. Content involving minors, non-consensual intimate imagery, or sexual exploitation is strictly prohibited. We may block processing, remove content, suspend accounts, and report material when required by law or platform rules.",
+      "You agree not to use our Service to generate, upload, or share any content that is sexually explicit, pornographic, or NSFW; depicts nudity, sexual acts, or sexually suggestive material; exploits, harms, or endangers minors in any way; or violates the acceptable use policies of our payment processors or AI model providers. We reserve the right to refuse any generation request, remove violating content, NOT issue refunds for credits used on rejected or removed content, and terminate accounts that repeatedly violate these restrictions. All prompts and generated outputs are subject to automated content moderation. By using our Service, you consent to this screening process.",
     uploadTitle: "Content Safety",
     uploadNotice:
-      "Only upload lawful images you have the right to use. NSFW, nude, sexually explicit, pornographic, or exploitative content is prohibited and may be blocked or removed.",
+      "Only upload lawful images you have the right to use. NSFW, nude, sexually explicit, pornographic, or exploitative content is prohibited and may be blocked or removed. Credits used on rejected content are non-refundable.",
     linkLabel: "Read our Terms of Service",
   },
   zh: {
-    termsTitle: "4A. 内容安全与审核",
+    termsTitle: "4A. 内容限制",
+    termsIntro: "你同意不会使用本服务生成、上传或分享任何以下内容：",
+    termsItems: [
+      "色情、露骨性内容或 NSFW（不适合工作场所）内容",
+      "描绘裸露、性行为或性暗示的材料",
+      "以任何方式剥削、伤害或危及未成年人",
+      "违反我们支付处理商或 AI 模型提供商的可接受使用政策",
+    ],
+    termsReserveIntro: "我们保留以下权利：",
+    termsReserveItems: [
+      "自行决定拒绝任何生成请求",
+      "移除违反本条款的生成内容",
+      "对被拒绝或已移除内容所消耗的积分不予退款",
+      "对反复违规的账户予以终止",
+    ],
+    termsFooter:
+      "所有提示词与生成结果均可能经过自动内容审核。使用本服务即表示你同意该筛查流程。",
     termsBody:
-      "你不得使用 OldPhotoLive AI 上传、生成、修复、动画化、编辑、转换或分发任何 NSFW、裸露、露骨性内容、色情、恋物或剥削性内容。涉及未成年人、未经同意的私密影像，或任何性剥削内容均被严格禁止。我们可能会拦截处理、移除内容、暂停账户，并在法律或平台规则要求时进行举报。",
+      "你同意不会使用本服务生成、上传或分享色情、NSFW、裸露、性暗示内容，或以任何方式剥削、伤害或危及未成年人的内容，亦不得违反支付处理商或 AI 模型提供商的可接受使用政策。我们有权拒绝请求、移除违规内容、对违规生成不予退款，并终止反复违规账户。所有提示词与生成结果均可能经过自动内容审核。",
     uploadTitle: "内容安全",
     uploadNotice:
-      "只可上传你有权使用的合法图片。NSFW、裸露、露骨性内容、色情或剥削性内容均被禁止，相关内容可能会被拦截或移除。",
+      "只可上传你有权使用的合法图片。NSFW、裸露、露骨性内容、色情或剥削性内容均被禁止，相关内容可能会被拦截或移除。违规生成所消耗的积分不予退款。",
     linkLabel: "查看服务条款",
   },
   ja: {
-    termsTitle: "4A. コンテンツ安全性と審査",
+    termsTitle: "4A. コンテンツ制限",
+    termsIntro:
+      "本サービスを使用して、以下のコンテンツを生成、アップロード、または共有しないことに同意するものとします：",
+    termsItems: [
+      "性的に露骨、ポルノ、または NSFW（職場で不適切）な内容",
+      "ヌード、性行為、または性的に示唆的な素材を描写するもの",
+      "未成年者をあらゆる形で搾取、危害、または危険にさらすもの",
+      "決済事業者または AI モデル提供者の利用規約に違反するもの",
+    ],
+    termsReserveIntro: "当社は以下の権利を留保します：",
+    termsReserveItems: [
+      "任意の生成リクエストを独自の判断で拒否すること",
+      "本規約に違反する生成コンテンツを削除すること",
+      "拒否または削除されたコンテンツに使用されたクレジットについて返金しないこと",
+      "制限に繰り返し違反するアカウントを停止すること",
+    ],
+    termsFooter:
+      "すべてのプロンプトおよび生成結果は自動コンテンツモデレーションの対象となります。本サービスの利用により、この審査プロセスに同意したものとみなされます。",
     termsBody:
-      "OldPhotoLive AI を使用して、NSFW、ヌード、性的に露骨なコンテンツ、ポルノ、フェティッシュ、または搾取的なコンテンツをアップロード、生成、修復、アニメーション化、編集、変換、配布することはできません。未成年者を含む内容、同意のない私的な画像、または性的搾取に関わるコンテンツは厳しく禁止されます。法令またはプラットフォーム規則で求められる場合、当社は処理の拒否、コンテンツの削除、アカウント停止、必要な報告を行うことがあります。",
+      "性的に露骨・ポルノ・NSFW な内容、ヌードや性的示唆のある素材、未成年者を危険にさらす内容、決済事業者や AI モデル提供者のポリシーに違反する内容の生成・アップロード・共有は禁止です。当社はリクエスト拒否、コンテンツ削除、拒否/削除分のクレジット非返金、繰り返し違反アカウントの停止を行う権利を留保します。すべてのプロンプトと出力は自動審査の対象です。",
     uploadTitle: "コンテンツ安全性",
     uploadNotice:
-      "合法で、かつ利用権限を持つ画像のみをアップロードしてください。NSFW、ヌード、性的に露骨なコンテンツ、ポルノ、または搾取的なコンテンツは禁止されており、ブロックまたは削除される場合があります。",
+      "合法で、かつ利用権限を持つ画像のみをアップロードしてください。NSFW、ヌード、性的に露骨なコンテンツ、ポルノ、または搾取的なコンテンツは禁止されており、ブロックまたは削除される場合があります。拒否されたコンテンツに使用されたクレジットは返金されません。",
     linkLabel: "利用規約を見る",
   },
   es: {
-    termsTitle: "4A. Seguridad del contenido y moderación",
+    termsTitle: "4A. Restricciones de contenido",
+    termsIntro:
+      "Aceptas no usar nuestro Servicio para generar, subir o compartir contenido que:",
+    termsItems: [
+      "Sea sexualmente explícito, pornográfico o NSFW (No apto para el trabajo)",
+      "Represente desnudos, actos sexuales o material sexualmente sugerente",
+      "Explotar, dañar o poner en peligro a menores de cualquier forma",
+      "Viole las políticas de uso aceptable de nuestros procesadores de pago o proveedores de modelos de IA",
+    ],
+    termsReserveIntro: "Nos reservamos el derecho de:",
+    termsReserveItems: [
+      "Rechazar cualquier solicitud de generación a nuestra sola discreción",
+      "Eliminar el contenido generado que viole estos términos",
+      "NO emitir reembolsos por créditos usados en contenido rechazado o eliminado",
+      "Terminar cuentas que violen repetidamente estas restricciones",
+    ],
+    termsFooter:
+      "Todos los prompts y resultados generados están sujetos a moderación automática de contenido. Al usar nuestro Servicio, aceptas este proceso de detección.",
     termsBody:
-      "No puedes usar OldPhotoLive AI para subir, generar, restaurar, animar, editar, transformar ni distribuir contenido NSFW, desnudos, contenido sexualmente explícito, pornográfico, fetichista o explotador. El contenido que involucre menores, imágenes íntimas sin consentimiento o explotación sexual está estrictamente prohibido. Podemos bloquear el procesamiento, retirar contenido, suspender cuentas y reportar material cuando lo exijan la ley o las reglas de la plataforma.",
+      "Aceptas no usar nuestro Servicio para generar, subir o compartir contenido sexualmente explícito, pornográfico o NSFW; que represente desnudos o material sexualmente sugerente; que explote, dañe o ponga en peligro a menores; o que viole las políticas de nuestros procesadores de pago o proveedores de IA. Nos reservamos el derecho de rechazar solicitudes, eliminar contenido, NO reembolsar créditos usados en contenido rechazado o eliminado, y terminar cuentas reincidentes. Todos los prompts y resultados están sujetos a moderación automática.",
     uploadTitle: "Seguridad del contenido",
     uploadNotice:
-      "Solo sube imágenes legales que tengas derecho a usar. El contenido NSFW, desnudos, sexualmente explícito, pornográfico o explotador está prohibido y puede ser bloqueado o retirado.",
+      "Solo sube imágenes legales que tengas derecho a usar. El contenido NSFW, desnudos, sexualmente explícito, pornográfico o explotador está prohibido y puede ser bloqueado o retirado. Los créditos usados en contenido rechazado no son reembolsables.",
     linkLabel: "Leer los Términos del servicio",
   },
 } as const;

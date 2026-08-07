@@ -1,9 +1,25 @@
 import { getTask, updateTaskStatus, getUser } from "./redis";
-import { runModel } from "./replicate";
+import { runModel, ANIMATION_PARAMS } from "./replicate";
 import { uploadToR2, getR2CdnUrl } from "./r2";
 import { applyImageWatermark, resizeImage } from "./watermark";
+import {
+  checkImage,
+  checkText,
+  CONTENT_REJECTED_MESSAGE,
+} from "./moderation";
+import { ReplicateSpendLimitError } from "./replicate-spend";
 import { v4 as uuidv4 } from "uuid";
 import type { TaskFailureStage, TaskWorkflow, UserTier } from "@/types";
+
+export class ContentViolationError extends Error {
+  readonly moderationReason?: string;
+
+  constructor(message = CONTENT_REJECTED_MESSAGE, moderationReason?: string) {
+    super(message);
+    this.name = "ContentViolationError";
+    this.moderationReason = moderationReason;
+  }
+}
 
 const DOWNLOAD_TIMEOUT_MS = 30_000;
 const DOWNLOAD_MAX_RETRIES = 2;
@@ -275,6 +291,26 @@ async function applyImageTierSettings(
   return processed;
 }
 
+async function assertImageAllowed(imageUrl: string, stage: string): Promise<void> {
+  const result = await checkImage(imageUrl);
+  if (!result.passed) {
+    throw new ContentViolationError(
+      CONTENT_REJECTED_MESSAGE,
+      `${stage}:${result.reason ?? "flagged"}`
+    );
+  }
+}
+
+async function assertAnimationPromptAllowed(): Promise<void> {
+  const result = await checkText(ANIMATION_PARAMS.prompt);
+  if (!result.passed) {
+    throw new ContentViolationError(
+      CONTENT_REJECTED_MESSAGE,
+      `animation_prompt:${result.reason ?? "flagged"}`
+    );
+  }
+}
+
 export async function executePipeline(taskId: string): Promise<void> {
   const task = await getTask(taskId);
   if (!task) {
@@ -304,10 +340,16 @@ export async function executePipeline(taskId: string): Promise<void> {
 
       const originalCdnUrl = getR2CdnUrl(task.originalImageKey);
       await assertSourceImageAccessible(originalCdnUrl);
+      // Block NSFW uploads before any Replicate spend.
+      await assertImageAllowed(originalCdnUrl, "source");
+
       const restoredOutputUrl = await runModel(
         tierModelConfig.restoration.modelKey,
         tierModelConfig.restoration.createInput(originalCdnUrl)
       );
+
+      // Drop flagged outputs — never upload or return them to the user.
+      await assertImageAllowed(restoredOutputUrl, "restored");
 
       const restoredBuffer = await downloadBuffer(restoredOutputUrl);
       const processedRestored = await applyImageTierSettings(restoredBuffer, tier);
@@ -329,6 +371,7 @@ export async function executePipeline(taskId: string): Promise<void> {
         errorMessage: null,
         internalErrorMessage: null,
         failureStage: null,
+        violation: false,
       });
       return;
     }
@@ -346,6 +389,8 @@ export async function executePipeline(taskId: string): Promise<void> {
         image: restoredCdnUrl,
         ...tierModelConfig.colorization,
       });
+
+      await assertImageAllowed(colorizedOutputUrl, "colorized");
 
       const colorizedBuffer = await downloadBuffer(colorizedOutputUrl);
       const processedColorized = await applyImageTierSettings(colorizedBuffer, tier);
@@ -365,6 +410,7 @@ export async function executePipeline(taskId: string): Promise<void> {
         errorMessage: null,
         internalErrorMessage: null,
         failureStage: null,
+        violation: false,
       });
       return;
     }
@@ -374,6 +420,8 @@ export async function executePipeline(taskId: string): Promise<void> {
       restoredImageKey: restoredKey,
       ...(colorizedKey ? { colorizedImageKey: colorizedKey } : {}),
     });
+
+    await assertAnimationPromptAllowed();
 
     const animationInputUrl = colorizedCdnUrl ?? restoredCdnUrl;
     const animationOutputUrl = await runModel(
@@ -392,13 +440,27 @@ export async function executePipeline(taskId: string): Promise<void> {
       errorMessage: null,
       internalErrorMessage: null,
       failureStage: null,
+      violation: false,
     });
   } catch (error) {
     const rawMessage = error instanceof Error ? error.message : String(error);
     console.error(`Pipeline failed for task ${taskId}:`, rawMessage);
 
+    const isViolation = error instanceof ContentViolationError;
+    const isSpendLimit =
+      error instanceof ReplicateSpendLimitError ||
+      rawMessage.startsWith("REPLICATE_SPEND_LIMIT:");
+
     let errorMessage = "Processing failed. Please try again.";
-    if (
+    let violation = false;
+
+    if (isViolation) {
+      errorMessage = CONTENT_REJECTED_MESSAGE;
+      violation = true;
+    } else if (isSpendLimit) {
+      errorMessage =
+        "AI processing is temporarily paused due to capacity limits. Please try again later.";
+    } else if (
       rawMessage.includes("429") ||
       rawMessage.includes("throttled") ||
       rawMessage.includes("rate limit")
@@ -433,10 +495,16 @@ export async function executePipeline(taskId: string): Promise<void> {
       errorMessage = rawMessage;
     }
 
+    const internalDetail =
+      isViolation && error instanceof ContentViolationError
+        ? `violation:${error.moderationReason ?? rawMessage}`
+        : rawMessage;
+
     await updateTaskStatus(taskId, "failed", {
       errorMessage,
-      internalErrorMessage: rawMessage,
+      internalErrorMessage: internalDetail,
       failureStage,
+      violation,
     });
   }
 }

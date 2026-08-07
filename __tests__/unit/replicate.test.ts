@@ -17,6 +17,10 @@ jest.mock("@/lib/config", () => ({
   },
 }));
 
+jest.mock("@/lib/replicate-spend", () => ({
+  assertAndReserveReplicateSpend: jest.fn().mockResolvedValue(undefined),
+}));
+
 jest.mock("@/lib/retry", () => ({
   withRetry: async <T>(fn: () => Promise<T>) => fn(),
 }));

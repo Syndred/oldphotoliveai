@@ -3,6 +3,7 @@
 
 import Replicate from "replicate";
 import { config } from "./config";
+import { assertAndReserveReplicateSpend } from "./replicate-spend";
 
 // Fixed model versions - readonly, not overridable (Req 16.1)
 // Free users use a lightweight face restoration model. Paid users use a
@@ -73,6 +74,9 @@ export async function runModel(
   modelKey: ModelKey,
   input: Record<string, unknown>
 ): Promise<string> {
+  // Soft monthly budget guard before any paid prediction is created.
+  await assertAndReserveReplicateSpend(modelKey);
+
   const client = getReplicateClient();
   const modelVersion = MODELS[modelKey];
 

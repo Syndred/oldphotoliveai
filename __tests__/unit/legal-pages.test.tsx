@@ -265,12 +265,22 @@ describe("legal pages", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: "4A. Content Safety and Moderation",
+        name: "4A. Content Restrictions",
       })
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        /You may not use OldPhotoLive AI to upload, generate, restore, animate, edit, transform, or distribute NSFW/
+        /You agree not to use our Service to generate, upload, or share any content that:/
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Is sexually explicit, pornographic, or NSFW \(Not Safe For Work\)/
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /NOT issue refunds for credits used on rejected or removed content/
       )
     ).toBeInTheDocument();
   });

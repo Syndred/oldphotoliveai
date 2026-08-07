@@ -3,6 +3,7 @@ import { getTask, updateTaskStatus, getUser } from "@/lib/redis";
 import { runModel } from "@/lib/replicate";
 import { uploadToR2, getR2CdnUrl } from "@/lib/r2";
 import { applyImageWatermark, resizeImage } from "@/lib/watermark";
+import { checkImage, CONTENT_REJECTED_MESSAGE } from "@/lib/moderation";
 import type { Task, User } from "@/types";
 
 const mockUuidV4 = jest.fn();
@@ -13,6 +14,12 @@ jest.mock("@/lib/redis");
 jest.mock("@/lib/replicate");
 jest.mock("@/lib/r2");
 jest.mock("@/lib/watermark");
+jest.mock("@/lib/moderation", () => ({
+  checkImage: jest.fn().mockResolvedValue({ passed: true }),
+  checkText: jest.fn().mockResolvedValue({ passed: true }),
+  CONTENT_REJECTED_MESSAGE:
+    "Your request could not be processed because it violates our content policy. Credits used for rejected or removed content are non-refundable.",
+}));
 jest.mock("uuid", () => ({
   v4: () => mockUuidV4(),
 }));
@@ -25,6 +32,7 @@ const mockUploadToR2 = uploadToR2 as jest.MockedFunction<typeof uploadToR2>;
 const mockGetR2CdnUrl = getR2CdnUrl as jest.MockedFunction<typeof getR2CdnUrl>;
 const mockApplyImageWatermark = applyImageWatermark as jest.MockedFunction<typeof applyImageWatermark>;
 const mockResizeImage = resizeImage as jest.MockedFunction<typeof resizeImage>;
+const mockCheckImage = checkImage as jest.MockedFunction<typeof checkImage>;
 
 // ── Mock fetch globally ─────────────────────────────────────────────────────
 
@@ -130,6 +138,7 @@ beforeEach(() => {
   mockResizeImage.mockReset();
   mockFetch.mockReset();
   mockUuidV4.mockReset().mockReturnValue(ASSET_UUID);
+  mockCheckImage.mockReset().mockResolvedValue({ passed: true });
 });
 
 // ── Tests ───────────────────────────────────────────────────────────────────
@@ -158,6 +167,7 @@ describe("executePipeline", () => {
           errorMessage: null,
           internalErrorMessage: null,
           failureStage: null,
+          violation: false,
         }
       );
     });
@@ -257,6 +267,7 @@ describe("executePipeline", () => {
         errorMessage: null,
         internalErrorMessage: null,
         failureStage: null,
+        violation: false,
       });
       expect(mockUploadToR2).toHaveBeenCalledTimes(1);
       expect(mockUploadToR2).toHaveBeenCalledWith(
@@ -285,6 +296,7 @@ describe("executePipeline", () => {
         errorMessage: null,
         internalErrorMessage: null,
         failureStage: null,
+        violation: false,
       });
       expect(mockUploadToR2).toHaveBeenCalledTimes(2);
     });
@@ -311,6 +323,7 @@ describe("executePipeline", () => {
         errorMessage: null,
         internalErrorMessage: null,
         failureStage: null,
+        violation: false,
       });
       expect(mockUploadToR2).toHaveBeenCalledTimes(2);
     });
@@ -419,6 +432,7 @@ describe("executePipeline", () => {
         errorMessage: "Processing failed. Please try again.",
         internalErrorMessage: "GFPGAN model failed",
         failureStage: "restoring",
+        violation: false,
       });
       // Only restoration model was called
       expect(mockRunModel).toHaveBeenCalledTimes(1);
@@ -442,6 +456,7 @@ describe("executePipeline", () => {
         internalErrorMessage:
           "Request failed with status 401 Unauthorized: Unauthenticated",
         failureStage: "restoring",
+        violation: false,
       });
     });
   });
@@ -474,6 +489,7 @@ describe("executePipeline", () => {
         errorMessage: "Processing failed. Please try again.",
         internalErrorMessage: "DDColor model failed",
         failureStage: "colorizing",
+        violation: false,
       });
       // Only restored image was uploaded (1 upload)
       expect(mockUploadToR2).toHaveBeenCalledTimes(1);
@@ -512,6 +528,7 @@ describe("executePipeline", () => {
         errorMessage: "Processing failed. Please try again.",
         internalErrorMessage: "Animation model failed",
         failureStage: "animating",
+        violation: false,
       });
       // Restored + colorized uploaded, but not animation
       expect(mockUploadToR2).toHaveBeenCalledTimes(2);
@@ -663,6 +680,7 @@ describe("executePipeline", () => {
         internalErrorMessage:
           "Failed to download from https://replicate.com/restored.jpg: invalid response",
         failureStage: "restoring",
+        violation: false,
       });
     });
 
@@ -679,6 +697,7 @@ describe("executePipeline", () => {
         errorMessage: "Processing failed. Please try again.",
         internalErrorMessage: "string error",
         failureStage: "restoring",
+        violation: false,
       });
     });
 
@@ -701,6 +720,55 @@ describe("executePipeline", () => {
           "Source image URL is unreachable (404 Not Found). Please re-upload or check R2 bucket/domain configuration.",
         internalErrorMessage: "SOURCE_IMAGE_UNREACHABLE:404 Not Found",
         failureStage: "restoring",
+        violation: false,
+      });
+    });
+
+    it("marks violation and does not upload when source image is flagged", async () => {
+      mockGetTask.mockResolvedValue(makeTask());
+      mockGetUser.mockResolvedValue(makeUser());
+      mockGetR2CdnUrl.mockReturnValue("https://cdn.test.com/original.jpg");
+      mockSourceImageAccessible();
+      mockCheckImage.mockResolvedValueOnce({
+        passed: false,
+        reason: "flagged:sexual",
+      });
+
+      await executePipeline(TASK_ID);
+
+      expect(mockRunModel).not.toHaveBeenCalled();
+      expect(mockUploadToR2).not.toHaveBeenCalled();
+      expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
+        errorMessage: CONTENT_REJECTED_MESSAGE,
+        internalErrorMessage: "violation:source:flagged:sexual",
+        failureStage: "restoring",
+        violation: true,
+      });
+    });
+
+    it("marks violation and skips R2 upload when generated image is flagged", async () => {
+      mockGetTask.mockResolvedValue(makeTask());
+      mockGetUser.mockResolvedValue(makeUser());
+      mockGetR2CdnUrl.mockImplementation(
+        (key: string) => `https://cdn.test.com/${key}`
+      );
+      mockSourceImageAccessible();
+      mockRunModel.mockResolvedValueOnce("https://replicate.com/restored.jpg");
+      mockCheckImage
+        .mockResolvedValueOnce({ passed: true })
+        .mockResolvedValueOnce({
+          passed: false,
+          reason: "flagged:sexual",
+        });
+
+      await executePipeline(TASK_ID);
+
+      expect(mockUploadToR2).not.toHaveBeenCalled();
+      expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
+        errorMessage: CONTENT_REJECTED_MESSAGE,
+        internalErrorMessage: "violation:restored:flagged:sexual",
+        failureStage: "restoring",
+        violation: true,
       });
     });
   });

@@ -9,7 +9,7 @@ import {
   SUPPORT_EMAIL,
 } from "@/lib/site";
 
-const LAST_UPDATED = "March 16, 2026";
+const LAST_UPDATED = "August 7, 2026";
 
 const SECTION_KEYS = [
   "eligibility",
@@ -77,7 +77,23 @@ export default async function TermsOfServicePage() {
                         {contentSafety.termsTitle}
                       </h2>
                       <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
-                        {contentSafety.termsBody}
+                        {contentSafety.termsIntro}
+                      </p>
+                      <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                        {contentSafety.termsItems.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                      <p className="mt-4 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                        {contentSafety.termsReserveIntro}
+                      </p>
+                      <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                        {contentSafety.termsReserveItems.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                      <p className="mt-4 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                        {contentSafety.termsFooter}
                       </p>
                     </section>
                   ) : null}

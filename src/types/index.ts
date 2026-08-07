@@ -46,6 +46,8 @@ export interface Task {
   errorMessage: string | null;
   internalErrorMessage: string | null;
   failureStage: TaskFailureStage;
+  /** True when OpenAI Moderation rejected input or generated output. */
+  violation?: boolean;
   progress: number;
   createdAt: string;
   completedAt: string | null;
