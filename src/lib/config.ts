@@ -101,6 +101,17 @@ export const config = {
       apiKey: process.env.OPENAI_API_KEY || "",
     };
   },
+  get moderation() {
+    const provider = (process.env.MODERATION_PROVIDER || "replicate")
+      .trim()
+      .toLowerCase();
+    return {
+      provider:
+        provider === "openai" || provider === "auto" || provider === "replicate"
+          ? provider
+          : "replicate",
+    };
+  },
   get stripe() {
     const secretKey = process.env.STRIPE_SECRET_KEY || "";
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";

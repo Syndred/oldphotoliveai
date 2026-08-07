@@ -5,7 +5,7 @@
 - 老照片修复 / 上色 / 动画化全流程（Replicate + R2 + Redis 队列 Worker）
 - Google 登录、配额/积分、Stripe 支付（含 Professional）
 - 匿名试用、多语言（en/zh/ja/es）、法律页（Terms / Privacy）
-- **OpenAI Moderation**：`checkText` / `checkImage`（超时/失败 fail-open；flagged 或 score>0.5 拒绝）
+- **内容审核**：默认 Replicate `falcons-ai/nsfw_image_detection`（不依赖 OpenAI 绑卡）；可选 `MODERATION_PROVIDER=openai|auto`
 - Pipeline 在调用 Replicate 前审查原图，生成后审查 restored/colorized 图；违规标记 `task.violation`，用户友好提示且不退款（TOS）
 - **Replicate 月度预算兜底**：Redis `replicate:spend:YYYY-MM` + `REPLICATE_MONTHLY_SPEND_LIMIT_USD`（默认 $50）
 - TOS **4A. Content Restrictions**（含 NSFW 禁令与违规不退款）
@@ -28,13 +28,13 @@ docs/REPLICATE_SECURITY.md     # Replicate 安全配置指南
 - Next.js 14 App Router + TypeScript + next-intl
 - Upstash Redis（任务/配额，无 SQL）
 - Cloudflare R2 存储、Replicate 模型、Stripe 收款
-- OpenAI Moderation API（`omni-moderation-latest`，免费额度）
+- 内容审核默认走 Replicate NSFW 分类；OpenAI Moderation 为可选平替
 
 ## 下一步计划
 
-- 在生产环境配置 `OPENAI_API_KEY`，用明显违规图实测拦截
+- 用明显违规图实测 Replicate NSFW 拦截（无需 OpenAI 卡）
 - Replicate 改用 prepaid credit + 双 token 轮换（见安全文档）
-- 可选：上传接口在拿到 CDN URL 后提前审核，进一步省 Replicate 费用
+- 可选：上传接口在拿到 CDN URL 后提前审核，进一步省生成费用
 - 可选：接入 Sentry（当前 moderation/spend 仅 console.error）
 
 ## 注意事项
