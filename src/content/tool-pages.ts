@@ -14,7 +14,7 @@ export type ToolPageSlug = (typeof TOOL_PAGE_SLUGS)[number];
 
 const TOOL_PAGE_PATHS: Record<ToolPageSlug, string> = {
   "restore-old-photos": "/restore",
-  "colorize-old-photos": "/colorize",
+  "colorize-old-photos": "/colorize-old-photos",
   "animate-old-photos": "/animate",
   "repair-damaged-old-photos": "/repair-damaged-old-photos",
 };
@@ -253,9 +253,9 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
   },
   "colorize-old-photos": {
     slug: "colorize-old-photos",
-    title: "Colorize Black and White Photos Online Free - AI Photo Colorizer | OldPhotoLive",
+    title: "Colorize Old Photos Online Free - AI Photo Colorizer",
     description:
-      "Colorize black and white photos online free with AI. Turn vintage B&W family portraits into vivid, natural colors with no signup needed to try.",
+      "Colorize black and white photos online with AI. Sign in to try your daily free quota and turn vintage family portraits into color.",
     keywords: [
       "colorize black and white photos",
       "colorize old photos",

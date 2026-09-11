@@ -1,11 +1,33 @@
-import { redirect } from "next/navigation";
-import { isValidLocale, localizePathname, type Locale } from "@/i18n/routing";
+import type { Metadata } from "next";
+import ToolLandingPage from "@/components/tool/ToolLandingPage";
+import { getToolPage, getToolPagePath } from "@/content/tool-pages";
+import { isValidLocale, type Locale } from "@/i18n/routing";
+import { buildLocalizedPageMetadata } from "@/lib/seo";
 
-export default function LocalizedColorizeOldPhotosPage({
+interface LocalizedToolPageProps {
+  params: {
+    locale: string;
+  };
+}
+
+export function generateMetadata({
   params,
-}: {
-  params: { locale: string };
-}) {
+}: LocalizedToolPageProps): Metadata {
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
-  redirect(localizePathname(locale, "/colorize"));
+  const page = getToolPage(locale, "colorize-old-photos");
+
+  return buildLocalizedPageMetadata({
+    locale,
+    title: page.title,
+    description: page.description,
+    path: getToolPagePath("colorize-old-photos"),
+    keywords: page.keywords,
+  });
+}
+
+export default function LocalizedColorizePage({
+  params,
+}: LocalizedToolPageProps) {
+  const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
+  return <ToolLandingPage locale={locale} slug="colorize-old-photos" />;
 }

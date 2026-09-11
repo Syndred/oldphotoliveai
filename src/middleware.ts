@@ -118,13 +118,21 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (!pathname.startsWith("/api/")) {
+    // Normalize public aliases before next-intl rewrites to internal /en routes.
+    const locale = getPathLocale(pathname) ?? defaultLocale;
+    const basePath = stripLocaleFromPathname(pathname).replace(/\/$/, "") || "/";
+    const canonicalPath = localizePathname(locale, basePath === "/colorize" ? "/colorize-old-photos" : basePath);
+    if (getPathLocale(pathname) === "en" || basePath === "/colorize") {
+      const url = request.nextUrl.clone();
+      url.pathname = canonicalPath;
+      return NextResponse.redirect(url, 301);
+    }
     const response = handleI18nRouting(request);
 
     if (response.headers.get("location")) {
       return response;
     }
 
-    const locale = detectLocale(request);
     const normalizedPathname = stripLocaleFromPathname(pathname);
 
     if (

@@ -227,7 +227,7 @@ describe("HistoryPage", () => {
     screen.getByText("Sign in with Google").click();
 
     expect(mockSignIn).toHaveBeenCalledWith("google", {
-      callbackUrl: "/en/history",
+      callbackUrl: "/history",
     });
   });
 });

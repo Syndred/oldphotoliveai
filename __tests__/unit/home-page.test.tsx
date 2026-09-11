@@ -129,6 +129,7 @@ jest.mock("@/components/UploadZone", () => {
 });
 
 import HomePage from "@/app/page";
+import HomePageView from "@/components/HomePageView";
 import {
   __resetI18nNavigationMocks,
   __setMockLocale,
@@ -167,6 +168,17 @@ beforeEach(() => {
 });
 
 describe("HomePage", () => {
+  it.each(["zh", "es", "ja"] as const)("preserves the full workflow on the %s homepage", async (locale) => {
+    mockUseLocale.mockReturnValue(locale);
+    __setMockLocale(locale);
+    render(<HomePageView locale={locale} />);
+    fireEvent.click(screen.getByTestId("trigger-upload"));
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith("/api/tasks", expect.objectContaining({
+        body: JSON.stringify({ imageKey: "https://cdn.example.com/test.jpg", workflow: "full" }),
+      }));
+    });
+  });
   it("renders the upload zone inside the hero section", () => {
     render(<HomePage />);
     const hero = screen.getByTestId("hero-section");
@@ -184,27 +196,8 @@ describe("HomePage", () => {
     expect(screen.getByRole("navigation", {
       name: "OldPhotoLiveAI tool navigation",
     })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "No Login" })).toHaveAttribute(
-      "href",
-      "/en/no-login"
-    );
-    expect(screen.getByRole("link", { name: "Free Animation" })).toHaveAttribute(
-      "href",
-      "/en/animate-free"
-    );
-    expect(screen.getByRole("link", { name: "Bring to Life" })).toHaveAttribute(
-      "href",
-      "/en/bring-to-life"
-    );
-    expect(screen.getByRole("link", { name: "Photo to Video" })).toHaveAttribute(
-      "href",
-      "/en/to-video"
-    );
-    expect(
-      screen.getByRole("link", {
-        name: /Old photo to video AI/i,
-      })
-    ).toHaveAttribute("href", "/en/to-video");
+    expect(screen.getByRole("link", { name: "Free Quota & Plans" })).toHaveAttribute("href", "/pricing");
+    expect(screen.getByRole("link", { name: "AI Photo Colorizer" })).toHaveAttribute("href", "/colorize-old-photos");
   });
 
   it("shows the content safety notice and localized terms link", () => {
@@ -213,12 +206,12 @@ describe("HomePage", () => {
     expect(screen.getByText("Content Safety")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Only upload lawful images you have the right to use. NSFW, nude, sexually explicit, pornographic, or exploitative content is prohibited and may be blocked or removed."
+        "Only upload lawful images you have the right to use. NSFW, nude, sexually explicit, pornographic, or exploitative content is prohibited and may be blocked or removed. Credits used on rejected content are non-refundable."
       )
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Read our Terms of Service" })
-    ).toHaveAttribute("href", "/en/terms");
+    ).toHaveAttribute("href", "/terms");
   });
 
   it("creates a task and navigates to the localized result page", async () => {
@@ -231,13 +224,13 @@ describe("HomePage", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           imageKey: "https://cdn.example.com/test.jpg",
-          workflow: "full",
+          workflow: "colorize",
         }),
       });
     });
 
     await waitFor(() => {
-      expect(mockRouterPush).toHaveBeenCalledWith("/en/result/task-123");
+      expect(mockRouterPush).toHaveBeenCalledWith("/result/task-123");
     });
   });
 
@@ -267,7 +260,7 @@ describe("HomePage", () => {
 
     resolveTask({ ok: true, json: async () => ({ taskId: "t1" }) });
     await waitFor(() =>
-      expect(mockRouterPush).toHaveBeenCalledWith("/en/result/t1")
+      expect(mockRouterPush).toHaveBeenCalledWith("/result/t1")
     );
   });
 
@@ -317,7 +310,7 @@ describe("HomePage", () => {
     fireEvent.click(screen.getByTestId("trigger-upload"));
 
     expect(mockSignIn).toHaveBeenCalledWith("google", {
-      callbackUrl: "/en",
+      callbackUrl: "/",
     });
     expect(global.fetch).not.toHaveBeenCalled();
   });

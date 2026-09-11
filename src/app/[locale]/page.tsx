@@ -22,11 +22,9 @@ export function generateMetadata({
     description: seo.description,
     path: "/",
     keywords: [
-      "ai photo restoration",
-      "restore old photos online",
-      "old photo restoration ai",
-      "photo colorization ai",
-      "animate old photos",
+      "ai photo colorizer",
+      "colorize old photos",
+      "colorize black and white photos",
     ],
   });
 

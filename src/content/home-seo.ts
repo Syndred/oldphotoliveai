@@ -9,6 +9,7 @@ interface HomeSeoContent {
   contentEyebrow: string;
   contentTitle: string;
   contentParagraphs: string[];
+  sectionTitles?: string[];
   colorizeCta: string;
   restoreCta: string;
   animateCta: string;
@@ -18,12 +19,13 @@ interface HomeSeoContent {
 
 export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
   en: {
-    contentEyebrow: "AI old photo tools",
-    contentTitle: "Choose the right AI tool for each old-photo job",
+    contentEyebrow: "AI photo colorizer",
+    contentTitle: "Colorize old photos online",
+    sectionTitles: ["One-click AI photo colorizer", "Turn black-and-white photos into color", "Old photo restoration before colorization"],
     contentParagraphs: [
-      "OldPhotoLive AI is built for family photos, genealogy projects, memorial albums, and historical images that deserve more than a quick filter. Start with a faded scan, a black-and-white portrait, or a damaged print, then choose the workflow that matches the result you want: colorize black and white photos, restore old photos online, repair visible scratches, or animate a restored portrait.",
-      "The best results usually start with a clear upload. Scan the original print when possible, keep faces in focus, and avoid heavy glare from phone photos. The AI restoration pass improves contrast, cleans common damage, and prepares the image before colorization or animation, so the final photo keeps more facial detail, fabric texture, and background structure.",
-      "Use the dedicated colorizer when your main goal is natural color for black-and-white family portraits. Use restoration or damage repair when the image is faded, scratched, creased, or low contrast. When a portrait is clean enough, the animation workflow can turn one still image into a short, subtle video clip for sharing with family.",
+      "Colorize old photos with AI without painting each area by hand. Upload a clear scan of your family portrait, choose colorization, and let the photo colorizer generate a color version to compare with the original. Sign in to use your daily free quota; additional processing and export options depend on your plan.",
+      "Turn black-and-white photos into color for a family album, genealogy project, or a personal keepsake. AI estimates colors from the image, so skin tones, clothing, and backgrounds may differ from their original historical colors. Keep the original scan alongside your colorized copy.",
+      "Old photo restoration can help when fading, scratches, or low contrast obscure the details you want to colorize. Use the restoration or repair tool for damaged prints, then colorize the cleaner image. A well-lit scan without glare gives the AI more detail to work with; severe damage may still need manual editing.",
     ],
     colorizeCta: "Colorize B&W photos",
     restoreCta: "Restore old photos",

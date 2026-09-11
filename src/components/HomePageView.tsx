@@ -1,14 +1,12 @@
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/app/sections/HeroSection";
 import ShowcaseSection from "@/app/sections/ShowcaseSection";
-import VideoShowcaseSection from "@/app/sections/VideoShowcaseSection";
 import FeaturesSection from "@/app/sections/FeaturesSection";
 import HowItWorksSection from "@/app/sections/HowItWorksSection";
 import UploadSection from "@/app/sections/UploadSection";
 import FAQSection from "@/app/sections/FAQSection";
 import FooterSection from "@/app/sections/FooterSection";
 import ToolCardsSection from "@/components/tool/ToolCardsSection";
-import AnimationRelatedToolsSection from "@/components/AnimationRelatedToolsSection";
 import {
   BRAND_NAME,
   BRAND_ICON,
@@ -25,11 +23,9 @@ interface HomePageViewProps {
 }
 
 const HOME_TOOL_NAV_LINKS = [
-  { href: "/", label: "Animate Photos" },
-  { href: "/no-login", label: "No Login" },
-  { href: "/animate-free", label: "Free Animation" },
-  { href: "/bring-to-life", label: "Bring to Life" },
-  { href: "/to-video", label: "Photo to Video" },
+  { href: "/colorize-old-photos", label: "AI Photo Colorizer" },
+  { href: "/pricing", label: "Free Quota & Plans" },
+  { href: "/blog", label: "Photo Guides" },
 ] as const;
 
 export default function HomePageView({
@@ -89,11 +85,12 @@ export default function HomePageView({
             variant="embedded"
             showHeader={false}
             analyticsSource="home_hero"
+            workflow={locale === "en" ? "colorize" : "full"}
             className="mt-8 max-w-4xl"
           />
           <div className="mt-5 flex flex-wrap justify-center gap-3">
             <Link
-              href="/colorize"
+              href="/colorize-old-photos"
               className="inline-flex min-h-[44px] items-center rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent)]/90"
             >
               {homeSeo.colorizeCta}
@@ -133,9 +130,7 @@ export default function HomePageView({
           </nav>
         </HeroSection>
         <ToolCardsSection locale={locale} />
-        {locale === "en" ? <AnimationRelatedToolsSection /> : null}
         <ShowcaseSection />
-        <VideoShowcaseSection />
         <FeaturesSection />
         <section className="px-4 py-10 sm:py-14">
           <div className="mx-auto max-w-5xl">
@@ -146,13 +141,16 @@ export default function HomePageView({
               {homeSeo.contentTitle}
             </h2>
             <div className="mt-6 space-y-4 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
-              {homeSeo.contentParagraphs.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
+              {homeSeo.contentParagraphs.map((paragraph, index) => (
+                <div key={paragraph}>
+                  {homeSeo.sectionTitles?.[index] && <h2 className="mb-3 text-2xl font-semibold text-[var(--color-text-primary)]">{homeSeo.sectionTitles[index]}</h2>}
+                  <p>{paragraph}</p>
+                </div>
               ))}
             </div>
             <div className="mt-7 flex flex-wrap gap-3">
               <Link
-                href="/colorize"
+                href="/colorize-old-photos"
                 className="inline-flex min-h-[44px] items-center rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent)]/90"
               >
                 {homeSeo.colorizeCta}

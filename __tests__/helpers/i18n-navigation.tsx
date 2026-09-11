@@ -39,7 +39,7 @@ function localizeHref(href: string, locale?: string): string {
   const hrefWithoutLocale = href.replace(LOCALE_PREFIX_RE, "") || "/";
   const normalizedHref =
     hrefWithoutLocale === "/" ? "" : hrefWithoutLocale.replace(/^\/+/, "/");
-  return `/${activeLocale}${normalizedHref}`;
+  return activeLocale === "en" ? normalizedHref || "/" : `/${activeLocale}${normalizedHref}`;
 }
 
 export function __setMockPathname(pathname: string) {

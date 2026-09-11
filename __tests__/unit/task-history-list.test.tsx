@@ -91,8 +91,8 @@ describe("TaskHistoryList", () => {
     );
 
     const links = screen.getAllByRole("link");
-    expect(links[0]).toHaveAttribute("href", "/en/result/abc-123");
-    expect(links[1]).toHaveAttribute("href", "/en/result/def-456");
+    expect(links[0]).toHaveAttribute("href", "/result/abc-123");
+    expect(links[1]).toHaveAttribute("href", "/result/def-456");
   });
 
   it("displays translated status badges", () => {

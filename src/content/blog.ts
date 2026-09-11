@@ -57,7 +57,7 @@ const COLORIZE_GUIDE_BASE: BlogPostBase = {
   slug: "how-to-colorize-black-and-white-photos-for-free",
   publishedAt: "2026-07-22T00:00:00.000Z",
   updatedAt: "2026-07-22T00:00:00.000Z",
-  primaryToolPath: "/colorize",
+  primaryToolPath: "/colorize-old-photos",
   secondaryToolPath: "/restore",
 };
 

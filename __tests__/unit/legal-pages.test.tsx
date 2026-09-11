@@ -156,15 +156,15 @@ describe("FooterSection", () => {
 
     expect(screen.getByText("About").closest("a")).toHaveAttribute(
       "href",
-      "/en/about"
+      "/about"
     );
     expect(screen.getByText("Privacy").closest("a")).toHaveAttribute(
       "href",
-      "/en/privacy"
+      "/privacy"
     );
     expect(screen.getByText("Terms").closest("a")).toHaveAttribute(
       "href",
-      "/en/terms"
+      "/terms"
     );
   });
 });
@@ -203,7 +203,7 @@ describe("legal pages", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "View Terms of Service" })
-    ).toHaveAttribute("href", "/en/terms");
+    ).toHaveAttribute("href", "/terms");
     expect(
       screen
         .getAllByRole("link", { name: "support@oldphotoliveai.com" })
@@ -238,7 +238,7 @@ describe("legal pages", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "View Privacy Policy" })
-    ).toHaveAttribute("href", "/en/privacy");
+    ).toHaveAttribute("href", "/privacy");
     expect(
       screen
         .getAllByRole("link", { name: "support@oldphotoliveai.com" })

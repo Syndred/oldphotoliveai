@@ -8,7 +8,8 @@ export const LOCALE_COOKIE = "NEXT_LOCALE";
 export const routing = defineRouting({
   locales,
   defaultLocale,
-  localePrefix: "always",
+  localePrefix: "as-needed",
+  localeDetection: false,
   alternateLinks: true,
   localeCookie: {
     name: LOCALE_COOKIE,
@@ -39,5 +40,5 @@ export function localizePathname(locale: Locale, pathname = "/"): string {
   const basePathname = stripLocaleFromPathname(pathname);
   const normalizedPathname =
     basePathname === "/" ? "" : `/${basePathname.replace(/^\/+/, "")}`;
-  return `/${locale}${normalizedPathname}`;
+  return locale === defaultLocale ? normalizedPathname || "/" : `/${locale}${normalizedPathname}`;
 }

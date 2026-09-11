@@ -63,7 +63,7 @@
     "eyebrow": "One-time credit packs",
     "title": "Pay Once, Restore When You Need",
     "subtitle": "Start free, then buy credits only when a result is worth keeping. No subscription pressure, HD downloads on every paid pack.",
-    "valueProp1": "Free daily trial",
+    "valueProp1": "Free daily account quota",
     "valueProp2": "HD exports",
     "valueProp3": "Credits valid for 1 year",
     "free": "Free",
@@ -194,9 +194,9 @@
   },
   "landing": {
     "hero": {
-      "title": "OldPhotoLive AI: Restore, Colorize & Animate Old Photos",
-      "subtitle": "Upload an old photo and choose the result you need: repair damage, colorize black-and-white pictures, or create a short portrait animation.",
-      "signal1": "Restore only, colorize only, or animate",
+      "title": "Colorize Old Photos with AI",
+      "subtitle": "Use our AI photo colorizer to turn black-and-white pictures into color. Upload a clear scan and start with your free daily account quota.",
+      "signal1": "AI black-and-white photo colorizer",
       "signal2": "Free daily trial",
       "signal3": "Results in minutes",
       "signal4": "HD exports on paid packs",
@@ -231,7 +231,7 @@
     },
     "features": {
       "title": "Powerful AI Features",
-      "subtitle": "Three steps to bring your memories back",
+      "subtitle": "Colorize black-and-white pictures and improve damaged scans",
       "restoration": {
         "title": "Photo Restoration",
         "description": "Remove scratches, fix damage, and enhance clarity with AI-powered restoration"
@@ -247,18 +247,18 @@
     },
     "howItWorks": {
       "title": "How It Works",
-      "subtitle": "Three simple steps to transform your photos",
+      "subtitle": "Three simple steps to colorize old photos",
       "step1": {
         "title": "Upload",
-        "description": "Upload your old or damaged photo"
+        "description": "Sign in and upload a clear black-and-white photo"
       },
       "step2": {
         "title": "AI Processing",
-        "description": "Choose restoration, colorization, animation, or the full workflow"
+        "description": "The homepage photo colorizer adds AI-estimated colors to your image"
       },
       "step3": {
         "title": "Download",
-        "description": "Download your restored photo and animated video"
+        "description": "Compare the colorized photo with your original and download the result"
       }
     },
     "faq": {

@@ -72,7 +72,7 @@ describe("LoginPage", () => {
     fireEvent.click(
       screen.getByRole("button", { name: /sign in with google/i })
     );
-    expect(mockSignIn).toHaveBeenCalledWith("google", { callbackUrl: "/en" });
+    expect(mockSignIn).toHaveBeenCalledWith("google", { callbackUrl: "/" });
   });
 
   it("uses callbackUrl from query string when provided", () => {

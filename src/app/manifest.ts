@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: BRAND_NAME,
     short_name: "OldPhotoLive",
     description: SITE_DESCRIPTION,
-    start_url: "/en",
+    start_url: "/",
     display: "standalone",
     background_color: "#111827",
     theme_color: "#111827",

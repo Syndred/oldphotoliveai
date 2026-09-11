@@ -25,7 +25,7 @@ export function generateMetadata({ params }: PageProps): Metadata {
     ...metadata,
     title: { absolute: page.title },
     alternates: {
-      canonical: `/en${page.path}`,
+      canonical: absoluteLocalizedUrl("en", page.path),
       languages: {
         en: absoluteLocalizedUrl("en", page.path),
         "x-default": absoluteLocalizedUrl("en", page.path),

@@ -113,7 +113,7 @@ describe("AuthButton", () => {
     render(<AuthButton />);
     screen.getByText("Sign In").click();
     expect(mockSignIn).toHaveBeenCalledWith("google", {
-      callbackUrl: "/en",
+      callbackUrl: "/",
     });
   });
 
@@ -207,23 +207,23 @@ describe("Navbar", () => {
 
     expect(screen.getByRole("link", { name: "Animate Photos" })).toHaveAttribute(
       "href",
-      "/en/animate"
+      "/animate"
     );
     expect(screen.getByRole("link", { name: "No Login" })).toHaveAttribute(
       "href",
-      "/en/no-login"
+      "/no-login"
     );
     expect(screen.getByRole("link", { name: "Free Animation" })).toHaveAttribute(
       "href",
-      "/en/animate-free"
+      "/animate-free"
     );
     expect(screen.getByRole("link", { name: "Bring to Life" })).toHaveAttribute(
       "href",
-      "/en/bring-to-life"
+      "/bring-to-life"
     );
     expect(screen.getByRole("link", { name: "Photo to Video" })).toHaveAttribute(
       "href",
-      "/en/to-video"
+      "/to-video"
     );
   });
 
@@ -240,10 +240,10 @@ describe("Navbar", () => {
   it("links point to correct routes", () => {
     __setMockPathname("/");
     render(<Navbar />);
-    expect(screen.getByText("Home").closest("a")).toHaveAttribute("href", "/en");
+    expect(screen.getByText("Home").closest("a")).toHaveAttribute("href", "/");
     expect(screen.getByText("Pricing").closest("a")).toHaveAttribute(
       "href",
-      "/en/pricing"
+      "/pricing"
     );
   });
 
@@ -286,7 +286,7 @@ describe("Navbar", () => {
     render(<Navbar />);
     expect(screen.getByText("History").closest("a")).toHaveAttribute(
       "href",
-      "/en/history"
+      "/history"
     );
   });
 
@@ -360,6 +360,6 @@ describe("Navbar", () => {
     __setMockPathname("/pricing");
     render(<Navbar />);
     const logo = screen.getByText("OldPhotoLive AI").closest("a");
-    expect(logo).toHaveAttribute("href", "/en");
+    expect(logo).toHaveAttribute("href", "/");
   });
 });

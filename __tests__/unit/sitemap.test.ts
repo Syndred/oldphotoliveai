@@ -5,21 +5,21 @@ describe("sitemap", () => {
     const entries = sitemap();
     const aboutUrls = entries
       .map((entry) => entry.url)
-      .filter((url) => /\/(en|zh|es|ja)\/about$/.test(url));
+      .filter((url) => /\/(?:zh\/|es\/|ja\/)?about$/.test(url));
 
     expect(aboutUrls).toEqual([
-      "https://oldphotoliveai.com/en/about",
+      "https://oldphotoliveai.com/about",
       "https://oldphotoliveai.com/zh/about",
       "https://oldphotoliveai.com/es/about",
       "https://oldphotoliveai.com/ja/about",
     ]);
 
     const enAbout = entries.find(
-      (entry) => entry.url === "https://oldphotoliveai.com/en/about"
+      (entry) => entry.url === "https://oldphotoliveai.com/about"
     );
 
     expect(enAbout?.alternates?.languages?.["x-default"]).toBe(
-      "https://oldphotoliveai.com/en/about"
+      "https://oldphotoliveai.com/about"
     );
   });
 
@@ -27,10 +27,10 @@ describe("sitemap", () => {
     const entries = sitemap();
     const noLoginUrls = entries
       .map((entry) => entry.url)
-      .filter((url) => /\/(en|zh|es|ja)\/no-login$/.test(url));
+      .filter((url) => /\/(?:zh\/|es\/|ja\/)?no-login$/.test(url));
 
     expect(noLoginUrls).toEqual([
-      "https://oldphotoliveai.com/en/no-login",
+      "https://oldphotoliveai.com/no-login",
       "https://oldphotoliveai.com/zh/no-login",
       "https://oldphotoliveai.com/es/no-login",
       "https://oldphotoliveai.com/ja/no-login",
@@ -43,10 +43,10 @@ describe("sitemap", () => {
 
     expect(urls).toEqual(
       expect.arrayContaining([
-        "https://oldphotoliveai.com/en/animate-free",
-        "https://oldphotoliveai.com/en/bring-to-life",
-        "https://oldphotoliveai.com/en/to-video",
-        "https://oldphotoliveai.com/en/animate",
+        "https://oldphotoliveai.com/animate-free",
+        "https://oldphotoliveai.com/bring-to-life",
+        "https://oldphotoliveai.com/to-video",
+        "https://oldphotoliveai.com/animate",
       ])
     );
 
