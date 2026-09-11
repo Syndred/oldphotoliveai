@@ -45,7 +45,7 @@ for (const locale of ['en', 'zh', 'es', 'ja']) {
     }
     if (path === '/colorize-old-photos') {
       const description = html.match(/<meta name="description" content="([^"]*)"/)?.[1];
-      assert.ok(description?.includes('Sign in to try your daily free quota'));
+      assert.match(description ?? '', /Sign in.*daily free quota/);
       assert.doesNotMatch(description, /no signup/i);
     }
     console.log(`200 ${path}: language, canonical and hreflang verified`);

@@ -1,3 +1,4 @@
+import { COLORIZER_EXAMPLES } from "@/content/colorizer-examples";
 import Navbar from "@/components/Navbar";
 import FooterSection from "@/app/sections/FooterSection";
 import ShowcaseSection from "@/app/sections/ShowcaseSection";
@@ -37,6 +38,7 @@ export default function ToolLandingPage({
   locale,
   slug,
 }: ToolLandingPageProps) {
+  const isEnglishColorizer = locale === "en" && slug === "colorize-old-photos";
   const tool = getToolPage(locale, slug);
   const toolPath = getToolPagePath(slug);
   const sectionCopy = getToolSectionCopy(locale);
@@ -141,7 +143,22 @@ export default function ToolLandingPage({
           </div>
         </section>
 
-        {tool.showcaseKind === "animation" ? (
+        {isEnglishColorizer ? (
+          <section id="showcase-section" className="px-4 py-10 sm:py-14">
+            <div className="mx-auto max-w-6xl">
+              <h2 className="text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">{tool.showcaseTitle}</h2>
+              <p className="mt-4 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">{tool.showcaseSubtitle}</p>
+              <div className="mt-8 grid gap-5 md:grid-cols-3">
+                {COLORIZER_EXAMPLES.map((example) => (
+                  <article key={example.title} className="rounded-2xl border border-white/10 p-5">
+                    <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">{example.title}</h3>
+                    <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)]">{example.body}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : tool.showcaseKind === "animation" ? (
           <VideoShowcaseSection
             title={tool.showcaseTitle}
             subtitle={tool.showcaseSubtitle}
@@ -198,7 +215,7 @@ export default function ToolLandingPage({
           </section>
         ) : null}
 
-        <HowItWorksSection />
+        {!isEnglishColorizer && <HowItWorksSection />}
 
         <section className="px-4 py-4 sm:py-6">
           <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-[1.2fr,0.8fr]">

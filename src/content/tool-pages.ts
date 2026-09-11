@@ -252,120 +252,99 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     ],
   },
   "colorize-old-photos": {
-    slug: "colorize-old-photos",
-    title: "Colorize Old Photos Online Free - AI Photo Colorizer",
-    description:
-      "Colorize black and white photos online with AI. Sign in to try your daily free quota and turn vintage family portraits into color.",
-    keywords: [
-      "colorize black and white photos",
-      "colorize old photos",
-      "old photo colorizer",
-      "black and white photo colorizer",
-      "ai photo colorization",
-    ],
-    cardTitle: "Colorize old photos",
-    cardDescription:
-      "Turn black-and-white memories into natural color with cleaner faces, clothing, and background detail.",
-    eyebrow: "AI colorization",
-    heroTitle: "Colorize black and white photos with AI - natural colors in seconds",
-    heroDescription:
-      "Upload a black-and-white portrait or family snapshot to add realistic color while preserving facial detail, clothing texture, and scene balance.",
-    heroHighlights: [
-      "Bring black-and-white portraits into natural color",
-      "Start from a restored base instead of coloring damage",
-      "Keep skin tones, fabric, and background colors believable",
-    ],
-    primaryCtaLabel: "Colorize a photo now",
-    uploadTitle: "Upload a photo to colorize",
-    uploadSubtitle:
-      "Start with a scan or black-and-white print and generate a cleaner, naturally colored result in one pass.",
-    introTitle: "Add color without losing the original feeling",
-    introBody:
-      "Old family photos need more than a simple tint overlay. This AI photo colorizer first improves the source image, then predicts natural colors for skin tones, clothing, skies, foliage, rooms, and outdoor backgrounds. Use it for family portraits, genealogy projects, school photos, wedding prints, and historical images when you want a black-and-white photo to feel easier to share without losing the original mood.",
-    showcaseTitle: "Old photo colorization examples",
-    showcaseSubtitle:
-      "Before-and-after examples focused on natural skin tones, clothing, and environmental color in family photos.",
-    showcaseKind: "colorization",
-    benefitsTitle: "What this workflow is best at",
-    benefits: [
-      {
-        title: "Add believable color, not oversaturated noise",
-        body:
-          "The goal is not just color for its own sake. Good colorization should look plausible enough that the memory feels intact.",
-      },
-      {
-        title: "Start with a cleaner source image",
-        body:
-          "This colorization tool repairs the image first, so color is added to a stronger base instead of a faded, scratch-heavy original.",
-      },
-      {
-        title: "Make old memories easier to share",
-        body:
-          "Colorized photos are easier to share with younger family members, include in memorial projects, and print for albums or gifts.",
-      },
-    ],
-    guideSections: [
-      {
-        title: "Natural AI colorization for black and white photos",
-        body:
-          "The goal of AI photo colorization is believable color, not a neon filter. OldPhotoLive AI looks for visual clues in faces, clothing, skies, plants, interiors, and street scenes, then adds color that fits the photo's era and lighting. The result is especially useful for family portraits, wedding prints, school photos, genealogy records, and black-and-white snapshots that younger relatives may connect with more easily in color.",
-      },
-      {
-        title: "Why restore before adding color",
-        body:
-          "Many black-and-white photos are also faded, dusty, or scratched. If you add color directly onto damage, the final image can look noisy. This workflow improves the source first, then colorizes the cleaner image so skin tones, fabric, and background colors have a stronger base. That is why the colorizer sits inside the broader old-photo workflow instead of acting like a simple tint overlay.",
-      },
-      {
-        title: "Best practices for colorizing old family photos",
-        body:
-          "Start with a clear scan, keep the subject centered, and avoid heavy compression from messaging apps. Portraits with visible eyes and clothing usually colorize best. For group photos, larger files help preserve enough detail across every face. After colorization, compare the result with the original and download the version that feels most faithful to the memory.",
-      },
-    ],
-    pricingTitle: "Pick a plan for one photo or a full batch",
-    pricingBody:
-      "Use a small credit pack for occasional color work, or choose a larger pack when you are processing albums, family archives, or client orders.",
-    faqTitle: "Questions about colorizing old photos",
-    faqs: [
-      {
-        question: "Can I colorize black and white photos for free?",
-        answer:
-          "Yes. You can use your free daily quota to try AI colorization, then upgrade if you need more credits, higher-resolution exports, or watermark-free results.",
-      },
-      {
-        question: "How does AI photo colorization work?",
-        answer:
-          "The AI analyzes the black-and-white image and predicts realistic colors for faces, clothing, objects, and backgrounds based on visual patterns learned from color photos.",
-      },
-      {
-        question: "Will the workflow repair the photo before adding color?",
-        answer:
-          "Yes. This colorization entry restores the image first so the final result has cleaner structure and fewer visible defects.",
-      },
-      {
-        question: "What kind of source photos work well here?",
-        answer:
-          "Black-and-white portraits, family snapshots, and moderately faded prints usually perform best. A better scan usually leads to better color decisions.",
-      },
-      {
-        question: "Can old color photos be restored too?",
-        answer:
-          "Yes. If your photo already has color but looks faded or damaged, use the restoration workflow to improve contrast, repair wear, and recover clearer detail.",
-      },
-      {
-        question: "Can I animate the colorized photo afterward?",
-        answer:
-          "Yes. After downloading the colorized result, you can use the animation tool if the photo has a clear portrait subject.",
-      },
-    ],
-    relatedTitle: "More old-photo workflows",
-    relatedDescription:
-      "If the photo also needs cleanup or motion, continue with restoration, damage repair, or animation tools.",
-    relatedSlugs: [
-      "restore-old-photos",
-      "repair-damaged-old-photos",
-      "animate-old-photos",
-    ],
-  },
+  "slug": "colorize-old-photos",
+  "title": "Colorize Old Photos Online Free - AI Photo Colorizer",
+  "description": "Colorize old photos online with an AI photo colorizer. Upload a black-and-white image, review and download your result. Sign in for your daily free quota.",
+  "keywords": [
+    "colorize old photos",
+    "AI photo colorizer",
+    "colorize black and white photos",
+    "colorize old photos online"
+  ],
+  "cardTitle": "Colorize old photos",
+  "cardDescription": "Add AI-estimated color to black-and-white family photographs and compare the result with your original.",
+  "eyebrow": "AI colorization",
+  "heroTitle": "Colorize Old Photos with an AI Photo Colorizer",
+  "heroDescription": "Colorize old photos with an AI photo colorizer designed for black-and-white family portraits, scanned prints, and everyday snapshots. Upload a clear image, let the workflow restore it and add estimated colors, then download the colorized photo from your result page. You do not need to paint individual areas or choose colors for every face, garment, and background. Start with a scan that keeps the whole photograph visible, and avoid glare, heavy compression, or filters that hide detail. The AI uses visual patterns to suggest plausible colors; it cannot know the exact shades that were present when the photograph was taken. Keep your original file and compare the result before adding it to an album, genealogy project, or family keepsake. Sign in with Google to use your available daily free quota. Processing time and results vary with image quality and demand, and export options depend on your plan and remaining allowance.",
+  "heroHighlights": [
+    "Upload a black-and-white photo",
+    "Review AI-estimated colors against your original",
+    "Sign in to use your daily free quota"
+  ],
+  "primaryCtaLabel": "Colorize a photo now",
+  "uploadTitle": "Upload a photo to colorize",
+  "uploadSubtitle": "Upload a clear scan or black-and-white photo. Sign in to start processing.",
+  "introTitle": "How an AI photo colorizer estimates colors",
+  "introBody": "An AI photo colorizer uses patterns learned from color images to estimate colors for shapes and textures in a black-and-white photo. Faces, clothing, plants, and skies provide visual clues, but several different colors can produce the same gray tone. This workflow first restores the image, then adds predicted color. The result is an interpretation, not evidence of the original historical colors; compare it with reliable references if accuracy matters.",
+  "showcaseTitle": "Before & After: AI Photo Colorizer Examples",
+  "showcaseSubtitle": "The following are illustrative text descriptions, not real before-and-after results, customer photos, or guarantees. They describe possible changes and limitations; your photograph may produce a different result.",
+  "showcaseKind": "colorization",
+  "benefitsTitle": "How to Colorize Old Photos with AI",
+  "benefits": [
+    {
+      "title": "1. Sign in and upload your photo",
+      "body": "Sign in with Google, then upload a clear black-and-white scan using the upload area on this page. Keep the original file, include the whole photograph, and avoid glare or heavy compression."
+    },
+    {
+      "title": "2. Let AI restore and add color",
+      "body": "The colorization workflow first restores the image and then estimates colors for the scene. Wait for processing to finish; timing depends on the image, service availability, and queue demand."
+    },
+    {
+      "title": "3. Compare and download the result",
+      "body": "On the result page, compare the colorized image with your original, paying attention to faces, clothing, and fine details. Download the finished image if it suits your project, while keeping the original as your reference."
+    }
+  ],
+  "guideSections": [
+    {
+      "title": "Prepare a clearer scan before you colorize old photos",
+      "body": "Scan the print when possible, or photograph it in even light with the camera parallel to the paper. Avoid shadows, reflections, and beauty filters. Small faces in group photos and heavily damaged areas give the model less information, so inspect those parts of the output carefully."
+    },
+    {
+      "title": "Keep the original alongside your colorized copy",
+      "body": "A colorized photograph can offer a new way to view a family memory, but it should not replace the source in an archive. Label shared copies as AI-colorized, especially in genealogy records or historical projects. Use dated reference photographs or family knowledge to judge whether suggested colors are plausible."
+    }
+  ],
+  "pricingTitle": "Daily free quota and sign-in requirements",
+  "pricingBody": "Sign in with Google to create or access your account before starting colorization on this page. Free accounts receive one photo-processing allowance per day, shared across the supported workflows; a previous task may already have used it. Check your remaining quota before uploading. Paid plans provide additional capacity and export options as described on the pricing page. Free use is limited, not unlimited.",
+  "faqTitle": "FAQ: Colorize old photos online",
+  "faqs": [
+    {
+      "question": "How do I colorize old photos with AI?",
+      "answer": "Sign in with Google and upload a clear black-and-white image on this page. The workflow restores the image and adds estimated color, then you can compare the result with your original and download the finished photo."
+    },
+    {
+      "question": "What is the best AI photo colorizer free option for my photo?",
+      "answer": "There is no single best option for every photograph. Use the available free quota to evaluate your own scan, checking facial detail, plausible colors, and export limits. OldPhotoLive AI offers one daily photo-processing allowance for free accounts after sign-in; paid options are available if you need more."
+    },
+    {
+      "question": "Can I colorize old photos online without installing software?",
+      "answer": "Yes. Upload and review the photo in your browser without installing a desktop editing application. This colorization page requires Google sign-in and an available processing allowance."
+    },
+    {
+      "question": "Will AI recover the real historical colors?",
+      "answer": "No. A black-and-white image does not contain enough information to identify every original color. AI predicts plausible shades, so uniforms, skin tones, furniture, and clothing may differ from reality. Keep the original and label the output as AI-colorized."
+    },
+    {
+      "question": "Can I download my colorized photo?",
+      "answer": "Yes. Once processing completes, the result page provides an image download. Output quality and watermark options depend on your plan; review the pricing page for current export conditions."
+    },
+    {
+      "question": "Does this tool repair damaged photos before colorization?",
+      "answer": "Yes. The existing colorization workflow includes restoration before adding color. It may improve fading and common defects, but severe tears, missing areas, or very small faces can still produce imperfect results."
+    },
+    {
+      "question": "Do I need to register, and is colorization unlimited?",
+      "answer": "You need to sign in with Google to create or access an account on this page. Free accounts have one daily photo-processing allowance shared across workflows, so previous use can exhaust it. Additional processing requires an available paid allowance; the free tier is not unlimited."
+    }
+  ],
+  "relatedTitle": "More old-photo workflows",
+  "relatedDescription": "For a different result, explore restoration, damage repair, or portrait animation.",
+  "relatedSlugs": [
+    "restore-old-photos",
+    "repair-damaged-old-photos",
+    "animate-old-photos"
+  ]
+},
   "animate-old-photos": {
     slug: "animate-old-photos",
     title: "Animate Old Photos with AI",
