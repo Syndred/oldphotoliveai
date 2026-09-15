@@ -32,6 +32,14 @@ export type TaskStatus =
 export type TaskPriority = "normal" | "high" | "urgent";
 export type TaskFailureStage = "restoring" | "colorizing" | "animating" | null;
 export type TaskWorkflow = "full" | "restore" | "colorize" | "animate";
+export type TaskFailureCode =
+  | "content_rejected"
+  | "source_unreachable"
+  | "service_busy"
+  | "provider_auth"
+  | "provider_config"
+  | "download_failed"
+  | "processing_failed";
 
 export interface Task {
   id: string;
@@ -46,6 +54,8 @@ export interface Task {
   errorMessage: string | null;
   internalErrorMessage: string | null;
   failureStage: TaskFailureStage;
+  failureCode?: TaskFailureCode | null;
+  attemptCount?: number;
   /** True when OpenAI Moderation rejected input or generated output. */
   violation?: boolean;
   progress: number;

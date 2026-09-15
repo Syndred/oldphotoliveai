@@ -5,6 +5,7 @@ import { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 import { getAccessibleTask, type TaskAccessMode } from "@/lib/task-access";
+import { toPublicTaskStatus } from "@/lib/task-status";
 
 const POLL_INTERVAL_MS = 2000;
 const HEARTBEAT_INTERVAL_MS = 15000;
@@ -33,6 +34,7 @@ export async function GET(
       } = {};
       let closed = false;
       let lastEventPayload = "";
+      let polling = false;
 
       const close = () => {
         if (closed) return;
@@ -53,36 +55,16 @@ export async function GET(
       };
 
       const poll = async (): Promise<boolean> => {
+        if (polling) return false;
+        polling = true;
         try {
           const accessibleTask = await getAccessibleTask(request, taskId);
           if (!accessibleTask) {
-            sendEvent({ error: getErrorMessage("taskNotFound", locale) });
+            sendEvent({ transportError: "access_lost" });
             return true; // stop polling
           }
           const { task } = accessibleTask;
-
-          const eventData: Record<string, unknown> = {
-            status: task.status,
-            progress: task.progress,
-            workflow: task.workflow ?? "full",
-            accessMode,
-          };
-
-          if (task.errorMessage) {
-            eventData.errorMessage = task.errorMessage;
-          }
-          if (task.originalImageKey) {
-            eventData.originalImageKey = task.originalImageKey;
-          }
-          if (task.restoredImageKey) {
-            eventData.restoredImageKey = task.restoredImageKey;
-          }
-          if (task.colorizedImageKey) {
-            eventData.colorizedImageKey = task.colorizedImageKey;
-          }
-          if (task.animationVideoKey) {
-            eventData.animationVideoKey = task.animationVideoKey;
-          }
+          const eventData = toPublicTaskStatus(task, accessMode);
 
           const payload = JSON.stringify(eventData);
           if (payload !== lastEventPayload) {
@@ -101,8 +83,10 @@ export async function GET(
 
           return false;
         } catch {
-          sendEvent({ error: getErrorMessage("taskNotFound", locale) });
-          return true;
+          sendEvent({ transportError: "status_unavailable" });
+          return false;
+        } finally {
+          polling = false;
         }
       };
 

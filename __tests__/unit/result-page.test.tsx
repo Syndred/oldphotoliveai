@@ -43,22 +43,37 @@ jest.mock("next-intl", () => ({
 // Capture ProgressIndicator callbacks
 let capturedOnComplete: ((data: Record<string, unknown>) => void) | undefined;
 let capturedOnError: ((msg: string) => void) | undefined;
+let capturedOnStatus: ((data: Record<string, unknown>) => void) | undefined;
+let capturedOnConnectionLost: (() => void) | undefined;
 
 jest.mock("@/components/ProgressIndicator", () => {
   return function MockProgressIndicator({
     taskId,
     onComplete,
     onError,
+    onStatus,
+    onConnectionLost,
   }: {
     taskId: string;
     onComplete?: (data: Record<string, unknown>) => void;
     onError?: (msg: string) => void;
+    onStatus?: (data: Record<string, unknown>) => void;
+    onConnectionLost?: () => void;
   }) {
     capturedOnComplete = onComplete;
     capturedOnError = onError;
+    capturedOnStatus = onStatus;
+    capturedOnConnectionLost = onConnectionLost;
     return <div data-testid="progress-indicator" data-task-id={taskId} />;
   };
 });
+
+const mockTrackTaskEventOnce = jest.fn();
+const mockTrackAnalyticsEvent = jest.fn();
+jest.mock("@/lib/analytics", () => ({
+  trackTaskEventOnce: (...args: unknown[]) => mockTrackTaskEventOnce(...args),
+  trackAnalyticsEvent: (...args: unknown[]) => mockTrackAnalyticsEvent(...args),
+}));
 
 jest.mock("@/components/BeforeAfterCompare", () => {
   return function MockBeforeAfterCompare({
@@ -100,6 +115,9 @@ const ORIGINAL_ENV = process.env;
 const COMPLETED_DATA = {
   status: "completed",
   progress: 100,
+  workflow: "full",
+  accessMode: "authenticated",
+  attemptCount: 1,
   originalImageKey: "uploads/original.jpg",
   colorizedImageKey: "results/colorized.jpg",
   animationVideoKey: "results/animation.mp4",
@@ -108,6 +126,9 @@ const COMPLETED_DATA = {
 const PROCESSING_DATA = {
   status: "restoring",
   progress: 25,
+  workflow: "full",
+  accessMode: "authenticated",
+  attemptCount: 1,
 };
 
 /** Helper: create a fetch mock that handles /api/quota and /api/tasks/.../status */
@@ -127,6 +148,8 @@ beforeEach(() => {
   jest.clearAllMocks();
   capturedOnComplete = undefined;
   capturedOnError = undefined;
+  capturedOnStatus = undefined;
+  capturedOnConnectionLost = undefined;
   process.env = { ...ORIGINAL_ENV, NEXT_PUBLIC_R2_DOMAIN: "cdn.example.com" };
 });
 
@@ -179,6 +202,18 @@ describe("ResultPage", () => {
     });
     expect(screen.getByTestId("video-player")).toBeInTheDocument();
     expect(screen.queryByTestId("progress-indicator")).not.toBeInTheDocument();
+    expect(mockTrackTaskEventOnce).toHaveBeenCalledWith(
+      "generation_completed",
+      mockTaskId,
+      1,
+      expect.objectContaining({ workflow: "full", access_mode: "authenticated" })
+    );
+    expect(mockTrackTaskEventOnce).toHaveBeenCalledWith(
+      "result_view",
+      mockTaskId,
+      1,
+      expect.objectContaining({ workflow: "full", access_mode: "authenticated" })
+    );
   });
 
   it("passes correct CDN URLs to BeforeAfterCompare", async () => {
@@ -235,10 +270,26 @@ describe("ResultPage", () => {
       `/api/tasks/${mockTaskId}/asset?kind=animation&download=1`
     );
     expect(videoLink).toHaveAttribute("download");
+
+    fireEvent.click(imageLink!);
+    expect(mockTrackAnalyticsEvent).toHaveBeenCalledWith(
+      "result_download_requested",
+      expect.objectContaining({ asset_kind: "colorized", attempt: 1 })
+    );
   });
 
   it("shows error section when task is failed", async () => {
-    global.fetch = mockFetchWith({ status: "failed", progress: 50, errorMessage: "Model execution timed out" });
+    global.fetch = mockFetchWith({
+      status: "failed",
+      progress: 50,
+      errorMessage: "Model execution timed out",
+      workflow: "full",
+      accessMode: "authenticated",
+      attemptCount: 2,
+      failureCode: "service_busy",
+      failureStage: "animating",
+      retryAllowed: true,
+    });
     render(<ResultPage />);
 
     await waitFor(() => {
@@ -247,6 +298,32 @@ describe("ResultPage", () => {
     expect(screen.getByText("Processing Failed")).toBeInTheDocument();
     expect(screen.getByText("Model execution timed out")).toBeInTheDocument();
     expect(screen.getByText("Retry")).toBeInTheDocument();
+    expect(mockTrackTaskEventOnce).toHaveBeenCalledWith(
+      "generation_failed",
+      mockTaskId,
+      2,
+      {
+        workflow: "full",
+        access_mode: "authenticated",
+        failure_code: "service_busy",
+        stage: "animating",
+      }
+    );
+  });
+
+  it("does not offer retry for content-policy failures", async () => {
+    global.fetch = mockFetchWith({
+      status: "failed",
+      progress: 25,
+      errorMessage: "This image cannot be processed.",
+      failureCode: "content_rejected",
+      failureStage: "restoring",
+      retryAllowed: false,
+    });
+    render(<ResultPage />);
+
+    await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
+    expect(screen.queryByText("Retry")).not.toBeInTheDocument();
   });
 
   it("shows error via SSE callback for processing tasks", async () => {
@@ -280,6 +357,32 @@ describe("ResultPage", () => {
     expect(screen.queryByTestId("progress-indicator")).not.toBeInTheDocument();
     expect(screen.getByTestId("before-after-compare")).toBeInTheDocument();
     expect(screen.getByTestId("video-player")).toBeInTheDocument();
+  });
+
+  it("records active processing from SSE and keeps a connection loss non-terminal", async () => {
+    global.fetch = mockFetchWith({ status: "queued", progress: 5, attemptCount: 1 });
+    render(<ResultPage />);
+
+    await waitFor(() => expect(screen.getByTestId("progress-indicator")).toBeInTheDocument());
+    act(() => {
+      capturedOnStatus?.(PROCESSING_DATA);
+      capturedOnConnectionLost?.();
+    });
+
+    expect(mockTrackTaskEventOnce).toHaveBeenCalledWith(
+      "generation_started",
+      mockTaskId,
+      1,
+      expect.objectContaining({ status: "restoring" })
+    );
+    expect(mockTrackTaskEventOnce).toHaveBeenCalledWith(
+      "status_stream_disconnected",
+      mockTaskId,
+      1,
+      expect.objectContaining({ stage: "status_stream" })
+    );
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByTestId("progress-indicator")).toBeInTheDocument();
   });
 
   it("calls retry API on retry click", async () => {

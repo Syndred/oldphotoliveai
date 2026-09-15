@@ -58,6 +58,7 @@ export default function UploadZone({
   const [progress, setProgress] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const uploadInFlightRef = useRef(false);
   const t = useTranslations("upload");
   const tErrors = useTranslations("errors");
 
@@ -107,7 +108,7 @@ export default function UploadZone({
 
   const handleFile = useCallback(
     async (file: File) => {
-      if (disabled) return;
+      if (disabled || uploadInFlightRef.current) return;
 
       const validationError = validateClientFile(file, tErrors);
       if (validationError) {
@@ -116,6 +117,7 @@ export default function UploadZone({
         return;
       }
 
+      uploadInFlightRef.current = true;
       setState("uploading");
       setProgress(0);
       setErrorMsg("");
@@ -140,6 +142,8 @@ export default function UploadZone({
         setErrorMsg(
           err instanceof Error ? err.message : tErrors("uploadFailed")
         );
+      } finally {
+        uploadInFlightRef.current = false;
       }
     },
     [disabled, onUpload, tErrors, uploadWithProgress]

@@ -180,6 +180,9 @@
     "retryFailed": "再試行に失敗しました",
     "historyLoadFailed": "履歴の読み込みに失敗しました",
     "taskCreateFailed": "タスクの作成に失敗しました",
+    "creationAllowanceNotUsed": "利用枠は消費されていません。同じアップロード済み写真で再試行できます。",
+    "creationAllowanceMayBeUsed": "利用枠が消費された可能性があります。まず同じアップロード済み写真で再試行してください。既存の結果がある場合は、追加消費なしで再表示されます。",
+    "retrySamePhoto": "同じ写真で再試行",
     "taskIdsRequired": "少なくとも 1 件のタスクを選択してください。",
     "taskBatchTooLarge": "一度に削除できるのは最大 50 件までです。"
   },

@@ -240,6 +240,34 @@ describe("UploadZone", () => {
     expect(xhrMock.send).toHaveBeenCalled();
   });
 
+  it("ignores a second drop while the first upload is in flight", async () => {
+    const listeners: Record<string, EventListener[]> = {};
+    const instance = {
+      open: jest.fn(),
+      send: jest.fn(),
+      addEventListener: jest.fn((event: string, handler: EventListener) => {
+        listeners[event] = listeners[event] || [];
+        listeners[event].push(handler);
+      }),
+      upload: { addEventListener: jest.fn() },
+      status: 0,
+      responseText: "",
+    };
+    jest.spyOn(window, "XMLHttpRequest").mockImplementation(
+      () => instance as unknown as XMLHttpRequest
+    );
+
+    render(<UploadZone onUpload={mockOnUpload} />);
+    const zone = screen.getByRole("button", { name: /upload photo/i });
+    const file = createMockFile("photo.jpg", 5000, "image/jpeg");
+    const dataTransfer = { files: [file] } as unknown as DataTransfer;
+
+    fireEvent.drop(zone, { dataTransfer });
+    fireEvent.drop(zone, { dataTransfer });
+
+    await waitFor(() => expect(instance.send).toHaveBeenCalledTimes(1));
+  });
+
   it("shows upload progress", async () => {
     mockXHR({
       status: 200,

@@ -432,6 +432,7 @@ describe("executePipeline", () => {
         errorMessage: "Processing failed. Please try again.",
         internalErrorMessage: "GFPGAN model failed",
         failureStage: "restoring",
+        failureCode: "processing_failed",
         violation: false,
       });
       // Only restoration model was called
@@ -452,10 +453,11 @@ describe("executePipeline", () => {
       await executePipeline(TASK_ID);
 
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
-        errorMessage: "AI model configuration error. Please contact support.",
+        errorMessage: "AI service authentication is unavailable. Please contact support.",
         internalErrorMessage:
           "Request failed with status 401 Unauthorized: Unauthenticated",
         failureStage: "restoring",
+        failureCode: "provider_auth",
         violation: false,
       });
     });
@@ -489,6 +491,7 @@ describe("executePipeline", () => {
         errorMessage: "Processing failed. Please try again.",
         internalErrorMessage: "DDColor model failed",
         failureStage: "colorizing",
+        failureCode: "processing_failed",
         violation: false,
       });
       // Only restored image was uploaded (1 upload)
@@ -528,6 +531,7 @@ describe("executePipeline", () => {
         errorMessage: "Processing failed. Please try again.",
         internalErrorMessage: "Animation model failed",
         failureStage: "animating",
+        failureCode: "processing_failed",
         violation: false,
       });
       // Restored + colorized uploaded, but not animation
@@ -654,7 +658,11 @@ describe("executePipeline", () => {
       await executePipeline(TASK_ID);
 
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
-        errorMessage: `User not found: ${USER_ID}`,
+        errorMessage: "The task account is unavailable. Please sign in again or contact support.",
+        internalErrorMessage: `User not found: ${USER_ID}`,
+        failureCode: "processing_failed",
+        failureStage: null,
+        violation: false,
       });
       expect(mockRunModel).not.toHaveBeenCalled();
     });
@@ -676,10 +684,11 @@ describe("executePipeline", () => {
       await executePipeline(TASK_ID);
 
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
-        errorMessage: "Failed to download intermediate result. Please try again.",
+        errorMessage: "A generated file could not be retrieved. Please try again.",
         internalErrorMessage:
           "Failed to download from https://replicate.com/restored.jpg: invalid response",
         failureStage: "restoring",
+        failureCode: "download_failed",
         violation: false,
       });
     });
@@ -697,6 +706,7 @@ describe("executePipeline", () => {
         errorMessage: "Processing failed. Please try again.",
         internalErrorMessage: "string error",
         failureStage: "restoring",
+        failureCode: "processing_failed",
         violation: false,
       });
     });
@@ -717,9 +727,10 @@ describe("executePipeline", () => {
       expect(mockRunModel).not.toHaveBeenCalled();
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
         errorMessage:
-          "Source image URL is unreachable (404 Not Found). Please re-upload or check R2 bucket/domain configuration.",
+          "The uploaded source image is no longer available. Please re-upload it and try again.",
         internalErrorMessage: "SOURCE_IMAGE_UNREACHABLE:404 Not Found",
         failureStage: "restoring",
+        failureCode: "source_unreachable",
         violation: false,
       });
     });
@@ -742,6 +753,7 @@ describe("executePipeline", () => {
         errorMessage: CONTENT_REJECTED_MESSAGE,
         internalErrorMessage: "violation:source:flagged:sexual",
         failureStage: "restoring",
+        failureCode: "content_rejected",
         violation: true,
       });
     });
@@ -768,6 +780,7 @@ describe("executePipeline", () => {
         errorMessage: CONTENT_REJECTED_MESSAGE,
         internalErrorMessage: "violation:restored:flagged:sexual",
         failureStage: "restoring",
+        failureCode: "content_rejected",
         violation: true,
       });
     });

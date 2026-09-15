@@ -1,33 +1,42 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Script from "next/script";
 import {
   getClarityProjectId,
   getGaMeasurementId,
   isAnalyticsEnabled,
   isClarityEnabled,
+  normalizeAnalyticsPath,
 } from "@/lib/analytics";
 
 export default function Analytics() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const gaId = getGaMeasurementId();
   const clarityId = getClarityProjectId();
 
   useEffect(() => {
     if (!isAnalyticsEnabled()) return;
     if (typeof window === "undefined") return;
-    if (typeof window.gtag !== "function") return;
+    const sendPageView = () => {
+      if (typeof window.gtag !== "function") return;
+      const pagePath = normalizeAnalyticsPath(pathname);
+      const pageLocation = `${window.location.origin}${pagePath}`;
+      window.gtag("config", gaId, {
+        page_path: pagePath,
+        page_location: pageLocation,
+      });
+    };
 
-    const query = searchParams.toString();
-    const pagePath = query ? `${pathname}?${query}` : pathname;
+    if (typeof window.gtag === "function") {
+      sendPageView();
+      return;
+    }
 
-    window.gtag("config", gaId, {
-      page_path: pagePath,
-    });
-  }, [gaId, pathname, searchParams]);
+    window.addEventListener("opla-ga-ready", sendPageView, { once: true });
+    return () => window.removeEventListener("opla-ga-ready", sendPageView);
+  }, [gaId, pathname]);
 
   if (!isAnalyticsEnabled() && !isClarityEnabled()) {
     return null;
@@ -47,7 +56,8 @@ export default function Analytics() {
               function gtag(){dataLayer.push(arguments);}
               window.gtag = gtag;
               gtag('js', new Date());
-              gtag('config', '${gaId}');
+              gtag('config', '${gaId}', { send_page_view: false });
+              window.dispatchEvent(new Event('opla-ga-ready'));
             `}
           </Script>
         </>

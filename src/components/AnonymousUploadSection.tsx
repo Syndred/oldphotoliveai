@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useLocale } from "next-intl";
 import UploadZone from "@/components/UploadZone";
 import { useRouter } from "@/i18n/navigation";
 import { trackAnalyticsEvent } from "@/lib/analytics";
+import { classifyTaskCreationResponse } from "@/lib/task-create-client";
 
 interface AnonymousUploadSectionProps {
   analyticsSource?: string;
@@ -19,15 +20,25 @@ export default function AnonymousUploadSection({
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState("");
   const [trialUsed, setTrialUsed] = useState(false);
+  const [retryImageKey, setRetryImageKey] = useState<string | null>(null);
+  const [allowanceConsumed, setAllowanceConsumed] = useState<boolean | null>(false);
+  const createInFlightRef = useRef(false);
 
   async function handleUpload(imageKey: string) {
+    if (createInFlightRef.current) return;
+    createInFlightRef.current = true;
     trackAnalyticsEvent("anonymous_task_create_started", {
       source: analyticsSource,
+      workflow: "animate",
+      auth_state: "anonymous",
     });
     setIsCreating(true);
     setError("");
     setTrialUsed(false);
+    setRetryImageKey(null);
+    setAllowanceConsumed(false);
 
+    let responseAllowance: boolean | null = null;
     try {
       const res = await fetch("/api/anonymous-tasks", {
         method: "POST",
@@ -35,25 +46,61 @@ export default function AnonymousUploadSection({
         body: JSON.stringify({ imageKey }),
       });
       const data = await res.json().catch(() => null);
+      responseAllowance =
+        typeof data?.allowanceConsumed === "boolean"
+          ? data.allowanceConsumed
+          : null;
 
       if (!res.ok) {
+        const failure = classifyTaskCreationResponse(res.status, data);
         if (data?.code === "ANONYMOUS_TRIAL_USED") {
           setTrialUsed(true);
         }
-        throw new Error(data?.error || "Could not start your free animation.");
+        trackAnalyticsEvent(
+          failure.kind === "rejected"
+            ? "anonymous_task_create_rejected"
+            : "anonymous_task_create_failed",
+          {
+            source: analyticsSource,
+            workflow: "animate",
+            stage: failure.stage,
+            failure_code: failure.failureCode,
+            allowance_consumed: failure.allowanceConsumed,
+          }
+        );
+        setError(data?.error || "Could not start your free animation.");
+        setAllowanceConsumed(failure.allowanceConsumed);
+        setRetryImageKey(failure.retryable ? imageKey : null);
+        return;
       }
 
+      if (typeof data?.taskId !== "string" || !data.taskId) {
+        throw new Error("Could not start your free animation.");
+      }
       trackAnalyticsEvent("anonymous_task_create_succeeded", {
         source: analyticsSource,
+        workflow: "animate",
+        replayed: data?.replayed === true,
+        allowance_consumed: data?.allowanceConsumed === true,
       });
       router.push(`/result/${data.taskId}`);
     } catch (err) {
       trackAnalyticsEvent("anonymous_task_create_failed", {
         source: analyticsSource,
+        workflow: "animate",
+        stage: "creation",
+        failure_code: "network_or_server",
+        ...(typeof responseAllowance === "boolean"
+          ? { allowance_consumed: responseAllowance }
+          : {}),
       });
       setError(
         err instanceof Error ? err.message : "Could not start your free animation."
       );
+      setRetryImageKey(imageKey);
+      setAllowanceConsumed(responseAllowance);
+    } finally {
+      createInFlightRef.current = false;
       setIsCreating(false);
     }
   }
@@ -105,6 +152,20 @@ export default function AnonymousUploadSection({
           <p className="text-sm text-red-300" role="alert">
             {error}
           </p>
+          <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
+            {allowanceConsumed === false
+              ? "Your no-login preview was not used. You can retry the same uploaded photo."
+              : "The request may have used your preview. Retry the same uploaded photo first; an existing result will reopen without another charge."}
+          </p>
+          {retryImageKey ? (
+            <button
+              type="button"
+              onClick={() => handleUpload(retryImageKey)}
+              className="mt-3 inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-[var(--color-accent)]"
+            >
+              Retry same photo
+            </button>
+          ) : null}
           {trialUsed ? (
             <button
               type="button"

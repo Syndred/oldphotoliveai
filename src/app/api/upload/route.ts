@@ -5,6 +5,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateFile, generateStorageKey } from "@/lib/validation";
 import { uploadToR2 } from "@/lib/r2";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
+import {
+  createAnonymousVisitorId,
+  getAnonymousVisitorId,
+  setAnonymousVisitorCookie,
+} from "@/lib/anonymous";
 
 type UploadErrorKey =
   | "uploadFailed"
@@ -166,7 +171,11 @@ export async function POST(request: NextRequest) {
     await uploadToR2(buffer, key, file.type);
 
     // 5. Return only the storage key so the browser never receives raw object URLs.
-    return NextResponse.json({ key }, { status: 200 });
+    const response = NextResponse.json({ key }, { status: 200 });
+    if (!getAnonymousVisitorId(request)) {
+      setAnonymousVisitorCookie(response, createAnonymousVisitorId());
+    }
+    return response;
   } catch (error) {
     const classified = classifyUploadError(error);
     const requestId = buildRequestId();

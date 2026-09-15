@@ -3,13 +3,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { createTask, getUser } from "@/lib/redis";
-import { enqueueTask } from "@/lib/queue";
-import { checkAndDecrementQuota } from "@/lib/quota";
-import { getTaskPriorityForTier } from "@/lib/taskPriority";
+import { getUser } from "@/lib/redis";
 import { isSafeTaskStorageKey } from "@/lib/validation";
-import type { TaskPriority, TaskWorkflow, UserTier } from "@/types";
+import type { TaskWorkflow } from "@/types";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
+import { createAuthenticatedTaskAtomic } from "@/lib/task-creation";
 
 const TASK_WORKFLOWS: readonly TaskWorkflow[] = [
   "full",
@@ -24,20 +22,11 @@ function parseTaskWorkflow(value: unknown): TaskWorkflow {
     : "full";
 }
 
-function resolveQuotaErrorKey(reason: string | undefined, tier: UserTier): string {
-  if (reason === "No credits remaining") {
+function resolveQuotaErrorKey(code: string): string {
+  if (code === "NO_CREDITS") {
     return "creditsExpired";
   }
-
-  if (reason === "Daily free quota exhausted") {
-    return "quotaExceeded";
-  }
-
-  if (reason === "Quota not initialized") {
-    return tier === "pay_as_you_go" ? "creditsExpired" : "quotaExceeded";
-  }
-
-  return tier === "pay_as_you_go" ? "creditsExpired" : "quotaExceeded";
+  return "quotaExceeded";
 }
 
 export async function POST(request: NextRequest) {
@@ -54,7 +43,12 @@ export async function POST(request: NextRequest) {
 
     if (!userId) {
       return NextResponse.json(
-        { error: getErrorMessage("unauthorized", locale) },
+        {
+          error: getErrorMessage("unauthorized", locale),
+          code: "UNAUTHORIZED",
+          stage: "authorization",
+          allowanceConsumed: false,
+        },
         { status: 401 }
       );
     }
@@ -65,7 +59,12 @@ export async function POST(request: NextRequest) {
       body = await request.json();
     } catch {
       return NextResponse.json(
-        { error: getErrorMessage("taskCreateFailed", locale) },
+        {
+          error: getErrorMessage("taskCreateFailed", locale),
+          code: "INVALID_INPUT",
+          stage: "validation",
+          allowanceConsumed: false,
+        },
         { status: 400 }
       );
     }
@@ -78,14 +77,24 @@ export async function POST(request: NextRequest) {
     // 3. Validate required fields
     if (!imageKey || typeof imageKey !== "string" || imageKey.trim() === "") {
       return NextResponse.json(
-        { error: getErrorMessage("taskCreateFailed", locale) },
+        {
+          error: getErrorMessage("taskCreateFailed", locale),
+          code: "INVALID_INPUT",
+          stage: "validation",
+          allowanceConsumed: false,
+        },
         { status: 400 }
       );
     }
     const normalizedImageKey = imageKey.trim();
     if (!isSafeTaskStorageKey(normalizedImageKey)) {
       return NextResponse.json(
-        { error: getErrorMessage("taskCreateFailed", locale) },
+        {
+          error: getErrorMessage("taskCreateFailed", locale),
+          code: "INVALID_INPUT",
+          stage: "validation",
+          allowanceConsumed: false,
+        },
         { status: 400 }
       );
     }
@@ -94,34 +103,36 @@ export async function POST(request: NextRequest) {
     const user = await getUser(userId);
     if (!user) {
       return NextResponse.json(
-        { error: getErrorMessage("unauthorized", locale) },
-        { status: 404 }
+        {
+          error: getErrorMessage("unauthorized", locale),
+          code: "UNAUTHORIZED",
+          stage: "authorization",
+          allowanceConsumed: false,
+        },
+        { status: 401 }
       );
     }
 
-    // 5. Check and decrement quota before creating a task
-    const quotaResult = await checkAndDecrementQuota(userId, user.tier);
-    if (!quotaResult.allowed) {
-      const errorKey = resolveQuotaErrorKey(quotaResult.reason, user.tier);
+    // 5. Commit allowance, task record, history, queue and replay marker together.
+    const creation = await createAuthenticatedTaskAtomic({
+      user,
+      imageKey: normalizedImageKey,
+      workflow,
+    });
+    if (creation.outcome === "rejected") {
+      const errorKey = resolveQuotaErrorKey(creation.code);
       return NextResponse.json(
-        { error: getErrorMessage(errorKey, locale) },
+        {
+          error: getErrorMessage(errorKey, locale),
+          code: creation.code,
+          stage: "authorization",
+          allowanceConsumed: false,
+        },
         { status: 403 }
       );
     }
 
-    // 6. Determine priority based on tier
-    const priority: TaskPriority = getTaskPriorityForTier(user.tier);
-
-    // 7. Create task record in Redis (status: pending)
-    const task = await createTask({
-      userId,
-      originalImageKey: normalizedImageKey,
-      priority,
-      workflow,
-    });
-
-    // 8. Enqueue task for processing
-    await enqueueTask(task.id, priority);
+    const taskId = creation.outcome === "created" ? creation.task.id : creation.taskId;
 
     // 9. Fire-and-forget: trigger worker pipeline
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
@@ -135,11 +146,29 @@ export async function POST(request: NextRequest) {
     });
 
     // 10. Return task ID
-    return NextResponse.json({ taskId: task.id }, { status: 201 });
-  } catch (error) {
-    console.error("Create task failed:", error);
     return NextResponse.json(
-      { error: getErrorMessage("taskCreateFailed", locale) },
+      {
+        taskId,
+        replayed: creation.outcome === "existing",
+        allowanceConsumed: creation.outcome === "created",
+      },
+      { status: creation.outcome === "created" ? 201 : 200 }
+    );
+  } catch (error) {
+    console.error(JSON.stringify({
+      level: "error",
+      message: "task_create_failed",
+      route: "/api/tasks",
+      requestId: request.headers.get("x-vercel-id") || undefined,
+      errorType: error instanceof Error ? error.name : "UnknownError",
+    }));
+    return NextResponse.json(
+      {
+        error: getErrorMessage("taskCreateFailed", locale),
+        code: "INTERNAL_ERROR",
+        stage: "creation",
+        allowanceConsumed: null,
+      },
       { status: 500 }
     );
   }

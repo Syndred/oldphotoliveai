@@ -38,6 +38,7 @@ type ESListener = (event: MessageEvent | Event) => void;
 let mockESInstance: {
   onmessage: ESListener | null;
   onerror: ESListener | null;
+  onopen: ESListener | null;
   close: jest.Mock;
   url: string;
 };
@@ -45,6 +46,7 @@ let mockESInstance: {
 class MockEventSource {
   onmessage: ESListener | null = null;
   onerror: ESListener | null = null;
+  onopen: ESListener | null = null;
   close = jest.fn();
   url: string;
 
@@ -179,12 +181,15 @@ describe("ProgressIndicator", () => {
   });
 
   it("updates steps and progress on SSE restoring event", async () => {
-    render(<ProgressIndicator taskId="task-1" />);
+    const onStatus = jest.fn();
+    render(<ProgressIndicator taskId="task-1" onStatus={onStatus} />);
 
-    sendSSE({ status: "restoring", progress: 25 });
+    const restoringData = { status: "restoring", progress: 25, attemptCount: 1 };
+    sendSSE(restoringData);
 
     await waitFor(() => {
       expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "25");
+      expect(onStatus).toHaveBeenCalledWith(restoringData);
     });
   });
 
@@ -233,31 +238,54 @@ describe("ProgressIndicator", () => {
     expect(mockESInstance.close).toHaveBeenCalled();
   });
 
-  it("handles SSE error event from data payload", async () => {
+  it("treats an SSE status-transport error as non-terminal", async () => {
     const onError = jest.fn();
-    render(<ProgressIndicator taskId="task-1" onError={onError} />);
+    const onConnectionLost = jest.fn();
+    render(
+      <ProgressIndicator
+        taskId="task-1"
+        onError={onError}
+        onConnectionLost={onConnectionLost}
+      />
+    );
 
-    sendSSE({ error: "Task not found" });
+    sendSSE({ transportError: "status_unavailable" });
 
     await waitFor(() => {
-      expect(onError).toHaveBeenCalledWith("Task not found");
+      expect(onConnectionLost).toHaveBeenCalledTimes(1);
+      expect(onError).not.toHaveBeenCalled();
     });
-    expect(mockESInstance.close).toHaveBeenCalled();
+    expect(mockESInstance.close).not.toHaveBeenCalled();
   });
 
-  it("handles EventSource connection error", async () => {
+  it("reports EventSource connection loss without treating the task as failed", async () => {
     const onError = jest.fn();
-    render(<ProgressIndicator taskId="task-1" onError={onError} />);
+    const onConnectionLost = jest.fn();
+    render(
+      <ProgressIndicator
+        taskId="task-1"
+        onError={onError}
+        onConnectionLost={onConnectionLost}
+      />
+    );
 
     act(() => {
       mockESInstance.onerror?.(new Event("error"));
     });
 
     await waitFor(() => {
-      expect(onError).toHaveBeenCalledWith("Connection lost");
+      expect(onConnectionLost).toHaveBeenCalledTimes(1);
+      expect(onError).not.toHaveBeenCalled();
       expect(screen.getByText("Connection lost")).toBeInTheDocument();
     });
-    expect(mockESInstance.close).toHaveBeenCalled();
+    expect(mockESInstance.close).not.toHaveBeenCalled();
+
+    act(() => {
+      mockESInstance.onopen?.(new Event("open"));
+    });
+    await waitFor(() => {
+      expect(screen.queryByText("Connection lost")).not.toBeInTheDocument();
+    });
   });
 
   it("closes EventSource on unmount", () => {

@@ -10,6 +10,7 @@ import {
 import { ReplicateSpendLimitError } from "./replicate-spend";
 import { v4 as uuidv4 } from "uuid";
 import type { TaskFailureStage, TaskWorkflow, UserTier } from "@/types";
+import { classifyPipelineFailure } from "@/lib/pipeline-error";
 
 export class ContentViolationError extends Error {
   readonly moderationReason?: string;
@@ -320,7 +321,11 @@ export async function executePipeline(taskId: string): Promise<void> {
   const user = await getUser(task.userId);
   if (!user) {
     await updateTaskStatus(taskId, "failed", {
-      errorMessage: `User not found: ${task.userId}`,
+      errorMessage: "The task account is unavailable. Please sign in again or contact support.",
+      internalErrorMessage: `User not found: ${task.userId}`,
+      failureCode: "processing_failed",
+      failureStage: null,
+      violation: false,
     });
     return;
   }
@@ -451,49 +456,10 @@ export async function executePipeline(taskId: string): Promise<void> {
       error instanceof ReplicateSpendLimitError ||
       rawMessage.startsWith("REPLICATE_SPEND_LIMIT:");
 
-    let errorMessage = "Processing failed. Please try again.";
-    let violation = false;
-
-    if (isViolation) {
-      errorMessage = CONTENT_REJECTED_MESSAGE;
-      violation = true;
-    } else if (isSpendLimit) {
-      errorMessage =
-        "AI processing is temporarily paused due to capacity limits. Please try again later.";
-    } else if (
-      rawMessage.includes("429") ||
-      rawMessage.includes("throttled") ||
-      rawMessage.includes("rate limit")
-    ) {
-      errorMessage = "Service is temporarily busy. Please try again in a moment.";
-    } else if (
-      rawMessage.includes("401") ||
-      rawMessage.includes("Unauthenticated") ||
-      rawMessage.includes("authentication token")
-    ) {
-      errorMessage = "AI model configuration error. Please contact support.";
-    } else if (
-      rawMessage.includes("422") ||
-      rawMessage.includes("Invalid version")
-    ) {
-      errorMessage = "AI model configuration error. Please contact support.";
-    } else if (rawMessage.startsWith("SOURCE_IMAGE_UNREACHABLE:")) {
-      const detail = rawMessage.replace("SOURCE_IMAGE_UNREACHABLE:", "").trim();
-      const suffix = detail ? ` (${detail})` : "";
-      errorMessage =
-        `Source image URL is unreachable${suffix}. Please re-upload or check R2 bucket/domain configuration.`;
-    } else if (
-      rawMessage.includes("Failed to download") ||
-      rawMessage.includes("Download timeout") ||
-      rawMessage.startsWith("DOWNLOAD_TOO_LARGE:")
-    ) {
-      errorMessage = "Failed to download intermediate result. Please try again.";
-    } else if (
-      rawMessage.includes("Task not found") ||
-      rawMessage.includes("User not found")
-    ) {
-      errorMessage = rawMessage;
-    }
+    const classification = classifyPipelineFailure(rawMessage, {
+      isViolation,
+      isSpendLimit,
+    });
 
     const internalDetail =
       isViolation && error instanceof ContentViolationError
@@ -501,10 +467,11 @@ export async function executePipeline(taskId: string): Promise<void> {
         : rawMessage;
 
     await updateTaskStatus(taskId, "failed", {
-      errorMessage,
+      errorMessage: classification.errorMessage,
       internalErrorMessage: internalDetail,
       failureStage,
-      violation,
+      failureCode: classification.failureCode,
+      violation: classification.violation,
     });
   }
 }

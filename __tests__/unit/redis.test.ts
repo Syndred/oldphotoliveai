@@ -10,6 +10,7 @@ import {
   cancelTask,
   retryTask,
   getRedisClient,
+  parseAnonymousTrialTaskId,
 } from "@/lib/redis";
 import type { Task } from "@/types";
 
@@ -74,6 +75,15 @@ describe("getRedisClient", () => {
   it("returns a Redis instance", () => {
     const client = getRedisClient();
     expect(client).toBeDefined();
+  });
+});
+
+describe("parseAnonymousTrialTaskId", () => {
+  it("supports legacy and hashed replay records", () => {
+    expect(parseAnonymousTrialTaskId("task-legacy")).toBe("task-legacy");
+    expect(parseAnonymousTrialTaskId("task-new|abc123")).toBe("task-new");
+    expect(parseAnonymousTrialTaskId({ taskId: "task-json" })).toBe("task-json");
+    expect(parseAnonymousTrialTaskId(null)).toBeNull();
   });
 });
 

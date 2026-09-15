@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import Navbar from "@/components/Navbar";
@@ -10,6 +10,7 @@ import BeforeAfterCompare from "@/components/BeforeAfterCompare";
 import VideoPlayer from "@/components/VideoPlayer";
 import { buildTaskAssetUrl } from "@/lib/task-assets";
 import { resolveTaskErrorMessage } from "@/lib/task-error";
+import { trackAnalyticsEvent, trackTaskEventOnce } from "@/lib/analytics";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -18,6 +19,37 @@ interface TaskResult {
   restoredImageKey?: string;
   colorizedImageKey?: string;
   animationVideoKey?: string;
+}
+
+interface TaskContext {
+  workflow: string;
+  accessMode: string;
+  attemptCount: number;
+  retryAllowed: boolean;
+}
+
+function readTaskContext(
+  data: Record<string, unknown>,
+  previous: TaskContext
+): TaskContext {
+  const attempt = Number(data.attemptCount);
+  const failureCode =
+    typeof data.failureCode === "string" ? data.failureCode : "";
+  return {
+    workflow:
+      typeof data.workflow === "string" ? data.workflow : previous.workflow,
+    accessMode:
+      typeof data.accessMode === "string"
+        ? data.accessMode
+        : previous.accessMode,
+    attemptCount: Number.isFinite(attempt)
+      ? Math.max(1, Math.floor(attempt))
+      : previous.attemptCount,
+    retryAllowed:
+      typeof data.retryAllowed === "boolean"
+        ? data.retryAllowed
+        : data.status === "failed" && failureCode !== "content_rejected",
+  };
 }
 
 function getTaskResult(data: Record<string, unknown>): TaskResult | null {
@@ -53,10 +85,55 @@ export default function ResultPage() {
   const [showAnonymousUpgrade, setShowAnonymousUpgrade] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [needsPolling, setNeedsPolling] = useState(false);
+  const [retryAllowed, setRetryAllowed] = useState(false);
+  const [streamRevision, setStreamRevision] = useState(0);
+  const taskContextRef = useRef<TaskContext>({
+    workflow: "full",
+    accessMode: "authenticated",
+    attemptCount: 1,
+    retryAllowed: false,
+  });
   const tResult = useTranslations("result");
   const tProcessing = useTranslations("processing");
   const tCommon = useTranslations("common");
   const tErrors = useTranslations("errors");
+
+  const handleTaskStatus = useCallback(
+    (data: Record<string, unknown>) => {
+      const context = readTaskContext(data, taskContextRef.current);
+      taskContextRef.current = context;
+      setRetryAllowed(context.retryAllowed);
+
+      const commonParams = {
+        workflow: context.workflow,
+        access_mode: context.accessMode,
+      };
+      const status = typeof data.status === "string" ? data.status : "";
+      if (["restoring", "colorizing", "animating"].includes(status)) {
+        trackTaskEventOnce("generation_started", taskId, context.attemptCount, {
+          ...commonParams,
+          status,
+        });
+      } else if (status === "completed") {
+        trackTaskEventOnce("generation_completed", taskId, context.attemptCount, commonParams);
+        trackTaskEventOnce("result_view", taskId, context.attemptCount, commonParams);
+      } else if (status === "failed") {
+        trackTaskEventOnce("generation_failed", taskId, context.attemptCount, {
+          ...commonParams,
+          failure_code:
+            typeof data.failureCode === "string"
+              ? data.failureCode
+              : "processing_failed",
+          ...(typeof data.failureStage === "string"
+            ? { stage: data.failureStage }
+            : {}),
+        });
+      } else if (status === "cancelled") {
+        trackTaskEventOnce("generation_cancelled", taskId, context.attemptCount, commonParams);
+      }
+    },
+    [taskId]
+  );
 
   // Fetch user tier for watermark decision
   useEffect(() => {
@@ -77,6 +154,7 @@ export default function ResultPage() {
         res.ok ? res.json() : Promise.reject(new Error(tErrors("taskNotFound")))
       )
       .then((data) => {
+        handleTaskStatus(data as Record<string, unknown>);
         const accessMode =
           typeof data.accessMode === "string" ? data.accessMode : "";
         setIsAnonymousResult(accessMode === "anonymous");
@@ -90,11 +168,13 @@ export default function ResultPage() {
             : null;
 
         if (completedResult) {
+          setNeedsPolling(false);
           setResult(completedResult);
           if (accessMode === "anonymous") {
             setShowAnonymousUpgrade(true);
           }
         } else if (data.status === "failed") {
+          setNeedsPolling(false);
           setError(resolveTaskErrorMessage(data.errorMessage, tErrors));
         } else {
           // Task is still processing — need SSE polling
@@ -106,10 +186,11 @@ export default function ResultPage() {
         setNeedsPolling(true);
       })
       .finally(() => setInitialLoading(false));
-  }, [taskId, tErrors]);
+  }, [handleTaskStatus, taskId, tErrors]);
 
   const handleComplete = useCallback(
     (data: { status: string; progress: number; [key: string]: unknown }) => {
+      handleTaskStatus(data);
       if (data.accessMode === "anonymous") {
         setIsAnonymousResult(true);
         setIsFreeTier(true);
@@ -117,29 +198,71 @@ export default function ResultPage() {
       }
       setResult(getTaskResult(data) ?? null);
       setError(null);
+      setNeedsPolling(false);
     },
-    [],
+    [handleTaskStatus],
   );
 
   const handleError = useCallback(
     (msg: string) => {
       setError(resolveTaskErrorMessage(msg, tErrors));
       setResult(null);
+      setNeedsPolling(false);
     },
     [tErrors],
   );
 
+  const handleConnectionLost = useCallback(() => {
+    const context = taskContextRef.current;
+    trackTaskEventOnce(
+      "status_stream_disconnected",
+      taskId,
+      context.attemptCount,
+      {
+        workflow: context.workflow,
+        access_mode: context.accessMode,
+        stage: "status_stream",
+      }
+    );
+  }, [taskId]);
+
   async function handleRetry() {
+    const context = taskContextRef.current;
+    trackTaskEventOnce("generation_retry_requested", taskId, context.attemptCount, {
+      workflow: context.workflow,
+      access_mode: context.accessMode,
+    });
     setRetrying(true);
     try {
       const res = await fetch(`/api/tasks/${taskId}/retry`, { method: "POST" });
+      const body = await res.json().catch(() => null);
       if (!res.ok) {
-        const body = await res.json().catch(() => null);
         throw new Error(body?.error || tErrors("retryFailed"));
       }
-      // Reload to reconnect SSE with fresh state
-      window.location.reload();
+      const nextAttempt = Number(body?.task?.attemptCount);
+      const attemptCount = Number.isFinite(nextAttempt)
+        ? Math.max(1, Math.floor(nextAttempt))
+        : context.attemptCount + 1;
+      taskContextRef.current = {
+        ...context,
+        attemptCount,
+        retryAllowed: false,
+      };
+      trackTaskEventOnce("generation_retry_accepted", taskId, attemptCount, {
+        workflow: context.workflow,
+        access_mode: context.accessMode,
+      });
+      setError(null);
+      setResult(null);
+      setRetryAllowed(false);
+      setNeedsPolling(true);
+      setStreamRevision((revision) => revision + 1);
     } catch (err) {
+      trackTaskEventOnce("generation_retry_failed", taskId, context.attemptCount, {
+        workflow: context.workflow,
+        access_mode: context.accessMode,
+        failure_code: "network_or_server",
+      });
       setError(err instanceof Error ? err.message : tErrors("retryFailed"));
     } finally {
       setRetrying(false);
@@ -185,9 +308,12 @@ export default function ResultPage() {
               {tProcessing("title")}
             </h1>
             <ProgressIndicator
+              key={`${taskId}:${streamRevision}`}
               taskId={taskId}
               onComplete={handleComplete}
               onError={handleError}
+              onStatus={handleTaskStatus}
+              onConnectionLost={handleConnectionLost}
             />
           </div>
         )}
@@ -216,13 +342,15 @@ export default function ResultPage() {
               {tResult("failed")}
             </h2>
             <p className="mb-6 text-sm text-[var(--color-text-secondary)]">{error}</p>
-            <button
-              onClick={handleRetry}
-              disabled={retrying}
-              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 min-h-[44px]"
-            >
-              {retrying ? tResult("retrying") : tCommon("retry")}
-            </button>
+            {retryAllowed && (
+              <button
+                onClick={handleRetry}
+                disabled={retrying}
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 min-h-[44px]"
+              >
+                {retrying ? tResult("retrying") : tCommon("retry")}
+              </button>
+            )}
           </div>
         )}
 
@@ -287,6 +415,18 @@ export default function ResultPage() {
                 <a
                   href={imageDownloadUrl}
                   download
+                  onClick={() => {
+                    const context = taskContextRef.current;
+                    trackAnalyticsEvent(
+                      "result_download_requested",
+                      {
+                        workflow: context.workflow,
+                        access_mode: context.accessMode,
+                        asset_kind: imageResultKind,
+                        attempt: context.attemptCount,
+                      }
+                    );
+                  }}
                   className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 min-h-[44px]"
                 >
                   <DownloadIcon />
@@ -297,6 +437,18 @@ export default function ResultPage() {
                 <a
                   href={animationDownloadUrl}
                   download
+                  onClick={() => {
+                    const context = taskContextRef.current;
+                    trackAnalyticsEvent(
+                      "result_download_requested",
+                      {
+                        workflow: context.workflow,
+                        access_mode: context.accessMode,
+                        asset_kind: "animation",
+                        attempt: context.attemptCount,
+                      }
+                    );
+                  }}
                   className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-accent)] px-6 py-3 text-sm font-medium text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent)]/10 min-h-[44px]"
                 >
                   <DownloadIcon />

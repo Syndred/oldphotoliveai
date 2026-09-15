@@ -1,78 +1,37 @@
 import { NextRequest } from "next/server";
-import type { Task, User } from "@/types";
+import type { Task } from "@/types";
 
-const mockClaimAnonymousTrial = jest.fn<Promise<boolean>, [string]>();
-const mockCreateOrGetAnonymousUser = jest.fn<Promise<User>, [string]>();
-const mockCreateTask = jest.fn<Promise<Task>, [Record<string, unknown>]>();
-const mockGetAnonymousTrialTaskId = jest.fn<Promise<string | null>, [string]>();
-const mockRecordAnonymousTrialTask = jest.fn<Promise<void>, [string, string]>();
-const mockEnqueueTask = jest.fn<Promise<void>, [string, string]>();
-
-jest.mock("@/lib/redis", () => ({
-  claimAnonymousTrial: (...args: unknown[]) =>
-    mockClaimAnonymousTrial(args[0] as string),
-  createOrGetAnonymousUser: (...args: unknown[]) =>
-    mockCreateOrGetAnonymousUser(args[0] as string),
-  createTask: (...args: unknown[]) =>
-    mockCreateTask(args[0] as Record<string, unknown>),
-  getAnonymousTrialTaskId: (...args: unknown[]) =>
-    mockGetAnonymousTrialTaskId(args[0] as string),
-  recordAnonymousTrialTask: (...args: unknown[]) =>
-    mockRecordAnonymousTrialTask(args[0] as string, args[1] as string),
+const mockCreateAnonymousTaskAtomic = jest.fn();
+jest.mock("@/lib/task-creation", () => ({
+  createAnonymousTaskAtomic: (...args: unknown[]) =>
+    mockCreateAnonymousTaskAtomic(args[0]),
 }));
-
-jest.mock("@/lib/queue", () => ({
-  enqueueTask: (...args: unknown[]) =>
-    mockEnqueueTask(args[0] as string, args[1] as string),
-}));
-
-jest.mock("@/lib/config", () => ({
-  config: {
-    redis: { url: "https://test.upstash.io", token: "test-token" },
-  },
-}));
+jest.mock("uuid", () => ({ v4: () => "visitor-001" }));
 
 const mockWorkerFetch = jest.fn().mockResolvedValue(undefined);
 global.fetch = mockWorkerFetch as unknown as typeof fetch;
 
 import { POST } from "@/app/api/anonymous-tasks/route";
 
-function makeFakeUser(overrides: Partial<User> = {}): User {
-  return {
-    id: "anonymous:visitor-001",
-    googleId: "anonymous:visitor-001",
-    email: "visitor-001@anonymous.oldphotoliveai.local",
-    name: "Anonymous visitor",
-    avatarUrl: null,
-    tier: "free",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    ...overrides,
-  };
-}
+const task: Task = {
+  id: "task-anon-001",
+  userId: "anonymous:visitor-001",
+  status: "pending",
+  priority: "normal",
+  workflow: "animate",
+  originalImageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
+  restoredImageKey: null,
+  colorizedImageKey: null,
+  animationVideoKey: null,
+  errorMessage: null,
+  internalErrorMessage: null,
+  failureStage: null,
+  progress: 0,
+  createdAt: "2026-09-15T00:00:00.000Z",
+  completedAt: null,
+};
 
-function makeFakeTask(overrides: Partial<Task> = {}): Task {
-  return {
-    id: "task-anon-001",
-    userId: "anonymous:visitor-001",
-    status: "pending",
-    priority: "normal",
-    workflow: "animate",
-    originalImageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
-    restoredImageKey: null,
-    colorizedImageKey: null,
-    animationVideoKey: null,
-    errorMessage: null,
-    internalErrorMessage: null,
-    failureStage: null,
-    progress: 0,
-    createdAt: new Date().toISOString(),
-    completedAt: null,
-    ...overrides,
-  };
-}
-
-function createJsonRequest(body: unknown, cookie?: string): NextRequest {
+function makeRequest(body: unknown, cookie?: string): NextRequest {
   return new NextRequest("http://localhost/api/anonymous-tasks", {
     method: "POST",
     headers: {
@@ -84,79 +43,65 @@ function createJsonRequest(body: unknown, cookie?: string): NextRequest {
 }
 
 beforeEach(() => {
-  mockClaimAnonymousTrial.mockReset();
-  mockCreateOrGetAnonymousUser.mockReset();
-  mockCreateTask.mockReset();
-  mockGetAnonymousTrialTaskId.mockReset();
-  mockRecordAnonymousTrialTask.mockReset();
-  mockEnqueueTask.mockReset();
+  mockCreateAnonymousTaskAtomic.mockReset().mockResolvedValue({ outcome: "created", task });
   mockWorkerFetch.mockReset().mockResolvedValue(undefined);
   jest.spyOn(console, "error").mockImplementation(() => {});
-
-  mockGetAnonymousTrialTaskId.mockResolvedValue(null);
-  mockClaimAnonymousTrial.mockResolvedValue(true);
-  mockCreateOrGetAnonymousUser.mockResolvedValue(makeFakeUser());
-  mockCreateTask.mockResolvedValue(makeFakeTask());
-  mockRecordAnonymousTrialTask.mockResolvedValue(undefined);
-  mockEnqueueTask.mockResolvedValue(undefined);
 });
 
 describe("POST /api/anonymous-tasks", () => {
-  it("creates one no-login animation task and sets visitor cookie", async () => {
-    const req = createJsonRequest({
-      imageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
-    });
-
-    const res = await POST(req);
-    const body = await res.json();
-
+  it("creates one atomic no-login animation task and sets the visitor cookie", async () => {
+    const res = await POST(makeRequest({ imageKey: task.originalImageKey }));
     expect(res.status).toBe(201);
-    expect(body).toMatchObject({
-      taskId: "task-anon-001",
+    await expect(res.json()).resolves.toMatchObject({
+      taskId: task.id,
       accessMode: "anonymous",
-      watermark: true,
-      maxQuality: "480p",
+      replayed: false,
+      allowanceConsumed: true,
     });
-    expect(res.headers.get("set-cookie")).toContain("opla_anon_visitor=");
-    expect(mockCreateTask).toHaveBeenCalledWith({
-      userId: "anonymous:visitor-001",
-      originalImageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
-      priority: "normal",
-      workflow: "animate",
+    expect(res.headers.get("set-cookie")).toContain("opla_anon_visitor=visitor-001");
+    expect(mockCreateAnonymousTaskAtomic).toHaveBeenCalledWith({
+      visitorId: "visitor-001",
+      imageKey: task.originalImageKey,
     });
-    expect(mockEnqueueTask).toHaveBeenCalledWith("task-anon-001", "normal");
   });
 
-  it("rejects a visitor that already used the no-login trial", async () => {
-    mockGetAnonymousTrialTaskId.mockResolvedValue("task-existing");
-
-    const req = createJsonRequest(
-      {
-        imageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
-      },
-      "opla_anon_visitor=visitor-001"
-    );
-
-    const res = await POST(req);
-    const body = await res.json();
-
-    expect(res.status).toBe(403);
-    expect(body).toMatchObject({
-      code: "ANONYMOUS_TRIAL_USED",
+  it("recovers an existing task without consuming the trial again", async () => {
+    mockCreateAnonymousTaskAtomic.mockResolvedValue({ outcome: "existing", taskId: "task-existing" });
+    const res = await POST(makeRequest({ imageKey: task.originalImageKey }, "opla_anon_visitor=visitor-001"));
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toMatchObject({
       taskId: "task-existing",
+      replayed: true,
+      allowanceConsumed: false,
     });
-    expect(mockClaimAnonymousTrial).not.toHaveBeenCalled();
-    expect(mockCreateTask).not.toHaveBeenCalled();
   });
 
-  it("rejects unsafe storage keys", async () => {
-    const req = createJsonRequest({
-      imageKey: "https://example.com/photo.jpg",
+  it("classifies a used trial as an expected refusal", async () => {
+    mockCreateAnonymousTaskAtomic.mockResolvedValue({
+      outcome: "rejected",
+      code: "ANONYMOUS_TRIAL_USED",
+      remaining: 0,
     });
+    const res = await POST(makeRequest({ imageKey: task.originalImageKey }, "opla_anon_visitor=visitor-001"));
+    expect(res.status).toBe(403);
+    await expect(res.json()).resolves.toMatchObject({
+      code: "ANONYMOUS_TRIAL_USED",
+      stage: "authorization",
+      allowanceConsumed: false,
+    });
+  });
 
-    const res = await POST(req);
+  it("rejects unsafe keys before atomic creation", async () => {
+    expect((await POST(makeRequest({ imageKey: "https://example.com/photo.jpg" }))).status).toBe(400);
+    expect(mockCreateAnonymousTaskAtomic).not.toHaveBeenCalled();
+  });
 
-    expect(res.status).toBe(400);
-    expect(mockCreateTask).not.toHaveBeenCalled();
+  it("does not expose raw technical errors", async () => {
+    mockCreateAnonymousTaskAtomic.mockRejectedValue(new Error("redis token secret"));
+    const res = await POST(makeRequest({ imageKey: task.originalImageKey }));
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body).toMatchObject({ code: "INTERNAL_ERROR", stage: "creation", allowanceConsumed: null });
+    expect(JSON.stringify(body)).not.toContain("redis token secret");
   });
 });

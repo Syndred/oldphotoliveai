@@ -10,6 +10,8 @@ interface ProgressIndicatorProps {
   taskId: string;
   onComplete?: (task: { status: string; progress: number; [key: string]: unknown }) => void;
   onError?: (error: string) => void;
+  onStatus?: (task: { status: string; progress: number; [key: string]: unknown }) => void;
+  onConnectionLost?: () => void;
 }
 
 interface StepInfo {
@@ -58,7 +60,13 @@ function getProgress(status: string, serverProgress?: number): number {
   return STATUS_PROGRESS[status] ?? 0;
 }
 
-export default function ProgressIndicator({ taskId, onComplete, onError }: ProgressIndicatorProps) {
+export default function ProgressIndicator({
+  taskId,
+  onComplete,
+  onError,
+  onStatus,
+  onConnectionLost,
+}: ProgressIndicatorProps) {
   const [status, setStatus] = useState<string>("pending");
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +74,8 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
   const eventSourceRef = useRef<EventSource | null>(null);
   const onCompleteRef = useRef(onComplete);
   const onErrorRef = useRef(onError);
+  const onStatusRef = useRef(onStatus);
+  const onConnectionLostRef = useRef(onConnectionLost);
   const t = useTranslations("processing");
   const tErrors = useTranslations("errors");
   const tStatus = useTranslations("history.status");
@@ -83,6 +93,14 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
   }, [onError]);
 
   useEffect(() => {
+    onStatusRef.current = onStatus;
+  }, [onStatus]);
+
+  useEffect(() => {
+    onConnectionLostRef.current = onConnectionLost;
+  }, [onConnectionLost]);
+
+  useEffect(() => {
     resolveTaskErrorRef.current = (msg) => resolveTaskErrorMessage(msg, tErrors);
     connectionLostRef.current = t("connectionLost");
   }, [t, tErrors]);
@@ -93,21 +111,26 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
     const es = new EventSource(`/api/tasks/${taskId}/stream`);
     eventSourceRef.current = es;
 
+    es.onopen = () => {
+      setError(null);
+    };
+
     es.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
 
-        if (data.error) {
-          const msg = resolveTaskErrorRef.current(String(data.error));
+        if (data.transportError || data.error) {
+          const msg = connectionLostRef.current;
           setError(msg);
-          onErrorRef.current?.(msg);
-          es.close();
+          onConnectionLostRef.current?.();
           return;
         }
 
         const taskStatus = data.status as TaskStatus;
+        setError(null);
         setStatus(taskStatus);
         setProgress(getProgress(taskStatus, data.progress));
+        onStatusRef.current?.(data);
 
         setIntermediateResults((prev) => ({
           ...prev,
@@ -135,8 +158,9 @@ export default function ProgressIndicator({ taskId, onComplete, onError }: Progr
     es.onerror = () => {
       const msg = connectionLostRef.current;
       setError(msg);
-      onErrorRef.current?.(msg);
-      es.close();
+      onConnectionLostRef.current?.();
+      // EventSource reconnects automatically. A transport interruption is not
+      // evidence that the generation itself failed.
     };
 
     return () => {

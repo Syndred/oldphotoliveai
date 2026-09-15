@@ -180,6 +180,9 @@
     "retryFailed": "Retry failed",
     "historyLoadFailed": "Failed to load history",
     "taskCreateFailed": "Failed to create task",
+    "creationAllowanceNotUsed": "Your allowance was not used. You can retry the same uploaded photo.",
+    "creationAllowanceMayBeUsed": "The request may have used your allowance. Retry the same uploaded photo first; an existing result will reopen without another charge.",
+    "retrySamePhoto": "Retry same photo",
     "taskIdsRequired": "Please select at least one task.",
     "taskBatchTooLarge": "You can delete up to 50 tasks at once."
   },

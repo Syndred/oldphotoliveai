@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
 import UploadZone from "@/components/UploadZone";
@@ -9,6 +9,7 @@ import { localizePathname, type Locale } from "@/i18n/routing";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { getContentSafetyCopy } from "@/lib/content-safety";
 import type { TaskWorkflow } from "@/types";
+import { classifyTaskCreationResponse } from "@/lib/task-create-client";
 
 interface UploadSectionProps {
   title?: string;
@@ -34,6 +35,9 @@ export default function UploadSection({
   const { status } = useSession();
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState("");
+  const [retryImageKey, setRetryImageKey] = useState<string | null>(null);
+  const [allowanceConsumed, setAllowanceConsumed] = useState<boolean | null>(false);
+  const createInFlightRef = useRef(false);
   const locale = useLocale() as Locale;
   const t = useTranslations("upload");
   const tAuth = useTranslations("auth");
@@ -60,12 +64,20 @@ export default function UploadSection({
       return;
     }
 
+    if (createInFlightRef.current) return;
+    createInFlightRef.current = true;
+    setRetryImageKey(null);
+    setAllowanceConsumed(false);
+
     trackAnalyticsEvent("task_create_started", {
       source: analyticsSource,
+      workflow,
+      auth_state: "authenticated",
     });
     setIsCreating(true);
     setError("");
 
+    let responseAllowance: boolean | null = null;
     try {
       const res = await fetch("/api/tasks", {
         method: "POST",
@@ -73,23 +85,55 @@ export default function UploadSection({
         body: JSON.stringify({ imageKey, workflow }),
       });
 
+      const data = await res.json().catch(() => null);
+      responseAllowance =
+        typeof data?.allowanceConsumed === "boolean"
+          ? data.allowanceConsumed
+          : null;
       if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(data?.error || tErrors("taskCreateFailed"));
+        const failure = classifyTaskCreationResponse(res.status, data);
+        trackAnalyticsEvent(
+          failure.kind === "rejected" ? "task_create_rejected" : "task_create_failed",
+          {
+            source: analyticsSource,
+            workflow,
+            stage: failure.stage,
+            failure_code: failure.failureCode,
+            allowance_consumed: failure.allowanceConsumed,
+          }
+        );
+        setError(data?.error || tErrors("taskCreateFailed"));
+        setAllowanceConsumed(failure.allowanceConsumed);
+        setRetryImageKey(failure.retryable ? imageKey : null);
+        return;
       }
 
-      const { taskId } = await res.json();
+      const taskId = typeof data?.taskId === "string" ? data.taskId : "";
+      if (!taskId) throw new Error(tErrors("taskCreateFailed"));
       trackAnalyticsEvent("task_create_succeeded", {
         source: analyticsSource,
+        workflow,
+        replayed: data?.replayed === true,
+        allowance_consumed: data?.allowanceConsumed === true,
       });
       router.push(`/result/${taskId}`);
     } catch (err) {
       trackAnalyticsEvent("task_create_failed", {
         source: analyticsSource,
+        workflow,
+        stage: "creation",
+        failure_code: "network_or_server",
+        ...(typeof responseAllowance === "boolean"
+          ? { allowance_consumed: responseAllowance }
+          : {}),
       });
       setError(
         err instanceof Error ? err.message : tErrors("taskCreateFailed")
       );
+      setRetryImageKey(imageKey);
+      setAllowanceConsumed(responseAllowance);
+    } finally {
+      createInFlightRef.current = false;
       setIsCreating(false);
     }
   }
@@ -161,9 +205,23 @@ export default function UploadSection({
       )}
 
       {error && (
-        <p className="mt-4 text-center text-sm text-red-400" role="alert">
-          {error}
-        </p>
+        <div className="mt-4 text-center" role="alert">
+          <p className="text-sm text-red-400">{error}</p>
+          <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
+            {allowanceConsumed === false
+              ? tErrors("creationAllowanceNotUsed")
+              : tErrors("creationAllowanceMayBeUsed")}
+          </p>
+          {retryImageKey ? (
+            <button
+              type="button"
+              onClick={() => handleUpload(retryImageKey)}
+              className="mt-3 inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-[var(--color-accent)]"
+            >
+              {tErrors("retrySamePhoto")}
+            </button>
+          ) : null}
+        </div>
       )}
     </div>
   );

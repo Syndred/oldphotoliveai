@@ -55,7 +55,7 @@ function isPublicTrialApiRoute(pathname: string): boolean {
     return true;
   }
 
-  return /^\/api\/tasks\/[^/]+\/(status|stream|asset)$/.test(pathname);
+  return /^\/api\/tasks\/[^/]+\/(status|stream|asset|retry)$/.test(pathname);
 }
 
 function parseAcceptLanguage(header: string | null): Locale | null {

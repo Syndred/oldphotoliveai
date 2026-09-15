@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 import { getAccessibleTask } from "@/lib/task-access";
+import { toPublicTaskStatus } from "@/lib/task-status";
 
 export async function GET(
   request: NextRequest,
@@ -21,32 +22,9 @@ export async function GET(
         { status: 404 }
       );
     }
-    const { task, mode } = accessibleTask;
-
-    const response: Record<string, unknown> = {
-      status: task.status,
-      progress: task.progress,
-      workflow: task.workflow ?? "full",
-      accessMode: mode,
-    };
-
-    if (task.errorMessage) {
-      response.errorMessage = task.errorMessage;
-    }
-    if (task.originalImageKey) {
-      response.originalImageKey = task.originalImageKey;
-    }
-    if (task.restoredImageKey) {
-      response.restoredImageKey = task.restoredImageKey;
-    }
-    if (task.colorizedImageKey) {
-      response.colorizedImageKey = task.colorizedImageKey;
-    }
-    if (task.animationVideoKey) {
-      response.animationVideoKey = task.animationVideoKey;
-    }
-
-    return NextResponse.json(response);
+    return NextResponse.json(
+      toPublicTaskStatus(accessibleTask.task, accessibleTask.mode)
+    );
   } catch (error) {
     console.error("Get task status failed:", error);
     return NextResponse.json(

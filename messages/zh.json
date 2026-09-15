@@ -180,6 +180,9 @@
     "retryFailed": "重试失败",
     "historyLoadFailed": "加载历史记录失败",
     "taskCreateFailed": "创建任务失败",
+    "creationAllowanceNotUsed": "本次未消耗额度，你可以用同一张已上传照片重试。",
+    "creationAllowanceMayBeUsed": "本次请求可能已消耗额度。请先用同一张已上传照片重试；若任务已创建，将直接恢复原结果且不会再次扣费。",
+    "retrySamePhoto": "重试同一张照片",
     "taskIdsRequired": "请至少选择一个任务。",
     "taskBatchTooLarge": "单次最多可删除 50 个任务。"
   },

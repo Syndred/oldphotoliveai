@@ -2,15 +2,21 @@ import { NextRequest } from "next/server";
 import type { Task } from "@/types";
 
 const mockGetTaskOwnedByUser = jest.fn<Promise<Task | null>, [string, string]>();
+const mockGetAnonymousTaskOwnedByVisitor = jest.fn();
 const mockCancelTask = jest.fn<Promise<boolean>, [string]>();
-const mockRetryTask = jest.fn<Promise<Task>, [string]>();
+const mockRetryTaskAtomic = jest.fn();
 const mockGetToken = jest.fn();
 
 jest.mock("@/lib/redis", () => ({
   getTaskOwnedByUser: (...args: unknown[]) =>
     mockGetTaskOwnedByUser(args[0] as string, args[1] as string),
   cancelTask: (...args: unknown[]) => mockCancelTask(args[0] as string),
-  retryTask: (...args: unknown[]) => mockRetryTask(args[0] as string),
+  getAnonymousTaskOwnedByVisitor: (...args: unknown[]) =>
+    mockGetAnonymousTaskOwnedByVisitor(args[0], args[1]),
+}));
+
+jest.mock("@/lib/task-retry", () => ({
+  retryTaskAtomic: (...args: unknown[]) => mockRetryTaskAtomic(args[0]),
 }));
 
 jest.mock("next-auth/jwt", () => ({
@@ -21,12 +27,6 @@ jest.mock("@/lib/config", () => ({
   config: {
     redis: { url: "https://test.upstash.io", token: "test-token" },
   },
-}));
-
-const mockEnqueueTask = jest.fn<Promise<void>, [string, string]>();
-jest.mock("@/lib/queue", () => ({
-  enqueueTask: (...args: unknown[]) =>
-    mockEnqueueTask(args[0] as string, args[1] as string),
 }));
 
 const mockWorkerFetch = jest.fn().mockResolvedValue(undefined);
@@ -62,9 +62,10 @@ function makeGetRequest(taskId: string): NextRequest {
   });
 }
 
-function makePostRequest(taskId: string, path: string): NextRequest {
+function makePostRequest(taskId: string, path: string, cookie?: string): NextRequest {
   return new NextRequest(`http://localhost/api/tasks/${taskId}/${path}`, {
     method: "POST",
+    headers: cookie ? { Cookie: cookie } : undefined,
   });
 }
 
@@ -73,8 +74,8 @@ const routeParams = (taskId: string) => ({ params: { taskId } });
 beforeEach(() => {
   mockGetTaskOwnedByUser.mockReset();
   mockCancelTask.mockReset();
-  mockRetryTask.mockReset();
-  mockEnqueueTask.mockReset();
+  mockRetryTaskAtomic.mockReset();
+  mockGetAnonymousTaskOwnedByVisitor.mockReset().mockResolvedValue(null);
   mockGetToken.mockReset();
   mockWorkerFetch.mockReset().mockResolvedValue(undefined);
 
@@ -151,6 +152,8 @@ describe("GET /api/tasks/[taskId]/status", () => {
         errorMessage: "GFPGAN model timeout",
         internalErrorMessage: "429 throttled",
         failureStage: "animating",
+        failureCode: "service_busy",
+        attemptCount: 2,
       })
     );
 
@@ -163,7 +166,28 @@ describe("GET /api/tasks/[taskId]/status", () => {
     expect(body.progress).toBe(25);
     expect(body.errorMessage).toBe("GFPGAN model timeout");
     expect(body.internalErrorMessage).toBeUndefined();
-    expect(body.failureStage).toBeUndefined();
+    expect(body.failureStage).toBe("animating");
+    expect(body.failureCode).toBe("service_busy");
+    expect(body.attemptCount).toBe(2);
+    expect(body.retryAllowed).toBe(true);
+  });
+
+  it("does not offer retry for a content-policy failure", async () => {
+    mockGetTaskOwnedByUser.mockResolvedValue(
+      makeFakeTask({
+        status: "failed",
+        failureCode: "content_rejected",
+        failureStage: "restoring",
+        violation: true,
+      })
+    );
+
+    const res = await getStatus(makeGetRequest("task-001"), routeParams("task-001"));
+    const body = await res.json();
+
+    expect(body.retryAllowed).toBe(false);
+    expect(body.failureCode).toBe("content_rejected");
+    expect(body.violation).toBeUndefined();
   });
 
   it("returns 500 when task lookup throws", async () => {
@@ -240,15 +264,15 @@ describe("POST /api/tasks/[taskId]/cancel", () => {
 });
 
 describe("POST /api/tasks/[taskId]/retry", () => {
-  it("returns 401 when unauthenticated", async () => {
+  it("returns 404 when unauthenticated and not an anonymous owner", async () => {
     mockGetToken.mockResolvedValue(null);
 
     const req = makePostRequest("task-001", "retry");
     const res = await retryRoute(req, routeParams("task-001"));
     const body = await res.json();
 
-    expect(res.status).toBe(401);
-    expect(body.error).toBe("Please sign in to continue");
+    expect(res.status).toBe(404);
+    expect(body.error).toBe("Task not found");
   });
 
   it("returns 404 when task not found", async () => {
@@ -271,7 +295,7 @@ describe("POST /api/tasks/[taskId]/retry", () => {
       progress: 5,
       errorMessage: null,
     });
-    mockRetryTask.mockResolvedValue(retriedTask);
+    mockRetryTaskAtomic.mockResolvedValue({ outcome: "retried", attemptCount: 2 });
 
     const req = makePostRequest("task-001", "retry");
     const res = await retryRoute(req, routeParams("task-001"));
@@ -281,13 +305,37 @@ describe("POST /api/tasks/[taskId]/retry", () => {
     expect(body.message).toBe("Task queued for retry");
     expect(body.task.status).toBe("queued");
     expect(body.task.progress).toBe(5);
-    expect(mockRetryTask).toHaveBeenCalledWith("task-001");
-    expect(mockEnqueueTask).toHaveBeenCalledWith("task-001", "normal");
+    expect(mockRetryTaskAtomic).toHaveBeenCalledWith(expect.objectContaining({ id: "task-001" }));
+    expect(body.task.attemptCount).toBe(2);
     expect(mockWorkerFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries an anonymously owned technical failure without charging again", async () => {
+    mockGetToken.mockResolvedValue(null);
+    mockGetAnonymousTaskOwnedByVisitor.mockResolvedValue(
+      makeFakeTask({
+        userId: "anonymous:visitor-001",
+        status: "failed",
+        failureCode: "service_busy",
+      })
+    );
+    mockRetryTaskAtomic.mockResolvedValue({ outcome: "retried", attemptCount: 2 });
+
+    const req = makePostRequest(
+      "task-001",
+      "retry",
+      "opla_anon_visitor=visitor-001"
+    );
+    const res = await retryRoute(req, routeParams("task-001"));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.task).toMatchObject({ accessMode: "anonymous", attemptCount: 2 });
   });
 
   it("returns 400 when task is not failed", async () => {
     mockGetTaskOwnedByUser.mockResolvedValue(makeFakeTask({ status: "pending" }));
+    mockRetryTaskAtomic.mockResolvedValue({ outcome: "rejected", code: "NOT_FAILED" });
 
     const req = makePostRequest("task-001", "retry");
     const res = await retryRoute(req, routeParams("task-001"));
@@ -299,7 +347,7 @@ describe("POST /api/tasks/[taskId]/retry", () => {
 
   it("returns 500 when retryTask throws", async () => {
     mockGetTaskOwnedByUser.mockResolvedValue(makeFakeTask({ status: "failed" }));
-    mockRetryTask.mockRejectedValue(new Error("Redis error"));
+    mockRetryTaskAtomic.mockRejectedValue(new Error("Redis error"));
 
     const req = makePostRequest("task-001", "retry");
     const res = await retryRoute(req, routeParams("task-001"));

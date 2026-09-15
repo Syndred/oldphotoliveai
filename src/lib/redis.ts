@@ -220,6 +220,8 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
     errorMessage: null,
     internalErrorMessage: null,
     failureStage: null,
+    failureCode: null,
+    attemptCount: 1,
     progress: 0,
     createdAt: now,
     completedAt: null,
@@ -290,8 +292,24 @@ export async function getAnonymousTrialTaskId(
   visitorId: string
 ): Promise<string | null> {
   const redis = getRedisClient();
-  const taskId = await redis.get<string>(keys.anonymousTrial(visitorId));
-  return taskId ?? null;
+  const record = await redis.get<unknown>(keys.anonymousTrial(visitorId));
+  return parseAnonymousTrialTaskId(record);
+}
+
+export function parseAnonymousTrialTaskId(record: unknown): string | null {
+  if (typeof record === "string") {
+    const [taskId] = record.split("|", 1);
+    return taskId || null;
+  }
+  if (
+    record &&
+    typeof record === "object" &&
+    "taskId" in record &&
+    typeof (record as { taskId?: unknown }).taskId === "string"
+  ) {
+    return (record as { taskId: string }).taskId || null;
+  }
+  return null;
 }
 
 export async function claimAnonymousTrial(visitorId: string): Promise<boolean> {
@@ -388,6 +406,8 @@ export async function retryTask(taskId: string): Promise<Task> {
   task.errorMessage = null;
   task.internalErrorMessage = null;
   task.failureStage = null;
+  task.failureCode = null;
+  task.attemptCount = Math.max(1, task.attemptCount ?? 1) + 1;
   task.completedAt = null;
 
   await redis.set(keys.task(taskId), task);

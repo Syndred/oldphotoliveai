@@ -180,6 +180,9 @@
     "retryFailed": "El reintento fallo",
     "historyLoadFailed": "No se pudo cargar el historial",
     "taskCreateFailed": "No se pudo crear la tarea",
+    "creationAllowanceNotUsed": "No se consumió tu cuota. Puedes reintentar con la misma foto subida.",
+    "creationAllowanceMayBeUsed": "Es posible que la solicitud haya consumido tu cuota. Reintenta primero con la misma foto subida; si el resultado ya existe, se abrirá sin otro cargo.",
+    "retrySamePhoto": "Reintentar la misma foto",
     "taskIdsRequired": "Selecciona al menos una tarea.",
     "taskBatchTooLarge": "Solo puedes eliminar hasta 50 tareas a la vez."
   },
