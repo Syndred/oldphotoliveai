@@ -24,14 +24,15 @@ were used.
   recovered, lock conflicts and unexpected exceptions requeue atomically, and
   recovered terminal tasks are acknowledged without re-execution. Lock renewal
   and release are atomic token comparisons, closing the previous check/act race.
-  Cleanup failures self-chain a validated recovery claim so the next authorized
-  worker can retry settlement before taking new work. Next.js `after()` binds
-  execution to the platform lifecycle. Transport retries are bounded, recovery
-  requests carry a cross-request attempt/not-before budget, and lock conflicts
-  stop after safely requeueing instead of creating a hot loop. Authenticated
-  status observation uses a global Redis `SET NX EX` marker to wake at most one
-  worker per minute. A Hobby-compatible authenticated daily cron provides cold
-  recovery if no result page is being observed.
+  Next.js `after()` binds execution to the platform lifecycle. Normal successful
+  work can self-chain, while lock conflicts and worker, settlement, or release
+  errors stop. A failed settlement deliberately leaves its processing lease for
+  atomic expiry recovery, eliminating both failure hot loops and future-dated
+  requests with no real scheduler. Authenticated status observation uses a
+  global Redis `SET NX EX` marker to wake at most one worker per minute. REST
+  status schedules the bounded wakeup with `after()`; SSE awaits it for at most
+  two seconds before opening the long-lived stream. A Hobby-compatible
+  authenticated daily cron provides cold recovery if no result page is observed.
 - All worker cron GET handlers fail closed. A missing or incorrect
   `CRON_SECRET` returns 401 for pipeline, cleanup, and quota reset; their POST
   handlers continue to require `WORKER_SECRET`.

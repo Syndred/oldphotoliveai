@@ -4,7 +4,7 @@
 
 **Goal:** Upgrade to the smallest approved secure Next.js line and clear production high/critical dependency advisories without changing product behavior.
 
-**Architecture:** Pin the framework and ESLint configuration to 15.5.25, override its compatible PostCSS dependency to the audited 8.5.28 release, use compiler/build failures as migration tests for Next.js 15 asynchronous request APIs, and keep React 18 plus the existing next-intl middleware architecture. Bind pipeline work to `after()`, bound recovery across requests, throttle observer wakeups in Redis, and keep an authenticated daily cron fallback.
+**Architecture:** Pin the framework and ESLint configuration to 15.5.25, override its compatible PostCSS dependency to the audited 8.5.28 release, use compiler/build failures as migration tests for Next.js 15 asynchronous request APIs, and keep React 18 plus the existing next-intl middleware architecture. Bind pipeline work to `after()`, stop all failure self-chains, recover expired processing leases through Redis-throttled observers, and keep an authenticated daily cron fallback.
 
 **Tech Stack:** Next.js 15.5.25, React 18, TypeScript, next-intl 4, PostCSS 8.5.28, Jest, npm audit.
 
@@ -47,7 +47,7 @@
 
 - [x] Run middleware, i18n, route-contract, image, and Server Action searches/tests.
 - [x] Confirm `images.unoptimized` remains enabled, no Server Actions exist, and no deprecated edge runtime value is present.
-- [x] Register worker execution with `after()` and a 300-second duration, stop lock-conflict self-chains, and cap error recovery with cross-request attempt/not-before state.
+- [x] Register worker execution with `after()` and a 300-second duration, stop lock-conflict self-chains, and bound error recovery across requests.
 - [x] Add Redis-throttled status-observer wakeups and a Hobby-compatible authenticated daily cron fallback.
 - [x] Make pipeline, cleanup, and quota-reset cron GET authentication fail closed while preserving POST worker-secret authentication.
 - [x] Run the focused SEO, route, and worker lifecycle suites.
@@ -62,4 +62,21 @@
 - [x] Run `npm test -- --runInBand --silent`, `npm run typecheck`, `npm run lint`, and `npm run build`.
 - [x] Run the official-registry production audit and require zero high/critical advisories.
 - [x] Run `git diff --check` and credential-signature scans.
+- [x] Commit locally, verify a clean worktree, and do not push or deploy.
+
+### Task 5: Correct deferred recovery and stream-first wakeups
+
+**Files:**
+- Modify: `src/app/api/worker/pipeline/route.ts`
+- Modify: `src/lib/worker-wakeup.ts`
+- Modify: `src/app/api/tasks/[taskId]/stream/route.ts`
+- Modify: `__tests__/unit/pipeline-worker-route.test.ts`
+- Modify: `__tests__/unit/worker-wakeup.test.ts`
+- Create: `__tests__/unit/task-stream-wakeup.test.ts`
+- Modify: worker lifecycle documentation listed above.
+
+- [x] Replace future-dated recovery payloads with failure-stop semantics that preserve failed settlement leases for observer or cron recovery.
+- [x] Add a system sequence test covering no failure self-chain, a pre-expiry empty observer wake, post-expiry observer recovery, and the daily cron fallback.
+- [x] Await a timeout-protected, error-isolated throttled wakeup before starting an SSE stream, and prove dispatch precedes its first event.
+- [x] Run the full test, type, lint, build, audit, diff, and security gates.
 - [x] Commit locally, verify a clean worktree, and do not push or deploy.

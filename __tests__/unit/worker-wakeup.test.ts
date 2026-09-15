@@ -16,7 +16,10 @@ jest.mock("@/lib/redis", () => ({
   getRedisClient: () => ({ set: mockRedisSet }),
 }));
 
-import { schedulePipelineWakeupForStatus } from "@/lib/worker-wakeup";
+import {
+  requestPipelineWakeupForStatus,
+  schedulePipelineWakeupForStatus,
+} from "@/lib/worker-wakeup";
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -51,4 +54,37 @@ it("does not schedule wakeups for terminal task statuses", () => {
   schedulePipelineWakeupForStatus("cancelled");
 
   expect(mockAfterCallbacks).toHaveLength(0);
+});
+
+it("isolates an awaited worker dispatch failure", async () => {
+  const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+  mockRedisSet.mockReset().mockResolvedValue("OK");
+  global.fetch = jest.fn().mockRejectedValue(new Error("worker unavailable"));
+
+  try {
+    await expect(
+      requestPipelineWakeupForStatus("queued")
+    ).resolves.toBeUndefined();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    expect(consoleError).toHaveBeenCalled();
+  } finally {
+    consoleError.mockRestore();
+  }
+});
+
+it("bounds an awaited wakeup when Redis does not respond", async () => {
+  jest.useFakeTimers();
+  const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+  mockRedisSet.mockReset().mockImplementation(() => new Promise(() => {}));
+
+  try {
+    const wakeup = requestPipelineWakeupForStatus("queued");
+    await jest.advanceTimersByTimeAsync(5_000);
+    await expect(wakeup).resolves.toBeUndefined();
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(consoleError).toHaveBeenCalled();
+  } finally {
+    consoleError.mockRestore();
+    jest.useRealTimers();
+  }
 });

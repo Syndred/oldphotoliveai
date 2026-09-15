@@ -47,15 +47,18 @@ The pipeline dispatch endpoint registers execution with Next.js `after()` and
 returns before long-running model work begins. The platform keeps that lifecycle
 task alive after the response without making earlier workers wait for the full
 recursive chain. Normal successful work can immediately schedule the next ready
-task. Lock conflicts settle and stop, avoiding a request hot loop. If lock
-acquisition, claim settlement, or lock release fails, the self-chain request
-carries the tokenized recovery claim plus a cross-request attempt and
-`notBefore`; three recovery successors is the hard limit. Future-dated requests
-return without starting work, and no delay relies on an in-process timer.
+task. Lock conflicts and worker, settlement, or lock-release errors stop without
+self-chaining, avoiding a request hot loop. If settlement fails, the tokenized
+processing lease remains the durable recovery record. A later worker invocation
+recovers the unfinished claim after lease expiry; there is no in-process delay or
+future-dated request that can be acknowledged without actually being scheduled.
 
-Authenticated REST/SSE status observation schedules a worker wakeup through a
+Authenticated REST/SSE status observation requests a worker wakeup through a
 global Redis `SET NX EX` marker, limiting high-frequency polling to one dispatch
-per minute while still recovering expired leases. A Hobby-compatible daily cron
+per minute while still recovering expired leases. REST status uses Next.js
+`after()`. SSE awaits the same error-isolated request with a two-second upper
+bound before constructing its long-lived response, so a stream-only client does
+not wait for disconnect before its first dispatch. A Hobby-compatible daily cron
 is the cold fallback when nobody is observing a result. Pipeline, cleanup, and
 quota-reset cron GET requests all require a configured matching `CRON_SECRET`;
 missing configuration fails closed with 401. Pipeline lifecycle work has a
@@ -96,9 +99,11 @@ the original anonymous visitor cookie.
    conflict. Confirm the unfinished task returns to `queue:tasks`. Let a claim
    lease expire, invoke the worker again, and confirm it is recovered. Repeat
    with a completed task and confirm the pipeline is not executed twice. Confirm
-   lock conflicts do not self-chain, persistent failures stop after the third
-   cross-request recovery attempt, repeated status polling creates one throttled
-   wakeup per minute, and the authenticated daily cron can recover cold work.
+   lock conflicts and worker/settlement errors do not self-chain. Confirm an
+   observer wake before processing-lease expiry claims nothing, a later observer
+   wake recovers the expired claim, repeated status polling creates at most one
+   dispatch per minute, a stream-only client dispatches before its first SSE
+   event, and the authenticated daily cron can recover cold work.
 7. In GA4 DebugView with internal/developer traffic isolated, verify the event
    sequence and dimensions. Confirm no task ID, object key, raw error, email or
    query string appears in event parameters or page location/title overrides.
