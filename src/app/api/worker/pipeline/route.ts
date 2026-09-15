@@ -3,12 +3,45 @@
 
 import { NextResponse } from "next/server";
 import { config } from "@/lib/config";
-import { dequeueTask } from "@/lib/queue";
+import {
+  claimNextTask,
+  getQueueLength,
+  refreshTaskClaim,
+  settleTaskClaim,
+} from "@/lib/queue";
 import { acquireLock, releaseLock, refreshLock } from "@/lib/lock";
 import { executePipeline } from "@/lib/pipeline";
+import { getTask } from "@/lib/redis";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
+import type { TaskStatus } from "@/types";
 
 const LOCK_RENEW_INTERVAL_MS = 90_000;
+const TERMINAL_STATUSES = new Set<TaskStatus>([
+  "completed",
+  "failed",
+  "cancelled",
+]);
+
+async function triggerNextTaskIfQueued(): Promise<void> {
+  try {
+    const queueLen = await getQueueLength();
+    if (queueLen.urgent + queueLen.high + queueLen.normal === 0) return;
+
+    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    fetch(`${baseUrl}/api/worker/pipeline`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${config.worker.secret}`,
+      },
+    }).catch(() => {
+      // A future task creation or worker invocation will recover the leased work.
+    });
+  } catch (error) {
+    // Queue chaining is best-effort. Claim settlement remains the source of
+    // truth, so a chaining failure must not mask the task's execution result.
+    console.error("Failed to trigger the next pipeline worker:", error);
+  }
+}
 
 export async function POST(request: Request): Promise<NextResponse> {
   const locale = getRequestLocale(request);
@@ -22,16 +55,20 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
   }
 
-  // Step 2: Dequeue task from priority queue
-  const taskId = await dequeueTask();
-  if (!taskId) {
+  // Step 2: Atomically lease the next task. Expired claims are recovered first.
+  const claim = await claimNextTask();
+  if (!claim) {
     return NextResponse.json({ message: "No tasks in queue" }, { status: 200 });
   }
+  const { taskId } = claim;
 
   // Step 3: Acquire distributed lock
   const lockKey = `lock:task:${taskId}`;
   const lease = await acquireLock(lockKey);
   if (!lease) {
+    // Another worker owns this task. Returning the claim is atomic and cannot
+    // overwrite a newer queue entry.
+    await settleTaskClaim(claim);
     return NextResponse.json(
       { message: getErrorMessage("serviceBusy", locale) },
       { status: 200 }
@@ -39,48 +76,56 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   let renewInterval: ReturnType<typeof setInterval> | undefined;
+  let executionError: unknown;
 
   try {
     // Keep lock alive for long-running tasks.
     renewInterval = setInterval(async () => {
       try {
-        const renewed = await refreshLock(lease);
-        if (!renewed) {
+        const [lockRenewed, claimRenewed] = await Promise.all([
+          refreshLock(lease),
+          refreshTaskClaim(claim),
+        ]);
+        if (!lockRenewed) {
           console.warn(`Failed to renew lock for task ${taskId}: lease not owned`);
         }
+        if (!claimRenewed) {
+          console.warn(`Failed to renew queue claim for task ${taskId}: claim not owned`);
+        }
       } catch (error) {
-        console.error(`Failed to renew lock for task ${taskId}:`, error);
+        console.error(`Failed to renew worker leases for task ${taskId}:`, error);
       }
     }, LOCK_RENEW_INTERVAL_MS);
 
-    // Step 4: Execute pipeline
-    await executePipeline(taskId);
-
-    // Step 5: Self-chain — if more tasks remain, trigger another pipeline run
-    // This replaces the per-minute cron that Vercel Hobby doesn't support
-    const { getQueueLength } = await import("@/lib/queue");
-    const queueLen = await getQueueLength();
-    if (queueLen.urgent + queueLen.high + queueLen.normal > 0) {
-      const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
-      fetch(`${baseUrl}/api/worker/pipeline`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${config.worker.secret}`,
-        },
-      }).catch(() => {
-        // Ignore — next task creation will trigger pipeline again
-      });
+    // A worker can crash after completing a task but before acknowledging its
+    // claim. Recovered terminal tasks must be acknowledged, never rerun.
+    const task = await getTask(taskId);
+    if (task && !TERMINAL_STATUSES.has(task.status)) {
+      await executePipeline(taskId);
     }
-
-    return NextResponse.json(
-      { taskId, status: "processed" },
-      { status: 200 }
-    );
+  } catch (error) {
+    executionError = error;
   } finally {
     if (renewInterval) {
       clearInterval(renewInterval);
     }
-    // Step 6: Always release lock
-    await releaseLock(lease);
+    // Step 6: Terminal tasks are acknowledged; unfinished tasks are restored
+    // to the ready queue. Always release the task lock even if settlement fails.
+    try {
+      await settleTaskClaim(claim);
+    } finally {
+      await releaseLock(lease);
+    }
   }
+
+  // Step 5: Self-chain after settlement so an unexpectedly unfinished task is
+  // visible in the ready queue before the next worker starts.
+  await triggerNextTaskIfQueued();
+
+  if (executionError) throw executionError;
+
+  return NextResponse.json(
+    { taskId, status: "processed" },
+    { status: 200 }
+  );
 }

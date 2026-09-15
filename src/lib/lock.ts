@@ -8,6 +8,20 @@ import { getRedisClient } from "./redis";
 
 const DEFAULT_TTL_SECONDS = 300;
 
+export const LOCK_REFRESH_SCRIPT = `
+if redis.call('GET', KEYS[1]) ~= ARGV[1] then
+  return 0
+end
+return redis.call('EXPIRE', KEYS[1], tonumber(ARGV[2]))
+`;
+
+export const LOCK_RELEASE_SCRIPT = `
+if redis.call('GET', KEYS[1]) ~= ARGV[1] then
+  return 0
+end
+return redis.call('DEL', KEYS[1])
+`;
+
 export interface LockLease {
   key: string;
   token: string;
@@ -40,26 +54,21 @@ export async function refreshLock(
   lease: LockLease,
   ttlSeconds: number = lease.ttlSeconds
 ): Promise<boolean> {
-  const redis = getRedisClient();
-  const currentToken = await redis.get<string>(lease.key);
-  if (currentToken !== lease.token) {
-    return false;
-  }
-
-  const result = await redis.set(lease.key, lease.token, {
-    xx: true,
-    ex: ttlSeconds,
-  });
-  return result === "OK";
+  const result = await getRedisClient().eval(
+    LOCK_REFRESH_SCRIPT,
+    [lease.key],
+    [lease.token, String(ttlSeconds)]
+  );
+  return Number(result) === 1;
 }
 
 /**
  * Release a distributed lock only if this worker still owns it.
  */
 export async function releaseLock(lease: LockLease): Promise<void> {
-  const redis = getRedisClient();
-  const currentToken = await redis.get<string>(lease.key);
-  if (currentToken === lease.token) {
-    await redis.del(lease.key);
-  }
+  await getRedisClient().eval(
+    LOCK_RELEASE_SCRIPT,
+    [lease.key],
+    [lease.token]
+  );
 }

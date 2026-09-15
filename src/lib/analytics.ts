@@ -1,3 +1,5 @@
+import { locales } from "@/i18n/routing";
+
 const ANALYTICS_PARAM_KEYS = new Set([
   "source",
   "stage",
@@ -16,6 +18,9 @@ const ANALYTICS_PARAM_KEYS = new Set([
 ]);
 const ENUM_VALUE = /^[a-z0-9][a-z0-9_-]{0,47}$/;
 const EVENT_NAME = /^[a-z][a-z0-9_]{0,39}$/;
+const RESULT_ROUTE_PATTERN = new RegExp(
+  `^/(?:(${locales.join("|")})/)?result/[^/]+/?$`
+);
 
 declare global {
   interface Window {
@@ -52,9 +57,11 @@ export function isClarityEnabled(): boolean {
 
 export function normalizeAnalyticsPath(rawPath: string): string {
   const path = rawPath.split(/[?#]/, 1)[0] || "/";
-  return path.replace(/^(\/(?:zh|ja|es))?\/result\/[^/]+\/?$/, (_match, locale = "") =>
-    `${locale}/result/:taskId`
-  );
+  const resultRoute = path.match(RESULT_ROUTE_PATTERN);
+  if (!resultRoute) return path;
+
+  const localePrefix = resultRoute[1] ? `/${resultRoute[1]}` : "";
+  return `${localePrefix}/result/:taskId`;
 }
 
 export function sanitizeAnalyticsParams(
@@ -77,17 +84,26 @@ export function sanitizeAnalyticsParams(
 export function trackAnalyticsEvent(
   eventName: string,
   params: Record<string, unknown> = {}
-): void {
-  if (typeof window === "undefined" || !EVENT_NAME.test(eventName)) return;
+): boolean {
+  if (typeof window === "undefined" || !EVENT_NAME.test(eventName)) return false;
   const safeParams = sanitizeAnalyticsParams(params);
+  let sentToGa = false;
 
   if (isAnalyticsEnabled() && typeof window.gtag === "function") {
-    window.gtag("event", eventName, safeParams);
+    try {
+      window.gtag("event", eventName, safeParams);
+      sentToGa = true;
+    } catch {
+      // Analytics must never interrupt the product. Leave the once marker
+      // unset so a later state render can retry after GA becomes available.
+    }
   }
 
   if (isClarityEnabled() && typeof window.clarity === "function") {
     window.clarity("event", eventName);
   }
+
+  return sentToGa;
 }
 
 export function trackTaskEventOnce(
@@ -100,10 +116,17 @@ export function trackTaskEventOnce(
   const key = `opla:analytics:${eventName}:${taskId}:${attempt}`;
   try {
     if (window.localStorage.getItem(key)) return;
+  } catch {
+    // Storage can be unavailable in strict browser modes. Continue without
+    // deduplication rather than breaking the product.
+  }
+
+  const sentToGa = trackAnalyticsEvent(eventName, { ...params, attempt });
+  if (!sentToGa) return;
+
+  try {
     window.localStorage.setItem(key, "1");
   } catch {
-    // Storage can be unavailable in strict browser modes; emitting is preferable
-    // to breaking the product. GA still receives no task identifier.
+    // The event was delivered; failure to persist the marker is non-fatal.
   }
-  trackAnalyticsEvent(eventName, { ...params, attempt });
 }

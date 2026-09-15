@@ -22,8 +22,24 @@ not reinterpret historical GA4 event counts as users or completed generations.
 Lifecycle events are deduplicated locally by task and attempt. GA4 receives only
 allowlisted, bounded dimensions such as workflow, access mode, stage and finite
 failure code. Task IDs, storage keys, email addresses, raw errors, query strings
-and private result URLs are not sent. Detailed task correlation remains in
-access-controlled server/Redis data.
+and private result URLs are not sent. Result routes for every configured locale
+are reduced to `/[locale/]result/:taskId` before `page_path` and `page_location`
+are constructed. A lifecycle event is marked as sent only after the GA function
+accepts it, so an event rendered before GA initialization remains retryable.
+Detailed task correlation remains in access-controlled server/Redis data.
+
+## Worker claim contract
+
+The ready queue is `queue:tasks`; active claims are leases in
+`queue:tasks:processing`. Claiming first restores expired, unfinished leases and
+then atomically moves one ready item into the processing set. The worker renews
+the queue lease with its task lock. Settlement reads the persisted task state in
+the same Redis script: completed, failed, cancelled, missing or invalid tasks
+are acknowledged, while unfinished tasks return to the ready queue at their
+original priority score. Every claim has a unique token, so a late worker cannot
+acknowledge or requeue a newer claim for the same task. Task-lock renewal and
+release also compare the ownership token and act in one Redis script, preventing
+an expired worker from extending or deleting a successor's lock.
 
 ## Failure codes
 
@@ -55,13 +71,19 @@ the original anonymous visitor cookie.
 5. Interrupt the SSE connection while the worker continues. Confirm the UI says
    the connection was lost, reconnects automatically and does not emit
    `generation_failed` until the task itself is failed.
-6. In GA4 DebugView with internal/developer traffic isolated, verify the event
+6. In the disposable Redis namespace, force a worker exception and a task-lock
+   conflict. Confirm the unfinished task returns to `queue:tasks`. Let a claim
+   lease expire, invoke the worker again, and confirm it is recovered. Repeat
+   with a completed task and confirm the pipeline is not executed twice.
+7. In GA4 DebugView with internal/developer traffic isolated, verify the event
    sequence and dimensions. Confirm no task ID, object key, raw error, email or
    query string appears in event parameters or page location/title overrides.
-7. Re-run `npm ci`, `npm test -- --runInBand`, `npm run typecheck`, `npm run lint`
+   Include `/result/<id>`, `/en/result/<id>` and `/zh/result/<id>` with query and
+   fragment text, and test a terminal render before and after GA initialization.
+8. Re-run `npm ci`, `npm test -- --runInBand`, `npm run typecheck`, `npm run lint`
    and `npm run build`, then deploy through the normal reviewed release path.
 
 The automated suite mocks the Upstash `EVAL` boundary and verifies the scripts,
 routes and client behavior. A real Lua/Redis integration test was intentionally
-not run here because no disposable Redis service was available; step 2 and step
-3 are release gates.
+not run here because no disposable Redis service was available; steps 2, 3 and
+6 are release gates.

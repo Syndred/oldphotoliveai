@@ -1,6 +1,6 @@
 import {
   enqueueTask,
-  dequeueTask,
+  claimNextTask,
   getQueueLength,
   removeFromQueue,
 } from "@/lib/queue";
@@ -15,6 +15,15 @@ function clearSortedSet() {
 }
 
 const redisMock = {
+  eval: jest.fn(async () => {
+    if (sortedSet.length === 0) return [];
+    const item = sortedSet.shift()!;
+    return [
+      item.member,
+      String(item.score),
+      JSON.stringify({ taskId: item.member, score: item.score, token: "test" }),
+    ];
+  }),
   zadd: jest.fn(
     async (_key: string, entry: { score: number; member: string }) => {
       const idx = sortedSet.findIndex((e) => e.member === entry.member);
@@ -117,9 +126,9 @@ describe("enqueueTask", () => {
   });
 });
 
-describe("dequeueTask", () => {
+describe("claimNextTask", () => {
   it("returns null when queue is empty", async () => {
-    const result = await dequeueTask();
+    const result = await claimNextTask();
     expect(result).toBeNull();
   });
 
@@ -128,8 +137,8 @@ describe("dequeueTask", () => {
     await enqueueTask("high-task", "high");
     await enqueueTask("urgent-task", "urgent");
 
-    const result = await dequeueTask();
-    expect(result).toBe("urgent-task");
+    const result = await claimNextTask();
+    expect(result?.taskId).toBe("urgent-task");
   });
 
   it("dequeues tasks in FIFO order within the same priority", async () => {
@@ -137,10 +146,10 @@ describe("dequeueTask", () => {
     // Small delay to ensure different timestamps
     await enqueueTask("task-b", "high");
 
-    const first = await dequeueTask();
-    const second = await dequeueTask();
-    expect(first).toBe("task-a");
-    expect(second).toBe("task-b");
+    const first = await claimNextTask();
+    const second = await claimNextTask();
+    expect(first?.taskId).toBe("task-a");
+    expect(second?.taskId).toBe("task-b");
   });
 
   it("dequeues urgent, then high-priority tasks, then normal ones", async () => {
@@ -153,7 +162,7 @@ describe("dequeueTask", () => {
 
     const results: (string | null)[] = [];
     for (let i = 0; i < 6; i++) {
-      results.push(await dequeueTask());
+      results.push((await claimNextTask())?.taskId ?? null);
     }
 
     expect(results[0]).toBe("urgent-1");

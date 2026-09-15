@@ -3,8 +3,10 @@ import React from "react";
 import { render, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
+let mockPathname = "/result/private-task-id";
+
 jest.mock("next/navigation", () => ({
-  usePathname: () => "/result/private-task-id",
+  usePathname: () => mockPathname,
 }));
 
 jest.mock("next/script", () => ({
@@ -24,6 +26,7 @@ beforeEach(() => {
     NEXT_PUBLIC_GA_MEASUREMENT_ID: "G-TEST",
     NEXT_PUBLIC_CLARITY_PROJECT_ID: "",
   };
+  mockPathname = "/result/private-task-id";
   window.gtag = jest.fn();
 });
 
@@ -32,18 +35,20 @@ afterAll(() => {
 });
 
 it("suppresses the raw initial page view and sends only a normalized result URL", async () => {
+  mockPathname = "/en/result/private-task-id?token=secret#preview";
   const { getByTestId } = render(<Analytics />);
 
   expect(getByTestId("ga4-init").textContent).toContain("send_page_view: false");
   await waitFor(() => {
     expect(window.gtag).toHaveBeenCalledWith("config", "G-TEST", {
-      page_path: "/result/:taskId",
-      page_location: "http://localhost/result/:taskId",
+      page_path: "/en/result/:taskId",
+      page_location: "http://localhost/en/result/:taskId",
     });
   });
-  expect(JSON.stringify((window.gtag as jest.Mock).mock.calls)).not.toContain(
-    "private-task-id"
-  );
+  const calls = JSON.stringify((window.gtag as jest.Mock).mock.calls);
+  expect(calls).not.toContain("private-task-id");
+  expect(calls).not.toContain("token=secret");
+  expect(calls).not.toContain("#preview");
 });
 
 it("waits for the analytics bootstrap before sending the sanitized page view", async () => {
