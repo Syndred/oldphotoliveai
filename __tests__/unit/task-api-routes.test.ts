@@ -69,7 +69,9 @@ function makePostRequest(taskId: string, path: string, cookie?: string): NextReq
   });
 }
 
-const routeParams = (taskId: string) => ({ params: { taskId } });
+const routeParams = (taskId: string) => ({
+  params: Promise.resolve({ taskId }),
+});
 
 beforeEach(() => {
   mockGetTaskOwnedByUser.mockReset();

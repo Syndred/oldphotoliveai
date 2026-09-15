@@ -5,10 +5,11 @@ import { isValidLocale, type Locale } from "@/i18n/routing";
 import { absoluteLocalizedUrl, buildLocalizedPageMetadata } from "@/lib/seo";
 
 interface PageProps {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }
 
-export function generateMetadata({ params }: PageProps): Metadata {
+export async function generateMetadata(props: PageProps): Promise<Metadata> {
+  const params = await props.params;
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
   const page = getAnimationLandingPage("to-video");
 
@@ -34,7 +35,8 @@ export function generateMetadata({ params }: PageProps): Metadata {
   };
 }
 
-export default function ToVideoPage({ params }: PageProps) {
+export default async function ToVideoPage(props: PageProps) {
+  const params = await props.params;
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
   return <AnimationLandingPage locale={locale} slug="to-video" />;
 }

@@ -11,9 +11,9 @@ describe('English-only animation canonicals', () => {
     ['/animate-free', animateFree],
     ['/bring-to-life', bringToLife],
     ['/to-video', toVideo],
-  ] as const)('%s points to the canonical English destination', (path, generateMetadata) => {
+  ] as const)('%s points to the canonical English destination', async (path, generateMetadata) => {
     for (const locale of ['en', 'zh', 'es', 'ja']) {
-      const metadata = generateMetadata({ params: { locale } });
+      const metadata = await generateMetadata({ params: Promise.resolve({ locale }) });
       expect(metadata.alternates?.canonical).toBe(`https://oldphotoliveai.com${path}`);
       expect(metadata.alternates?.languages).toEqual({
         en: `https://oldphotoliveai.com${path}`,

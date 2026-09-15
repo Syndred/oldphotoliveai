@@ -10,7 +10,7 @@ import type { Locale } from "./routing";
 
 export default getRequestConfig(async ({ requestLocale }) => {
   const requestedLocale = await requestLocale;
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const cookieLocale = cookieStore.get(LOCALE_COOKIE)?.value;
 
   let locale: Locale = defaultLocale;

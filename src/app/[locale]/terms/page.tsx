@@ -5,14 +5,13 @@ import { isValidLocale, type Locale } from "@/i18n/routing";
 import { buildLocalizedPageMetadata } from "@/lib/seo";
 
 interface LocalizedTermsPageProps {
-  params: {
+  params: Promise<{
     locale: string;
-  };
+  }>;
 }
 
-export function generateMetadata({
-  params,
-}: LocalizedTermsPageProps): Metadata {
+export async function generateMetadata(props: LocalizedTermsPageProps): Promise<Metadata> {
+  const params = await props.params;
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
   const seo = PAGE_SEO_COPY[locale].terms;
 

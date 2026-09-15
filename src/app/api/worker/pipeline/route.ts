@@ -1,7 +1,7 @@
 // Pipeline Worker - Cron-triggered route
 // Requirements: 3.1-3.10, 14.3, 18.5
 
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { config } from "@/lib/config";
 import {
   claimNextTask,
@@ -18,6 +18,7 @@ import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 import type { TaskStatus } from "@/types";
 
 const LOCK_RENEW_INTERVAL_MS = 90_000;
+const SELF_CHAIN_RETRY_DELAYS_MS = [250, 1_000] as const;
 const TERMINAL_STATUSES = new Set<TaskStatus>([
   "completed",
   "failed",
@@ -99,45 +100,44 @@ async function triggerNextTaskIfQueued(
 
   if (!shouldTrigger) return;
 
-  try {
-    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
-    fetch(`${baseUrl}/api/worker/pipeline`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${config.worker.secret}`,
-        ...(recovery ? { "Content-Type": "application/json" } : {}),
-      },
-      ...(recovery
-        ? { body: JSON.stringify(recovery) }
-        : {}),
-    }).catch(() => {
-      // A future task creation or worker invocation will recover the leased work.
-    });
-  } catch (error) {
-    // Chaining is best-effort and must never replace the worker's root error.
-    console.error("Failed to trigger the next pipeline worker:", error);
+  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const requestInit: RequestInit = {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${config.worker.secret}`,
+      ...(recovery ? { "Content-Type": "application/json" } : {}),
+    },
+    ...(recovery ? { body: JSON.stringify(recovery) } : {}),
+  };
+
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= SELF_CHAIN_RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      const response = await fetch(
+        `${baseUrl}/api/worker/pipeline`,
+        requestInit
+      );
+      if (response.ok) return;
+      lastError = new Error(`Pipeline self-chain returned ${response.status}`);
+    } catch (error) {
+      lastError = error;
+    }
+
+    const retryDelay = SELF_CHAIN_RETRY_DELAYS_MS[attempt];
+    if (retryDelay !== undefined) {
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
+    }
   }
+
+  // The periodic cron is the durable fallback after bounded immediate retries.
+  console.error("Failed to trigger the next pipeline worker:", lastError);
 }
 
-export async function POST(request: Request): Promise<NextResponse> {
-  const locale = getRequestLocale(request);
-
-  // Step 1: Verify Worker Secret
-  const authHeader = request.headers.get("Authorization");
-  if (authHeader !== `Bearer ${config.worker.secret}`) {
-    return NextResponse.json(
-      { error: getErrorMessage("unauthorized", locale) },
-      { status: 401 }
-    );
-  }
-
+async function runPipelineWorker(recovery: WorkerRecoveryState): Promise<void> {
   let claim: Awaited<ReturnType<typeof claimNextTask>> = null;
   let lease: Awaited<ReturnType<typeof acquireLock>> = null;
   let renewInterval: ReturnType<typeof setInterval> | undefined;
   let executionError: unknown;
-  let response: NextResponse | undefined;
-  let lockConflict = false;
-  const recovery = await readRecoveryState(request);
 
   try {
     // A previous worker may have failed while settling after Redis had already
@@ -162,23 +162,12 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     // Step 2: Atomically lease the next task. Expired claims are recovered first.
     claim = await claimNextTask();
-    if (!claim) {
-      response = NextResponse.json(
-        { message: "No tasks in queue" },
-        { status: 200 }
-      );
-    } else {
+    if (claim) {
       const { taskId } = claim;
 
       // Step 3: Acquire distributed lock.
       lease = await acquireLock(`lock:task:${taskId}`);
-      if (!lease) {
-        lockConflict = true;
-        response = NextResponse.json(
-          { message: getErrorMessage("serviceBusy", locale) },
-          { status: 200 }
-        );
-      } else {
+      if (lease) {
         // Keep both leases alive for long-running tasks.
         renewInterval = setInterval(async () => {
           try {
@@ -202,11 +191,6 @@ export async function POST(request: Request): Promise<NextResponse> {
         if (task && !TERMINAL_STATUSES.has(task.status)) {
           await executePipeline(taskId);
         }
-
-        response = NextResponse.json(
-          { taskId, status: "processed" },
-          { status: 200 }
-        );
       }
     }
   } catch (error) {
@@ -241,7 +225,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     const wakeClaim = claim ?? recovery.recoveryClaim;
     const wakeLease = lease ?? recovery.recoveryLease;
-    if ((wakeClaim || wakeLease) && (!lockConflict || executionError)) {
+    if (wakeClaim || wakeLease) {
       await triggerNextTaskIfQueued(
         Boolean(executionError),
         executionError
@@ -255,6 +239,41 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   if (executionError) throw executionError;
-  if (!response) throw new Error("Pipeline worker completed without a response");
-  return response;
+}
+
+function schedulePipelineWorker(
+  recovery: WorkerRecoveryState
+): NextResponse {
+  // `after` binds the work to the platform request lifecycle while allowing the
+  // dispatch endpoint to respond before a long-running pipeline task finishes.
+  after(() => runPipelineWorker(recovery));
+  return NextResponse.json({ status: "scheduled" }, { status: 200 });
+}
+
+export async function POST(request: Request): Promise<NextResponse> {
+  const locale = getRequestLocale(request);
+  const authHeader = request.headers.get("Authorization");
+  if (authHeader !== `Bearer ${config.worker.secret}`) {
+    return NextResponse.json(
+      { error: getErrorMessage("unauthorized", locale) },
+      { status: 401 }
+    );
+  }
+
+  const recovery = await readRecoveryState(request);
+  return schedulePipelineWorker(recovery);
+}
+
+export async function GET(request: Request): Promise<NextResponse> {
+  const locale = getRequestLocale(request);
+  const authHeader = request.headers.get("Authorization");
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json(
+      { error: getErrorMessage("unauthorized", locale) },
+      { status: 401 }
+    );
+  }
+
+  return schedulePipelineWorker({});
 }

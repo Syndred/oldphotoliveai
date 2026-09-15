@@ -16,19 +16,18 @@ import {
 } from "@/lib/seo";
 
 interface BlogPostPageProps {
-  params: {
+  params: Promise<{
     locale: string;
     slug: string;
-  };
+  }>;
 }
 
 export function generateStaticParams() {
   return getBlogPostSlugs().map((slug) => ({ slug }));
 }
 
-export function generateMetadata({
-  params,
-}: BlogPostPageProps): Metadata {
+export async function generateMetadata(props: BlogPostPageProps): Promise<Metadata> {
+  const params = await props.params;
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
   const post = getBlogPost(locale, params.slug);
 
@@ -49,7 +48,8 @@ export function generateMetadata({
   });
 }
 
-export default function BlogPostPage({ params }: BlogPostPageProps) {
+export default async function BlogPostPage(props: BlogPostPageProps) {
+  const params = await props.params;
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
   const post = getBlogPost(locale, params.slug);
 

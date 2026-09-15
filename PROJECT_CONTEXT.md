@@ -25,7 +25,7 @@ docs/REPLICATE_SECURITY.md     # Replicate 安全配置指南
 
 ## 技术选择
 
-- Next.js 14 App Router + TypeScript + next-intl
+- Next.js 15 App Router + TypeScript + next-intl
 - Upstash Redis（任务/配额，无 SQL）
 - Cloudflare R2 存储、Replicate 模型、Stripe 收款
 - 内容审核默认走 Replicate NSFW 分类；OpenAI Moderation 为可选平替

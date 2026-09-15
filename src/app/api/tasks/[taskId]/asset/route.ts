@@ -11,9 +11,9 @@ import { getAccessibleTask } from "@/lib/task-access";
 export const runtime = "nodejs";
 
 interface TaskAssetRouteContext {
-  params: {
+  params: Promise<{
     taskId: string;
-  };
+  }>;
 }
 
 function normalizeRangeHeader(value: string | null): string | null {
@@ -27,10 +27,8 @@ function normalizeRangeHeader(value: string | null): string | null {
   return trimmed;
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: TaskAssetRouteContext
-) {
+export async function GET(request: NextRequest, props: TaskAssetRouteContext) {
+  const params = await props.params;
   const locale = getRequestLocale(request);
 
   const kindParam = request.nextUrl.searchParams.get("kind")?.trim() ?? "";

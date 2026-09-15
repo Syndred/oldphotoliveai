@@ -6,10 +6,8 @@ import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 import { getAccessibleTask } from "@/lib/task-access";
 import { toPublicTaskStatus } from "@/lib/task-status";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { taskId: string } }
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ taskId: string }> }) {
+  const params = await props.params;
   const locale = getRequestLocale(request);
 
   try {

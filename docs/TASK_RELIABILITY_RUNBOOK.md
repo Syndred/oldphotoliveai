@@ -43,11 +43,15 @@ acknowledge or requeue a newer claim for the same task. Task-lock renewal and
 release also compare the ownership token and act in one Redis script, preventing
 an expired worker from extending or deleting a successor's lock.
 
-Every claimed worker invocation reaches a final wake-up path. If lock
-acquisition, claim settlement, or lock release fails, the self-chain request
-carries the tokenized recovery claim. The successor retries that idempotent
-settlement before claiming work, so a transient cleanup failure does not need a
-pipeline cron or a new customer task to become runnable again.
+The pipeline dispatch endpoint registers execution with Next.js `after()` and
+returns before long-running model work begins. The platform keeps that lifecycle
+task alive after the response without making earlier workers wait for the full
+recursive chain. Every claimed invocation reaches a final wake-up path,
+including lock conflicts. If lock acquisition, claim settlement, or lock release
+fails, the self-chain request carries the tokenized recovery claim. Dispatch is
+awaited inside the lifecycle task with two bounded retries. An authenticated
+five-minute pipeline cron is the durable fallback, so queued work can recover
+without a new customer task even when every immediate dispatch fails.
 
 ## Failure codes
 
@@ -82,7 +86,9 @@ the original anonymous visitor cookie.
 6. In the disposable Redis namespace, force a worker exception and a task-lock
    conflict. Confirm the unfinished task returns to `queue:tasks`. Let a claim
    lease expire, invoke the worker again, and confirm it is recovered. Repeat
-   with a completed task and confirm the pipeline is not executed twice.
+   with a completed task and confirm the pipeline is not executed twice. Reject
+   two self-chain requests and confirm the third is attempted; reject all three
+   and confirm the authenticated cron recovers the ready task within five minutes.
 7. In GA4 DebugView with internal/developer traffic isolated, verify the event
    sequence and dimensions. Confirm no task ID, object key, raw error, email or
    query string appears in event parameters or page location/title overrides.

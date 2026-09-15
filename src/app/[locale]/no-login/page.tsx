@@ -4,14 +4,13 @@ import { isValidLocale, type Locale } from "@/i18n/routing";
 import { buildLocalizedPageMetadata } from "@/lib/seo";
 
 interface LocalizedNoLoginPageProps {
-  params: {
+  params: Promise<{
     locale: string;
-  };
+  }>;
 }
 
-export function generateMetadata({
-  params,
-}: LocalizedNoLoginPageProps): Metadata {
+export async function generateMetadata(props: LocalizedNoLoginPageProps): Promise<Metadata> {
+  const params = await props.params;
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
 
   const metadata = buildLocalizedPageMetadata({
@@ -37,9 +36,8 @@ export function generateMetadata({
   };
 }
 
-export default function LocalizedNoLoginPage({
-  params,
-}: LocalizedNoLoginPageProps) {
+export default async function LocalizedNoLoginPage(props: LocalizedNoLoginPageProps) {
+  const params = await props.params;
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
   return <NoLoginToolPage locale={locale} />;
 }

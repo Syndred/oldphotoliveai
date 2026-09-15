@@ -5,14 +5,13 @@ import { isValidLocale, type Locale } from "@/i18n/routing";
 import { absoluteLocalizedUrl, buildLocalizedPageMetadata } from "@/lib/seo";
 
 interface LocalizedToolPageProps {
-  params: {
+  params: Promise<{
     locale: string;
-  };
+  }>;
 }
 
-export function generateMetadata({
-  params,
-}: LocalizedToolPageProps): Metadata {
+export async function generateMetadata(props: LocalizedToolPageProps): Promise<Metadata> {
+  const params = await props.params;
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
   const page = getAnimationLandingPage("animate");
 
@@ -38,9 +37,8 @@ export function generateMetadata({
   };
 }
 
-export default function LocalizedAnimatePage({
-  params,
-}: LocalizedToolPageProps) {
+export default async function LocalizedAnimatePage(props: LocalizedToolPageProps) {
+  const params = await props.params;
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
   return <AnimationLandingPage locale={locale} slug="animate" />;
 }

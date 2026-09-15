@@ -5,14 +5,13 @@ import { isValidLocale, type Locale } from "@/i18n/routing";
 import { buildLocalizedPageMetadata } from "@/lib/seo";
 
 interface LocalizedToolPageProps {
-  params: {
+  params: Promise<{
     locale: string;
-  };
+  }>;
 }
 
-export function generateMetadata({
-  params,
-}: LocalizedToolPageProps): Metadata {
+export async function generateMetadata(props: LocalizedToolPageProps): Promise<Metadata> {
+  const params = await props.params;
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
   const page = getToolPage(locale, "colorize-old-photos");
 
@@ -25,9 +24,8 @@ export function generateMetadata({
   });
 }
 
-export default function LocalizedColorizePage({
-  params,
-}: LocalizedToolPageProps) {
+export default async function LocalizedColorizePage(props: LocalizedToolPageProps) {
+  const params = await props.params;
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
   return <ToolLandingPage locale={locale} slug="colorize-old-photos" />;
 }

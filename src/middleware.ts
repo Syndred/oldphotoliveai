@@ -170,8 +170,8 @@ export async function middleware(request: NextRequest) {
 
   const forwardedFor = request.headers.get("x-forwarded-for");
   const clientIp =
-    request.ip ||
     (forwardedFor ? forwardedFor.split(",")[0].trim() : "") ||
+    request.headers.get("x-real-ip")?.trim() ||
     "unknown";
   const visitorId = request.cookies.get("opla_anon_visitor")?.value;
   const userId =

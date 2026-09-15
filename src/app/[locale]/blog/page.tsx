@@ -11,14 +11,13 @@ import { isValidLocale, type Locale } from "@/i18n/routing";
 import { buildLocalizedPageMetadata } from "@/lib/seo";
 
 interface BlogIndexPageProps {
-  params: {
+  params: Promise<{
     locale: string;
-  };
+  }>;
 }
 
-export function generateMetadata({
-  params,
-}: BlogIndexPageProps): Metadata {
+export async function generateMetadata(props: BlogIndexPageProps): Promise<Metadata> {
+  const params = await props.params;
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
   const copy = getBlogIndexCopy(locale);
 
@@ -31,7 +30,8 @@ export function generateMetadata({
   });
 }
 
-export default function BlogIndexPage({ params }: BlogIndexPageProps) {
+export default async function BlogIndexPage(props: BlogIndexPageProps) {
+  const params = await props.params;
   if (!isValidLocale(params.locale)) {
     return null;
   }

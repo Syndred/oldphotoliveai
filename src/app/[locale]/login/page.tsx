@@ -8,14 +8,13 @@ import {
 } from "@/lib/seo";
 
 interface LocalizedLoginPageProps {
-  params: {
+  params: Promise<{
     locale: string;
-  };
+  }>;
 }
 
-export function generateMetadata({
-  params,
-}: LocalizedLoginPageProps): Metadata {
+export async function generateMetadata(props: LocalizedLoginPageProps): Promise<Metadata> {
+  const params = await props.params;
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
   const seo = PAGE_SEO_COPY[locale].login;
 

@@ -8,14 +8,13 @@ import {
 } from "@/lib/seo";
 
 interface LocalizedHistoryPageProps {
-  params: {
+  params: Promise<{
     locale: string;
-  };
+  }>;
 }
 
-export function generateMetadata({
-  params,
-}: LocalizedHistoryPageProps): Metadata {
+export async function generateMetadata(props: LocalizedHistoryPageProps): Promise<Metadata> {
+  const params = await props.params;
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
   const seo = PAGE_SEO_COPY[locale].history;
 

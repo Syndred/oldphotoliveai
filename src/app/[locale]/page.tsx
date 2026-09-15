@@ -5,14 +5,13 @@ import { isValidLocale, type Locale } from "@/i18n/routing";
 import { buildLocalizedPageMetadata } from "@/lib/seo";
 
 interface LocalizedHomePageProps {
-  params: {
+  params: Promise<{
     locale: string;
-  };
+  }>;
 }
 
-export function generateMetadata({
-  params,
-}: LocalizedHomePageProps): Metadata {
+export async function generateMetadata(props: LocalizedHomePageProps): Promise<Metadata> {
+  const params = await props.params;
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
   const seo = PAGE_SEO_COPY[locale].home;
 
@@ -31,9 +30,8 @@ export function generateMetadata({
   return { ...metadata, title: { absolute: seo.title } };
 }
 
-export default function LocalizedHomePage({
-  params,
-}: LocalizedHomePageProps) {
+export default async function LocalizedHomePage(props: LocalizedHomePageProps) {
+  const params = await props.params;
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
   return <HomePageView locale={locale} />;
 }

@@ -10,10 +10,8 @@ import { toPublicTaskStatus } from "@/lib/task-status";
 const POLL_INTERVAL_MS = 2000;
 const HEARTBEAT_INTERVAL_MS = 15000;
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { taskId: string } }
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ taskId: string }> }) {
+  const params = await props.params;
   const { taskId } = params;
   const locale = getRequestLocale(request);
   const initialAccessibleTask = await getAccessibleTask(request, taskId);

@@ -25,27 +25,29 @@ were used.
   recovered terminal tasks are acknowledged without re-execution. Lock renewal
   and release are atomic token comparisons, closing the previous check/act race.
   Cleanup failures self-chain a validated recovery claim so the next authorized
-  worker can retry settlement before taking new work.
+  worker can retry settlement before taking new work. Next.js `after()` binds
+  execution to the platform lifecycle; dispatch retries are bounded and every
+  lock-conflict path schedules a successor. An authenticated five-minute cron
+  recovers the queue if all immediate dispatch attempts fail.
 - `npm audit fix` without `--force` updated compatible dependencies, including
   next-auth 4.24.15, next-intl 4.14.5 and the AWS XML builder chain. Direct
   image/ID dependencies were updated to sharp 0.35.4 and uuid 14.0.2. The
-  production audit count fell from 11 findings (2 critical, 5 high) to 2
-  findings (1 critical, 1 high).
+  production audit count initially fell from 11 findings (2 critical, 5 high)
+  to 2 findings (1 critical, 1 high).
 
-## Remaining dependency risk
+## Framework security upgrade
 
-Both remaining production findings are attached to Next.js 14.2.35 and its
-bundled PostCSS version. The audit's available remediation is Next.js 16.3.5,
-which is a breaking framework migration and also requires aligned React,
-middleware, lint and route-contract validation. `npm audit fix --force` was not
-used because silently crossing two Next.js major versions would be a higher
-release risk than a reviewed migration.
+Next.js and `eslint-config-next` are now pinned to 15.5.25, the newest stable
+patch on the approved 15.5 line. Next.js 15 request APIs were migrated to async
+`params` and `cookies()`, and the removed `NextRequest.ip` property was replaced
+with normalized proxy headers. React remains on 18.3.1 because Next.js 15.5.25
+explicitly supports it, reducing unrelated migration risk.
 
-Treat the Next.js 16 migration as an urgent, separate release gate. Until then,
-retain the current managed Linux deployment boundary, do not self-host this
-version on Windows, keep image optimization and rewrite destinations tightly
-allowlisted, and monitor for abnormal request volume/cache behavior. These
-mitigations reduce exposure but do not remove the advisories.
+Next.js 15.5.25 still pins PostCSS 8.4.31, so npm would retain a high-severity
+finding without intervention. The package override selects PostCSS 8.5.28 on
+the same major API line. `npm ls` confirms both direct and Next.js consumers use
+8.5.28, the production build completes, and the official-registry
+`npm audit --omit=dev --audit-level=high` result is zero vulnerabilities.
 
 ## Environment validation still required
 
