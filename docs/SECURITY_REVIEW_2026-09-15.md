@@ -31,8 +31,10 @@ were used.
   requests with no real scheduler. Authenticated status observation uses a
   global Redis `SET NX EX` marker to wake at most one worker per minute. REST
   status schedules the bounded wakeup with `after()`; SSE awaits it for at most
-  two seconds before opening the long-lived stream. A Hobby-compatible
-  authenticated daily cron provides cold recovery if no result page is observed.
+  two seconds before opening the long-lived stream, then nonterminal polls invoke
+  it without awaiting so an already-open stream can recover expired work without
+  delaying status events. A Hobby-compatible authenticated daily cron provides
+  cold recovery if no result page is observed.
 - All worker cron GET handlers fail closed. A missing or incorrect
   `CRON_SECRET` returns 401 for pipeline, cleanup, and quota reset; their POST
   handlers continue to require `WORKER_SECRET`.

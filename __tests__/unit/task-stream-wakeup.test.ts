@@ -48,6 +48,12 @@ afterAll(() => {
   global.fetch = originalFetch;
 });
 
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockGetAccessibleTask.mockReset();
+  mockRedisSet.mockReset();
+});
+
 it("awaits a throttled worker dispatch before emitting the first SSE event", async () => {
   const queued = { task: task("queued"), mode: "authenticated" as const };
   const completed = { task: task("completed"), mode: "authenticated" as const };
@@ -93,4 +99,78 @@ it("awaits a throttled worker dispatch before emitting the first SSE event", asy
     mockGetAccessibleTask.mock.invocationCallOrder[1]
   );
   expect(mockAfter).not.toHaveBeenCalled();
+});
+
+it("retries recovery from one open SSE stream without blocking status events", async () => {
+  jest.useFakeTimers({ now: 0 });
+  const abort = new AbortController();
+  let markerExpiresAt = 0;
+  let recovered = false;
+  let acceptRecoveryDispatch: ((response: Response) => void) | undefined;
+  let dispatchCount = 0;
+
+  mockRedisSet.mockImplementation(async () => {
+    if (Date.now() < markerExpiresAt) return null;
+    markerExpiresAt = Date.now() + 60_000;
+    return "OK";
+  });
+  mockGetAccessibleTask.mockImplementation(async () => ({
+    task: task(
+      recovered ? "completed" : Date.now() >= 60_000 ? "restoring" : "queued"
+    ),
+    mode: "authenticated" as const,
+  }));
+  global.fetch = jest.fn(() => {
+    dispatchCount += 1;
+    if (dispatchCount === 1) {
+      return Promise.resolve(new Response(null, { status: 200 }));
+    }
+    return new Promise<Response>((resolve) => {
+      acceptRecoveryDispatch = resolve;
+    });
+  });
+
+  try {
+    const response = await GET(
+      new NextRequest("http://localhost/api/tasks/task-001/stream", {
+        signal: abort.signal,
+      }),
+      { params: Promise.resolve({ taskId: "task-001" }) }
+    );
+    const reader = response.body!.getReader();
+    const firstEvent = await reader.read();
+    expect(new TextDecoder().decode(firstEvent.value)).toContain(
+      '"status":"queued"'
+    );
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+
+    await jest.advanceTimersByTimeAsync(60_000);
+
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+    let sawRestoring = false;
+    for (let index = 0; index < 8 && !sawRestoring; index += 1) {
+      const event = await reader.read();
+      sawRestoring = new TextDecoder()
+        .decode(event.value)
+        .includes('"status":"restoring"');
+    }
+    expect(sawRestoring).toBe(true);
+
+    // The restoring event is readable while the repeated worker POST is pending.
+    recovered = true;
+    acceptRecoveryDispatch?.(new Response(null, { status: 200 }));
+    await jest.advanceTimersByTimeAsync(2_000);
+
+    let sawCompleted = false;
+    for (let index = 0; index < 4 && !sawCompleted; index += 1) {
+      const event = await reader.read();
+      sawCompleted = new TextDecoder()
+        .decode(event.value)
+        .includes('"status":"completed"');
+    }
+    expect(sawCompleted).toBe(true);
+  } finally {
+    abort.abort();
+    jest.useRealTimers();
+  }
 });

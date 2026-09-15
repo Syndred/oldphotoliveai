@@ -58,12 +58,14 @@ global Redis `SET NX EX` marker, limiting high-frequency polling to one dispatch
 per minute while still recovering expired leases. REST status uses Next.js
 `after()`. SSE awaits the same error-isolated request with a two-second upper
 bound before constructing its long-lived response, so a stream-only client does
-not wait for disconnect before its first dispatch. A Hobby-compatible daily cron
-is the cold fallback when nobody is observing a result. Pipeline, cleanup, and
-quota-reset cron GET requests all require a configured matching `CRON_SECRET`;
-missing configuration fails closed with 401. Pipeline lifecycle work has a
-300-second route duration, after which the existing queue and lock leases remain
-the recovery source of truth.
+not wait for disconnect before its first dispatch. Every later nonterminal SSE
+poll requests the same wakeup without awaiting it, so status delivery stays
+responsive while the one-minute Redis marker suppresses duplicate worker POSTs.
+A Hobby-compatible daily cron is the cold fallback when nobody is observing a
+result. Pipeline, cleanup, and quota-reset cron GET requests all require a
+configured matching `CRON_SECRET`; missing configuration fails closed with 401.
+Pipeline lifecycle work has a 300-second route duration, after which the existing
+queue and lock leases remain the recovery source of truth.
 
 ## Failure codes
 
@@ -102,8 +104,9 @@ the original anonymous visitor cookie.
    lock conflicts and worker/settlement errors do not self-chain. Confirm an
    observer wake before processing-lease expiry claims nothing, a later observer
    wake recovers the expired claim, repeated status polling creates at most one
-   dispatch per minute, a stream-only client dispatches before its first SSE
-   event, and the authenticated daily cron can recover cold work.
+   dispatch per minute, and a stream-only client dispatches before its first SSE
+   event and again from later nonterminal polls after the throttle expires. The
+   authenticated daily cron must still recover cold work with no observer.
 7. In GA4 DebugView with internal/developer traffic isolated, verify the event
    sequence and dimensions. Confirm no task ID, object key, raw error, email or
    query string appears in event parameters or page location/title overrides.

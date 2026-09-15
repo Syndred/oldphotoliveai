@@ -77,6 +77,6 @@
 
 - [x] Replace future-dated recovery payloads with failure-stop semantics that preserve failed settlement leases for observer or cron recovery.
 - [x] Add a system sequence test covering no failure self-chain, a pre-expiry empty observer wake, post-expiry observer recovery, and the daily cron fallback.
-- [x] Await a timeout-protected, error-isolated throttled wakeup before starting an SSE stream, and prove dispatch precedes its first event.
+- [x] Await a timeout-protected, error-isolated throttled wakeup before starting an SSE stream, then request nonblocking wakeups from later nonterminal polls; prove one open stream dispatches before its first event and can recover after throttle/lease expiry.
 - [x] Run the full test, type, lint, build, audit, diff, and security gates.
 - [x] Commit locally, verify a clean worktree, and do not push or deploy.

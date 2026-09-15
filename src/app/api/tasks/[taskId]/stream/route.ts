@@ -56,7 +56,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ taskI
         controller.enqueue(encoder.encode(`: keep-alive\n\n`));
       };
 
-      const poll = async (): Promise<boolean> => {
+      const poll = async (wakeWorker = false): Promise<boolean> => {
         if (polling) return false;
         polling = true;
         try {
@@ -83,6 +83,12 @@ export async function GET(request: NextRequest, props: { params: Promise<{ taskI
             return true;
           }
 
+          if (wakeWorker) {
+            // Do not make SSE delivery wait on Redis or the worker dispatch. The
+            // shared NX/EX marker bounds repeated polls to one POST per minute.
+            void requestPipelineWakeupForStatus(task.status);
+          }
+
           return false;
         } catch {
           sendEvent({ transportError: "status_unavailable" });
@@ -102,7 +108,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ taskI
       // Continue polling at interval
       intervals.poll = setInterval(async () => {
         try {
-          const done = await poll();
+          const done = await poll(true);
           if (done) {
             close();
           }
