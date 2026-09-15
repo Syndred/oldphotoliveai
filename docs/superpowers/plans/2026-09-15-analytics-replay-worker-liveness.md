@@ -17,11 +17,11 @@
 - Modify: `__tests__/unit/result-page.test.tsx`
 - Modify: `src/lib/analytics.ts`
 
-- [ ] Add a failing unit test that queues duplicate task events before `gtag`, dispatches `opla-ga-ready`, and expects one sanitized delivery.
-- [ ] Add a failing ResultPage test using the real analytics module and a completed REST response; expect `generation_completed` and `result_view` once after GA readiness.
-- [ ] Run the two test files and confirm failures show that no replay occurs.
-- [ ] Implement a 100-entry pending `Map`, a single readiness listener, successful-delivery markers, and queue cleanup.
-- [ ] Re-run the two test files and confirm they pass.
+- [x] Add a failing unit test that queues duplicate task events before `gtag`, dispatches `opla-ga-ready`, and expects one sanitized delivery.
+- [x] Add a failing ResultPage test using the real analytics module and a completed REST response; expect `generation_completed` and `result_view` once after GA readiness.
+- [x] Run the two test files and confirm failures show that no replay occurs.
+- [x] Implement a 100-entry pending `Map`, a single readiness listener, successful-delivery markers, and queue cleanup.
+- [x] Re-run the two test files and confirm they pass.
 
 ### Task 2: Executable Redis Lua state machine
 
@@ -31,10 +31,10 @@
 - Modify: `package.json`
 - Modify: `package-lock.json`
 
-- [ ] Add Wasmoon as a dev dependency.
-- [ ] Build an atomic in-memory Redis command fixture that executes the exported Lua scripts unchanged.
-- [ ] Add tests for two concurrent claims, unfinished settlement, lock-conflict-style return, expired recovery, and stale-token isolation.
-- [ ] Run the queue state-machine test and confirm it passes against actual Lua execution.
+- [x] Add Wasmoon as a dev dependency.
+- [x] Build an atomic in-memory Redis command fixture that executes the exported Lua scripts unchanged.
+- [x] Add tests for two concurrent claims, unfinished settlement, lock-conflict-style return, expired recovery, and stale-token isolation.
+- [x] Run the queue state-machine test and confirm it passes against actual Lua execution.
 
 ### Task 3: Worker exception liveness
 
@@ -42,10 +42,10 @@
 - Modify: `__tests__/unit/pipeline-worker-route.test.ts`
 - Modify: `src/app/api/worker/pipeline/route.ts`
 
-- [ ] Add failing tests for thrown lock acquisition, settlement, and release; each must still attempt self-chain.
-- [ ] Run the worker route test and confirm the new cases fail at the missing wake-up.
-- [ ] Refactor the route so cleanup steps are independent and wake-up executes from an outer final path.
-- [ ] Re-run worker tests and confirm all exception paths pass.
+- [x] Add failing tests for thrown lock acquisition, settlement, and release; each must still attempt self-chain.
+- [x] Run the worker route test and confirm the new cases fail at the missing wake-up.
+- [x] Refactor the route so cleanup steps are independent and wake-up executes from an outer final path.
+- [x] Re-run worker tests and confirm all exception paths pass.
 
 ### Task 4: Documentation and final verification
 
@@ -53,7 +53,7 @@
 - Modify: `docs/TASK_RELIABILITY_RUNBOOK.md`
 - Modify: `docs/SECURITY_REVIEW_2026-09-15.md`
 
-- [ ] Document automatic GA replay, executable Lua coverage, and unconditional worker wake-up.
-- [ ] Run `npm ci`, `npm test -- --runInBand --silent`, `npm run typecheck`, `npm run lint`, and `npm run build`.
-- [ ] Run `git diff --check` and scan staged additions for credential signatures.
-- [ ] Commit all implementation and test changes without pushing or deploying.
+- [x] Document automatic GA replay, executable Lua coverage, and unconditional worker wake-up.
+- [x] Run `npm ci`, `npm test -- --runInBand --silent`, `npm run typecheck`, `npm run lint`, and `npm run build`.
+- [x] Run `git diff --check` and scan staged additions for credential signatures.
+- [x] Commit all implementation and test changes without pushing or deploying.

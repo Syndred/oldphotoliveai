@@ -11,7 +11,7 @@ interface RunnerResult {
 function runLuaProcess(payload: Record<string, unknown>): Promise<RunnerResult> {
   const runnerPath = path.resolve(
     process.cwd(),
-    "__tests/helpers/redis-lua-runner.cjs"
+    "scripts/redis-lua-runner.cjs"
   );
   const runnerSource = readFileSync(runnerPath, "utf8");
   return new Promise((resolve, reject) => {

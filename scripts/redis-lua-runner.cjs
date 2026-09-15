@@ -101,11 +101,29 @@ async function main() {
     lua.global.set("KEYS", payload.keys);
     lua.global.set("ARGV", payload.args);
     lua.global.set("redis", { call: redisCall });
-    lua.global.set("cjson", {
-      encode: JSON.stringify,
-      decode: JSON.parse,
-    });
-    const result = await lua.doString(payload.script);
+    lua.global.set("jsonEncode", JSON.stringify);
+    lua.global.set("jsonDecodePairs", (value) =>
+      Object.entries(JSON.parse(value))
+    );
+    await lua.doString(`
+      cjson = {}
+      cjson.encode = jsonEncode
+      cjson.decode = function(value)
+        local decoded = {}
+        local entries = jsonDecodePairs(value)
+        for index = 1, #entries do
+          decoded[entries[index][1]] = entries[index][2]
+        end
+        return decoded
+      end
+    `);
+    const rawResult = await lua.doString(payload.script);
+    const result =
+      rawResult &&
+      rawResult.constructor === Object &&
+      Object.keys(rawResult).length === 0
+        ? []
+        : rawResult;
     process.stdout.write(
       JSON.stringify({
         result,

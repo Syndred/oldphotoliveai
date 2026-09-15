@@ -13,7 +13,8 @@ were used.
 - Analytics now allowlists bounded event names and parameters. Result paths and
   page locations for every configured locale are normalized before the first
   GA4 page view; task IDs, storage keys, queries and raw errors are not sent.
-  Terminal-event deduplication is committed only after GA accepts the event.
+  Terminal-event deduplication is committed only after GA accepts the event;
+  a bounded queue replays pre-initialization events without exposing task IDs.
 - Status responses expose a finite failure code/stage but never
   `internalErrorMessage` or the content-policy diagnostic flag.
 - Task creation and retry use validated Redis Lua inputs and key types before
@@ -23,6 +24,8 @@ were used.
   recovered, lock conflicts and unexpected exceptions requeue atomically, and
   recovered terminal tasks are acknowledged without re-execution. Lock renewal
   and release are atomic token comparisons, closing the previous check/act race.
+  Cleanup failures self-chain a validated recovery claim so the next authorized
+  worker can retry settlement before taking new work.
 - `npm audit fix` without `--force` updated compatible dependencies, including
   next-auth 4.24.15, next-intl 4.14.5 and the AWS XML builder chain. Direct
   image/ID dependencies were updated to sharp 0.35.4 and uuid 14.0.2. The
@@ -46,8 +49,8 @@ mitigations reduce exposure but do not remove the advisories.
 
 ## Environment validation still required
 
-The Lua scripts were tested at the application/EVAL boundary with deterministic
-fixtures, but no disposable real Redis instance was available. Before release,
+The queue scripts were executed in a real Lua VM with deterministic Redis command
+state transitions, but no disposable live Redis instance was available. Before release,
 run the atomic create/replay/retry and worker claim/recovery cases in a
 non-production Upstash namespace and inspect the task, history, ready queue,
 processing queue, quota and anonymous-trial keys. The exact procedure is in

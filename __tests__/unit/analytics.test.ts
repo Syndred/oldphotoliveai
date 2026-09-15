@@ -75,10 +75,13 @@ describe("privacy-safe analytics", () => {
     );
   });
 
-  it("does not consume the once marker until GA accepts the event", async () => {
+  it("queues and automatically replays a task event when GA becomes ready", async () => {
     const { trackTaskEventOnce } = await import("@/lib/analytics");
     window.gtag = undefined;
 
+    trackTaskEventOnce("generation_completed", "private-task-123", 2, {
+      workflow: "animate",
+    });
     trackTaskEventOnce("generation_completed", "private-task-123", 2, {
       workflow: "animate",
     });
@@ -90,18 +93,42 @@ describe("privacy-safe analytics", () => {
     ).toBeNull();
 
     window.gtag = jest.fn();
-    trackTaskEventOnce("generation_completed", "private-task-123", 2, {
-      workflow: "animate",
-    });
-    trackTaskEventOnce("generation_completed", "private-task-123", 2, {
-      workflow: "animate",
-    });
+    window.dispatchEvent(new Event("opla-ga-ready"));
 
     expect(window.gtag).toHaveBeenCalledTimes(1);
+    expect(window.gtag).toHaveBeenCalledWith("event", "generation_completed", {
+      workflow: "animate",
+      attempt: 2,
+    });
+    expect(JSON.stringify((window.gtag as jest.Mock).mock.calls)).not.toContain(
+      "private-task-123"
+    );
     expect(
       localStorage.getItem(
         "opla:analytics:generation_completed:private-task-123:2"
       )
+    ).toBe("1");
+  });
+
+  it("bounds the pending task event queue to the newest 100 unique events", async () => {
+    const { trackTaskEventOnce } = await import("@/lib/analytics");
+    window.gtag = undefined;
+
+    for (let index = 0; index < 101; index += 1) {
+      trackTaskEventOnce("generation_completed", `private-task-${index}`, 1, {
+        workflow: "animate",
+      });
+    }
+
+    window.gtag = jest.fn();
+    window.dispatchEvent(new Event("opla-ga-ready"));
+
+    expect(window.gtag).toHaveBeenCalledTimes(100);
+    expect(
+      localStorage.getItem("opla:analytics:generation_completed:private-task-0:1")
+    ).toBeNull();
+    expect(
+      localStorage.getItem("opla:analytics:generation_completed:private-task-100:1")
     ).toBe("1");
   });
 

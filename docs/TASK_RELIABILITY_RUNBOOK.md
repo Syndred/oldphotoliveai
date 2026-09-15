@@ -25,7 +25,9 @@ failure code. Task IDs, storage keys, email addresses, raw errors, query strings
 and private result URLs are not sent. Result routes for every configured locale
 are reduced to `/[locale/]result/:taskId` before `page_path` and `page_location`
 are constructed. A lifecycle event is marked as sent only after the GA function
-accepts it, so an event rendered before GA initialization remains retryable.
+accepts it. Events rendered before GA initialization enter a deduplicated,
+100-entry in-memory queue and are replayed automatically on `opla-ga-ready`;
+they do not depend on a second page render.
 Detailed task correlation remains in access-controlled server/Redis data.
 
 ## Worker claim contract
@@ -40,6 +42,12 @@ original priority score. Every claim has a unique token, so a late worker cannot
 acknowledge or requeue a newer claim for the same task. Task-lock renewal and
 release also compare the ownership token and act in one Redis script, preventing
 an expired worker from extending or deleting a successor's lock.
+
+Every claimed worker invocation reaches a final wake-up path. If lock
+acquisition, claim settlement, or lock release fails, the self-chain request
+carries the tokenized recovery claim. The successor retries that idempotent
+settlement before claiming work, so a transient cleanup failure does not need a
+pipeline cron or a new customer task to become runnable again.
 
 ## Failure codes
 
@@ -83,7 +91,8 @@ the original anonymous visitor cookie.
 8. Re-run `npm ci`, `npm test -- --runInBand`, `npm run typecheck`, `npm run lint`
    and `npm run build`, then deploy through the normal reviewed release path.
 
-The automated suite mocks the Upstash `EVAL` boundary and verifies the scripts,
-routes and client behavior. A real Lua/Redis integration test was intentionally
-not run here because no disposable Redis service was available; steps 2, 3 and
-6 are release gates.
+The automated suite executes the production claim and settlement scripts in the
+official Lua VM compiled to WebAssembly, backed by a deterministic Redis-command
+fixture. It also verifies routes and real client lifecycle behavior. A live
+Redis integration test was intentionally not run here because no disposable
+Redis service was available; steps 2, 3 and 6 remain release gates.
