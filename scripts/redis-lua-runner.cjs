@@ -44,6 +44,17 @@ async function main() {
 
     if (command === "GET") return strings.get(key);
 
+    if (command === "TYPE") {
+      if (strings.has(key)) return { ok: "string" };
+      if (sortedSets.has(key)) return { ok: "zset" };
+      return { ok: "none" };
+    }
+
+    if (command === "SET") {
+      strings.set(key, String(rawArgs[1]));
+      return "OK";
+    }
+
     if (command === "ZRANGEBYSCORE") {
       const min = redisBound(rawArgs[1]);
       const max = redisBound(rawArgs[2]);
@@ -102,6 +113,7 @@ async function main() {
     lua.global.set("ARGV", payload.args);
     lua.global.set("redis", { call: redisCall });
     lua.global.set("jsonEncode", JSON.stringify);
+    lua.global.set("jsonStringifyValue", JSON.stringify);
     lua.global.set("jsonDecodePairs", (value) =>
       Object.entries(JSON.parse(value))
     );
@@ -112,7 +124,12 @@ async function main() {
         local decoded = {}
         local entries = jsonDecodePairs(value)
         for index = 1, #entries do
-          decoded[entries[index][1]] = entries[index][2]
+          local rawValue = jsonStringifyValue(entries[index][2])
+          if string.sub(rawValue, 1, 1) == '{' then
+            decoded[entries[index][1]] = cjson.decode(rawValue)
+          elseif rawValue ~= 'null' then
+            decoded[entries[index][1]] = entries[index][2]
+          end
         end
         return decoded
       end

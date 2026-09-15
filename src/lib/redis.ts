@@ -222,6 +222,10 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
     failureStage: null,
     failureCode: null,
     attemptCount: 1,
+    executionToken: null,
+    executionStartedAt: null,
+    providerInvocations: {},
+    providerCreationDefinitivelyRejected: false,
     progress: 0,
     createdAt: now,
     completedAt: null,
@@ -399,6 +403,21 @@ export async function retryTask(taskId: string): Promise<Task> {
   if (task.status !== "failed") {
     throw new Error(`Task ${taskId} is not in failed status, cannot retry`);
   }
+  if (task.failureCode === "provider_creation_unknown") {
+    throw new Error(`Task ${taskId} requires manual review, cannot retry`);
+  }
+  const hasAmbiguousProviderCreation = Object.values(
+    task.providerInvocations ?? {}
+  ).some(
+    (invocation) =>
+      (invocation?.status === "provider_creation_started" &&
+        task.providerCreationDefinitivelyRejected !== true) ||
+      (invocation?.status === "creation_unknown" && !invocation.predictionId) ||
+      (invocation?.status === "active" && !invocation.predictionId)
+  );
+  if (hasAmbiguousProviderCreation) {
+    throw new Error(`Task ${taskId} requires manual review, cannot retry`);
+  }
 
   // Reset to queued status
   task.status = "queued";
@@ -408,6 +427,16 @@ export async function retryTask(taskId: string): Promise<Task> {
   task.failureStage = null;
   task.failureCode = null;
   task.attemptCount = Math.max(1, task.attemptCount ?? 1) + 1;
+  task.executionToken = null;
+  task.executionStartedAt = null;
+  task.providerCreationDefinitivelyRejected = false;
+  task.providerInvocations = Object.fromEntries(
+    Object.entries(task.providerInvocations ?? {}).filter(([, invocation]) =>
+      invocation?.status === "active" ||
+      invocation?.status === "succeeded" ||
+      (invocation?.status === "creation_unknown" && Boolean(invocation.predictionId))
+    )
+  );
   task.completedAt = null;
 
   await redis.set(keys.task(taskId), task);

@@ -8,7 +8,9 @@ const mockGetQueueLength = jest.fn();
 const mockAcquireLock = jest.fn();
 const mockReleaseLock = jest.fn();
 const mockRefreshLock = jest.fn();
+const mockRefreshTaskClaim = jest.fn();
 const mockExecutePipeline = jest.fn();
+const mockBeginTaskExecution = jest.fn();
 const mockGetTask = jest.fn();
 const mockRedisSet = jest.fn();
 const mockAfterCallbacks: Array<() => unknown | Promise<unknown>> = [];
@@ -30,6 +32,7 @@ jest.mock("@/lib/queue", () => ({
   claimNextTask: (...args: unknown[]) => mockClaimNextTask(...args),
   settleTaskClaim: (...args: unknown[]) => mockSettleTaskClaim(...args),
   getQueueLength: (...args: unknown[]) => mockGetQueueLength(...args),
+  refreshTaskClaim: (...args: unknown[]) => mockRefreshTaskClaim(...args),
 }));
 jest.mock("@/lib/lock", () => ({
   acquireLock: (...args: unknown[]) => mockAcquireLock(...args),
@@ -38,6 +41,9 @@ jest.mock("@/lib/lock", () => ({
 }));
 jest.mock("@/lib/pipeline", () => ({
   executePipeline: (...args: unknown[]) => mockExecutePipeline(...args),
+}));
+jest.mock("@/lib/task-execution", () => ({
+  beginTaskExecution: (...args: unknown[]) => mockBeginTaskExecution(...args),
 }));
 jest.mock("@/lib/redis", () => ({
   getTask: (...args: unknown[]) => mockGetTask(...args),
@@ -90,6 +96,8 @@ beforeEach(() => {
   mockAcquireLock.mockResolvedValue(lease);
   mockReleaseLock.mockResolvedValue(undefined);
   mockRefreshLock.mockResolvedValue(true);
+  mockRefreshTaskClaim.mockResolvedValue(true);
+  mockBeginTaskExecution.mockResolvedValue("started");
   mockExecutePipeline.mockResolvedValue(undefined);
   mockGetTask.mockResolvedValue(task);
   mockRedisSet.mockResolvedValue("OK");
@@ -250,7 +258,10 @@ describe("pipeline worker claims", () => {
     await requestPipelineWakeupForStatus("queued");
     await runAfterTasks();
     expect(mockExecutePipeline).toHaveBeenCalledTimes(1);
-    expect(mockExecutePipeline).toHaveBeenCalledWith("task-1");
+    expect(mockExecutePipeline).toHaveBeenCalledWith("task-1", {
+      executionToken: claim.leaseMember,
+      signal: expect.any(AbortSignal),
+    });
     expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 
@@ -283,7 +294,47 @@ describe("pipeline worker claims", () => {
 
     await runAfterTasks();
 
-    expect(mockExecutePipeline).toHaveBeenCalledWith("task-1");
+    expect(mockBeginTaskExecution).toHaveBeenCalledWith("task-1", claim, lease);
+    expect(mockExecutePipeline).toHaveBeenCalledWith("task-1", {
+      executionToken: claim.leaseMember,
+      signal: expect.any(AbortSignal),
+    });
+  });
+
+  it("aborts pipeline execution when either worker lease cannot be renewed", async () => {
+    jest.useFakeTimers();
+    mockRefreshTaskClaim.mockResolvedValue(false);
+    let observedSignal: AbortSignal | undefined;
+    mockExecutePipeline.mockImplementation(
+      async (_taskId: string, context: { signal: AbortSignal }) => {
+        observedSignal = context.signal;
+        await new Promise<void>((_resolve, reject) => {
+          context.signal.addEventListener(
+            "abort",
+            () => reject(new Error("execution ownership lost")),
+            { once: true }
+          );
+        });
+      }
+    );
+
+    try {
+      await POST(request());
+      const lifecycleWork = runAfterTasks();
+      const lifecycleExpectation = expect(lifecycleWork).rejects.toThrow(
+        "execution ownership lost"
+      );
+      await jest.advanceTimersByTimeAsync(90_000);
+
+      await lifecycleExpectation;
+      expect(mockRefreshLock).toHaveBeenCalledWith(lease);
+      expect(mockRefreshTaskClaim).toHaveBeenCalledWith(claim);
+      expect(observedSignal?.aborted).toBe(true);
+      expect(mockSettleTaskClaim).toHaveBeenCalledWith(claim);
+      expect(mockReleaseLock).toHaveBeenCalledWith(lease);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it.each(["completed", "failed", "cancelled"] as const)(

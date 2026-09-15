@@ -13,6 +13,7 @@ const FAILURE_CODES = new Set<NonNullable<TaskFailureCode>>([
   "service_busy",
   "provider_auth",
   "provider_config",
+  "provider_creation_unknown",
   "download_failed",
   "processing_failed",
 ]);
@@ -30,6 +31,7 @@ export interface PublicTaskStatus {
   accessMode: TaskAccessMode;
   attemptCount: number;
   retryAllowed: boolean;
+  requiresManualReview: boolean;
   errorMessage?: string;
   failureCode?: TaskFailureCode;
   failureStage?: NonNullable<TaskFailureStage>;
@@ -47,6 +49,15 @@ export function toPublicTaskStatus(
   task: Task,
   accessMode: TaskAccessMode
 ): PublicTaskStatus {
+  const hasAmbiguousProviderCreation = Object.values(
+    task.providerInvocations ?? {}
+  ).some(
+    (invocation) =>
+      (invocation?.status === "provider_creation_started" &&
+        task.providerCreationDefinitivelyRejected !== true) ||
+      (invocation?.status === "creation_unknown" && !invocation.predictionId) ||
+      (invocation?.status === "active" && !invocation.predictionId)
+  );
   const attemptCount = Number.isFinite(task.attemptCount)
     ? Math.max(1, Math.floor(task.attemptCount as number))
     : 1;
@@ -56,7 +67,15 @@ export function toPublicTaskStatus(
     workflow: task.workflow ?? "full",
     accessMode,
     attemptCount,
-    retryAllowed: task.status === "failed" && task.violation !== true,
+    retryAllowed:
+      task.status === "failed" &&
+      task.violation !== true &&
+      task.failureCode !== "provider_creation_unknown" &&
+      !hasAmbiguousProviderCreation,
+    requiresManualReview:
+      task.status === "failed" &&
+      (task.failureCode === "provider_creation_unknown" ||
+        hasAmbiguousProviderCreation),
   };
 
   if (typeof task.errorMessage === "string" && task.errorMessage) {

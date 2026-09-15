@@ -80,3 +80,22 @@
 - [x] Await a timeout-protected, error-isolated throttled wakeup before starting an SSE stream, then request nonblocking wakeups from later nonterminal polls; prove one open stream dispatches before its first event and can recover after throttle/lease expiry.
 - [x] Run the full test, type, lint, build, audit, diff, and security gates.
 - [x] Commit locally, verify a clean worktree, and do not push or deploy.
+
+### Task 6: Fence executions and recover provider predictions
+
+**Files:**
+- Create: `src/lib/task-execution.ts`
+- Modify: `src/types/index.ts`
+- Modify: `src/lib/replicate.ts`
+- Modify: `src/lib/pipeline.ts`
+- Modify: `src/app/api/worker/pipeline/route.ts`
+- Modify: `src/lib/task-retry.ts`
+- Modify: `src/lib/task-status.ts`
+- Modify: focused unit and concurrency tests for these modules.
+
+- [x] Install each claim's unique lease member as the task execution token and reject every stale stage, invocation, failure, and completion write with Redis CAS.
+- [x] Abort local execution on lease-renew failure and prove an older worker cannot publish after a recovered claim takes ownership.
+- [x] Replace `Replicate.run()` with explicit prediction create/get polling, persist the prediction ID before polling, and resume an existing ID without another create.
+- [x] Fail ambiguous provider creation into a non-retryable manual-review state without refunding or recharging the task allowance.
+- [x] Cover concurrent old/new workers, post-create interruption, ambiguous create results, and retry/status behavior with executable tests.
+- [x] Run focused and full tests, typecheck, production build, diff checks, commit locally, and do not push or deploy.

@@ -44,6 +44,10 @@ export class RedisLuaFixture {
     this.strings.set(key, value);
   }
 
+  getString(key: string): string | undefined {
+    return this.strings.get(key);
+  }
+
   addSorted(key: string, score: number, member: string): void {
     let set = this.sortedSets.get(key);
     if (!set) {

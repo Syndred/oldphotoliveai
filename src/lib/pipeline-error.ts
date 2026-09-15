@@ -9,7 +9,11 @@ export interface PipelineFailureClassification {
 
 export function classifyPipelineFailure(
   rawMessage: string,
-  options: { isViolation?: boolean; isSpendLimit?: boolean } = {}
+  options: {
+    isViolation?: boolean;
+    isSpendLimit?: boolean;
+    isProviderCreationUnknown?: boolean;
+  } = {}
 ): PipelineFailureClassification {
   if (options.isViolation) {
     return {
@@ -22,6 +26,14 @@ export function classifyPipelineFailure(
     return {
       errorMessage: "The uploaded source image is no longer available. Please re-upload it and try again.",
       failureCode: "source_unreachable",
+      violation: false,
+    };
+  }
+  if (options.isProviderCreationUnknown) {
+    return {
+      errorMessage:
+        "The AI provider may have accepted this request, but its result could not be confirmed. Support must review it before another attempt.",
+      failureCode: "provider_creation_unknown",
       violation: false,
     };
   }

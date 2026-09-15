@@ -38,8 +38,26 @@ export type TaskFailureCode =
   | "service_busy"
   | "provider_auth"
   | "provider_config"
+  | "provider_creation_unknown"
   | "download_failed"
   | "processing_failed";
+
+export type TaskProviderStage = Exclude<TaskFailureStage, null>;
+export type ProviderInvocationStatus =
+  | "provider_creation_started"
+  | "active"
+  | "succeeded"
+  | "failed"
+  | "creation_unknown";
+
+export interface ProviderInvocation {
+  status: ProviderInvocationStatus;
+  modelKey: string;
+  predictionId?: string;
+  outputUrl?: string;
+  error?: string;
+  updatedAt: string;
+}
 
 export interface Task {
   id: string;
@@ -56,6 +74,13 @@ export interface Task {
   failureStage: TaskFailureStage;
   failureCode?: TaskFailureCode | null;
   attemptCount?: number;
+  /** Unique queue-claim token currently allowed to mutate pipeline state. */
+  executionToken?: string | null;
+  executionStartedAt?: string | null;
+  /** Durable provider state used to resume a prediction without recreating it. */
+  providerInvocations?: Partial<Record<TaskProviderStage, ProviderInvocation>>;
+  /** True only when Replicate returned a definitive create rejection response. */
+  providerCreationDefinitivelyRejected?: boolean;
   /** True when OpenAI Moderation rejected input or generated output. */
   violation?: boolean;
   progress: number;

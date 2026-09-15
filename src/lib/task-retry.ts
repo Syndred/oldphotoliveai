@@ -20,6 +20,20 @@ end
 if task.violation == true then
   return {'REJECTED', 'CONTENT_VIOLATION'}
 end
+if type(task.providerInvocations) == 'table' then
+  for _, invocation in pairs(task.providerInvocations) do
+    if type(invocation) == 'table' and
+       ((invocation.status == 'provider_creation_started' and
+         task.providerCreationDefinitivelyRejected ~= true) or
+        (invocation.status == 'creation_unknown' and not invocation.predictionId) or
+        (invocation.status == 'active' and not invocation.predictionId)) then
+      return {'REJECTED', 'MANUAL_REVIEW_REQUIRED'}
+    end
+  end
+end
+if task.failureCode == 'provider_creation_unknown' then
+  return {'REJECTED', 'MANUAL_REVIEW_REQUIRED'}
+end
 if task.status ~= 'failed' then
   return {'REJECTED', 'NOT_FAILED'}
 end
@@ -32,6 +46,19 @@ task.failureStage = cjson.null
 task.failureCode = cjson.null
 task.completedAt = cjson.null
 task.attemptCount = attempts
+task.executionToken = cjson.null
+task.executionStartedAt = cjson.null
+task.providerCreationDefinitivelyRejected = false
+if type(task.providerInvocations) == 'table' then
+  for stage, invocation in pairs(task.providerInvocations) do
+    if type(invocation) ~= 'table' or
+       (invocation.status ~= 'active' and
+        invocation.status ~= 'succeeded' and
+        not (invocation.status == 'creation_unknown' and invocation.predictionId)) then
+      task.providerInvocations[stage] = nil
+    end
+  end
+end
 redis.call('SET', KEYS[1], cjson.encode(task))
 redis.call('ZADD', KEYS[2], ARGV[1], ARGV[2])
 return {'RETRIED', tostring(attempts)}
@@ -42,7 +69,10 @@ export async function retryTaskAtomic(
   now = new Date()
 ): Promise<
   | { outcome: "retried" | "already_queued"; attemptCount: number }
-  | { outcome: "rejected"; code: "CONTENT_VIOLATION" | "NOT_FAILED" }
+  | {
+      outcome: "rejected";
+      code: "CONTENT_VIOLATION" | "MANUAL_REVIEW_REQUIRED" | "NOT_FAILED";
+    }
 > {
   const score = PRIORITY_WEIGHTS[task.priority] + now.getTime();
   const result = await getRedisClient().eval(
@@ -58,7 +88,13 @@ export async function retryTaskAtomic(
     };
   }
   if (values[0] === "REJECTED") {
-    return { outcome: "rejected", code: values[1] as "CONTENT_VIOLATION" | "NOT_FAILED" };
+    return {
+      outcome: "rejected",
+      code: values[1] as
+        | "CONTENT_VIOLATION"
+        | "MANUAL_REVIEW_REQUIRED"
+        | "NOT_FAILED",
+    };
   }
   throw new Error(`Atomic task retry failed: ${values[1] || "UNKNOWN"}`);
 }

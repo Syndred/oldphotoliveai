@@ -36,4 +36,17 @@ describe("classifyPipelineFailure", () => {
       violation: true,
     });
   });
+
+  it("classifies an uncertain provider create as manual handling", () => {
+    expect(
+      classifyPipelineFailure("private transport detail", {
+        isProviderCreationUnknown: true,
+      })
+    ).toEqual({
+      errorMessage:
+        "The AI provider may have accepted this request, but its result could not be confirmed. Support must review it before another attempt.",
+      failureCode: "provider_creation_unknown",
+      violation: false,
+    });
+  });
 });

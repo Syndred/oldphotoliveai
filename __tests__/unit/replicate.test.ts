@@ -5,66 +5,79 @@ import {
   runModel,
 } from "@/lib/replicate";
 
-const runMock = jest.fn();
+const getMock = jest.fn();
+const fetchMock = jest.fn();
+const originalFetch = global.fetch;
 
-jest.mock("replicate", () => {
-  return jest.fn().mockImplementation(() => ({ run: runMock }));
-});
-
+jest.mock("replicate", () =>
+  jest.fn().mockImplementation(() => ({
+    predictions: { get: getMock, cancel: jest.fn() },
+  }))
+);
 jest.mock("@/lib/config", () => ({
-  config: {
-    replicate: { apiToken: "test-token" },
-  },
+  config: { replicate: { apiToken: "test-token" } },
 }));
-
 jest.mock("@/lib/replicate-spend", () => ({
   assertAndReserveReplicateSpend: jest.fn().mockResolvedValue(undefined),
 }));
-
-jest.mock("@/lib/retry", () => ({
-  withRetry: async <T>(fn: () => Promise<T>) => fn(),
+jest.mock("@/lib/task-execution", () => ({
+  WorkerOwnershipLostError: class WorkerOwnershipLostError extends Error {},
+  getTaskForExecution: jest.fn().mockResolvedValue({
+    executionToken: "execution-token",
+    providerInvocations: {},
+  }),
+  updateTaskProviderInvocationFenced: jest.fn().mockResolvedValue(undefined),
 }));
 
+const execution = {
+  taskId: "task-1",
+  stage: "restoring" as const,
+  executionToken: "execution-token",
+  signal: new AbortController().signal,
+};
+
+function createdPrediction() {
+  return { id: "prediction-1", status: "starting" };
+}
+
+function completedPrediction(output: unknown) {
+  return { id: "prediction-1", status: "succeeded", output };
+}
+
 beforeEach(() => {
-  runMock.mockReset();
+  fetchMock.mockReset().mockResolvedValue(
+    new Response(JSON.stringify(createdPrediction()), {
+      status: 201,
+      headers: { "Content-Type": "application/json" },
+    })
+  );
+  global.fetch = fetchMock as typeof fetch;
+  getMock.mockReset();
 });
 
-describe("MODELS constant", () => {
+afterAll(() => {
+  global.fetch = originalFetch;
+});
+
+describe("Replicate constants", () => {
   it("contains the fixed model versions", () => {
-    expect(MODELS.restoration).toBe(
-      "tencentarc/gfpgan:21c4d9d8e427bab060aff58f43823260e33b3620de1f87e8418a1df9b05f7b55"
-    );
-    expect(MODELS.restorationPremium).toBe(
-      "microsoft/bringing-old-photos-back-to-life:c75db81db6cbd809d93cc3b7e7a088a351a3349c9fa02b6d393e35e0d51ba799"
-    );
-    expect(MODELS.colorization).toBe(
-      "piddnad/ddcolor:ca494ba129e44e45f661d6ece83c4c98a9a7c774309beca01429b58fce8aa695"
-    );
-    expect(MODELS.animationFree).toBe(
-      "bytedance/seedance-1-lite:cf47c0693227ff7221d3efea90e442335f4de350bc04080db7f59e7cd5b694d6"
-    );
-    expect(MODELS.animationPaid).toBe(
-      "bytedance/seedance-1-lite:cf47c0693227ff7221d3efea90e442335f4de350bc04080db7f59e7cd5b694d6"
-    );
-    expect(MODELS.animationPremium).toBe(
-      "bytedance/seedance-1-pro:edcd35c62d96dcd88a9f32a2d6e06f961ff4ef2d32b5b973f6a9d2b80382cb0e"
-    );
+    expect(MODELS).toEqual({
+      restoration:
+        "tencentarc/gfpgan:21c4d9d8e427bab060aff58f43823260e33b3620de1f87e8418a1df9b05f7b55",
+      restorationPremium:
+        "microsoft/bringing-old-photos-back-to-life:c75db81db6cbd809d93cc3b7e7a088a351a3349c9fa02b6d393e35e0d51ba799",
+      colorization:
+        "piddnad/ddcolor:ca494ba129e44e45f661d6ece83c4c98a9a7c774309beca01429b58fce8aa695",
+      animationFree:
+        "bytedance/seedance-1-lite:cf47c0693227ff7221d3efea90e442335f4de350bc04080db7f59e7cd5b694d6",
+      animationPaid:
+        "bytedance/seedance-1-lite:cf47c0693227ff7221d3efea90e442335f4de350bc04080db7f59e7cd5b694d6",
+      animationPremium:
+        "bytedance/seedance-1-pro:edcd35c62d96dcd88a9f32a2d6e06f961ff4ef2d32b5b973f6a9d2b80382cb0e",
+    });
   });
 
-  it("is readonly (frozen at type level via as const)", () => {
-    expect(Object.keys(MODELS)).toEqual([
-      "restoration",
-      "restorationPremium",
-      "colorization",
-      "animationFree",
-      "animationPaid",
-      "animationPremium",
-    ]);
-  });
-});
-
-describe("ANIMATION_PARAMS constant", () => {
-  it("has the correct fixed values", () => {
+  it("keeps fixed animation parameters and tier resolutions", () => {
     expect(ANIMATION_PARAMS).toEqual({
       duration: 4,
       fps: 24,
@@ -72,11 +85,6 @@ describe("ANIMATION_PARAMS constant", () => {
       prompt:
         "natural subtle smile, gentle blink, tiny head nod, preserve identity and facial details",
     });
-  });
-});
-
-describe("ANIMATION_VARIANTS constant", () => {
-  it("uses tier-specific video resolutions", () => {
     expect(ANIMATION_VARIANTS).toEqual({
       animationFree: { resolution: "480p" },
       animationPaid: { resolution: "720p" },
@@ -85,171 +93,82 @@ describe("ANIMATION_VARIANTS constant", () => {
   });
 });
 
-describe("runModel", () => {
-  it("calls replicate.run with the correct model version for restoration", async () => {
-    runMock.mockResolvedValueOnce("https://output.url/restored.jpg");
+describe("runModel inputs and outputs", () => {
+  it("creates the fixed restoration version", async () => {
+    getMock.mockResolvedValue(completedPrediction("https://output.test/restored.jpg"));
 
-    const result = await runModel("restoration", {
-      img: "https://input.url/photo.jpg",
-      version: "v1.4",
-      scale: 1,
-    });
+    await expect(
+      runModel(
+        "restoration",
+        { img: "https://input.test/photo.jpg", version: "v1.4", scale: 1 },
+        execution
+      )
+    ).resolves.toBe("https://output.test/restored.jpg");
 
-    expect(result).toBe("https://output.url/restored.jpg");
-    expect(runMock).toHaveBeenCalledWith(
-      "tencentarc/gfpgan:21c4d9d8e427bab060aff58f43823260e33b3620de1f87e8418a1df9b05f7b55",
-      {
-        input: {
-          img: "https://input.url/photo.jpg",
-          version: "v1.4",
-          scale: 1,
-        },
-      }
-    );
-  });
-
-  it("calls replicate.run with the correct model version for premium restoration", async () => {
-    runMock.mockResolvedValueOnce("https://output.url/restored-premium.jpg");
-
-    const result = await runModel("restorationPremium", {
-      image: "https://input.url/photo.jpg",
-      with_scratch: true,
-    });
-
-    expect(result).toBe("https://output.url/restored-premium.jpg");
-    expect(runMock).toHaveBeenCalledWith(
-      "microsoft/bringing-old-photos-back-to-life:c75db81db6cbd809d93cc3b7e7a088a351a3349c9fa02b6d393e35e0d51ba799",
-      {
-        input: {
-          image: "https://input.url/photo.jpg",
-          with_scratch: true,
-        },
-      }
-    );
-  });
-
-  it("calls replicate.run with the correct model version for colorization", async () => {
-    runMock.mockResolvedValueOnce("https://output.url/colorized.jpg");
-
-    const result = await runModel("colorization", {
-      image: "https://input.url/photo.jpg",
-    });
-
-    expect(result).toBe("https://output.url/colorized.jpg");
-    expect(runMock).toHaveBeenCalledWith(
-      "piddnad/ddcolor:ca494ba129e44e45f661d6ece83c4c98a9a7c774309beca01429b58fce8aa695",
-      { input: { image: "https://input.url/photo.jpg" } }
-    );
-  });
-
-  it("merges animation defaults and paid resolution with precedence", async () => {
-    runMock.mockResolvedValueOnce("https://output.url/animation.mp4");
-
-    const result = await runModel("animationPaid", {
-      image: "https://input.url/photo.jpg",
-      duration: 4,
-    });
-
-    expect(result).toBe("https://output.url/animation.mp4");
-    expect(runMock).toHaveBeenCalledWith(
-      "bytedance/seedance-1-lite:cf47c0693227ff7221d3efea90e442335f4de350bc04080db7f59e7cd5b694d6",
-      {
-        input: {
-          image: "https://input.url/photo.jpg",
-          duration: 4,
-          fps: 24,
-          resolution: "720p",
-          camera_fixed: true,
-          prompt:
-            "natural subtle smile, gentle blink, tiny head nod, preserve identity and facial details",
-        },
-      }
-    );
-  });
-
-  it("normalizes input_image to image for premium animation model", async () => {
-    runMock.mockResolvedValueOnce("https://output.url/animation.mp4");
-
-    await runModel("animationPremium", {
-      input_image: "https://input.url/photo.jpg",
-    });
-
-    expect(runMock).toHaveBeenCalledWith(
-      "bytedance/seedance-1-pro:edcd35c62d96dcd88a9f32a2d6e06f961ff4ef2d32b5b973f6a9d2b80382cb0e",
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.replicate.com/v1/predictions",
       expect.objectContaining({
-        input: expect.objectContaining({
-          image: "https://input.url/photo.jpg",
-          duration: 4,
-          resolution: "1080p",
+        method: "POST",
+        body: JSON.stringify({
+          version: MODELS.restoration,
+          input: {
+            img: "https://input.test/photo.jpg",
+            version: "v1.4",
+            scale: 1,
+          },
         }),
+        signal: execution.signal,
       })
     );
-    expect(runMock.mock.calls[0][1].input).not.toHaveProperty("input_image");
   });
 
-  it("does NOT merge ANIMATION_PARAMS for non-animation models", async () => {
-    runMock.mockResolvedValueOnce("https://output.url/restored.jpg");
+  it("normalizes animation input and gives fixed settings precedence", async () => {
+    getMock.mockResolvedValue(completedPrediction("https://output.test/animation.mp4"));
 
-    await runModel("restoration", { img: "https://input.url/photo.jpg" });
+    await runModel(
+      "animationPaid",
+      {
+        input_image: "https://input.test/photo.jpg",
+        duration: 99,
+        resolution: "144p",
+      },
+      { ...execution, stage: "animating" }
+    );
 
-    const callInput = runMock.mock.calls[0][1].input;
-    expect(callInput).not.toHaveProperty("duration");
+    const request = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(JSON.parse(String(request.body))).toEqual({
+      version: MODELS.animationPaid,
+      input: {
+        image: "https://input.test/photo.jpg",
+        duration: 4,
+        fps: 24,
+        resolution: "720p",
+        camera_fixed: true,
+        prompt: ANIMATION_PARAMS.prompt,
+      },
+    });
+    expect(request.signal).toBe(execution.signal);
   });
 
-  it("handles array output (returns first element)", async () => {
-    runMock.mockResolvedValueOnce(["https://output.url/result.jpg", "https://other.url"]);
-
-    const result = await runModel("restoration", { image: "https://input.url/photo.jpg" });
-
-    expect(result).toBe("https://output.url/result.jpg");
-  });
-
-  it("handles FileOutput objects (Replicate SDK v1.x)", async () => {
-    const fileOutput = { toString: () => "https://output.url/result.jpg" };
-    runMock.mockResolvedValueOnce(fileOutput);
-
-    const result = await runModel("restoration", { img: "https://input.url/photo.jpg" });
-
-    expect(result).toBe("https://output.url/result.jpg");
-  });
-
-  it("handles object output with 'output' field", async () => {
-    runMock.mockResolvedValueOnce({ output: "https://output.url/result.jpg" });
-
-    const result = await runModel("restoration", { image: "https://input.url/photo.jpg" });
-
-    expect(result).toBe("https://output.url/result.jpg");
-  });
-
-  it("handles object output with 'url' field", async () => {
-    runMock.mockResolvedValueOnce({ url: "https://output.url/result.jpg" });
-
-    const result = await runModel("restoration", { image: "https://input.url/photo.jpg" });
-
-    expect(result).toBe("https://output.url/result.jpg");
-  });
-
-  it("throws on unexpected output format", async () => {
-    runMock.mockResolvedValueOnce(42);
+  it.each([
+    ["plain string", "https://output.test/result.jpg"],
+    ["array", ["https://output.test/result.jpg", "https://other.test/result.jpg"]],
+    ["output field", { output: "https://output.test/result.jpg" }],
+    ["url field", { url: "https://output.test/result.jpg" }],
+    ["FileOutput", { toString: (): string => "https://output.test/result.jpg" }],
+  ])("parses %s output", async (_label, output) => {
+    getMock.mockResolvedValue(completedPrediction(output));
 
     await expect(
-      runModel("restoration", { image: "https://input.url/photo.jpg" })
+      runModel("restoration", { img: "https://input.test/photo.jpg" }, execution)
+    ).resolves.toBe("https://output.test/result.jpg");
+  });
+
+  it("throws on an unexpected output format", async () => {
+    getMock.mockResolvedValue(completedPrediction(42));
+
+    await expect(
+      runModel("restoration", { img: "https://input.test/photo.jpg" }, execution)
     ).rejects.toThrow('Unexpected output format from model "restoration": 42');
-  });
-
-  it("throws on empty array output", async () => {
-    runMock.mockResolvedValueOnce([]);
-
-    await expect(
-      runModel("restoration", { image: "https://input.url/photo.jpg" })
-    ).rejects.toThrow('Unexpected output format from model "restoration"');
-  });
-
-  it("propagates Replicate API errors", async () => {
-    runMock.mockRejectedValueOnce(new Error("Replicate API error"));
-
-    await expect(
-      runModel("restoration", { image: "https://input.url/photo.jpg" })
-    ).rejects.toThrow("Replicate API error");
   });
 });

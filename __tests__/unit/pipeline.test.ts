@@ -1,6 +1,9 @@
 import { executePipeline } from "@/lib/pipeline";
 import { getTask, updateTaskStatus, getUser } from "@/lib/redis";
-import { runModel } from "@/lib/replicate";
+import {
+  ReplicatePredictionCreateRejectedError,
+  runModel,
+} from "@/lib/replicate";
 import { uploadToR2, getR2CdnUrl } from "@/lib/r2";
 import { applyImageWatermark, resizeImage } from "@/lib/watermark";
 import { checkImage, CONTENT_REJECTED_MESSAGE } from "@/lib/moderation";
@@ -11,7 +14,10 @@ const mockUuidV4 = jest.fn();
 // ── Mocks ───────────────────────────────────────────────────────────────────
 
 jest.mock("@/lib/redis");
-jest.mock("@/lib/replicate");
+jest.mock("@/lib/replicate", () => ({
+  ...jest.requireActual("@/lib/replicate"),
+  runModel: jest.fn(),
+}));
 jest.mock("@/lib/r2");
 jest.mock("@/lib/watermark");
 jest.mock("@/lib/moderation", () => ({
@@ -20,6 +26,27 @@ jest.mock("@/lib/moderation", () => ({
   CONTENT_REJECTED_MESSAGE:
     "Your request could not be processed because it violates our content policy. Credits used for rejected or removed content are non-refundable.",
 }));
+jest.mock("@/lib/task-execution", () => {
+  class WorkerOwnershipLostError extends Error {
+    constructor(taskId: string) {
+      super(`Worker execution ownership lost for task ${taskId}`);
+      this.name = "WorkerOwnershipLostError";
+    }
+  }
+  return {
+    WorkerOwnershipLostError,
+    getTaskForExecution: (taskId: string) => mockGetTask(taskId),
+    updateTaskStatusFenced: (
+      taskId: string,
+      _executionToken: string,
+      status: Parameters<typeof mockUpdateTaskStatus>[1],
+      data?: Parameters<typeof mockUpdateTaskStatus>[2]
+    ) => data === undefined
+      ? mockUpdateTaskStatus(taskId, status)
+      : mockUpdateTaskStatus(taskId, status, data),
+    assertTaskExecutionOwned: jest.fn().mockResolvedValue(undefined),
+  };
+});
 jest.mock("uuid", () => ({
   v4: () => mockUuidV4(),
 }));
@@ -47,6 +74,10 @@ const ASSET_UUID = "asset-uuid";
 const RESTORED_KEY = `tasks/${TASK_ID}/restored-${ASSET_UUID}.jpg`;
 const COLORIZED_KEY = `tasks/${TASK_ID}/colorized-${ASSET_UUID}.jpg`;
 const ANIMATION_KEY = `tasks/${TASK_ID}/animation-${ASSET_UUID}.mp4`;
+const EXECUTION = {
+  executionToken: "execution-token",
+  signal: new AbortController().signal,
+};
 
 function makeTask(overrides?: Partial<Task>): Task {
   return {
@@ -148,7 +179,7 @@ describe("executePipeline", () => {
     it("completes all 3 steps and marks task as completed", async () => {
       setupSuccessfulPipeline();
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       // Verify all 3 models were called in order
       expect(mockRunModel).toHaveBeenCalledTimes(3);
@@ -175,7 +206,7 @@ describe("executePipeline", () => {
     it("updates status in correct order: restoring → colorizing → animating → completed", async () => {
       setupSuccessfulPipeline();
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       const statusCalls = mockUpdateTaskStatus.mock.calls.map((c) => c[1]);
       expect(statusCalls).toEqual(["restoring", "colorizing", "animating", "completed"]);
@@ -184,7 +215,7 @@ describe("executePipeline", () => {
     it("stores intermediate results with correct R2 keys", async () => {
       setupSuccessfulPipeline();
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       // Restored image uploaded
       expect(mockUploadToR2).toHaveBeenCalledWith(
@@ -209,7 +240,7 @@ describe("executePipeline", () => {
     it("passes restoredImageKey when updating to colorizing", async () => {
       setupSuccessfulPipeline();
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(
         TASK_ID,
@@ -221,7 +252,7 @@ describe("executePipeline", () => {
     it("passes colorizedImageKey when updating to animating", async () => {
       setupSuccessfulPipeline();
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(
         TASK_ID,
@@ -233,7 +264,7 @@ describe("executePipeline", () => {
     it("uses restored CDN URL as input for colorization model", async () => {
       setupSuccessfulPipeline();
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockRunModel.mock.calls[1][1]).toEqual({
         image: `https://cdn.test.com/${RESTORED_KEY}`,
@@ -244,7 +275,7 @@ describe("executePipeline", () => {
     it("uses colorized CDN URL as input for animation model", async () => {
       setupSuccessfulPipeline();
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockRunModel.mock.calls[2][1]).toEqual({
         input_image: `https://cdn.test.com/${COLORIZED_KEY}`,
@@ -254,7 +285,7 @@ describe("executePipeline", () => {
     it("runs only restoration for restore workflow tasks", async () => {
       setupSuccessfulPipeline({ workflow: "restore" });
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockRunModel).toHaveBeenCalledTimes(1);
       expect(mockRunModel.mock.calls[0][0]).toBe("restoration");
@@ -280,7 +311,7 @@ describe("executePipeline", () => {
     it("runs restoration and colorization for colorize workflow tasks", async () => {
       setupSuccessfulPipeline({ workflow: "colorize" });
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockRunModel).toHaveBeenCalledTimes(2);
       expect(mockRunModel.mock.calls[0][0]).toBe("restoration");
@@ -304,7 +335,7 @@ describe("executePipeline", () => {
     it("runs restoration and animation for animate workflow tasks", async () => {
       setupSuccessfulPipeline({ workflow: "animate" });
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockRunModel).toHaveBeenCalledTimes(2);
       expect(mockRunModel.mock.calls[0][0]).toBe("restoration");
@@ -334,9 +365,9 @@ describe("executePipeline", () => {
       setupSuccessfulPipeline();
       mockGetUser.mockResolvedValue(makeUser({ tier: "free" }));
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
-      expect(mockRunModel.mock.calls[0]).toEqual([
+      expect(mockRunModel.mock.calls[0].slice(0, 2)).toEqual([
         "restoration",
         {
           img: "https://cdn.test.com/tasks/task-123/original.jpg",
@@ -350,9 +381,9 @@ describe("executePipeline", () => {
       setupSuccessfulPipeline();
       mockGetUser.mockResolvedValue(makeUser({ tier: "pay_as_you_go" }));
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
-      expect(mockRunModel.mock.calls[0]).toEqual([
+      expect(mockRunModel.mock.calls[0].slice(0, 2)).toEqual([
         "restorationPremium",
         {
           image: "https://cdn.test.com/tasks/task-123/original.jpg",
@@ -367,9 +398,9 @@ describe("executePipeline", () => {
       setupSuccessfulPipeline();
       mockGetUser.mockResolvedValue(makeUser({ tier: "professional" }));
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
-      expect(mockRunModel.mock.calls[0]).toEqual([
+      expect(mockRunModel.mock.calls[0].slice(0, 2)).toEqual([
         "restorationPremium",
         {
           image: "https://cdn.test.com/tasks/task-123/original.jpg",
@@ -384,7 +415,7 @@ describe("executePipeline", () => {
       setupSuccessfulPipeline();
       mockGetUser.mockResolvedValue(makeUser({ tier: "free" }));
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       // resizeImage called for restored and colorized images (2 image steps)
       expect(mockResizeImage).toHaveBeenCalledTimes(2);
@@ -398,7 +429,7 @@ describe("executePipeline", () => {
       setupSuccessfulPipeline();
       mockGetUser.mockResolvedValue(makeUser({ tier: "pay_as_you_go" }));
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockResizeImage).toHaveBeenCalledTimes(2);
       expect(mockResizeImage).toHaveBeenCalledWith(expect.any(Buffer), "pay_as_you_go");
@@ -409,7 +440,7 @@ describe("executePipeline", () => {
       setupSuccessfulPipeline();
       mockGetUser.mockResolvedValue(makeUser({ tier: "professional" }));
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockResizeImage).toHaveBeenCalledTimes(2);
       expect(mockResizeImage).toHaveBeenCalledWith(expect.any(Buffer), "professional");
@@ -425,7 +456,7 @@ describe("executePipeline", () => {
       mockRunModel.mockRejectedValueOnce(new Error("GFPGAN model failed"));
       mockSourceImageAccessible();
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "restoring");
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
@@ -450,7 +481,7 @@ describe("executePipeline", () => {
       );
       mockSourceImageAccessible();
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
         errorMessage: "AI service authentication is unavailable. Please contact support.",
@@ -483,7 +514,7 @@ describe("executePipeline", () => {
           arrayBuffer: () => Promise.resolve(fakeImageBuffer.buffer.slice(0)),
         });
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       // Restoration succeeded, colorization failed
       expect(mockRunModel).toHaveBeenCalledTimes(2);
@@ -524,7 +555,7 @@ describe("executePipeline", () => {
           arrayBuffer: () => Promise.resolve(fakeImageBuffer.buffer.slice(0)),
         });
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockRunModel).toHaveBeenCalledTimes(3);
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
@@ -558,12 +589,13 @@ describe("executePipeline", () => {
         arrayBuffer: () => Promise.resolve(fakeVideoBuffer.buffer.slice(0)),
       });
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockRunModel).toHaveBeenCalledTimes(1);
-      expect(mockRunModel).toHaveBeenCalledWith("animationPremium", {
-        input_image: `https://cdn.test.com/${COLORIZED_KEY}`,
-      });
+      expect(mockRunModel.mock.calls[0].slice(0, 2)).toEqual([
+        "animationPremium",
+        { input_image: `https://cdn.test.com/${COLORIZED_KEY}` },
+      ]);
       expect(mockResizeImage).not.toHaveBeenCalled();
       expect(mockApplyImageWatermark).not.toHaveBeenCalled();
       expect(mockUpdateTaskStatus.mock.calls.map((call) => call[1])).toEqual([
@@ -605,17 +637,17 @@ describe("executePipeline", () => {
           arrayBuffer: () => Promise.resolve(fakeVideoBuffer.buffer.slice(0)),
         });
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockRunModel).toHaveBeenCalledTimes(2);
-      expect(mockRunModel.mock.calls[0]).toEqual([
+      expect(mockRunModel.mock.calls[0].slice(0, 2)).toEqual([
         "colorization",
         {
           image: `https://cdn.test.com/${RESTORED_KEY}`,
           model_size: "large",
         },
       ]);
-      expect(mockRunModel.mock.calls[1]).toEqual([
+      expect(mockRunModel.mock.calls[1].slice(0, 2)).toEqual([
         "animationPaid",
         {
           input_image: `https://cdn.test.com/${COLORIZED_KEY}`,
@@ -645,17 +677,87 @@ describe("executePipeline", () => {
   });
 
   describe("edge cases", () => {
+    it("stops after ownership loss without publishing a failed or later-stage state", async () => {
+      const controller = new AbortController();
+      mockGetTask.mockResolvedValue(makeTask());
+      mockGetUser.mockResolvedValue(makeUser());
+      mockGetR2CdnUrl.mockReturnValue("https://cdn.test.com/original.jpg");
+      mockSourceImageAccessible();
+      mockRunModel.mockImplementationOnce(async () => {
+        controller.abort();
+        throw new Error("late provider response after lease loss");
+      });
+
+      await expect(
+        executePipeline(TASK_ID, {
+          executionToken: EXECUTION.executionToken,
+          signal: controller.signal,
+        })
+      ).rejects.toMatchObject({ name: "WorkerOwnershipLostError" });
+
+      expect(mockUpdateTaskStatus.mock.calls.map((call) => call[1])).toEqual([
+        "restoring",
+      ]);
+      expect(mockUploadToR2).not.toHaveBeenCalled();
+    });
+
+    it("moves an uncertain provider create into manual review", async () => {
+      mockGetTask.mockResolvedValue(makeTask());
+      mockGetUser.mockResolvedValue(makeUser());
+      mockGetR2CdnUrl.mockReturnValue("https://cdn.test.com/original.jpg");
+      mockSourceImageAccessible();
+      mockRunModel.mockRejectedValueOnce(new Error("PROVIDER_CREATION_UNKNOWN"));
+
+      await executePipeline(TASK_ID, EXECUTION);
+
+      expect(mockUpdateTaskStatus).toHaveBeenLastCalledWith(TASK_ID, "failed", {
+        errorMessage:
+          "The AI provider may have accepted this request, but its result could not be confirmed. Support must review it before another attempt.",
+        internalErrorMessage: "PROVIDER_CREATION_UNKNOWN",
+        failureStage: "restoring",
+        failureCode: "provider_creation_unknown",
+        violation: false,
+      });
+      expect(mockUploadToR2).not.toHaveBeenCalled();
+    });
+
+    it("marks a definitive provider create rejection as safe to retry", async () => {
+      mockGetTask.mockResolvedValue(makeTask());
+      mockGetUser.mockResolvedValue(makeUser());
+      mockGetR2CdnUrl.mockReturnValue("https://cdn.test.com/original.jpg");
+      mockSourceImageAccessible();
+      const rejection = new ReplicatePredictionCreateRejectedError(
+        422,
+        "Unprocessable Entity",
+        "invalid version"
+      );
+      mockRunModel.mockRejectedValueOnce(rejection);
+
+      await executePipeline(TASK_ID, EXECUTION);
+
+      expect(mockUpdateTaskStatus).toHaveBeenLastCalledWith(TASK_ID, "failed", {
+        errorMessage:
+          "AI model configuration is unavailable. Please contact support.",
+        internalErrorMessage:
+          "Replicate prediction create rejected with 422 Unprocessable Entity: invalid version",
+        failureStage: "restoring",
+        failureCode: "provider_config",
+        violation: false,
+        providerCreationDefinitivelyRejected: true,
+      });
+    });
+
     it("throws when task is not found", async () => {
       mockGetTask.mockResolvedValue(null);
 
-      await expect(executePipeline(TASK_ID)).rejects.toThrow(`Task not found: ${TASK_ID}`);
+      await expect(executePipeline(TASK_ID, EXECUTION)).rejects.toThrow(`Task not found: ${TASK_ID}`);
     });
 
     it("marks task as failed when user is not found", async () => {
       mockGetTask.mockResolvedValue(makeTask());
       mockGetUser.mockResolvedValue(null);
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
         errorMessage: "The task account is unavailable. Please sign in again or contact support.",
@@ -681,7 +783,7 @@ describe("executePipeline", () => {
           statusText: "Internal Server Error",
         });
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
         errorMessage: "A generated file could not be retrieved. Please try again.",
@@ -700,7 +802,7 @@ describe("executePipeline", () => {
       mockRunModel.mockRejectedValueOnce("string error");
       mockSourceImageAccessible();
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
         errorMessage: "Processing failed. Please try again.",
@@ -722,7 +824,7 @@ describe("executePipeline", () => {
         statusText: "Not Found",
       });
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockRunModel).not.toHaveBeenCalled();
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {
@@ -745,7 +847,7 @@ describe("executePipeline", () => {
         reason: "flagged:sexual",
       });
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockRunModel).not.toHaveBeenCalled();
       expect(mockUploadToR2).not.toHaveBeenCalled();
@@ -773,7 +875,7 @@ describe("executePipeline", () => {
           reason: "flagged:sexual",
         });
 
-      await executePipeline(TASK_ID);
+      await executePipeline(TASK_ID, EXECUTION);
 
       expect(mockUploadToR2).not.toHaveBeenCalled();
       expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "failed", {

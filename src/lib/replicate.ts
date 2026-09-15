@@ -1,9 +1,15 @@
 // Replicate API client with fixed model versions and animation parameters
 // Requirements: 16.1, 16.2, 16.3
 
-import Replicate from "replicate";
+import Replicate, { type Prediction } from "replicate";
 import { config } from "./config";
 import { assertAndReserveReplicateSpend } from "./replicate-spend";
+import {
+  getTaskForExecution,
+  updateTaskProviderInvocationFenced,
+  WorkerOwnershipLostError,
+} from "./task-execution";
+import type { ProviderInvocation, TaskProviderStage } from "@/types";
 
 // Fixed model versions - readonly, not overridable (Req 16.1)
 // Free users use a lightweight face restoration model. Paid users use a
@@ -42,6 +48,32 @@ export const ANIMATION_VARIANTS = {
 
 export type ModelKey = keyof typeof MODELS;
 
+export interface ModelExecutionContext {
+  taskId: string;
+  stage: TaskProviderStage;
+  executionToken: string;
+  signal: AbortSignal;
+}
+
+export class ProviderCreationUnknownError extends Error {
+  constructor() {
+    super("PROVIDER_CREATION_UNKNOWN");
+    this.name = "ProviderCreationUnknownError";
+  }
+}
+
+export class ReplicatePredictionCreateRejectedError extends Error {
+  readonly status: number;
+
+  constructor(status: number, statusText: string, detail: string) {
+    super(
+      `Replicate prediction create rejected with ${status} ${statusText}: ${detail}`.trim()
+    );
+    this.name = "ReplicatePredictionCreateRejectedError";
+    this.status = status;
+  }
+}
+
 const ANIMATION_MODEL_KEYS = [
   "animationFree",
   "animationPaid",
@@ -72,11 +104,9 @@ export function getReplicateClient(): Replicate {
  */
 export async function runModel(
   modelKey: ModelKey,
-  input: Record<string, unknown>
+  input: Record<string, unknown>,
+  context: ModelExecutionContext
 ): Promise<string> {
-  // Soft monthly budget guard before any paid prediction is created.
-  await assertAndReserveReplicateSpend(modelKey);
-
   const client = getReplicateClient();
   const modelVersion = MODELS[modelKey];
 
@@ -94,10 +124,282 @@ export async function runModel(
         }
       : { ...input };
 
-  // Do not auto-resubmit a model run on failure. Replicate's `run()` creates a
-  // prediction and then waits/polls for completion, so retrying the entire call
-  // can create duplicate paid predictions for a single user task.
-  const output = await client.run(modelVersion, { input: finalInput });
+  const task = await getTaskForExecution(
+    context.taskId,
+    context.executionToken,
+    context.signal
+  );
+  const existing = task.providerInvocations?.[context.stage];
+
+  if (existing) {
+    if (existing.modelKey !== modelKey) {
+      throw new ProviderCreationUnknownError();
+    }
+    if (existing.status === "creation_unknown" && !existing.predictionId) {
+      throw new ProviderCreationUnknownError();
+    }
+    if (existing.status === "succeeded" && existing.outputUrl) {
+      return existing.outputUrl;
+    }
+    if (existing.status === "failed") {
+      throw new Error(existing.error || "Replicate prediction failed");
+    }
+    if (!existing.predictionId) {
+      return failCreationUnknown(modelKey, context);
+    }
+    return pollPrediction(client, modelKey, existing.predictionId, context);
+  }
+
+  // Reserve before entering the ambiguous-create boundary. This operation
+  // cannot create a provider prediction, so its failures remain safely retryable.
+  await assertAndReserveReplicateSpend(modelKey);
+
+  await persistInvocation(context, {
+    status: "provider_creation_started",
+    modelKey,
+    updatedAt: new Date().toISOString(),
+  });
+
+  await getTaskForExecution(
+    context.taskId,
+    context.executionToken,
+    context.signal
+  );
+
+  let created: Prediction;
+  try {
+    created = await createPredictionOnce(modelVersion, finalInput, context.signal);
+  } catch (error) {
+    if (error instanceof WorkerOwnershipLostError || context.signal.aborted) {
+      throw new WorkerOwnershipLostError(context.taskId);
+    }
+    if (error instanceof ReplicatePredictionCreateRejectedError) {
+      try {
+        await persistInvocation(context, {
+          status: "failed",
+          modelKey,
+          error: error.message,
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (persistenceError) {
+        if (persistenceError instanceof WorkerOwnershipLostError) {
+          throw persistenceError;
+        }
+      }
+      throw error;
+    }
+    return failCreationUnknown(modelKey, context, error);
+  }
+
+  if (!created.id) {
+    return failCreationUnknown(modelKey, context, "missing prediction ID");
+  }
+
+  await persistKnownPredictionId(modelKey, created.id, context);
+
+  return pollPrediction(client, modelKey, created.id, context);
+}
+
+async function persistKnownPredictionId(
+  modelKey: ModelKey,
+  predictionId: string,
+  context: ModelExecutionContext
+): Promise<void> {
+  const activeInvocation: ProviderInvocation = {
+    status: "active",
+    modelKey,
+    predictionId,
+    updatedAt: new Date().toISOString(),
+  };
+
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      await persistInvocation(context, activeInvocation);
+      return;
+    } catch (error) {
+      if (error instanceof WorkerOwnershipLostError) throw error;
+      lastError = error;
+    }
+  }
+
+  // If Redis recovers on this final safe write, retain the known ID and keep
+  // polling it. Only an ID that cannot be made durable becomes manual review.
+  try {
+    await markCreationUnknown(modelKey, context, lastError, predictionId);
+    return;
+  } catch (error) {
+    if (error instanceof WorkerOwnershipLostError) throw error;
+    console.error(
+      `Failed to persist Replicate prediction ID for task ${context.taskId}:`,
+      error
+    );
+    throw new ProviderCreationUnknownError();
+  }
+}
+
+/**
+ * Submit exactly one provider POST. The Replicate SDK retries thrown transport
+ * errors internally, including POST requests, so prediction creation uses the
+ * platform fetch directly and deliberately has no retry loop.
+ */
+async function createPredictionOnce(
+  version: string,
+  input: Record<string, unknown>,
+  signal: AbortSignal
+): Promise<Prediction> {
+  const response = await fetch("https://api.replicate.com/v1/predictions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${config.replicate.apiToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ version, input }),
+    signal,
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const detail = (await response.text().catch(() => "")).slice(0, 500);
+    if (response.status >= 400 && response.status < 500 && response.status !== 408) {
+      throw new ReplicatePredictionCreateRejectedError(
+        response.status,
+        response.statusText,
+        detail
+      );
+    }
+    throw new Error(
+      `Replicate prediction create response was uncertain: ${response.status} ${response.statusText} ${detail}`.trim()
+    );
+  }
+
+  const prediction = await response.json();
+  if (!prediction || typeof prediction !== "object") {
+    throw new Error("Replicate prediction create returned an invalid response");
+  }
+  return prediction as Prediction;
+}
+
+async function persistInvocation(
+  context: ModelExecutionContext,
+  invocation: ProviderInvocation
+): Promise<void> {
+  await updateTaskProviderInvocationFenced(
+    context.taskId,
+    context.executionToken,
+    context.stage,
+    invocation,
+    context.signal
+  );
+}
+
+async function markCreationUnknown(
+  modelKey: ModelKey,
+  context: ModelExecutionContext,
+  error?: unknown,
+  predictionId?: string
+): Promise<void> {
+  await persistInvocation(context, {
+    status: "creation_unknown",
+    modelKey,
+    ...(predictionId ? { predictionId } : {}),
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+async function failCreationUnknown(
+  modelKey: ModelKey,
+  context: ModelExecutionContext,
+  error?: unknown,
+  predictionId?: string
+): Promise<never> {
+  try {
+    await markCreationUnknown(modelKey, context, error, predictionId);
+  } catch (persistenceError) {
+    if (persistenceError instanceof WorkerOwnershipLostError) {
+      throw persistenceError;
+    }
+    console.error(
+      `Failed to persist ambiguous Replicate creation for task ${context.taskId}:`,
+      persistenceError
+    );
+  }
+  throw new ProviderCreationUnknownError();
+}
+
+async function pollPrediction(
+  client: Replicate,
+  modelKey: ModelKey,
+  predictionId: string,
+  context: ModelExecutionContext
+): Promise<string> {
+  while (true) {
+    if (context.signal.aborted) {
+      throw new WorkerOwnershipLostError(context.taskId);
+    }
+
+    let prediction: Prediction;
+    try {
+      prediction = await client.predictions.get(predictionId, {
+        signal: context.signal,
+      });
+    } catch (error) {
+      if (context.signal.aborted) {
+        throw new WorkerOwnershipLostError(context.taskId);
+      }
+      throw error;
+    }
+
+    if (prediction.status === "succeeded") {
+      const outputUrl = parseOutput(modelKey, prediction.output);
+      await persistInvocation(context, {
+        status: "succeeded",
+        modelKey,
+        predictionId,
+        outputUrl,
+        updatedAt: new Date().toISOString(),
+      });
+      return outputUrl;
+    }
+
+    if (["failed", "canceled", "aborted"].includes(prediction.status)) {
+      const message = prediction.error
+        ? `Replicate prediction ${prediction.status}: ${String(prediction.error)}`
+        : `Replicate prediction ${prediction.status}`;
+      await persistInvocation(context, {
+        status: "failed",
+        modelKey,
+        predictionId,
+        error: message,
+        updatedAt: new Date().toISOString(),
+      });
+      throw new Error(message);
+    }
+
+    await pollingDelay(context);
+  }
+}
+
+function pollingDelay(context: ModelExecutionContext): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      context.signal.removeEventListener("abort", onAbort);
+      resolve();
+    }, 1_000);
+    const onAbort = () => {
+      clearTimeout(timeout);
+      reject(new WorkerOwnershipLostError(context.taskId));
+    };
+    if (context.signal.aborted) {
+      onAbort();
+      return;
+    }
+    context.signal.addEventListener("abort", onAbort, { once: true });
+  });
+}
+
+function parseOutput(modelKey: ModelKey, output: unknown): string {
 
   // Replicate SDK v1.x returns FileOutput objects (not plain strings).
   // FileOutput has a toString() that returns the URL, but JSON.stringify gives {}.

@@ -1,5 +1,10 @@
-import { getTask, updateTaskStatus, getUser } from "./redis";
-import { runModel, ANIMATION_PARAMS } from "./replicate";
+import { getUser } from "./redis";
+import {
+  runModel,
+  ANIMATION_PARAMS,
+  ProviderCreationUnknownError,
+  ReplicatePredictionCreateRejectedError,
+} from "./replicate";
 import { uploadToR2, getR2CdnUrl } from "./r2";
 import { applyImageWatermark, resizeImage } from "./watermark";
 import {
@@ -11,6 +16,12 @@ import { ReplicateSpendLimitError } from "./replicate-spend";
 import { v4 as uuidv4 } from "uuid";
 import type { TaskFailureStage, TaskWorkflow, UserTier } from "@/types";
 import { classifyPipelineFailure } from "@/lib/pipeline-error";
+import {
+  assertTaskExecutionOwned,
+  getTaskForExecution,
+  updateTaskStatusFenced,
+  WorkerOwnershipLostError,
+} from "@/lib/task-execution";
 
 export class ContentViolationError extends Error {
   readonly moderationReason?: string;
@@ -312,15 +323,31 @@ async function assertAnimationPromptAllowed(): Promise<void> {
   }
 }
 
-export async function executePipeline(taskId: string): Promise<void> {
-  const task = await getTask(taskId);
+export interface PipelineExecutionContext {
+  executionToken: string;
+  signal: AbortSignal;
+}
+
+export async function executePipeline(
+  taskId: string,
+  context: PipelineExecutionContext
+): Promise<void> {
+  const { executionToken, signal } = context;
+  const task = await getTaskForExecution(taskId, executionToken, signal);
   if (!task) {
     throw new Error(`Task not found: ${taskId}`);
   }
+  const checkpoint = () =>
+    assertTaskExecutionOwned(taskId, executionToken, signal);
+  const updateStatus = (
+    status: Parameters<typeof updateTaskStatusFenced>[2],
+    data?: Partial<typeof task>
+  ) => updateTaskStatusFenced(taskId, executionToken, status, data, signal);
 
   const user = await getUser(task.userId);
+  await checkpoint();
   if (!user) {
-    await updateTaskStatus(taskId, "failed", {
+    await updateStatus("failed", {
       errorMessage: "The task account is unavailable. Please sign in again or contact support.",
       internalErrorMessage: `User not found: ${task.userId}`,
       failureCode: "processing_failed",
@@ -341,25 +368,32 @@ export async function executePipeline(taskId: string): Promise<void> {
 
     if (!restoredKey || !restoredCdnUrl) {
       failureStage = "restoring";
-      await updateTaskStatus(taskId, "restoring");
+      await updateStatus("restoring");
 
       const originalCdnUrl = getR2CdnUrl(task.originalImageKey);
       await assertSourceImageAccessible(originalCdnUrl);
+      await checkpoint();
       // Block NSFW uploads before any Replicate spend.
       await assertImageAllowed(originalCdnUrl, "source");
+      await checkpoint();
 
       const restoredOutputUrl = await runModel(
         tierModelConfig.restoration.modelKey,
-        tierModelConfig.restoration.createInput(originalCdnUrl)
+        tierModelConfig.restoration.createInput(originalCdnUrl),
+        { taskId, stage: "restoring", executionToken, signal }
       );
 
       // Drop flagged outputs — never upload or return them to the user.
       await assertImageAllowed(restoredOutputUrl, "restored");
+      await checkpoint();
 
       const restoredBuffer = await downloadBuffer(restoredOutputUrl);
+      await checkpoint();
       const processedRestored = await applyImageTierSettings(restoredBuffer, tier);
+      await checkpoint();
       restoredKey = createDerivedAssetKey(taskId, "restored", "jpg");
       await uploadToR2(processedRestored, restoredKey, "image/jpeg");
+      await checkpoint();
       restoredCdnUrl = getR2CdnUrl(restoredKey);
     }
 
@@ -371,7 +405,7 @@ export async function executePipeline(taskId: string): Promise<void> {
     const shouldAnimate = needsAnimation(workflow);
 
     if (!shouldColorize && !shouldAnimate) {
-      await updateTaskStatus(taskId, "completed", {
+      await updateStatus("completed", {
         restoredImageKey: restoredKey,
         errorMessage: null,
         internalErrorMessage: null,
@@ -386,21 +420,29 @@ export async function executePipeline(taskId: string): Promise<void> {
 
     if (shouldColorize && (!colorizedKey || !colorizedCdnUrl)) {
       failureStage = "colorizing";
-      await updateTaskStatus(taskId, "colorizing", {
+      await updateStatus("colorizing", {
         restoredImageKey: restoredKey,
       });
 
-      const colorizedOutputUrl = await runModel("colorization", {
-        image: restoredCdnUrl,
-        ...tierModelConfig.colorization,
-      });
+      const colorizedOutputUrl = await runModel(
+        "colorization",
+        {
+          image: restoredCdnUrl,
+          ...tierModelConfig.colorization,
+        },
+        { taskId, stage: "colorizing", executionToken, signal }
+      );
 
       await assertImageAllowed(colorizedOutputUrl, "colorized");
+      await checkpoint();
 
       const colorizedBuffer = await downloadBuffer(colorizedOutputUrl);
+      await checkpoint();
       const processedColorized = await applyImageTierSettings(colorizedBuffer, tier);
+      await checkpoint();
       colorizedKey = createDerivedAssetKey(taskId, "colorized", "jpg");
       await uploadToR2(processedColorized, colorizedKey, "image/jpeg");
+      await checkpoint();
       colorizedCdnUrl = getR2CdnUrl(colorizedKey);
     }
 
@@ -409,7 +451,7 @@ export async function executePipeline(taskId: string): Promise<void> {
     }
 
     if (!shouldAnimate) {
-      await updateTaskStatus(taskId, "completed", {
+      await updateStatus("completed", {
         restoredImageKey: restoredKey,
         colorizedImageKey: colorizedKey,
         errorMessage: null,
@@ -421,24 +463,28 @@ export async function executePipeline(taskId: string): Promise<void> {
     }
 
     failureStage = "animating";
-    await updateTaskStatus(taskId, "animating", {
+    await updateStatus("animating", {
       restoredImageKey: restoredKey,
       ...(colorizedKey ? { colorizedImageKey: colorizedKey } : {}),
     });
 
     await assertAnimationPromptAllowed();
+    await checkpoint();
 
     const animationInputUrl = colorizedCdnUrl ?? restoredCdnUrl;
     const animationOutputUrl = await runModel(
       tierModelConfig.animation.modelKey,
-      tierModelConfig.animation.createInput(animationInputUrl)
+      tierModelConfig.animation.createInput(animationInputUrl),
+      { taskId, stage: "animating", executionToken, signal }
     );
 
     const animationBuffer = await downloadBuffer(animationOutputUrl);
+    await checkpoint();
     const animationKey = createDerivedAssetKey(taskId, "animation", "mp4");
     await uploadToR2(animationBuffer, animationKey, "video/mp4");
+    await checkpoint();
 
-    await updateTaskStatus(taskId, "completed", {
+    await updateStatus("completed", {
       restoredImageKey: restoredKey,
       ...(colorizedKey ? { colorizedImageKey: colorizedKey } : {}),
       animationVideoKey: animationKey,
@@ -448,6 +494,10 @@ export async function executePipeline(taskId: string): Promise<void> {
       violation: false,
     });
   } catch (error) {
+    if (error instanceof WorkerOwnershipLostError || signal.aborted) {
+      throw new WorkerOwnershipLostError(taskId);
+    }
+
     const rawMessage = error instanceof Error ? error.message : String(error);
     console.error(`Pipeline failed for task ${taskId}:`, rawMessage);
 
@@ -455,10 +505,16 @@ export async function executePipeline(taskId: string): Promise<void> {
     const isSpendLimit =
       error instanceof ReplicateSpendLimitError ||
       rawMessage.startsWith("REPLICATE_SPEND_LIMIT:");
+    const isProviderCreationUnknown =
+      error instanceof ProviderCreationUnknownError ||
+      rawMessage.startsWith("PROVIDER_CREATION_UNKNOWN");
+    const isDefinitiveCreateRejection =
+      error instanceof ReplicatePredictionCreateRejectedError;
 
     const classification = classifyPipelineFailure(rawMessage, {
       isViolation,
       isSpendLimit,
+      isProviderCreationUnknown,
     });
 
     const internalDetail =
@@ -466,12 +522,15 @@ export async function executePipeline(taskId: string): Promise<void> {
         ? `violation:${error.moderationReason ?? rawMessage}`
         : rawMessage;
 
-    await updateTaskStatus(taskId, "failed", {
+    await updateStatus("failed", {
       errorMessage: classification.errorMessage,
       internalErrorMessage: internalDetail,
       failureStage,
       failureCode: classification.failureCode,
       violation: classification.violation,
+      ...(isDefinitiveCreateRejection
+        ? { providerCreationDefinitivelyRejected: true }
+        : {}),
     });
   }
 }

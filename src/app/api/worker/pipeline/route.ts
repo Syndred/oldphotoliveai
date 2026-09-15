@@ -12,6 +12,7 @@ import {
 import { acquireLock, releaseLock, refreshLock } from "@/lib/lock";
 import { executePipeline } from "@/lib/pipeline";
 import { getTask } from "@/lib/redis";
+import { beginTaskExecution } from "@/lib/task-execution";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 import type { TaskStatus } from "@/types";
 
@@ -78,6 +79,19 @@ async function runPipelineWorker(): Promise<void> {
       // Step 3: Acquire distributed lock.
       lease = await acquireLock(`lock:task:${taskId}`);
       if (lease) {
+        const executionController = new AbortController();
+        let ownershipLost = false;
+        const stopForOwnershipLoss = (reason: string, error?: unknown) => {
+          if (ownershipLost) return;
+          ownershipLost = true;
+          if (error) {
+            console.error(`Lost worker ownership for task ${taskId}: ${reason}`, error);
+          } else {
+            console.warn(`Lost worker ownership for task ${taskId}: ${reason}`);
+          }
+          executionController.abort();
+        };
+
         // Keep both leases alive for long-running tasks.
         renewInterval = setInterval(async () => {
           try {
@@ -86,20 +100,26 @@ async function runPipelineWorker(): Promise<void> {
               refreshTaskClaim(claim!),
             ]);
             if (!lockRenewed) {
-              console.warn(`Failed to renew lock for task ${taskId}: lease not owned`);
+              stopForOwnershipLoss("lock lease not owned");
             }
             if (!claimRenewed) {
-              console.warn(`Failed to renew queue claim for task ${taskId}: claim not owned`);
+              stopForOwnershipLoss("queue claim not owned");
             }
           } catch (error) {
-            console.error(`Failed to renew worker leases for task ${taskId}:`, error);
+            stopForOwnershipLoss("lease renewal failed", error);
           }
         }, LOCK_RENEW_INTERVAL_MS);
 
         // Recovered terminal claims are acknowledged without re-execution.
         const task = await getTask(taskId);
         if (task && !TERMINAL_STATUSES.has(task.status)) {
-          await executePipeline(taskId);
+          const beginResult = await beginTaskExecution(taskId, claim, lease);
+          if (beginResult === "started") {
+            await executePipeline(taskId, {
+              executionToken: claim.leaseMember,
+              signal: executionController.signal,
+            });
+          }
         }
       } else {
         lockConflict = true;

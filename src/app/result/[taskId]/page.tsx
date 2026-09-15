@@ -48,7 +48,9 @@ function readTaskContext(
     retryAllowed:
       typeof data.retryAllowed === "boolean"
         ? data.retryAllowed
-        : data.status === "failed" && failureCode !== "content_rejected",
+        : data.status === "failed" &&
+          failureCode !== "content_rejected" &&
+          failureCode !== "provider_creation_unknown",
   };
 }
 
