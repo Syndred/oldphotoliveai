@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 import { getAccessibleTask, type TaskAccessMode } from "@/lib/task-access";
 import { toPublicTaskStatus } from "@/lib/task-status";
+import { schedulePipelineWakeupForStatus } from "@/lib/worker-wakeup";
 
 const POLL_INTERVAL_MS = 2000;
 const HEARTBEAT_INTERVAL_MS = 15000;
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ taskI
       { status: 404 }
     );
   }
+  schedulePipelineWakeupForStatus(initialAccessibleTask.task.status);
   const accessMode: TaskAccessMode = initialAccessibleTask.mode;
 
   const stream = new ReadableStream({

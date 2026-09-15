@@ -46,12 +46,21 @@ an expired worker from extending or deleting a successor's lock.
 The pipeline dispatch endpoint registers execution with Next.js `after()` and
 returns before long-running model work begins. The platform keeps that lifecycle
 task alive after the response without making earlier workers wait for the full
-recursive chain. Every claimed invocation reaches a final wake-up path,
-including lock conflicts. If lock acquisition, claim settlement, or lock release
-fails, the self-chain request carries the tokenized recovery claim. Dispatch is
-awaited inside the lifecycle task with two bounded retries. An authenticated
-five-minute pipeline cron is the durable fallback, so queued work can recover
-without a new customer task even when every immediate dispatch fails.
+recursive chain. Normal successful work can immediately schedule the next ready
+task. Lock conflicts settle and stop, avoiding a request hot loop. If lock
+acquisition, claim settlement, or lock release fails, the self-chain request
+carries the tokenized recovery claim plus a cross-request attempt and
+`notBefore`; three recovery successors is the hard limit. Future-dated requests
+return without starting work, and no delay relies on an in-process timer.
+
+Authenticated REST/SSE status observation schedules a worker wakeup through a
+global Redis `SET NX EX` marker, limiting high-frequency polling to one dispatch
+per minute while still recovering expired leases. A Hobby-compatible daily cron
+is the cold fallback when nobody is observing a result. Pipeline, cleanup, and
+quota-reset cron GET requests all require a configured matching `CRON_SECRET`;
+missing configuration fails closed with 401. Pipeline lifecycle work has a
+300-second route duration, after which the existing queue and lock leases remain
+the recovery source of truth.
 
 ## Failure codes
 
@@ -86,9 +95,10 @@ the original anonymous visitor cookie.
 6. In the disposable Redis namespace, force a worker exception and a task-lock
    conflict. Confirm the unfinished task returns to `queue:tasks`. Let a claim
    lease expire, invoke the worker again, and confirm it is recovered. Repeat
-   with a completed task and confirm the pipeline is not executed twice. Reject
-   two self-chain requests and confirm the third is attempted; reject all three
-   and confirm the authenticated cron recovers the ready task within five minutes.
+   with a completed task and confirm the pipeline is not executed twice. Confirm
+   lock conflicts do not self-chain, persistent failures stop after the third
+   cross-request recovery attempt, repeated status polling creates one throttled
+   wakeup per minute, and the authenticated daily cron can recover cold work.
 7. In GA4 DebugView with internal/developer traffic isolated, verify the event
    sequence and dimensions. Confirm no task ID, object key, raw error, email or
    query string appears in event parameters or page location/title overrides.

@@ -42,7 +42,7 @@ jest.mock("@/lib/redis", () => ({
   getTask: (...args: unknown[]) => mockGetTask(...args),
 }));
 
-import { GET, POST } from "@/app/api/worker/pipeline/route";
+import { GET, POST, maxDuration } from "@/app/api/worker/pipeline/route";
 
 const claim = { taskId: "task-1", score: 1234, leaseMember: "claim-json" };
 const lease = { key: "lock:task:task-1", token: "lock-token", ttlSeconds: 300 };
@@ -105,7 +105,7 @@ afterAll(() => {
 });
 
 describe("pipeline worker claims", () => {
-  it("returns a lock-conflicted claim and registers a successor after the response", async () => {
+  it("returns a lock-conflicted claim without creating a self-chain hot loop", async () => {
     mockAcquireLock.mockResolvedValue(null);
     mockSettleTaskClaim.mockResolvedValue("requeued");
     mockGetQueueLength.mockResolvedValue({ urgent: 0, high: 0, normal: 1 });
@@ -121,10 +121,7 @@ describe("pipeline worker claims", () => {
 
     expect(mockSettleTaskClaim).toHaveBeenCalledWith(claim);
     expect(mockExecutePipeline).not.toHaveBeenCalled();
-    expect(global.fetch).toHaveBeenCalledWith(
-      "http://localhost:3000/api/worker/pipeline",
-      expect.objectContaining({ method: "POST" })
-    );
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 
   it("settles the claim and releases the lock after an unexpected pipeline error", async () => {
@@ -161,10 +158,14 @@ describe("pipeline worker claims", () => {
 
     expect(mockSettleTaskClaim).toHaveBeenCalledWith(claim);
     expect(mockReleaseLock).not.toHaveBeenCalled();
-    expect(global.fetch).toHaveBeenCalledWith(
-      "http://localhost:3000/api/worker/pipeline",
-      expect.objectContaining({ body: JSON.stringify({ recoveryClaim: claim }) })
+    const recoveryBody = JSON.parse(
+      (global.fetch as jest.Mock).mock.calls[0][1].body
     );
+    expect(recoveryBody).toMatchObject({
+      recoveryClaim: claim,
+      recoveryAttempt: 1,
+      notBefore: expect.any(Number),
+    });
   });
 
   it("releases the lock and schedules a successor when settlement throws", async () => {
@@ -193,12 +194,15 @@ describe("pipeline worker claims", () => {
     await expect(runAfterTasks()).rejects.toThrow("release unavailable");
 
     expect(mockSettleTaskClaim).toHaveBeenCalledWith(claim);
-    expect(global.fetch).toHaveBeenCalledWith(
-      "http://localhost:3000/api/worker/pipeline",
-      expect.objectContaining({
-        body: JSON.stringify({ recoveryClaim: claim, recoveryLease: lease }),
-      })
+    const recoveryBody = JSON.parse(
+      (global.fetch as jest.Mock).mock.calls[0][1].body
     );
+    expect(recoveryBody).toMatchObject({
+      recoveryClaim: claim,
+      recoveryLease: lease,
+      recoveryAttempt: 1,
+      notBefore: expect.any(Number),
+    });
   });
 
   it("retries a rejected self-chain request inside the registered lifecycle task", async () => {
@@ -227,6 +231,46 @@ describe("pipeline worker claims", () => {
     }
   });
 
+  it("caps recovery retries across successor requests and preserves recovery state", async () => {
+    const now = jest.spyOn(Date, "now").mockReturnValue(1_000_000);
+    mockExecutePipeline.mockRejectedValue(new Error("persistent pipeline failure"));
+    mockSettleTaskClaim.mockResolvedValue("requeued");
+    mockGetQueueLength.mockResolvedValue({ urgent: 0, high: 0, normal: 1 });
+
+    try {
+      let recovery: Record<string, unknown> | undefined;
+
+      for (let expectedAttempt = 1; expectedAttempt <= 3; expectedAttempt++) {
+        const response = await POST(request(recovery));
+        expect(response.status).toBe(200);
+        await expect(runAfterTasks()).rejects.toThrow("persistent pipeline failure");
+
+        const fetchMock = global.fetch as jest.Mock;
+        const latestCall = fetchMock.mock.calls.at(-1);
+        expect(latestCall).toBeDefined();
+        recovery = JSON.parse(latestCall[1].body) as Record<string, unknown>;
+        expect(recovery).toMatchObject({
+          recoveryAttempt: expectedAttempt,
+          recoveryClaim: claim,
+          recoveryLease: lease,
+        });
+        expect(recovery.notBefore).toEqual(expect.any(Number));
+
+        const deferred = await POST(request(recovery));
+        expect(deferred.status).toBe(202);
+        expect(mockAfterCallbacks).toHaveLength(0);
+        now.mockReturnValue(recovery.notBefore as number);
+      }
+
+      const finalResponse = await POST(request(recovery));
+      expect(finalResponse.status).toBe(200);
+      await expect(runAfterTasks()).rejects.toThrow("persistent pipeline failure");
+      expect(global.fetch).toHaveBeenCalledTimes(3);
+    } finally {
+      now.mockRestore();
+    }
+  });
+
   it("has an authenticated cron fallback that can recover queued work", async () => {
     process.env.CRON_SECRET = "cron-secret";
     const deployment = JSON.parse(
@@ -235,8 +279,15 @@ describe("pipeline worker claims", () => {
 
     expect(deployment.crons).toContainEqual({
       path: "/api/worker/pipeline",
-      schedule: "*/5 * * * *",
+      schedule: "17 2 * * *",
     });
+    expect(deployment.crons).not.toContainEqual(
+      expect.objectContaining({
+        path: "/api/worker/pipeline",
+        schedule: expect.stringContaining("*/5"),
+      })
+    );
+    expect(maxDuration).toBe(300);
 
     const response = await GET(
       new Request("http://localhost/api/worker/pipeline", {

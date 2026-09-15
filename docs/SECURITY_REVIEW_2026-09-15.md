@@ -26,9 +26,15 @@ were used.
   and release are atomic token comparisons, closing the previous check/act race.
   Cleanup failures self-chain a validated recovery claim so the next authorized
   worker can retry settlement before taking new work. Next.js `after()` binds
-  execution to the platform lifecycle; dispatch retries are bounded and every
-  lock-conflict path schedules a successor. An authenticated five-minute cron
-  recovers the queue if all immediate dispatch attempts fail.
+  execution to the platform lifecycle. Transport retries are bounded, recovery
+  requests carry a cross-request attempt/not-before budget, and lock conflicts
+  stop after safely requeueing instead of creating a hot loop. Authenticated
+  status observation uses a global Redis `SET NX EX` marker to wake at most one
+  worker per minute. A Hobby-compatible authenticated daily cron provides cold
+  recovery if no result page is being observed.
+- All worker cron GET handlers fail closed. A missing or incorrect
+  `CRON_SECRET` returns 401 for pipeline, cleanup, and quota reset; their POST
+  handlers continue to require `WORKER_SECRET`.
 - `npm audit fix` without `--force` updated compatible dependencies, including
   next-auth 4.24.15, next-intl 4.14.5 and the AWS XML builder chain. Direct
   image/ID dependencies were updated to sharp 0.35.4 and uuid 14.0.2. The

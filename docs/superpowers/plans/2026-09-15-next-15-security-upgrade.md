@@ -4,7 +4,7 @@
 
 **Goal:** Upgrade to the smallest approved secure Next.js line and clear production high/critical dependency advisories without changing product behavior.
 
-**Architecture:** Pin the framework and ESLint configuration to 15.5.25, override its compatible PostCSS dependency to the audited 8.5.28 release, use compiler/build failures as migration tests for Next.js 15 asynchronous request APIs, and keep React 18 plus the existing next-intl middleware architecture. Bind pipeline work to `after()`, retry immediate self-chain dispatches, and add an authenticated cron fallback.
+**Architecture:** Pin the framework and ESLint configuration to 15.5.25, override its compatible PostCSS dependency to the audited 8.5.28 release, use compiler/build failures as migration tests for Next.js 15 asynchronous request APIs, and keep React 18 plus the existing next-intl middleware architecture. Bind pipeline work to `after()`, bound recovery across requests, throttle observer wakeups in Redis, and keep an authenticated daily cron fallback.
 
 **Tech Stack:** Next.js 15.5.25, React 18, TypeScript, next-intl 4, PostCSS 8.5.28, Jest, npm audit.
 
@@ -41,10 +41,15 @@
 - Modify: `src/app/api/worker/pipeline/route.ts`
 - Modify: `__tests__/unit/pipeline-worker-route.test.ts`
 - Modify: `vercel.json`
+- Create: `src/lib/worker-wakeup.ts`
+- Create: `__tests__/unit/worker-wakeup.test.ts`
+- Create: `__tests__/unit/worker-cron-auth.test.ts`
 
 - [x] Run middleware, i18n, route-contract, image, and Server Action searches/tests.
 - [x] Confirm `images.unoptimized` remains enabled, no Server Actions exist, and no deprecated edge runtime value is present.
-- [x] Register worker execution with `after()`, add bounded self-chain retries, schedule lock-conflict successors, and configure an authenticated five-minute cron fallback.
+- [x] Register worker execution with `after()` and a 300-second duration, stop lock-conflict self-chains, and cap error recovery with cross-request attempt/not-before state.
+- [x] Add Redis-throttled status-observer wakeups and a Hobby-compatible authenticated daily cron fallback.
+- [x] Make pipeline, cleanup, and quota-reset cron GET authentication fail closed while preserving POST worker-secret authentication.
 - [x] Run the focused SEO, route, and worker lifecycle suites.
 
 ### Task 4: Full release gate and local commit

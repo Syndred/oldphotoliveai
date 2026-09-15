@@ -18,9 +18,9 @@ The legacy `next lint` command remains available in Next.js 15, so the existing 
 
 ## Worker Lifecycle
 
-The pipeline POST endpoint registers execution with stable Next.js `after()` and returns immediately. The platform therefore keeps the long-running worker attached to the request lifecycle without making each predecessor wait for the full recursive chain. At completion, the lifecycle task awaits only the next endpoint's immediate scheduling response and retries failed dispatches twice with bounded delays. Lock-conflict paths schedule the same successor after atomically returning the claim to the ready queue.
+The pipeline POST endpoint registers execution with stable Next.js `after()` and returns immediately. The platform therefore keeps the long-running worker attached to the request lifecycle without making each predecessor wait for the full recursive chain. The route declares a 300-second duration. Normal successful work can immediately schedule the next task. Lock-conflict paths atomically requeue and stop. Error successors carry an attempt and `notBefore`, stop after three cross-request attempts, and never depend on an in-process delay timer.
 
-An authenticated Vercel cron invokes the same scheduler every five minutes. This is the durable fallback if all immediate dispatch attempts fail and guarantees that queued or expired work can resume without another user request.
+Authenticated result-status observations use a global one-minute Redis `SET NX EX` marker before dispatching a wakeup, so polling provides timely expired-lease recovery without a request storm. A Hobby-compatible authenticated daily Vercel cron is the cold fallback. All three worker cron GET routes reject missing or incorrect `CRON_SECRET` values.
 
 ## Evidence and Release Gate
 

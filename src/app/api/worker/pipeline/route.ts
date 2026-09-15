@@ -18,7 +18,9 @@ import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 import type { TaskStatus } from "@/types";
 
 const LOCK_RENEW_INTERVAL_MS = 90_000;
-const SELF_CHAIN_RETRY_DELAYS_MS = [250, 1_000] as const;
+const SELF_CHAIN_TRANSPORT_ATTEMPTS = 3;
+const MAX_RECOVERY_CHAIN_ATTEMPTS = 3;
+const RECOVERY_BACKOFF_MS = [5_000, 30_000, 120_000] as const;
 const TERMINAL_STATUSES = new Set<TaskStatus>([
   "completed",
   "failed",
@@ -28,7 +30,11 @@ const TERMINAL_STATUSES = new Set<TaskStatus>([
 interface WorkerRecoveryState {
   recoveryClaim?: TaskClaim;
   recoveryLease?: LockLease;
+  recoveryAttempt?: number;
+  notBefore?: number;
 }
+
+export const maxDuration = 300;
 
 function parseRecoveryClaim(value: unknown): TaskClaim | undefined {
   if (!value || typeof value !== "object") return undefined;
@@ -80,9 +86,23 @@ async function readRecoveryState(request: Request): Promise<WorkerRecoveryState>
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   const recoveryClaim = parseRecoveryClaim(body?.recoveryClaim);
   const recoveryLease = parseRecoveryLease(body?.recoveryLease);
+  const recoveryAttempt =
+    typeof body?.recoveryAttempt === "number" &&
+    Number.isSafeInteger(body.recoveryAttempt) &&
+    body.recoveryAttempt >= 0
+      ? Math.min(body.recoveryAttempt, MAX_RECOVERY_CHAIN_ATTEMPTS)
+      : undefined;
+  const notBefore =
+    typeof body?.notBefore === "number" &&
+    Number.isSafeInteger(body.notBefore) &&
+    body.notBefore >= 0
+      ? body.notBefore
+      : undefined;
   return {
     ...(recoveryClaim ? { recoveryClaim } : {}),
     ...(recoveryLease ? { recoveryLease } : {}),
+    ...(recoveryAttempt !== undefined ? { recoveryAttempt } : {}),
+    ...(notBefore !== undefined ? { notBefore } : {}),
   };
 }
 
@@ -111,7 +131,7 @@ async function triggerNextTaskIfQueued(
   };
 
   let lastError: unknown;
-  for (let attempt = 0; attempt <= SELF_CHAIN_RETRY_DELAYS_MS.length; attempt++) {
+  for (let attempt = 0; attempt < SELF_CHAIN_TRANSPORT_ATTEMPTS; attempt++) {
     try {
       const response = await fetch(
         `${baseUrl}/api/worker/pipeline`,
@@ -121,11 +141,6 @@ async function triggerNextTaskIfQueued(
       lastError = new Error(`Pipeline self-chain returned ${response.status}`);
     } catch (error) {
       lastError = error;
-    }
-
-    const retryDelay = SELF_CHAIN_RETRY_DELAYS_MS[attempt];
-    if (retryDelay !== undefined) {
-      await new Promise((resolve) => setTimeout(resolve, retryDelay));
     }
   }
 
@@ -138,6 +153,7 @@ async function runPipelineWorker(recovery: WorkerRecoveryState): Promise<void> {
   let lease: Awaited<ReturnType<typeof acquireLock>> = null;
   let renewInterval: ReturnType<typeof setInterval> | undefined;
   let executionError: unknown;
+  let lockConflict = false;
 
   try {
     // A previous worker may have failed while settling after Redis had already
@@ -191,6 +207,8 @@ async function runPipelineWorker(recovery: WorkerRecoveryState): Promise<void> {
         if (task && !TERMINAL_STATUSES.has(task.status)) {
           await executePipeline(taskId);
         }
+      } else {
+        lockConflict = true;
       }
     }
   } catch (error) {
@@ -218,23 +236,24 @@ async function runPipelineWorker(recovery: WorkerRecoveryState): Promise<void> {
         }
       }
 
-      // Force a successor on any failure. This remains live even when queue
-      // inspection is the operation that failed, and lets the next invocation
-      // recover a requeued or expired claim without a pipeline cron.
+      // Errors can emit a globally bounded recovery successor. Ordinary lock
+      // conflicts stop here and wait for an observer wakeup or the daily cron.
     }
 
     const wakeClaim = claim ?? recovery.recoveryClaim;
     const wakeLease = lease ?? recovery.recoveryLease;
-    if (wakeClaim || wakeLease) {
-      await triggerNextTaskIfQueued(
-        Boolean(executionError),
-        executionError
-          ? {
-              ...(wakeClaim ? { recoveryClaim: wakeClaim } : {}),
-              ...(wakeLease ? { recoveryLease: wakeLease } : {}),
-            }
-          : undefined
-      );
+    if ((wakeClaim || wakeLease) && executionError) {
+      const recoveryAttempt = recovery.recoveryAttempt ?? 0;
+      if (recoveryAttempt < MAX_RECOVERY_CHAIN_ATTEMPTS) {
+        await triggerNextTaskIfQueued(true, {
+          ...(wakeClaim ? { recoveryClaim: wakeClaim } : {}),
+          ...(wakeLease ? { recoveryLease: wakeLease } : {}),
+          recoveryAttempt: recoveryAttempt + 1,
+          notBefore: Date.now() + RECOVERY_BACKOFF_MS[recoveryAttempt],
+        });
+      }
+    } else if ((wakeClaim || wakeLease) && !lockConflict) {
+      await triggerNextTaskIfQueued();
     }
   }
 
@@ -244,6 +263,13 @@ async function runPipelineWorker(recovery: WorkerRecoveryState): Promise<void> {
 function schedulePipelineWorker(
   recovery: WorkerRecoveryState
 ): NextResponse {
+  if (recovery.notBefore !== undefined && recovery.notBefore > Date.now()) {
+    return NextResponse.json(
+      { status: "deferred", notBefore: recovery.notBefore },
+      { status: 202 }
+    );
+  }
+
   // `after` binds the work to the platform request lifecycle while allowing the
   // dispatch endpoint to respond before a long-running pipeline task finishes.
   after(() => runPipelineWorker(recovery));

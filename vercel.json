@@ -1,6 +1,6 @@
 {
   "crons": [
-    { "path": "/api/worker/pipeline", "schedule": "*/5 * * * *" },
+    { "path": "/api/worker/pipeline", "schedule": "17 2 * * *" },
     { "path": "/api/worker/quota-reset", "schedule": "0 0 * * *" },
     { "path": "/api/worker/cleanup", "schedule": "0 0 * * *" }
   ]

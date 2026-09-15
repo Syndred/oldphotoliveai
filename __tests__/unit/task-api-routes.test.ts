@@ -6,6 +6,7 @@ const mockGetAnonymousTaskOwnedByVisitor = jest.fn();
 const mockCancelTask = jest.fn<Promise<boolean>, [string]>();
 const mockRetryTaskAtomic = jest.fn();
 const mockGetToken = jest.fn();
+const mockSchedulePipelineWakeupForStatus = jest.fn();
 
 jest.mock("@/lib/redis", () => ({
   getTaskOwnedByUser: (...args: unknown[]) =>
@@ -17,6 +18,11 @@ jest.mock("@/lib/redis", () => ({
 
 jest.mock("@/lib/task-retry", () => ({
   retryTaskAtomic: (...args: unknown[]) => mockRetryTaskAtomic(args[0]),
+}));
+
+jest.mock("@/lib/worker-wakeup", () => ({
+  schedulePipelineWakeupForStatus: (...args: unknown[]) =>
+    mockSchedulePipelineWakeupForStatus(...args),
 }));
 
 jest.mock("next-auth/jwt", () => ({
@@ -80,6 +86,7 @@ beforeEach(() => {
   mockGetAnonymousTaskOwnedByVisitor.mockReset().mockResolvedValue(null);
   mockGetToken.mockReset();
   mockWorkerFetch.mockReset().mockResolvedValue(undefined);
+  mockSchedulePipelineWakeupForStatus.mockReset();
 
   mockGetToken.mockResolvedValue({ userId: "user-001" });
 });
@@ -121,6 +128,7 @@ describe("GET /api/tasks/[taskId]/status", () => {
     expect(body.progress).toBe(0);
     expect(body.errorMessage).toBeUndefined();
     expect(body.restoredImageKey).toBeUndefined();
+    expect(mockSchedulePipelineWakeupForStatus).toHaveBeenCalledWith("pending");
   });
 
   it("returns result keys for completed task", async () => {

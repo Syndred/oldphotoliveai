@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 import { getAccessibleTask } from "@/lib/task-access";
 import { toPublicTaskStatus } from "@/lib/task-status";
+import { schedulePipelineWakeupForStatus } from "@/lib/worker-wakeup";
 
 export async function GET(request: NextRequest, props: { params: Promise<{ taskId: string }> }) {
   const params = await props.params;
@@ -20,6 +21,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ taskI
         { status: 404 }
       );
     }
+    schedulePipelineWakeupForStatus(accessibleTask.task.status);
     return NextResponse.json(
       toPublicTaskStatus(accessibleTask.task, accessibleTask.mode)
     );
