@@ -238,29 +238,71 @@ async function persistKnownPredictionId(
   }
 }
 
+const CREATE_RATE_LIMIT_RETRIES = 2;
+
+function getRateLimitDelayMs(response: Response, detail: string): number {
+  const retryAfter = response.headers.get("Retry-After");
+  const bodySeconds = detail.match(
+    /"retry_after"\s*:\s*(\d+(?:\.\d+)?)/i
+  )?.[1];
+  const raw = retryAfter ?? bodySeconds;
+  const seconds = raw ? Number(raw) : 10;
+  return Math.min(Math.max(Number.isFinite(seconds) ? seconds : 10, 0), 20) * 1000;
+}
+
+function waitForRateLimit(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      signal.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    const onAbort = () => {
+      clearTimeout(timeout);
+      reject(new DOMException("Aborted", "AbortError"));
+    };
+    if (signal.aborted) {
+      onAbort();
+      return;
+    }
+    signal.addEventListener("abort", onAbort, { once: true });
+  });
+}
+
 /**
- * Submit exactly one provider POST. The Replicate SDK retries thrown transport
- * errors internally, including POST requests, so prediction creation uses the
- * platform fetch directly and deliberately has no retry loop.
+ * Submit one provider POST, except when Replicate definitively rejects it with
+ * 429. A rejected creation has no prediction to duplicate, so bounded retries
+ * after Retry-After are safe; transport and ambiguous 5xx failures never retry.
  */
 async function createPredictionOnce(
   version: string,
   input: Record<string, unknown>,
   signal: AbortSignal
 ): Promise<Prediction> {
-  const response = await fetch("https://api.replicate.com/v1/predictions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${config.replicate.apiToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ version, input }),
-    signal,
-    cache: "no-store",
-  });
+  for (let attempt = 0; ; attempt += 1) {
+    const response = await fetch("https://api.replicate.com/v1/predictions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${config.replicate.apiToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ version, input }),
+      signal,
+      cache: "no-store",
+    });
 
-  if (!response.ok) {
+    if (response.ok) {
+      const prediction = await response.json();
+      if (!prediction || typeof prediction !== "object") {
+        throw new Error("Replicate prediction create returned an invalid response");
+      }
+      return prediction as Prediction;
+    }
+
     const detail = (await response.text().catch(() => "")).slice(0, 500);
+    if (response.status === 429 && attempt < CREATE_RATE_LIMIT_RETRIES) {
+      await waitForRateLimit(getRateLimitDelayMs(response, detail), signal);
+      continue;
+    }
     if (response.status >= 400 && response.status < 500 && response.status !== 408) {
       throw new ReplicatePredictionCreateRejectedError(
         response.status,
@@ -272,12 +314,6 @@ async function createPredictionOnce(
       `Replicate prediction create response was uncertain: ${response.status} ${response.statusText} ${detail}`.trim()
     );
   }
-
-  const prediction = await response.json();
-  if (!prediction || typeof prediction !== "object") {
-    throw new Error("Replicate prediction create returned an invalid response");
-  }
-  return prediction as Prediction;
 }
 
 async function persistInvocation(

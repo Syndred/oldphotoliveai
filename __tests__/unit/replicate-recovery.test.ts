@@ -310,6 +310,47 @@ describe("recoverable Replicate predictions", () => {
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 
+  it("waits and retries when prediction creation is definitively rate-limited", async () => {
+    mockFetch
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ detail: "slow down", retry_after: 0 }), {
+          status: 429,
+          statusText: "Too Many Requests",
+        })
+      )
+      .mockResolvedValueOnce(
+        predictionResponse({ status: "starting", output: undefined })
+      );
+    mockGet.mockResolvedValue(prediction());
+
+    await expect(
+      runModel("restoration", { img: "https://input.test/photo.jpg" }, context())
+    ).resolves.toBe("https://output.test/restored.jpg");
+
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(mockReserveSpend).toHaveBeenCalledTimes(1);
+    expect(currentTask.providerInvocations?.restoring).toMatchObject({
+      status: "succeeded",
+      predictionId: "prediction-1",
+    });
+  });
+
+  it("stops after bounded retries when creation remains rate-limited", async () => {
+    mockFetch.mockImplementation(async () =>
+      new Response(JSON.stringify({ detail: "slow down", retry_after: 0 }), {
+        status: 429,
+        statusText: "Too Many Requests",
+      })
+    );
+
+    await expect(
+      runModel("restoration", { img: "https://input.test/photo.jpg" }, context())
+    ).rejects.toBeInstanceOf(ReplicatePredictionCreateRejectedError);
+
+    expect(mockFetch).toHaveBeenCalledTimes(3);
+    expect(currentTask.providerInvocations?.restoring?.status).toBe("failed");
+  });
+
   it("does not enter the ambiguous-create state when spend reservation fails", async () => {
     mockReserveSpend.mockRejectedValue(new Error("REPLICATE_SPEND_LIMIT:50/50"));
 
