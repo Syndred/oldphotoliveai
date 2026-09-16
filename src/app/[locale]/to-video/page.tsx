@@ -19,7 +19,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
     description: page.description,
     path: page.path,
     keywords: page.keywords,
-    robots: locale === "en" ? undefined : { index: false, follow: true },
+    robots: { index: false, follow: true },
   });
 
   return {

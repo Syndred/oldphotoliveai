@@ -21,6 +21,7 @@ export async function generateMetadata(props: LocalizedToolPageProps): Promise<M
     description: page.description,
     path: "/repair-damaged-old-photos",
     keywords: page.keywords,
+    robots: { index: false, follow: true },
   });
 }
 

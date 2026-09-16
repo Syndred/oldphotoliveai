@@ -21,6 +21,7 @@ import {
 } from "@/lib/seo";
 import type { Locale } from "@/i18n/routing";
 import type { TaskWorkflow } from "@/types";
+import { RESTORE_HOW_IT_WORKS } from "@/content/home-animation";
 
 interface ToolLandingPageProps {
   locale: Locale;
@@ -215,7 +216,15 @@ export default function ToolLandingPage({
           </section>
         ) : null}
 
-        {!isEnglishColorizer && <HowItWorksSection />}
+        {!isEnglishColorizer && (
+          <HowItWorksSection
+            copy={
+              locale === "en" && slug === "restore-old-photos"
+                ? RESTORE_HOW_IT_WORKS
+                : undefined
+            }
+          />
+        )}
 
         <section className="px-4 py-4 sm:py-6">
           <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-[1.2fr,0.8fr]">

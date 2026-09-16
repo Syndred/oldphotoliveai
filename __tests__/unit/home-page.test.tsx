@@ -190,14 +190,9 @@ describe("HomePage", () => {
     expect(screen.getByTestId("upload-zone")).toBeInTheDocument();
   });
 
-  it("renders SEO tool navigation and related tool links", () => {
+  it("renders the focused homepage navigation", () => {
     render(<HomePage />);
-
-    expect(screen.getByRole("navigation", {
-      name: "OldPhotoLiveAI tool navigation",
-    })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Free Quota & Plans" })).toHaveAttribute("href", "/pricing");
-    expect(screen.getByRole("link", { name: "AI Photo Colorizer" })).toHaveAttribute("href", "/colorize-old-photos");
+    expect(screen.getByTestId("navbar")).toBeInTheDocument();
   });
 
   it("shows the content safety notice and localized terms link", () => {
@@ -224,7 +219,7 @@ describe("HomePage", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           imageKey: "https://cdn.example.com/test.jpg",
-          workflow: "colorize",
+          workflow: "full",
         }),
       });
     });

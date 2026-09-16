@@ -196,35 +196,20 @@ describe("Navbar", () => {
   it("renders all navigation links", () => {
     __setMockPathname("/");
     render(<Navbar />);
-    expect(screen.getByText("Home")).toBeInTheDocument();
+    expect(screen.getByText("How It Works")).toBeInTheDocument();
     expect(screen.getByText("Pricing")).toBeInTheDocument();
     expect(screen.queryByText("History")).not.toBeInTheDocument();
   });
 
-  it("links to the animation search tools from the primary navigation", () => {
+  it("removes the old SEO tool links from the primary navigation", () => {
     __setMockPathname("/");
     render(<Navbar />);
 
-    expect(screen.getByRole("link", { name: "Animate Photos" })).toHaveAttribute(
-      "href",
-      "/animate"
-    );
-    expect(screen.getByRole("link", { name: "No Login" })).toHaveAttribute(
-      "href",
-      "/no-login"
-    );
-    expect(screen.getByRole("link", { name: "Free Animation" })).toHaveAttribute(
-      "href",
-      "/animate-free"
-    );
-    expect(screen.getByRole("link", { name: "Bring to Life" })).toHaveAttribute(
-      "href",
-      "/bring-to-life"
-    );
-    expect(screen.getByRole("link", { name: "Photo to Video" })).toHaveAttribute(
-      "href",
-      "/to-video"
-    );
+    expect(screen.queryByRole("link", { name: "Animate Photos" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "No Login" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Free Animation" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Bring to Life" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Photo to Video" })).not.toBeInTheDocument();
   });
 
   it("does not show English-only SEO links in a non-English navigation", () => {
@@ -240,18 +225,17 @@ describe("Navbar", () => {
   it("links point to correct routes", () => {
     __setMockPathname("/");
     render(<Navbar />);
-    expect(screen.getByText("Home").closest("a")).toHaveAttribute("href", "/");
+    expect(screen.getByText("OldPhotoLive AI").closest("a")).toHaveAttribute("href", "/");
     expect(screen.getByText("Pricing").closest("a")).toHaveAttribute(
       "href",
       "/pricing"
     );
   });
 
-  it("highlights active Home link when on /", () => {
+  it("links How It Works to the pipeline section", () => {
     __setMockPathname("/");
     render(<Navbar />);
-    const homeLink = screen.getByText("Home").closest("a");
-    expect(homeLink?.className).toContain("text-white");
+    expect(screen.getByText("How It Works").closest("a")).toHaveAttribute("href", "#how-it-works-section");
   });
 
   it("highlights active History link when on /history", () => {
@@ -264,9 +248,6 @@ describe("Navbar", () => {
     const historyLink = screen.getByText("History").closest("a");
     // Active link has "text-white" as a standalone class (not just in hover:text-white)
     expect(historyLink?.className).toMatch(/(?<![:\w-])text-white(?!\S)/);
-    const homeLink = screen.getByText("Home").closest("a");
-    // Home should have the secondary text color, not the active white
-    expect(homeLink?.className).toContain("text-[var(--color-text-secondary)]");
   });
 
   it("includes AuthButton", () => {

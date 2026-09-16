@@ -13,7 +13,7 @@ export const TOOL_PAGE_SLUGS = [
 export type ToolPageSlug = (typeof TOOL_PAGE_SLUGS)[number];
 
 const TOOL_PAGE_PATHS: Record<ToolPageSlug, string> = {
-  "restore-old-photos": "/restore",
+  "restore-old-photos": "/restore-old-photos",
   "colorize-old-photos": "/colorize-old-photos",
   "animate-old-photos": "/animate",
   "repair-damaged-old-photos": "/repair-damaged-old-photos",

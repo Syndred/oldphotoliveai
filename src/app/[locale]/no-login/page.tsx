@@ -25,6 +25,7 @@ export async function generateMetadata(props: LocalizedNoLoginPageProps): Promis
       "old photo animation no sign up",
       "animate old photos online free",
     ],
+    robots: { index: false, follow: true },
   });
 
   return {

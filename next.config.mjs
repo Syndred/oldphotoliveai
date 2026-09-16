@@ -1,9 +1,15 @@
 import createNextIntlPlugin from 'next-intl/plugin';
+import redirectsConfig from './src/config/redirects.cjs';
+
+const { LEGACY_REDIRECTS } = redirectsConfig;
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async redirects() {
+    return [...LEGACY_REDIRECTS];
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**.googleusercontent.com' },

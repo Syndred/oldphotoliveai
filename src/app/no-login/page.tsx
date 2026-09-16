@@ -14,6 +14,7 @@ const noLoginMetadata = buildPageMetadata({
     "old photo animation no sign up",
     "animate old photos online free",
   ],
+  robots: { index: false, follow: true },
 });
 
 export const metadata: Metadata = {

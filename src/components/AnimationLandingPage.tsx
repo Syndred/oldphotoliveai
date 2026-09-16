@@ -13,6 +13,10 @@ import { Link } from "@/i18n/navigation";
 import { buildBreadcrumbJsonLd } from "@/lib/seo";
 import { absoluteLocalizedUrl } from "@/lib/seo";
 import type { Locale } from "@/i18n/routing";
+import {
+  ANIMATE_HOW_IT_WORKS,
+  BRING_TO_LIFE_HOW_IT_WORKS,
+} from "@/content/home-animation";
 
 interface AnimationLandingPageProps {
   locale: Locale;
@@ -136,7 +140,15 @@ export default function AnimationLandingPage({
           </div>
         </section>
 
-        <HowItWorksSection />
+        <HowItWorksSection
+          copy={
+            locale === "en" && slug === "animate"
+              ? ANIMATE_HOW_IT_WORKS
+              : locale === "en" && slug === "bring-to-life"
+                ? BRING_TO_LIFE_HOW_IT_WORKS
+                : undefined
+          }
+        />
         <FAQSection title={page.faqTitle} items={page.faqs} />
 
         <section className="px-4 py-10 sm:py-14">
