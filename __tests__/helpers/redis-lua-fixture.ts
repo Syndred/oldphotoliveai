@@ -57,6 +57,10 @@ export class RedisLuaFixture {
     set.set(member, score);
   }
 
+  removeSorted(key: string, member: string): void {
+    this.sortedSets.get(key)?.delete(member);
+  }
+
   sortedMembers(key: string): string[] {
     return Array.from(this.sortedSets.get(key)?.entries() ?? [])
       .sort(

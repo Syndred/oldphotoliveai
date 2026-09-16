@@ -39,6 +39,7 @@ describe("executable Redis Lua queue state machine", () => {
     expect(results.filter((result) => (result as unknown[]).length === 0)).toHaveLength(1);
     expect(redis.sortedMembers(READY)).toEqual([]);
     expect(redis.sortedMembers(PROCESSING)).toHaveLength(1);
+    expect(redis.sortedMembers(PROCESSING)[0]).toMatch(/^claim:/);
   });
 
   it("returns an unfinished lock-conflict claim at its original score", async () => {
@@ -88,6 +89,28 @@ describe("executable Redis Lua queue state machine", () => {
     expect(newClaim[2]).toContain("new-token");
     expect(redis.sortedMembers(READY)).toEqual([]);
     expect(redis.sortedMembers(PROCESSING)).toEqual([newClaim[2]]);
+  });
+
+  it("recovers the legacy unprefixed JSON lease format", async () => {
+    redis.removeSorted(READY, "task-1");
+    const legacyClaim = JSON.stringify({
+      taskId: "task-1",
+      score: 1234,
+      token: "legacy-token",
+    });
+    redis.addSorted(PROCESSING, 999, legacyClaim);
+
+    const recovered = asClaim(
+      await redis.eval(
+        TASK_CLAIM_SCRIPT,
+        [READY, PROCESSING],
+        claimArgs(1000, 2000, "new-token")
+      )
+    );
+
+    expect(recovered[0]).toBe("task-1");
+    expect(recovered[2]).toMatch(/^claim:/);
+    expect(redis.sortedMembers(PROCESSING)).toEqual([recovered[2]]);
   });
 
   it("acknowledges a terminal task without putting it back in the ready queue", async () => {

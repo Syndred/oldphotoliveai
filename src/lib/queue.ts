@@ -30,7 +30,14 @@ local expiredClaims = redis.call(
   'LIMIT', 0, ${EXPIRED_CLAIM_RECOVERY_LIMIT}
 )
 for _, expiredMember in ipairs(expiredClaims) do
-  local ok, expiredClaim = pcall(cjson.decode, expiredMember)
+  -- Prefix new lease members so Upstash does not automatically deserialize
+  -- the JSON string into a JavaScript object on the way back to the worker.
+  -- Keep accepting the old unprefixed format while existing leases expire.
+  local encodedClaim = expiredMember
+  if string.sub(expiredMember, 1, 6) == 'claim:' then
+    encodedClaim = string.sub(expiredMember, 7)
+  end
+  local ok, expiredClaim = pcall(cjson.decode, encodedClaim)
   if ok and type(expiredClaim) == 'table' and expiredClaim.taskId and expiredClaim.score then
     local rawTask = redis.call('GET', 'task:' .. expiredClaim.taskId)
     if rawTask then
@@ -53,7 +60,7 @@ end
 
 local taskId = tostring(nextItems[1])
 local score = tonumber(nextItems[2])
-local queueClaim = cjson.encode({ taskId = taskId, score = score, token = ARGV[3] })
+local queueClaim = 'claim:' .. cjson.encode({ taskId = taskId, score = score, token = ARGV[3] })
 redis.call('ZADD', KEYS[2], tonumber(ARGV[2]), queueClaim)
 return { taskId, tostring(score), queueClaim }
 `;

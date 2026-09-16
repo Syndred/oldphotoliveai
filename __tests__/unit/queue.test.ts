@@ -21,7 +21,7 @@ const redisMock = {
     return [
       item.member,
       String(item.score),
-      JSON.stringify({ taskId: item.member, score: item.score, token: "test" }),
+      `claim:${JSON.stringify({ taskId: item.member, score: item.score, token: "test" })}`,
     ];
   }),
   zadd: jest.fn(
@@ -139,6 +139,7 @@ describe("claimNextTask", () => {
 
     const result = await claimNextTask();
     expect(result?.taskId).toBe("urgent-task");
+    expect(result?.leaseMember).toMatch(/^claim:/);
   });
 
   it("dequeues tasks in FIFO order within the same priority", async () => {
