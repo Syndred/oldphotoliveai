@@ -5,9 +5,9 @@ export const HOME_METADATA = {
 } as const;
 
 export const HOME_PIPELINE_STEPS = [
-  { title: "Restore", description: "Remove scratches, noise, folds, and blur from old and damaged photos. Our AI cleanup prepares your image for the next steps." },
-  { title: "Colorize", description: "Add natural, realistic color to black and white photos. The AI uses patterns learned from millions of photographs to infer plausible colors." },
-  { title: "Animate", description: "Bring faces to life with subtle, natural motion — a gentle smile, a blink, or a turn of the head. Respectful, not cartoonish." },
+  { title: "Restore", href: "/restore-old-photos", description: "Remove scratches, noise, folds, and blur from old and damaged photos. Our AI cleanup prepares your image for the next steps." },
+  { title: "Colorize", href: "/colorize-old-photos", description: "Add natural, realistic color to black and white photos. The AI uses patterns learned from millions of photographs to infer plausible colors." },
+  { title: "Animate", href: "/animate", description: "Bring faces to life with subtle, natural motion — a gentle smile, a blink, or a turn of the head. Respectful, not cartoonish." },
 ] as const;
 
 export const HOME_USE_CASES = [

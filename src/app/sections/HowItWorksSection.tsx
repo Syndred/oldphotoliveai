@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 const STEPS = [
   { key: "step1" as const, number: 1 },
@@ -11,12 +12,12 @@ const STEPS = [
 export interface HowItWorksCopy {
   title: string;
   subtitle: string;
-  steps: ReadonlyArray<{ title: string; description: string }>;
+  steps: ReadonlyArray<{ title: string; description: string; href?: string }>;
 }
 
 export default function HowItWorksSection({ copy }: { copy?: HowItWorksCopy }) {
   const t = useTranslations("landing.howItWorks");
-  const resolvedSteps = copy?.steps ?? STEPS.map((step) => ({
+  const resolvedSteps: ReadonlyArray<{ title: string; description: string; href?: string }> = copy?.steps ?? STEPS.map((step) => ({
     title: t(`${step.key}.title`),
     description: t(`${step.key}.description`),
   }));
@@ -32,8 +33,9 @@ export default function HowItWorksSection({ copy }: { copy?: HowItWorksCopy }) {
         </p>
 
         <div className="mt-8 grid gap-6 md:grid-cols-3 md:gap-8">
-          {resolvedSteps.map((step, index) => (
-            <div key={step.title} className="mx-auto flex max-w-md flex-col items-center text-center">
+          {resolvedSteps.map((step, index) => {
+            const content = (
+              <>
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] text-xl font-bold text-[var(--color-primary-bg)]">
                 {index + 1}
               </div>
@@ -43,8 +45,20 @@ export default function HowItWorksSection({ copy }: { copy?: HowItWorksCopy }) {
               <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
                 {step.description}
               </p>
-            </div>
-          ))}
+              {step.href ? <span className="mt-4 text-sm font-medium text-[var(--color-accent)]">Explore {step.title} →</span> : null}
+              </>
+            );
+
+            return step.href ? (
+              <Link key={step.title} href={step.href} className="mx-auto flex max-w-md flex-col items-center rounded-2xl border border-transparent p-5 text-center transition hover:border-white/10 hover:bg-white/[0.03]">
+                {content}
+              </Link>
+            ) : (
+              <div key={step.title} className="mx-auto flex max-w-md flex-col items-center p-5 text-center">
+                {content}
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

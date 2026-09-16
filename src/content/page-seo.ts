@@ -20,9 +20,9 @@ export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
   en: {
     home: {
       title:
-        "AI Photo Colorizer - Colorize Old Photos Online Free",
+        "Animate Old Photos with AI — Restore, Colorize & Bring Old Photos to Life Online Free",
       description:
-        "Colorize old photos online with our AI photo colorizer. Turn black-and-white pictures into color, with a free daily account quota. Repair faded photos too.",
+        "Restore, colorize, and animate your old family photos with AI. Upload a vintage photo and watch it come to life in seconds. Free preview.",
     },
     pricing: {
       title: "Pricing",

@@ -196,8 +196,14 @@ describe("Navbar", () => {
   it("renders all navigation links", () => {
     __setMockPathname("/");
     render(<Navbar />);
+    expect(screen.getByRole("link", { name: "Photo Animation" })).toHaveAttribute("href", "/animate");
     expect(screen.getByText("How It Works")).toBeInTheDocument();
+    expect(screen.getByText("Examples")).toBeInTheDocument();
     expect(screen.getByText("Pricing")).toBeInTheDocument();
+    expect(screen.getByText("Other Tools")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Restore Old Photos" })).toHaveAttribute("href", "/restore-old-photos");
+    expect(screen.getByRole("link", { name: "Colorize Old Photos" })).toHaveAttribute("href", "/colorize-old-photos");
+    expect(screen.getByRole("link", { name: "Repair Damaged Photos" })).toHaveAttribute("href", "/repair-damaged-old-photos");
     expect(screen.queryByText("History")).not.toBeInTheDocument();
   });
 
@@ -236,6 +242,7 @@ describe("Navbar", () => {
     __setMockPathname("/");
     render(<Navbar />);
     expect(screen.getByText("How It Works").closest("a")).toHaveAttribute("href", "#how-it-works-section");
+    expect(screen.getByText("Examples").closest("a")).toHaveAttribute("href", "#showcase-section");
   });
 
   it("highlights active History link when on /history", () => {

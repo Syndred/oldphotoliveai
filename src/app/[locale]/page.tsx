@@ -21,9 +21,9 @@ export async function generateMetadata(props: LocalizedHomePageProps): Promise<M
     description: seo.description,
     path: "/",
     keywords: [
-      "ai photo colorizer",
-      "colorize old photos",
-      "colorize black and white photos",
+      "animate old photos",
+      "bring old photos to life",
+      "restore colorize animate old photos",
     ],
   });
 
