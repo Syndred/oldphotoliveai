@@ -53,20 +53,6 @@ const siteJsonLd = [
     url: SITE_URL,
     description: SITE_DESCRIPTION,
   },
-  {
-    "@context": "https://schema.org",
-    "@type": "WebApplication",
-    name: BRAND_NAME,
-    url: SITE_URL,
-    description: SITE_DESCRIPTION,
-    applicationCategory: "MultimediaApplication",
-    operatingSystem: "Web",
-    offers: {
-      "@type": "Offer",
-      price: "0.00",
-      priceCurrency: "USD",
-    },
-  },
 ];
 
 export const metadata: Metadata = {

@@ -36,7 +36,7 @@ describe("root PWA metadata", () => {
     expect(viewport).toMatchObject({ themeColor: "#111827" });
   });
 
-  it("puts Organization, WebSite, and WebApplication JSON-LD in the document head", async () => {
+  it("puts only site-wide Organization and WebSite JSON-LD in the document head", async () => {
     const RootLayout = rootLayout.default;
     const document = renderToStaticMarkup(
       await RootLayout({ children: React.createElement("main", null, "Page content") })
@@ -44,7 +44,8 @@ describe("root PWA metadata", () => {
 
     expect(document).toContain('"@type":"Organization"');
     expect(document).toContain('"@type":"WebSite"');
-    expect(document).toContain('"@type":"WebApplication"');
+    expect(document).not.toContain('"@type":"WebApplication"');
+    expect(document).not.toContain("Colorize old photos with our AI photo colorizer");
     expect(document.indexOf("<head>")).toBeLessThan(
       document.indexOf('"@type":"Organization"')
     );

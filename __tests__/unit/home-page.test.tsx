@@ -168,6 +168,20 @@ beforeEach(() => {
 });
 
 describe("HomePage", () => {
+  it("renders one page-specific WebApplication and VideoObject without FAQPage", () => {
+    const { container } = render(<HomePageView />);
+    const schema = JSON.parse(
+      container.querySelector('script[type="application/ld+json"]')?.textContent ?? "[]"
+    ) as Array<{ "@type": string }>;
+
+    expect(schema.map((item) => item["@type"])).toEqual([
+      "WebApplication",
+      "VideoObject",
+    ]);
+    expect(schema.filter((item) => item["@type"] === "WebApplication")).toHaveLength(1);
+    expect(schema.some((item) => item["@type"] === "FAQPage")).toBe(false);
+  });
+
   it.each(["zh", "es", "ja"] as const)("preserves the full workflow on the %s homepage", async (locale) => {
     mockUseLocale.mockReturnValue(locale);
     __setMockLocale(locale);

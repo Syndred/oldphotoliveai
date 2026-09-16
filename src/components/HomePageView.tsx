@@ -5,8 +5,7 @@ import HomeUseCasesSection from "@/app/sections/HomeUseCasesSection";
 import HowItWorksSection from "@/app/sections/HowItWorksSection";
 import FAQSection from "@/app/sections/FAQSection";
 import FooterSection from "@/app/sections/FooterSection";
-import { BRAND_NAME, BRAND_ICON, SITE_URL } from "@/lib/site";
-import { absoluteUrl } from "@/lib/seo";
+import { SITE_URL } from "@/lib/site";
 import { HOME_ANIMATION_FAQS, HOME_HOW_IT_WORKS, HOME_METADATA } from "@/content/home-animation";
 import { SHOWCASE_SAMPLE_ASSETS } from "@/config/showcase-assets";
 import { resolveShowcaseAssetUrl } from "@/config/showcase";
@@ -15,14 +14,6 @@ import type { Locale } from "@/i18n/routing";
 export default function HomePageView({ locale = "en" }: { locale?: Locale } = {}) {
   const demo = SHOWCASE_SAMPLE_ASSETS[0];
   const jsonLd = [
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      name: BRAND_NAME,
-      url: SITE_URL,
-      email: "support@oldphotoliveai.com",
-      logo: absoluteUrl(BRAND_ICON),
-    },
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
