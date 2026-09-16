@@ -3,6 +3,8 @@ import type { NextRequest, NextResponse } from "next/server";
 
 export const ANONYMOUS_VISITOR_COOKIE = "opla_anon_visitor";
 export const ANONYMOUS_TRIAL_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
+export const ANONYMOUS_TRIAL_USED_ERROR =
+  "You have already used your free no-login trial. Sign up for HD and unlimited animations.";
 
 export function createAnonymousVisitorId(): string {
   return uuidv4();

@@ -5,11 +5,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateFile, generateStorageKey } from "@/lib/validation";
 import { uploadToR2 } from "@/lib/r2";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
+import { getToken } from "next-auth/jwt";
 import {
+  ANONYMOUS_TRIAL_USED_ERROR,
   createAnonymousVisitorId,
   getAnonymousVisitorId,
   setAnonymousVisitorCookie,
 } from "@/lib/anonymous";
+import { getAnonymousTrialTaskId } from "@/lib/redis";
 
 type UploadErrorKey =
   | "uploadFailed"
@@ -141,6 +144,28 @@ export async function POST(request: NextRequest) {
   const locale = getRequestLocale(request);
 
   try {
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
+    const visitorId = getAnonymousVisitorId(request);
+    if (!token && visitorId) {
+      const existingTrialTaskId = await getAnonymousTrialTaskId(visitorId);
+      if (existingTrialTaskId) {
+        return NextResponse.json(
+          {
+            error: ANONYMOUS_TRIAL_USED_ERROR,
+            code: "ANONYMOUS_TRIAL_USED",
+            taskId:
+              existingTrialTaskId === "claimed"
+                ? undefined
+                : existingTrialTaskId,
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     const formData = await request.formData();
     const file = formData.get("file");
 

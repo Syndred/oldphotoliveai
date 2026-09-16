@@ -4,9 +4,20 @@ import { NextRequest } from "next/server";
 // ── Mock dependencies ───────────────────────────────────────────────────────
 
 const mockUploadToR2 = jest.fn().mockResolvedValue("tasks/uuid/photo.jpg");
+const mockGetToken = jest.fn();
+const mockGetAnonymousTrialTaskId = jest.fn();
 
 jest.mock("@/lib/r2", () => ({
   uploadToR2: (...args: unknown[]) => mockUploadToR2(...args),
+}));
+
+jest.mock("next-auth/jwt", () => ({
+  getToken: (...args: unknown[]) => mockGetToken(...args),
+}));
+
+jest.mock("@/lib/redis", () => ({
+  getAnonymousTrialTaskId: (...args: unknown[]) =>
+    mockGetAnonymousTrialTaskId(...args),
 }));
 
 jest.mock("@/lib/config", () => ({
@@ -23,13 +34,14 @@ jest.mock("@/lib/config", () => ({
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-function createFileRequest(file?: File): NextRequest {
+function createFileRequest(file?: File, cookie?: string): NextRequest {
   const formData = new FormData();
   if (file) {
     formData.append("file", file);
   }
   return new NextRequest("http://localhost/api/upload", {
     method: "POST",
+    headers: cookie ? { Cookie: cookie } : undefined,
     body: formData,
   });
 }
@@ -53,9 +65,28 @@ function createNamedError(name: string, message: string): Error {
 
 beforeEach(() => {
   mockUploadToR2.mockReset().mockResolvedValue("tasks/uuid/photo.jpg");
+  mockGetToken.mockReset().mockResolvedValue({ userId: "signed-user" });
+  mockGetAnonymousTrialTaskId.mockReset().mockResolvedValue(null);
 });
 
 describe("POST /api/upload", () => {
+  it("rejects a repeated anonymous trial before uploading another file", async () => {
+    mockGetToken.mockResolvedValue(null);
+    mockGetAnonymousTrialTaskId.mockResolvedValue("task-existing");
+    const file = createTestFile("photo.jpg", "image/jpeg", 1024);
+    const req = createFileRequest(file, "opla_anon_visitor=visitor-001");
+
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(403);
+    expect(body).toMatchObject({
+      code: "ANONYMOUS_TRIAL_USED",
+      taskId: "task-existing",
+    });
+    expect(mockUploadToR2).not.toHaveBeenCalled();
+  });
+
   it("returns 400 when no file is provided", async () => {
     const req = createFileRequest();
     const res = await POST(req);

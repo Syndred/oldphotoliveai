@@ -216,6 +216,6 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/api/:path*",
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|brand-icon.png|apple-touch-icon.png|robots.txt|sitemap.xml).*)",
   ],
 };

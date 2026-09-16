@@ -3,13 +3,11 @@ import {
   createAnonymousVisitorId,
   getAnonymousVisitorId,
   setAnonymousVisitorCookie,
+  ANONYMOUS_TRIAL_USED_ERROR,
 } from "@/lib/anonymous";
 import { isSafeTaskStorageKey } from "@/lib/validation";
 import { getErrorMessage, getRequestLocale } from "@/lib/i18n-api";
 import { createAnonymousTaskAtomic } from "@/lib/task-creation";
-
-const ANONYMOUS_TRIAL_USED_ERROR =
-  "You have already used your free no-login trial. Sign up for HD and unlimited animations.";
 
 export async function POST(request: NextRequest) {
   const locale = getRequestLocale(request);
