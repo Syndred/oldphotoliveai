@@ -64,12 +64,26 @@
 - 生产脚本验证首页、上色、修复、动画、教程、转视频 6 个重点页面的 title、H1、description、canonical、hreflang 与 JSON-LD 通过。
 - 生产 sitemap 共 41 个唯一 URL；逐条抓取均为 200、自指 canonical、允许索引，无旧别名或重复 URL。最终输出：`All SEO production smoke checks passed.`
 
-### GSC 证据与待办
+### GSC 证据与操作结果
 
-- 已知汇总快照：23 个已编入索引、29 个未编入索引；其中 13 个“网页会自动重定向”、6 个 `noindex`、1 个 404、9 个“已抓取 - 尚未编入索引”。
-- 当前可用的两个 Google 登录账号访问 `sc-domain:oldphotoliveai.com` 都显示无权访问，因此无法读取那 9 个 URL 的真实列表，也不能安全提交 sitemap 或逐条请求编入索引。
-- 这 9 个 URL 不得根据路由或聚合数字猜测。取得权限后应逐条记录：URL、实时 HTTP、canonical、索引意图、内容质量、GSC 结论和最终动作。
-- 生产验证完成且 GSC 权限恢复后：提交 `/sitemap.xml`；仅对返回 200、自指 canonical、允许索引且有独立价值的页面执行 URL 检查/请求编入索引。301、`noindex`、404 或合并页不请求收录。
+- 正确资源是 URL 前缀属性 `https://oldphotoliveai.com/`；`sc-domain:oldphotoliveai.com` 是未验证的域名属性。账号 `syndredyoung@gmail.com` 可访问前缀属性。
+- GSC 网页索引快照最后更新于 2026-09-14：23 个已编入索引、29 个未编入索引；其中 13 个“网页会自动重定向”、6 个 `noindex`、1 个 404、9 个“已抓取 - 尚未编入索引”。
+- 2026-09-19 已重新提交 `/sitemap.xml`，GSC 回读“已成功提交站点地图”。提交日期已更新；上次读取日期仍显示 2026-04-03、已发现 36 个网页，等待 Google 异步重新读取当前 41-URL sitemap。
+
+| GSC 的 9 条示例 URL | 当前线上状态 | 动作 |
+| --- | --- | --- |
+| `/ja/repair-damaged-old-photos` | 200、自指 canonical、`noindex,follow` | 不请求收录 |
+| `/en/repair-damaged-old-photos` | 301 → `/repair-damaged-old-photos` | 不请求收录 |
+| `/es/repair-damaged-old-photos` | 200、自指 canonical、`noindex,follow` | 不请求收录 |
+| `/restore-old-photos` | 200、自指 canonical、可索引、在 sitemap | 已请求编入索引；GSC 回读“已将网址添加到优先抓取队列中” |
+| `/_next/static/media/e4af272ccee01ff0-s.p.woff2` | 200 字体资源 | 不请求收录 |
+| `/en/colorize-old-photos` | 301 → `/colorize-old-photos` | 不请求收录 |
+| `/es/colorize-old-photos` | 200、自指 canonical、可索引、在 sitemap | 已请求编入索引；GSC 回读“已将网址添加到优先抓取队列中” |
+| `/favicon.ico` | 200 图标资源 | 不请求收录 |
+| `/es` | 200、自指 canonical、可索引、在 sitemap | 已请求编入索引；GSC 回读“已将网址添加到优先抓取队列中” |
+
+- `/restore-old-photos` 的旧抓取记录（2026-07-26）仍显示历史声明 canonical `/en/restore`；当前生产 canonical 已修正为 `/restore-old-photos`，因此本次重新请求抓取是必要的。
+- 请求进入抓取队列不代表已经收录；后续应在 GSC 数据刷新后复查 Google 选择的 canonical 和索引状态。
 
 ### 提交记录
 
