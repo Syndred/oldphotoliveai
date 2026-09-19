@@ -55,6 +55,15 @@
 - `scripts/check-colorizer-seo.mjs` 会检查：单跳 301、查询参数、最终 200、title/H1/description、canonical、hreflang、robots、JSON-LD 唯一性，以及 sitemap 内每个 URL 的 200/自指 canonical/可索引状态。
 - 本地普通 Node `next start` 会让 next-intl 的无前缀英语内部 rewrite 再次经过仓库既有 `/en` 301 规则，出现自跳转；Vercel 当前生产运行时没有该现象。因此本地内容契约由单测覆盖，完整 URL smoke 必须在真实 Vercel 部署后执行。
 
+### 生产部署与回读
+
+- 2026-09-19 已推送到 `master`，Vercel/Cloudflare 生产环境已切换到新版本。
+- `https://oldphotoliveai.com/` 实际返回标题 `Colorize Photo Online Free – AI Photo Colorizer` 和 H1 `Colorize Photos with AI`，上传区、工具入口与下方内容正常显示。
+- `/colorize-old-photos` 实际返回目标标题/H1，可见面包屑、上传区、说明、FAQ 和指向修复/动画最终 URL 的相关链接均正常显示。
+- 13 组代表性旧 URL/语言变体已验证为单跳 301，查询参数保留，最终 URL 直接返回 200。
+- 生产脚本验证首页、上色、修复、动画、教程、转视频 6 个重点页面的 title、H1、description、canonical、hreflang 与 JSON-LD 通过。
+- 生产 sitemap 共 41 个唯一 URL；逐条抓取均为 200、自指 canonical、允许索引，无旧别名或重复 URL。最终输出：`All SEO production smoke checks passed.`
+
 ### GSC 证据与待办
 
 - 已知汇总快照：23 个已编入索引、29 个未编入索引；其中 13 个“网页会自动重定向”、6 个 `noindex`、1 个 404、9 个“已抓取 - 尚未编入索引”。
@@ -64,5 +73,7 @@
 
 ### 提交记录
 
-- `4e5d147 fix: lock canonical seo ownership`
-- 后续验证、文档和生产提交以本节追加记录为准。
+- `e64600c fix: lock canonical seo ownership`
+- `9154756 docs: record seo canonical rollout`
+- `4c1c887 fix: reconcile seo indexing contracts`
+- 本记录之后的文档提交不改变生产页面行为。
