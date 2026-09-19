@@ -73,6 +73,19 @@ export default function ToolLandingPage({
       <main>
         <section className="px-4 py-8 sm:py-12">
           <div className="mx-auto max-w-7xl rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.025))] px-5 py-8 shadow-[0_24px_60px_rgba(0,0,0,0.28)] backdrop-blur-sm sm:px-8 sm:py-10">
+            <nav aria-label="Breadcrumb" className="mb-6 text-sm text-[var(--color-text-secondary)]">
+              <ol className="flex flex-wrap items-center gap-2">
+                <li>
+                  <Link href="/" className="hover:text-white">
+                    {sectionCopy.homeLabel}
+                  </Link>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li aria-current="page" className="text-[var(--color-text-primary)]">
+                  {tool.cardTitle}
+                </li>
+              </ol>
+            </nav>
             <div className="grid items-stretch gap-8 lg:grid-cols-[0.9fr,1.1fr]">
               <div className="flex h-full flex-col">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">

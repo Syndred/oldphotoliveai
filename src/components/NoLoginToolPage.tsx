@@ -67,7 +67,7 @@ const RELATED_TOOLS = [
       "Create a gentle memory video for family stories, slideshows, and memorials.",
   },
   {
-    href: "/restore",
+    href: "/restore-old-photos",
     title: "Restore old photos before animation",
     body:
       "Clean fading, scratches, and soft details before creating a more natural video.",

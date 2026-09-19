@@ -19,10 +19,9 @@ interface SeoDictionary {
 export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
   en: {
     home: {
-      title:
-        "Animate Old Photos with AI — Restore, Colorize & Bring Old Photos to Life Online Free",
+      title: "Colorize Photo Online Free – AI Photo Colorizer",
       description:
-        "Restore, colorize, and animate your old family photos with AI. Upload a vintage photo and watch it come to life in seconds. Free preview.",
+        "Colorize a photo online with AI. Turn black-and-white photos into color using your daily free account quota, then restore or animate old photos when needed.",
     },
     pricing: {
       title: "Pricing",

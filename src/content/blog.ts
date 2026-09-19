@@ -58,7 +58,7 @@ const COLORIZE_GUIDE_BASE: BlogPostBase = {
   publishedAt: "2026-07-22T00:00:00.000Z",
   updatedAt: "2026-07-22T00:00:00.000Z",
   primaryToolPath: "/colorize-old-photos",
-  secondaryToolPath: "/restore",
+  secondaryToolPath: "/restore-old-photos",
 };
 
 const BLOG_INDEX_COPY: Record<Locale, BlogIndexCopy> = {

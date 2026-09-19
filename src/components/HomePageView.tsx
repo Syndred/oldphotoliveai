@@ -1,52 +1,155 @@
 import Navbar from "@/components/Navbar";
-import HomeAnimationHero from "@/app/sections/HomeAnimationHero";
-import HomeTransformationSection from "@/app/sections/HomeTransformationSection";
-import HomeUseCasesSection from "@/app/sections/HomeUseCasesSection";
+import HeroSection from "@/app/sections/HeroSection";
+import ShowcaseSection from "@/app/sections/ShowcaseSection";
+import FeaturesSection from "@/app/sections/FeaturesSection";
 import HowItWorksSection from "@/app/sections/HowItWorksSection";
+import UploadSection from "@/app/sections/UploadSection";
 import FAQSection from "@/app/sections/FAQSection";
 import FooterSection from "@/app/sections/FooterSection";
-import { SITE_URL } from "@/lib/site";
-import { HOME_ANIMATION_FAQS, HOME_HOW_IT_WORKS, HOME_METADATA } from "@/content/home-animation";
-import { SHOWCASE_SAMPLE_ASSETS } from "@/config/showcase-assets";
-import { resolveShowcaseAssetUrl } from "@/config/showcase";
-import type { Locale } from "@/i18n/routing";
+import ToolCardsSection from "@/components/tool/ToolCardsSection";
+import NextLink from "next/link";
+import { BRAND_NAME, SITE_DESCRIPTION, SITE_URL } from "@/lib/site";
+import { buildFaqJsonLd } from "@/lib/seo";
+import { defaultLocale, type Locale } from "@/i18n/routing";
+import { HOME_SEO_CONTENT } from "@/content/home-seo";
+import { Link } from "@/i18n/navigation";
 
-export default function HomePageView({ locale = "en" }: { locale?: Locale } = {}) {
-  const demo = SHOWCASE_SAMPLE_ASSETS[0];
+interface HomePageViewProps {
+  locale?: Locale;
+}
+
+const HOME_TOOL_NAV_LINKS = [
+  { href: "/colorize-old-photos", label: "AI Photo Colorizer" },
+  { href: "/pricing", label: "Free Quota & Plans" },
+  { href: "/blog", label: "Photo Guides" },
+] as const;
+
+export default function HomePageView({
+  locale = defaultLocale,
+}: HomePageViewProps) {
+  const homeSeo = HOME_SEO_CONTENT[locale] ?? HOME_SEO_CONTENT.en;
+  // Organization and WebSite schemas live in the root layout. Keep the
+  // homepage application and visible FAQ entities unique to this page.
   const jsonLd = [
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
-      name: "OldPhotoLive AI",
-      description: HOME_METADATA.description,
+      name: BRAND_NAME,
+      description: SITE_DESCRIPTION,
       url: SITE_URL,
       applicationCategory: "MultimediaApplication",
       operatingSystem: "Web",
-      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-      featureList: ["Restore old photos", "Colorize black and white photos", "Animate old portraits"],
+      offers: {
+        "@type": "Offer",
+        price: "0.00",
+        priceCurrency: "USD",
+      },
+      featureList: [
+        "Colorize black-and-white photos",
+        "Restore old photos online",
+        "Animate old photos",
+      ],
     },
-    {
-      "@context": "https://schema.org",
-      "@type": "VideoObject",
-      name: "Bring Old Photos to Life — AI Animation Demo",
-      description: "Watch AI restore, colorize, and animate an old family photo.",
-      thumbnailUrl: resolveShowcaseAssetUrl(demo.colorizedKey),
-      contentUrl: resolveShowcaseAssetUrl(demo.animationKey),
-      uploadDate: "2026-09-16",
-    },
+    buildFaqJsonLd(homeSeo.faqItems),
   ];
 
   return (
-    <div data-locale={locale} className="min-h-screen bg-[var(--color-primary-bg)]">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+    <div className="min-h-screen bg-[var(--color-primary-bg)]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Navbar />
+
       <main>
-        <HomeAnimationHero />
-        <HowItWorksSection copy={HOME_HOW_IT_WORKS} />
-        <HomeTransformationSection />
-        <HomeUseCasesSection />
-        <FAQSection title="Frequently Asked Questions" items={[...HOME_ANIMATION_FAQS]} />
+        <HeroSection>
+          <UploadSection
+            variant="embedded"
+            showHeader={false}
+            analyticsSource="home_hero"
+            workflow={locale === "en" ? "colorize" : "full"}
+            className="mt-8 max-w-4xl"
+          />
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/colorize-old-photos"
+              className="inline-flex min-h-[44px] items-center rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent)]/90"
+            >
+              {homeSeo.colorizeCta}
+            </Link>
+            <Link
+              href="/restore-old-photos"
+              className="inline-flex min-h-[44px] items-center rounded-full border border-white/12 bg-black/10 px-5 py-2.5 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.05]"
+            >
+              {homeSeo.restoreCta}
+            </Link>
+            <NextLink
+              href="/animate"
+              className="inline-flex min-h-[44px] items-center rounded-full border border-white/12 bg-black/10 px-5 py-2.5 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.05]"
+            >
+              {homeSeo.animateCta}
+            </NextLink>
+          </div>
+          <nav
+            aria-label="OldPhotoLiveAI tool navigation"
+            className="mt-5 flex flex-wrap justify-center gap-2"
+          >
+            {HOME_TOOL_NAV_LINKS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="inline-flex min-h-[40px] items-center rounded-full border border-white/12 bg-black/10 px-4 py-2 text-xs font-medium text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.05] hover:text-white sm:text-sm"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </HeroSection>
+        <ToolCardsSection locale={locale} />
+        <ShowcaseSection />
+        <FeaturesSection />
+        <section className="px-4 py-10 sm:py-14">
+          <div className="mx-auto max-w-5xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
+              {homeSeo.contentEyebrow}
+            </p>
+            <h2 className="mt-3 max-w-4xl text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">
+              {homeSeo.contentTitle}
+            </h2>
+            <div className="mt-6 space-y-4 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+              {homeSeo.contentParagraphs.map((paragraph, index) => (
+                <div key={paragraph}>
+                  {homeSeo.sectionTitles?.[index] && <h2 className="mb-3 text-2xl font-semibold text-[var(--color-text-primary)]">{homeSeo.sectionTitles[index]}</h2>}
+                  <p>{paragraph}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link
+                href="/colorize-old-photos"
+                className="inline-flex min-h-[44px] items-center rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent)]/90"
+              >
+                {homeSeo.colorizeCta}
+              </Link>
+              <Link
+                href="/restore-old-photos"
+                className="inline-flex min-h-[44px] items-center rounded-full border border-white/12 px-5 py-2.5 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.05]"
+              >
+                {homeSeo.restoreCta}
+              </Link>
+              <NextLink
+                href="/animate"
+                className="inline-flex min-h-[44px] items-center rounded-full border border-white/12 px-5 py-2.5 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.05]"
+              >
+                {homeSeo.animateCta}
+              </NextLink>
+            </div>
+          </div>
+        </section>
+        <HowItWorksSection />
+        <FAQSection items={homeSeo.faqItems} />
       </main>
+
       <FooterSection />
     </div>
   );

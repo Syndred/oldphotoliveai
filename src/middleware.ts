@@ -31,6 +31,22 @@ const UPLOAD_ROUTES = ["/api/upload"];
 const handleI18nRouting = createIntlMiddleware(routing);
 const PUBLIC_TRIAL_API_ROUTES = ["/api/upload", "/api/anonymous-tasks"];
 
+// Keep these permanent aliases for at least one year. They consolidate every
+// historical URL directly into its final canonical URL without redirect chains.
+const PERMANENT_PUBLIC_ALIASES: Record<string, string> = {
+  "/colorize": "/colorize-old-photos",
+  "/restore": "/restore-old-photos",
+  "/animate-old-photos": "/animate",
+};
+
+const ENGLISH_ONLY_PUBLIC_PATHS = new Set([
+  "/animate",
+  "/animate-free",
+  "/bring-to-life",
+  "/to-video",
+  "/no-login",
+]);
+
 function isProtectedApiRoute(pathname: string): boolean {
   return PROTECTED_API_ROUTES.some((route) => pathname.startsWith(route));
 }
@@ -121,8 +137,17 @@ export async function middleware(request: NextRequest) {
     // Normalize public aliases before next-intl rewrites to internal /en routes.
     const locale = getPathLocale(pathname) ?? defaultLocale;
     const basePath = stripLocaleFromPathname(pathname).replace(/\/$/, "") || "/";
-    const canonicalPath = localizePathname(locale, basePath === "/colorize" ? "/colorize-old-photos" : basePath);
-    if (getPathLocale(pathname) === "en" || basePath === "/colorize") {
+    const finalBasePath = PERMANENT_PUBLIC_ALIASES[basePath] ?? basePath;
+    const isEnglishOnlyPath = ENGLISH_ONLY_PUBLIC_PATHS.has(finalBasePath);
+    const canonicalPath = localizePathname(
+      isEnglishOnlyPath ? defaultLocale : locale,
+      finalBasePath
+    );
+    if (
+      getPathLocale(pathname) === "en" ||
+      finalBasePath !== basePath ||
+      (locale !== defaultLocale && isEnglishOnlyPath)
+    ) {
       const url = request.nextUrl.clone();
       url.pathname = canonicalPath;
       return NextResponse.redirect(url, 301);

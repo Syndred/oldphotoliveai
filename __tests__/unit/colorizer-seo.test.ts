@@ -1,6 +1,7 @@
 import { localizePathname, routing } from '@/i18n/routing';
 import { buildLocalizedPageMetadata } from '@/lib/seo';
 import sitemap from '@/app/sitemap';
+import { getToolPage, getToolPagePath } from '@/content/tool-pages';
 
 describe('canonical colorizer URLs', () => {
   it('keeps English unprefixed and translated pages addressable', () => {
@@ -16,5 +17,15 @@ describe('canonical colorizer URLs', () => {
     const urls = sitemap().map(entry => entry.url);
     expect(urls).not.toContain('https://oldphotoliveai.com/colorize-old-photos');
     expect(urls.some(url => /\/en(?:\/|$)|\/colorize$/.test(url))).toBe(false);
+  });
+  it('locks keyword ownership and the restoration final URL', () => {
+    const colorizer = getToolPage('en', 'colorize-old-photos');
+    const restoration = getToolPage('en', 'restore-old-photos');
+
+    expect(colorizer.title).toBe('Colorize Old Photos Online Free – AI Old Photo Colorizer');
+    expect(colorizer.heroTitle).toBe('Colorize Old Photos with AI');
+    expect(colorizer.keywords).toContain('old photo colorizer');
+    expect(getToolPagePath('restore-old-photos')).toBe('/restore-old-photos');
+    expect(restoration.heroTitle).toBe('Restore Old Photos with AI');
   });
 });

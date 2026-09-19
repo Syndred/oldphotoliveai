@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import ToolLandingPage from "@/components/tool/ToolLandingPage";
 import { getToolPage } from "@/content/tool-pages";
-import { isValidLocale, type Locale } from "@/i18n/routing";
+import { isValidLocale, localizePathname, type Locale } from "@/i18n/routing";
 import { buildLocalizedPageMetadata } from "@/lib/seo";
 
 interface LocalizedToolPageProps {
@@ -15,7 +15,7 @@ export async function generateMetadata(props: LocalizedToolPageProps): Promise<M
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
   const page = getToolPage(locale, "repair-damaged-old-photos");
 
-  return buildLocalizedPageMetadata({
+  const metadata = buildLocalizedPageMetadata({
     locale,
     title: page.title,
     description: page.description,
@@ -23,6 +23,13 @@ export async function generateMetadata(props: LocalizedToolPageProps): Promise<M
     keywords: page.keywords,
     robots: { index: false, follow: true },
   });
+
+  return {
+    ...metadata,
+    alternates: {
+      canonical: localizePathname(locale, "/repair-damaged-old-photos"),
+    },
+  };
 }
 
 export default async function LocalizedRepairDamagedOldPhotosPage(props: LocalizedToolPageProps) {

@@ -1,89 +1,339 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import NextLink from "next/link";
 import { useSession } from "next-auth/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import AuthButton from "./AuthButton";
 import BrandLogo from "./BrandLogo";
+import LanguageSwitcher from "./LanguageSwitcher";
 import { Link, usePathname } from "@/i18n/navigation";
+import { getToolPagePath, getToolPageSummaries } from "@/content/tool-pages";
+import type { Locale } from "@/i18n/routing";
 import type { QuotaInfo, UserTier } from "@/types";
 
+const NAV_LINKS = [
+  { href: "/", labelKey: "home" },
+  { href: "/blog", labelKey: "blog" },
+  { href: "/pricing", labelKey: "pricing" },
+] as const;
+
+const SEO_NAV_LINKS = [
+  { href: "/animate", label: "Animate Photos" },
+  { href: "/no-login", label: "No Login" },
+  { href: "/animate-free", label: "Free Animation" },
+  { href: "/bring-to-life", label: "Bring to Life" },
+  { href: "/to-video", label: "Photo to Video" },
+] as const;
+
 function parseUserTier(value: unknown): UserTier | null {
-  return value === "free" || value === "pay_as_you_go" || value === "professional" ? value : null;
+  if (
+    value === "free" ||
+    value === "pay_as_you_go" ||
+    value === "professional"
+  ) {
+    return value;
+  }
+  return null;
 }
 
 export default function Navbar() {
   const pathname = usePathname();
+  const locale = useLocale() as Locale;
   const { data: session, status } = useSession();
+  const t = useTranslations("nav");
   const tPricing = useTranslations("pricing");
   const tQuota = useTranslations("quota");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [quota, setQuota] = useState<QuotaInfo | null>(null);
-  const sessionTier = parseUserTier((session?.user as Record<string, unknown> | undefined)?.tier);
+  const sessionTier = parseUserTier(
+    (session?.user as Record<string, unknown> | undefined)?.tier
+  );
 
   useEffect(() => {
     if (status !== "authenticated") {
       setQuota(null);
       return;
     }
-    const controller = new AbortController();
-    fetch("/api/quota", { signal: controller.signal })
-      .then(async (response) => {
-        if (response.ok) setQuota((await response.json()) as QuotaInfo);
+
+    const abortController = new AbortController();
+
+    fetch("/api/quota", { signal: abortController.signal })
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = (await res.json()) as QuotaInfo;
+        setQuota(data);
       })
-      .catch(() => undefined);
-    return () => controller.abort();
+      .catch(() => {
+        // Ignore quota fetch error; fallback to session tier label.
+      });
+
+    return () => {
+      abortController.abort();
+    };
   }, [status]);
 
   const tier = quota?.tier ?? sessionTier;
-  const tierBaseLabel = tier === "pay_as_you_go" ? tPricing("payAsYouGo") : tier ? tPricing(tier) : null;
-  const remaining = tier === "pay_as_you_go" && quota ? quota.credits ?? quota.remaining : null;
-  const tierLabel = tierBaseLabel && remaining !== null ? `${tierBaseLabel} | ${tQuota("remaining", { count: remaining })}` : tierBaseLabel;
-  const linkClass = "flex min-h-[44px] items-center rounded-md px-3 text-sm text-[var(--color-text-secondary)] transition-colors hover:text-white";
-  const toolLinks = [
-    ["Restore Old Photos", "/restore-old-photos"],
-    ["Colorize Old Photos", "/colorize-old-photos"],
-    ["Repair Damaged Photos", "/repair-damaged-old-photos"],
-  ] as const;
+
+  const tierBaseLabel =
+    tier === "pay_as_you_go"
+      ? tPricing("payAsYouGo")
+      : tier
+        ? tPricing(tier)
+        : null;
+  const paygRemaining =
+    tier === "pay_as_you_go" && quota
+      ? quota.credits ?? quota.remaining
+      : null;
+  const tierLabel =
+    tierBaseLabel && paygRemaining !== null
+      ? `${tierBaseLabel} | ${tQuota("remaining", { count: paygRemaining })}`
+      : tierBaseLabel;
+  const navLinks =
+    status === "authenticated"
+      ? [...NAV_LINKS, { href: "/history", labelKey: "history" as const }]
+      : NAV_LINKS;
+  const productLinks = getToolPageSummaries(locale);
+  const hasActiveProduct = productLinks.some((tool) =>
+    pathname.startsWith(getToolPagePath(tool.slug))
+  );
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-white/10 bg-[var(--color-primary-bg)]/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
-        <Link href="/" className="min-w-0"><BrandLogo textClassName="text-base sm:text-lg" iconClassName="h-9 w-9 sm:h-10 sm:w-10" /></Link>
-        <div className="hidden items-center gap-1 lg:flex">
-          <Link href="/animate" className={pathname.startsWith("/animate") ? `${linkClass} text-white` : linkClass}>Photo Animation</Link>
-          <a href="#how-it-works-section" className={linkClass}>How It Works</a>
-          <a href="#showcase-section" className={linkClass}>Examples</a>
-          <details className="group relative">
-            <summary className={`${linkClass} cursor-pointer list-none`}>Other Tools <span aria-hidden="true" className="ml-1 text-xs">▾</span></summary>
-            <div className="absolute left-0 top-full w-56 rounded-xl border border-white/10 bg-[var(--color-primary-bg)] p-2 shadow-2xl">
-              {toolLinks.map(([label, href]) => <Link key={href} href={href} className={linkClass}>{label}</Link>)}
+    <nav className="sticky top-0 z-50 border-b border-white/10 bg-[var(--color-primary-bg)]/80 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6">
+        {/* Logo */}
+        <Link
+          href="/"
+          className="block min-w-0 max-w-[58vw] sm:max-w-none"
+        >
+          <BrandLogo
+            textClassName="text-base sm:text-lg"
+            className="max-w-full"
+            iconClassName="h-9 w-9 sm:h-10 sm:w-10"
+          />
+        </Link>
+
+        {/* Desktop Navigation Links */}
+        <div className="hidden sm:flex items-center gap-1 sm:gap-2">
+          <div className="group relative">
+            <button
+              type="button"
+              className={`flex min-h-[44px] items-center gap-1 rounded-md px-3 py-2 text-sm transition-colors ${
+                hasActiveProduct
+                  ? "text-white"
+                  : "text-[var(--color-text-secondary)] hover:text-white"
+              }`}
+              aria-haspopup="true"
+            >
+              {t("products")}
+              <svg
+                className="h-4 w-4 transition-transform group-hover:rotate-180 group-focus-within:rotate-180"
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                aria-hidden="true"
+              >
+                <path d="M5 7.5 10 12l5-4.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <div className="invisible absolute left-0 top-full z-50 w-72 translate-y-2 rounded-xl border border-white/10 bg-[var(--color-primary-bg)]/95 p-2 opacity-0 shadow-[0_18px_45px_rgba(0,0,0,0.35)] backdrop-blur-md transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
+              {productLinks.map((tool) => {
+                const href = getToolPagePath(tool.slug);
+                const isActive = pathname.startsWith(href);
+                const isEnglishOnly = tool.slug === "animate-old-photos";
+                const className = `block rounded-lg px-3 py-2.5 transition-colors ${
+                  isActive
+                    ? "bg-white/[0.08] text-white"
+                    : "text-[var(--color-text-secondary)] hover:bg-white/[0.05] hover:text-white"
+                }`;
+                const content = (
+                  <>
+                    <span className="block text-sm font-medium">
+                      {tool.cardTitle}
+                    </span>
+                    <span className="mt-1 block text-xs leading-5 text-[var(--color-text-secondary)]">
+                      {tool.eyebrow}
+                    </span>
+                  </>
+                );
+                return (
+                  isEnglishOnly ? (
+                    <NextLink key={tool.slug} href={href} className={className}>
+                      {content}
+                    </NextLink>
+                  ) : (
+                    <Link key={tool.slug} href={href} className={className}>
+                      {content}
+                    </Link>
+                  )
+                );
+              })}
             </div>
-          </details>
-          <Link href="/pricing" className={pathname.startsWith("/pricing") ? `${linkClass} text-white` : linkClass}>Pricing</Link>
-          {status === "authenticated" ? <Link href="/history" className={pathname.startsWith("/history") ? `${linkClass} text-white` : linkClass}>History</Link> : null}
+          </div>
+          {locale === "en" ? (
+            <div className="hidden 2xl:flex items-center gap-1">
+              {SEO_NAV_LINKS.map((link) => {
+                const isActive = pathname.startsWith(link.href);
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`min-h-[44px] rounded-md px-2 py-2 text-sm transition-colors ${
+                      isActive
+                        ? "text-white"
+                        : "text-[var(--color-text-secondary)] hover:text-white"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </div>
+          ) : null}
+          {navLinks.map((link) => {
+            const isActive =
+              link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`rounded-md px-2 py-2 text-sm transition-colors min-h-[44px] flex items-center sm:px-3 ${
+                  isActive
+                    ? "text-white"
+                    : "text-[var(--color-text-secondary)] hover:text-white"
+                }`}
+              >
+                {t(link.labelKey)}
+              </Link>
+            );
+          })}
         </div>
-        <div className="flex items-center gap-1 sm:gap-2">
+
+        {/* Auth, Language & Mobile Menu Button */}
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <div className="hidden sm:block">
+            <LanguageSwitcher />
+          </div>
           <AuthButton tierBadgeText={tierLabel} />
-          <button type="button" className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md text-[var(--color-text-secondary)] lg:hidden" aria-label="Toggle navigation menu" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen((open) => !open)}>
-            <span aria-hidden="true">{mobileMenuOpen ? "×" : "☰"}</span>
+          {/* Hamburger button - visible only on small screens */}
+          <button
+            type="button"
+            className="sm:hidden flex items-center justify-center rounded-md p-2 text-[var(--color-text-secondary)] hover:text-white transition-colors"
+            aria-label="Toggle navigation menu"
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+          >
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              {mobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              )}
+            </svg>
           </button>
         </div>
       </div>
-      {mobileMenuOpen ? (
-        <div className="border-t border-white/10 px-4 py-3 lg:hidden">
-          {tierLabel ? <div className="mb-2"><span data-testid="tier-badge-mobile" className="inline-flex rounded-full border border-[var(--color-accent)]/40 px-2.5 py-1 text-xs text-[var(--color-accent)]">{tPricing("currentPlan")}: {tierLabel}</span></div> : null}
-          <Link href="/animate" onClick={() => setMobileMenuOpen(false)} className={linkClass}>Photo Animation</Link>
-          <a href="#how-it-works-section" onClick={() => setMobileMenuOpen(false)} className={linkClass}>How It Works</a>
-          <a href="#showcase-section" onClick={() => setMobileMenuOpen(false)} className={linkClass}>Examples</a>
-          <div className="mt-2 border-t border-white/10 pt-2">
-            <p className="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">Other Tools</p>
-            {toolLinks.map(([label, href]) => <Link key={href} href={href} onClick={() => setMobileMenuOpen(false)} className={linkClass}>{label}</Link>)}
+
+      {/* Mobile Navigation Menu */}
+      {mobileMenuOpen && (
+        <div className="sm:hidden border-t border-white/10 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-2">
+          {tierLabel && (
+            <div className="px-3 py-2">
+              <span
+                data-testid="tier-badge-mobile"
+                className="inline-flex items-center rounded-full border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 px-2.5 py-1 text-xs font-medium text-[var(--color-text-primary)]"
+              >
+                {tPricing("currentPlan")}: {tierLabel}
+              </span>
+            </div>
+          )}
+          <div className="px-3 py-2">
+            <LanguageSwitcher />
           </div>
-          <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className={linkClass}>Pricing</Link>
-          {status === "authenticated" ? <Link href="/history" onClick={() => setMobileMenuOpen(false)} className={linkClass}>History</Link> : null}
+          <div className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-accent)]">
+            {t("products")}
+          </div>
+          {productLinks.map((tool) => {
+            const href = getToolPagePath(tool.slug);
+            const isActive = pathname.startsWith(href);
+            const isEnglishOnly = tool.slug === "animate-old-photos";
+            const className = `block rounded-md px-3 py-2.5 text-sm transition-colors min-h-[44px] ${
+              isActive
+                ? "text-white"
+                : "text-[var(--color-text-secondary)] hover:text-white"
+            }`;
+            return isEnglishOnly ? (
+              <NextLink
+                key={tool.slug}
+                href={href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={className}
+              >
+                {tool.cardTitle}
+              </NextLink>
+            ) : (
+              <Link
+                key={tool.slug}
+                href={href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={className}
+              >
+                {tool.cardTitle}
+              </Link>
+            );
+          })}
+          {locale === "en" ? (
+            <>
+              <div className="mt-2 border-t border-white/10 px-3 pb-1 pt-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-accent)]">
+                AI animation
+              </div>
+              {SEO_NAV_LINKS.map((link) => {
+                const isActive = pathname.startsWith(link.href);
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`block min-h-[44px] rounded-md px-3 py-2.5 text-sm transition-colors ${
+                      isActive
+                        ? "text-white"
+                        : "text-[var(--color-text-secondary)] hover:text-white"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </>
+          ) : null}
+          {navLinks.map((link) => {
+            const isActive =
+              link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block rounded-md px-3 py-2.5 text-sm transition-colors min-h-[44px] ${
+                  isActive
+                    ? "text-white"
+                    : "text-[var(--color-text-secondary)] hover:text-white"
+                }`}
+              >
+                {t(link.labelKey)}
+              </Link>
+            );
+          })}
         </div>
-      ) : null}
+      )}
     </nav>
   );
 }

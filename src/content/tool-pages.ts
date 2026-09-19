@@ -139,20 +139,22 @@ const TOOL_PAGE_TRANSLATIONS: Record<
 const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
   "restore-old-photos": {
     slug: "restore-old-photos",
-    title: "Restore Old Photos Online Free - AI Photo Restoration | OldPhotoLive",
+    title: "Restore Old Photos Online Free – AI Photo Restoration",
     description:
       "Restore old damaged photos online with AI. Remove scratches, tears, and fading, recover facial details, and try old photo restoration for free.",
     keywords: [
       "restore old photos",
-      "restore old photos online",
       "old photo restoration",
       "ai photo restoration",
+      "restore old photos online free",
+      "fix old photos",
+      "repair old photos",
     ],
     cardTitle: "Restore old photos",
     cardDescription:
       "Repair faded family prints, recover details, and produce a cleaner master image before color and animation.",
     eyebrow: "AI restoration",
-    heroTitle: "Restore old photos with AI - repair scratches and recover details",
+    heroTitle: "Restore Old Photos with AI",
     heroDescription:
       "Upload one damaged family photo and let AI restore detail, improve contrast, remove visible wear, and prepare the image for colorization or animation.",
     heroHighlights: [
@@ -208,7 +210,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     ],
     pricingTitle: "Choose the plan that fits your archive",
     pricingBody:
-      "Buy a small credit pack for occasional repairs, or choose a larger pack when you are restoring albums, family archives, or client work.",
+      "Sign in to use one free photo-processing allowance per day, shared across restoration, colorization, and animation. Free image exports are limited to 800×600 and include a watermark. Buy credits when you need more processing, higher-resolution output, or watermark-free exports.",
     faqTitle: "Questions about restoring old photos",
     faqs: [
       {
@@ -244,27 +246,27 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     ],
     relatedTitle: "More old-photo workflows",
     relatedDescription:
-      "After restoration, you can keep improving the same photo with damage repair, colorization, or animation tools.",
+      "After restoration, you can keep improving the same photo with colorization or animation tools.",
     relatedSlugs: [
-      "repair-damaged-old-photos",
       "colorize-old-photos",
       "animate-old-photos",
     ],
   },
   "colorize-old-photos": {
   "slug": "colorize-old-photos",
-  "title": "Colorize Old Photos Online Free - AI Photo Colorizer",
+  "title": "Colorize Old Photos Online Free – AI Old Photo Colorizer",
   "description": "Colorize old photos online with an AI photo colorizer. Upload a black-and-white image, review and download your result. Sign in for your daily free quota.",
   "keywords": [
     "colorize old photos",
-    "AI photo colorizer",
-    "colorize black and white photos",
-    "colorize old photos online"
+    "old photo colorizer",
+    "colorize old photos free",
+    "restore and colorize old photos",
+    "colorize vintage photos"
   ],
   "cardTitle": "Colorize old photos",
   "cardDescription": "Add AI-estimated color to black-and-white family photographs and compare the result with your original.",
   "eyebrow": "AI colorization",
-  "heroTitle": "Colorize Old Photos with an AI Photo Colorizer",
+  "heroTitle": "Colorize Old Photos with AI",
   "heroDescription": "Colorize old photos with an AI photo colorizer designed for black-and-white family portraits, scanned prints, and everyday snapshots. Upload a clear image, let the workflow restore it and add estimated colors, then download the colorized photo from your result page. You do not need to paint individual areas or choose colors for every face, garment, and background. Start with a scan that keeps the whole photograph visible, and avoid glare, heavy compression, or filters that hide detail. The AI uses visual patterns to suggest plausible colors; it cannot know the exact shades that were present when the photograph was taken. Keep your original file and compare the result before adding it to an album, genealogy project, or family keepsake. Sign in with Google to use your available daily free quota. Processing time and results vary with image quality and demand, and export options depend on your plan and remaining allowance.",
   "heroHighlights": [
     "Upload a black-and-white photo",
@@ -338,10 +340,9 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     }
   ],
   "relatedTitle": "More old-photo workflows",
-  "relatedDescription": "For a different result, explore restoration, damage repair, or portrait animation.",
+  "relatedDescription": "For a different result, explore restoration or portrait animation.",
   "relatedSlugs": [
     "restore-old-photos",
-    "repair-damaged-old-photos",
     "animate-old-photos"
   ]
 },
@@ -353,7 +354,6 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     keywords: [
       "animate old photos",
       "old photo animation",
-      "bring old photos to life",
       "animate family photos",
     ],
     cardTitle: "Animate old photos",
@@ -442,11 +442,10 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     ],
     relatedTitle: "More old-photo workflows",
     relatedDescription:
-      "If the photo needs cleanup or color before animation, explore the restoration, damage repair, and colorization tools.",
+      "If the photo needs cleanup or color before animation, explore the restoration and colorization tools.",
     relatedSlugs: [
       "restore-old-photos",
       "colorize-old-photos",
-      "repair-damaged-old-photos",
     ],
   },
   "repair-damaged-old-photos": {
@@ -576,7 +575,9 @@ export function getToolPage(
 }
 
 export function getToolPageSummaries(locale: Locale) {
-  return TOOL_PAGE_SLUGS.map((slug) => getToolPage(locale, slug));
+  return TOOL_PAGE_SLUGS.filter(
+    (slug) => slug !== "repair-damaged-old-photos"
+  ).map((slug) => getToolPage(locale, slug));
 }
 
 export function getRelatedToolPages(locale: Locale, slugs: ToolPageSlug[]) {

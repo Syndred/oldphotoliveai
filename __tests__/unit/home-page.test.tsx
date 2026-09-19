@@ -168,20 +168,6 @@ beforeEach(() => {
 });
 
 describe("HomePage", () => {
-  it("renders one page-specific WebApplication and VideoObject without FAQPage", () => {
-    const { container } = render(<HomePageView />);
-    const schema = JSON.parse(
-      container.querySelector('script[type="application/ld+json"]')?.textContent ?? "[]"
-    ) as Array<{ "@type": string }>;
-
-    expect(schema.map((item) => item["@type"])).toEqual([
-      "WebApplication",
-      "VideoObject",
-    ]);
-    expect(schema.filter((item) => item["@type"] === "WebApplication")).toHaveLength(1);
-    expect(schema.some((item) => item["@type"] === "FAQPage")).toBe(false);
-  });
-
   it.each(["zh", "es", "ja"] as const)("preserves the full workflow on the %s homepage", async (locale) => {
     mockUseLocale.mockReturnValue(locale);
     __setMockLocale(locale);
@@ -204,9 +190,23 @@ describe("HomePage", () => {
     expect(screen.getByTestId("upload-zone")).toBeInTheDocument();
   });
 
-  it("renders the focused homepage navigation", () => {
+  it("renders SEO tool navigation and related tool links", () => {
     render(<HomePage />);
-    expect(screen.getByTestId("navbar")).toBeInTheDocument();
+
+    expect(screen.getByRole("navigation", {
+      name: "OldPhotoLiveAI tool navigation",
+    })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Free Quota & Plans" })).toHaveAttribute("href", "/pricing");
+    expect(screen.getByRole("link", { name: "AI Photo Colorizer" })).toHaveAttribute("href", "/colorize-old-photos");
+    expect(
+      screen.getAllByRole("link", { name: "Restore old photos" })[0]
+    ).toHaveAttribute("href", "/restore-old-photos");
+    expect(
+      screen.getAllByRole("link", { name: "Animate portraits" })[0]
+    ).toHaveAttribute("href", "/animate");
+    expect(
+      screen.queryByRole("link", { name: "Repair damaged photos" })
+    ).not.toBeInTheDocument();
   });
 
   it("shows the content safety notice and localized terms link", () => {
@@ -233,7 +233,7 @@ describe("HomePage", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           imageKey: "https://cdn.example.com/test.jpg",
-          workflow: "full",
+          workflow: "colorize",
         }),
       });
     });

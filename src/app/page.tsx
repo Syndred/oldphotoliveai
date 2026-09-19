@@ -1,20 +1,28 @@
 import { Metadata } from "next";
 import HomePageView from "@/components/HomePageView";
 import { buildPageMetadata } from "@/lib/seo";
-import { HOME_METADATA } from "@/content/home-animation";
+import { defaultLocale } from "@/i18n/routing";
+import { PAGE_SEO_COPY } from "@/content/page-seo";
+
+const homeSeo = PAGE_SEO_COPY[defaultLocale].home;
 
 export const metadata: Metadata = {
   ...buildPageMetadata({
-    ...HOME_METADATA,
+    title: homeSeo.title,
+    description: homeSeo.description,
+    path: "/",
     keywords: [
-      "animate old photos",
-      "bring old photos to life",
-      "restore colorize animate old photos",
+      "colorize photo",
+      "colorize black and white photos",
+      "photo colorizer",
+      "colorize photos",
+      "AI photo colorizer",
+      "photo colorization",
     ],
   }),
-  title: { absolute: HOME_METADATA.title },
+  title: { absolute: homeSeo.title },
 };
 
 export default function HomePage() {
-  return <HomePageView />;
+  return <HomePageView locale={defaultLocale} />;
 }

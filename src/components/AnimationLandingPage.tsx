@@ -24,10 +24,10 @@ interface AnimationLandingPageProps {
 }
 
 export default function AnimationLandingPage({
-  locale,
   slug,
 }: AnimationLandingPageProps) {
   const page = getAnimationLandingPage(slug);
+  const isBringToLifeGuide = slug === "bring-to-life";
   const relatedPages = ANIMATION_LANDING_PAGE_SLUGS.filter(
     (relatedSlug) => relatedSlug !== slug
   ).map(getAnimationLandingPage);
@@ -38,14 +38,22 @@ export default function AnimationLandingPage({
         { name: "Home", path: "/" },
         { name: page.cardTitle, path: page.path },
       ],
-      locale
+      "en"
     ),
-    {
+    isBringToLifeGuide
+      ? {
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          name: page.cardTitle,
+          description: page.description,
+          url: absoluteLocalizedUrl("en", page.path),
+        }
+      : {
       "@context": "https://schema.org",
       "@type": "WebApplication",
       name: page.cardTitle,
       description: page.description,
-      url: absoluteLocalizedUrl(locale, page.path),
+      url: absoluteLocalizedUrl("en", page.path),
       applicationCategory: "MultimediaApplication",
       operatingSystem: "Web",
       offers: {
@@ -53,7 +61,7 @@ export default function AnimationLandingPage({
         price: "0.00",
         priceCurrency: "USD",
       },
-    },
+        },
   ];
 
   return (
@@ -67,6 +75,19 @@ export default function AnimationLandingPage({
       <main>
         <section className="px-4 py-8 sm:py-12">
           <div className="mx-auto max-w-7xl rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.025))] px-5 py-8 shadow-[0_24px_60px_rgba(0,0,0,0.28)] backdrop-blur-sm sm:px-8 sm:py-10">
+            <nav aria-label="Breadcrumb" className="mb-6 text-sm text-[var(--color-text-secondary)]">
+              <ol className="flex flex-wrap items-center gap-2">
+                <li>
+                  <Link href="/" className="hover:text-white">
+                    Home
+                  </Link>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li aria-current="page" className="text-[var(--color-text-primary)]">
+                  {page.cardTitle}
+                </li>
+              </ol>
+            </nav>
             <div className="grid items-stretch gap-8 lg:grid-cols-[0.9fr,1.1fr]">
               <div className="flex h-full flex-col">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
@@ -89,13 +110,30 @@ export default function AnimationLandingPage({
                   ))}
                 </div>
               </div>
-              <UploadSection
-                analyticsSource={`seo_${page.slug}`}
-                variant="embedded"
-                showHeader={false}
-                className="h-full"
-                workflow="animate"
-              />
+              {isBringToLifeGuide ? (
+                <aside className="flex h-full flex-col justify-center rounded-2xl border border-[var(--color-accent)]/25 bg-[var(--color-accent)]/10 p-6 sm:p-8">
+                  <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">
+                    Ready to animate your old photo?
+                  </h2>
+                  <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                    Use the dedicated animation tool to upload a portrait, review the generated motion, and keep this guide focused on preparation and respectful use.
+                  </p>
+                  <Link
+                    href="/animate"
+                    className="mt-6 inline-flex min-h-[44px] w-fit items-center rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent)]/90"
+                  >
+                    Animate old photos with AI
+                  </Link>
+                </aside>
+              ) : (
+                <UploadSection
+                  analyticsSource={`seo_${page.slug}`}
+                  variant="embedded"
+                  showHeader={false}
+                  className="h-full"
+                  workflow="animate"
+                />
+              )}
             </div>
           </div>
         </section>
@@ -171,6 +209,28 @@ export default function AnimationLandingPage({
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)]">
                   Try one watermarked, low-resolution video preview with no account.
+                </p>
+              </Link>
+              <Link
+                href="/restore-old-photos"
+                className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-5 transition-colors hover:border-[var(--color-accent)]/40"
+              >
+                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                  Restore old photos
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)]">
+                  Repair fading, scratches, and low contrast before generating motion.
+                </p>
+              </Link>
+              <Link
+                href="/colorize-old-photos"
+                className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-5 transition-colors hover:border-[var(--color-accent)]/40"
+              >
+                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                  Colorize old photos
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)]">
+                  Add estimated color to a clean scan before creating the video.
                 </p>
               </Link>
               {relatedPages.map((relatedPage) => (

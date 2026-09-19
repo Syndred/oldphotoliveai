@@ -74,6 +74,7 @@ const OG_LOCALE_BY_LOCALE: Record<Locale, string> = {
 
 export function absoluteUrl(path = "/"): string {
   const normalizedPath = path === "/" ? "/" : `/${path.replace(/^\/+/, "")}`;
+  if (normalizedPath === "/") return SITE_URL.replace(/\/$/, "");
   return new URL(normalizedPath, SITE_URL).toString();
 }
 

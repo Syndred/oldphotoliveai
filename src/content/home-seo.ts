@@ -20,12 +20,12 @@ interface HomeSeoContent {
 export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
   en: {
     contentEyebrow: "AI photo colorizer",
-    contentTitle: "Colorize old photos online",
+    contentTitle: "Colorize black-and-white photos online",
     sectionTitles: ["One-click AI photo colorizer", "Turn black-and-white photos into color", "Old photo restoration before colorization"],
     contentParagraphs: [
-      "Colorize old photos with AI without painting each area by hand. Upload a clear scan of your family portrait, choose colorization, and let the photo colorizer generate a color version to compare with the original. Sign in to use your daily free quota; additional processing and export options depend on your plan.",
-      "Turn black-and-white photos into color for a family album, genealogy project, or a personal keepsake. AI estimates colors from the image, so skin tones, clothing, and backgrounds may differ from their original historical colors. Keep the original scan alongside your colorized copy.",
-      "Old photo restoration can help when fading, scratches, or low contrast obscure the details you want to colorize. Use the restoration or repair tool for damaged prints, then colorize the cleaner image. A well-lit scan without glare gives the AI more detail to work with; severe damage may still need manual editing.",
+      "Colorize a photo with AI without painting each area by hand. Upload a clear black-and-white picture, choose colorization, and let the photo colorizer generate a color version to compare with the original. Sign in to use your daily free quota; additional processing and export options depend on your plan.",
+      "Turn black-and-white photos into color for an album, creative project, or personal keepsake. AI estimates colors from visible patterns, so skin tones, clothing, objects, and backgrounds may differ from their real colors. Keep the original image alongside the colorized copy.",
+      "Old photo restoration can help when fading, scratches, or low contrast obscure details before colorization. Use the dedicated restoration tool for damaged prints, then return to colorize the cleaner image. A well-lit scan without glare gives the AI more detail to work with; severe damage may still need manual editing.",
     ],
     colorizeCta: "Colorize B&W photos",
     restoreCta: "Restore old photos",
@@ -38,24 +38,24 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
           "Yes. You can start with a free account and use your daily free quota to try AI colorization before choosing a paid plan for more credits, HD exports, and watermark-free results.",
       },
       {
-        question: "What is the best way to restore old photos online?",
+        question: "How does an AI photo colorizer choose colors?",
         answer:
-          "Scan or photograph the print as clearly as possible, upload it to OldPhotoLive AI, then use the restoration workflow to repair fading, scratches, low contrast, and soft facial detail.",
+          "The model uses visual patterns in faces, clothing, objects, and backgrounds to estimate plausible colors. It does not recover hidden color data from the black-and-white source.",
       },
       {
-        question: "Can faded black and white photos be restored and colorized?",
+        question: "Will AI reproduce the exact original colors?",
         answer:
-          "Yes. Use restoration to improve faded black-and-white photos first, then use colorization to add natural color so portraits, clothing, and backgrounds look more believable.",
+          "No. Several real colors can produce the same gray tone, so the result is an interpretation. Compare important details with dated references and keep the original image.",
       },
       {
-        question: "How long does AI photo restoration take?",
+        question: "What image gives the best colorization result?",
         answer:
-          "Most photos are processed in a few minutes. Larger files, busy queues, or animation jobs may take longer, but your task history keeps the result available when processing completes.",
+          "Use a clear scan or photo with even lighting, visible details, and minimal glare. Heavy compression, tiny faces, and missing areas give the model less information.",
       },
       {
-        question: "Can I remove scratches and creases from old photos?",
+        question: "Can I colorize faded or damaged photos?",
         answer:
-          "Yes. The repair workflow is designed for common print damage such as scratches, dust, folds, fading, yellowing, and moderate surface wear.",
+          "Yes, but restore fading, scratches, and low contrast first when damage hides important details. Then colorize the cleaner copy and compare it with the source.",
       },
       {
         question: "Are uploaded family photos private?",
@@ -63,9 +63,9 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
           "Your photos are processed securely and remain tied to your account history. They are not published as public examples unless you explicitly share them elsewhere.",
       },
       {
-        question: "What is the difference between restoration and colorization?",
+        question: "Can I download the colorized photo?",
         answer:
-          "Restoration repairs damage and improves clarity. Colorization adds natural color to black-and-white or faded photos. Many users restore first, then colorize the cleaner image.",
+          "Yes. Completed results can be downloaded from the result page. Resolution and watermark options depend on the account plan and available allowance.",
       },
       {
         question: "What do paid plans unlock?",

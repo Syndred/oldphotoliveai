@@ -35,11 +35,9 @@ export const ANIMATION_LANDING_PAGES: Record<
     path: "/animate-free",
     title: "Animate Old Photos with AI Free - Bring Photos to Life | OldPhotoLiveAI",
     description:
-      "Animate old photos with AI free online. Upload a clear portrait, create a subtle video preview, and bring family memories to life today.",
+      "Animate an old photo with AI after sign-in using your daily free account quota. Upload a clear portrait and review a watermarked 480p preview.",
     keywords: [
-      "animate old photos with AI free",
-      "free AI photo animation",
-      "animate family photos online",
+      "animate photos online free",
     ],
     cardTitle: "Free AI photo animation",
     cardDescription:
@@ -47,7 +45,7 @@ export const ANIMATION_LANDING_PAGES: Record<
     eyebrow: "Free AI animation",
     h1: "Animate Old Photos with AI Free",
     heroDescription:
-      "Turn a still family portrait into a short video with a free AI preview. Start with a clear photo, keep the movement natural, and decide whether the result is worth preserving in HD.",
+      "Turn a still family portrait into a short video after sign-in. The daily free account quota provides a watermarked 480p preview; start with a clear photo and keep the movement natural.",
     highlights: [
       "Use one old portrait as the source for a short AI video preview.",
       "Gentle motion works best for faces, memorial photos, and family archives.",
@@ -92,7 +90,7 @@ export const ANIMATION_LANDING_PAGES: Record<
       {
         question: "Can I animate old photos with AI for free?",
         answer:
-          "Yes. You can start with a free preview to see how a clear old portrait animates before choosing an HD or watermark-free export.",
+          "Yes. Sign in and use the shared daily free account quota for a watermarked 480p preview, then choose a paid option only if you need more processing or a higher-quality export.",
       },
       {
         question: "What old photos work best for animation?",
@@ -119,11 +117,11 @@ export const ANIMATION_LANDING_PAGES: Record<
   "bring-to-life": {
     slug: "bring-to-life",
     path: "/bring-to-life",
-    title: "Bring Old Photos to Life AI Free - Animate Memories | OldPhotoLiveAI",
+    title: "Bring Old Photos to Life with AI | OldPhotoLive AI",
     description:
       "Bring old photos to life with AI free online. Turn a family portrait into a short, natural video and share a memory in a new way.",
     keywords: [
-      "bring old photos to life AI free",
+      "bring old photos to life",
       "bring family photos to life",
       "AI memory video from photo",
     ],
@@ -131,7 +129,7 @@ export const ANIMATION_LANDING_PAGES: Record<
     cardDescription:
       "Turn a meaningful portrait into a gentle memory video with AI.",
     eyebrow: "Memory video maker",
-    h1: "Bring Old Photos to Life AI Free",
+    h1: "Bring Old Photos to Life with AI",
     heroDescription:
       "Bring a favorite old photo to life with AI by creating a brief, natural-motion video from a single portrait. It is made for meaningful memories, not cartoon effects.",
     highlights: [
@@ -178,7 +176,7 @@ export const ANIMATION_LANDING_PAGES: Record<
       {
         question: "Can AI bring old photos to life for free?",
         answer:
-          "Yes. Start with a free preview from a clear portrait, then decide whether you want an HD or watermark-free version for sharing.",
+          "The dedicated animation tool lets signed-in free accounts use one shared daily allowance for a watermarked 480p preview. Paid options add capacity and export choices.",
       },
       {
         question: "Is AI animation suitable for memorial photos?",
@@ -205,10 +203,11 @@ export const ANIMATION_LANDING_PAGES: Record<
   "to-video": {
     slug: "to-video",
     path: "/to-video",
-    title: "Old Photo to Video AI Free Online - Convert Photo to Video | OldPhotoLiveAI",
+    title: "Photo to Video AI for Old Photos | OldPhotoLive AI",
     description:
-      "Convert an old photo to video with AI free online. Upload a portrait, generate a short animated clip, and preview your memory in motion.",
+      "Use photo to video AI for an old portrait. Sign in, upload a clear image, and use your shared daily free quota for a watermarked 480p preview.",
     keywords: [
+      "photo to video AI",
       "old photo to video AI free online",
       "convert old photo to video AI",
       "photo to video AI free",
@@ -217,7 +216,7 @@ export const ANIMATION_LANDING_PAGES: Record<
     cardDescription:
       "Convert a clear old portrait into a short AI-generated video online.",
     eyebrow: "Photo-to-video AI",
-    h1: "Old Photo to Video AI Free Online",
+    h1: "Turn an Old Photo into Video with AI",
     heroDescription:
       "Convert an old photo to a short video online with AI. Upload a portrait, review the generated motion, and use the preview to decide whether to export a higher-quality version.",
     highlights: [
@@ -264,7 +263,7 @@ export const ANIMATION_LANDING_PAGES: Record<
       {
         question: "Can I convert an old photo to video with AI for free?",
         answer:
-          "Yes. Start with a free online preview from a clear portrait, then choose a higher-quality output only when you need it.",
+          "Yes. Sign in and use the shared daily free account quota for a watermarked 480p preview, then choose a higher-quality output only when you need it.",
       },
       {
         question: "Do I need to install an app?",
@@ -291,21 +290,23 @@ export const ANIMATION_LANDING_PAGES: Record<
   animate: {
     slug: "animate",
     path: "/animate",
-    title: "Animate Old Photos Online Free - AI Photo Animation | OldPhotoLiveAI",
+    title: "Animate Old Photos with AI – Online Photo Animation",
     description:
-      "Animate old photos online free with AI. Make a vintage portrait move naturally, preview the result, and bring a family memory into motion.",
+      "Animate old photos with AI after sign-in. Use your shared daily free quota for a watermarked 480p preview, then review the motion before exporting.",
     keywords: [
       "animate old photos",
-      "animate old photos online free",
-      "AI photo animation",
+      "animate photos",
+      "animate photo",
+      "photo animation",
+      "animate picture AI",
     ],
     cardTitle: "Animate old photos",
     cardDescription:
       "Make an old portrait move with subtle AI animation online.",
     eyebrow: "AI photo animation",
-    h1: "Animate Old Photos",
+    h1: "Animate Old Photos with AI",
     heroDescription:
-      "Animate old photos online with AI and turn a familiar portrait into a short, natural-motion clip. Start with the image you care about and let the preview guide the final export.",
+      "Animate old photos online with AI and turn a familiar portrait into a short, natural-motion clip. Sign in to use the shared daily free quota for a watermarked 480p preview, then let the result guide the final export.",
     highlights: [
       "Animate a vintage portrait from a single uploaded photo.",
       "Use short, natural motion that suits family memories and archives.",
@@ -350,7 +351,7 @@ export const ANIMATION_LANDING_PAGES: Record<
       {
         question: "How can I animate old photos online?",
         answer:
-          "Upload a clear old portrait to the online AI tool, let it generate a short preview, then review the motion before choosing an export.",
+          "Sign in, upload a clear old portrait to the online AI tool, and use your available daily quota to generate a watermarked 480p preview before choosing an export.",
       },
       {
         question: "Can I animate black and white photos?",

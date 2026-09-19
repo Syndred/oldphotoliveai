@@ -1,19 +1,117 @@
 import { MetadataRoute } from "next";
-import { absoluteUrl } from "@/lib/seo";
-
-const INDEXABLE_ROUTES = [
-  { path: "/", changeFrequency: "weekly" as const, priority: 1 },
-  { path: "/animate", changeFrequency: "weekly" as const, priority: 0.9 },
-  { path: "/bring-to-life", changeFrequency: "weekly" as const, priority: 0.9 },
-  { path: "/pricing", changeFrequency: "monthly" as const, priority: 0.8 },
-  { path: "/about", changeFrequency: "monthly" as const, priority: 0.5 },
-] as const;
+import { getBlogPosts } from "@/content/blog";
+import { ANIMATION_LANDING_PAGE_SLUGS, getAnimationLandingPage } from "@/content/animation-landing-pages";
+import { TOOL_PAGE_SLUGS, getToolPagePath } from "@/content/tool-pages";
+import { locales, type Locale } from "@/i18n/routing";
+import {
+  absoluteLocalizedUrl,
+  buildLanguageAlternates,
+} from "@/lib/seo";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return INDEXABLE_ROUTES.map((route) => ({
-    url: absoluteUrl(route.path),
-    lastModified: new Date("2026-09-16T00:00:00.000Z"),
-    changeFrequency: route.changeFrequency,
-    priority: route.priority,
+  const staticRoutes = [
+    {
+      path: "/",
+      lastModified: new Date("2026-09-19T00:00:00.000Z"),
+      changeFrequency: "weekly",
+      priority: 1,
+    },
+    {
+      path: "/about",
+      lastModified: new Date("2026-04-01T00:00:00.000Z"),
+      changeFrequency: "monthly",
+      priority: 0.4,
+    },
+    {
+      path: "/pricing",
+      lastModified: new Date("2026-03-18T00:00:00.000Z"),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      path: "/blog",
+      lastModified: new Date("2026-07-22T00:00:00.000Z"),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      path: "/privacy",
+      lastModified: new Date("2026-03-14T00:00:00.000Z"),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      path: "/terms",
+      lastModified: new Date("2026-03-16T00:00:00.000Z"),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+  ] as const;
+
+  const toolRoutes = TOOL_PAGE_SLUGS.filter(
+    (slug) =>
+      getToolPagePath(slug) !== "/animate" &&
+      slug !== "repair-damaged-old-photos"
+  ).map((slug) => ({
+    path: getToolPagePath(slug),
+    lastModified: new Date("2026-09-19T00:00:00.000Z"),
+    changeFrequency: "weekly" as const,
+    priority: 0.9,
   }));
+
+  const blogRoutes = getBlogPosts("en").map((post) => ({
+    path: `/blog/${post.slug}`,
+    lastModified: new Date(post.updatedAt),
+    changeFrequency: "monthly" as const,
+    priority: 0.75,
+  }));
+
+  const allRoutes = [...staticRoutes, ...toolRoutes, ...blogRoutes];
+
+  const englishAnimationRoutes = ANIMATION_LANDING_PAGE_SLUGS.map((slug) => {
+    const page = getAnimationLandingPage(slug);
+    return {
+      url: absoluteLocalizedUrl("en", page.path),
+      lastModified: new Date(
+        slug === "animate-free"
+          ? "2026-07-25T00:00:00.000Z"
+          : "2026-09-19T00:00:00.000Z"
+      ),
+      changeFrequency: "weekly" as const,
+      priority: 0.9,
+      alternates: {
+        languages: {
+          en: absoluteLocalizedUrl("en", page.path),
+          "x-default": absoluteLocalizedUrl("en", page.path),
+        },
+      },
+    };
+  });
+
+  return [
+    ...locales.flatMap((locale) =>
+    allRoutes.map((route) => ({
+      url: absoluteLocalizedUrl(locale as Locale, route.path),
+      lastModified: route.lastModified,
+      changeFrequency: route.changeFrequency,
+      priority: route.priority,
+      alternates: {
+        languages: buildLanguageAlternates(route.path),
+      },
+    }))
+    ),
+    {
+      url: absoluteLocalizedUrl("en", "/no-login"),
+      lastModified: new Date("2026-07-23T00:00:00.000Z"),
+      changeFrequency: "weekly",
+      priority: 0.8,
+      alternates: {
+        languages: {
+          en: absoluteLocalizedUrl("en", "/no-login"),
+          "x-default": absoluteLocalizedUrl("en", "/no-login"),
+        },
+      },
+    },
+    ...englishAnimationRoutes,
+  ];
 }
