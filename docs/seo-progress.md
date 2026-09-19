@@ -49,7 +49,7 @@
 
 ### 验证记录
 
-- `npm test -- --runInBand`：65 个测试套件、640 项测试全部通过。
+- `npm test -- --runInBand`：69 个测试套件、648 项测试全部通过。
 - `npm run typecheck`：通过。
 - `npm run build`：通过；生成 118 个静态页面。仅保留既有的 `FooterSection.tsx` `<img>` 性能警告。
 - `scripts/check-colorizer-seo.mjs` 会检查：单跳 301、查询参数、最终 200、title/H1/description、canonical、hreflang、robots、JSON-LD 唯一性，以及 sitemap 内每个 URL 的 200/自指 canonical/可索引状态。
@@ -76,4 +76,5 @@
 - `e64600c fix: lock canonical seo ownership`
 - `9154756 docs: record seo canonical rollout`
 - `4c1c887 fix: reconcile seo indexing contracts`
+- `1929a76 docs: record production seo verification`
 - 本记录之后的文档提交不改变生产页面行为。
