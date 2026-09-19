@@ -4,24 +4,16 @@ import { defaultLocale } from "@/i18n/routing";
 import { buildPageMetadata } from "@/lib/seo";
 
 const noLoginMetadata = buildPageMetadata({
-  title:
-    "Old Photo to Video AI Free Without Login — No Sign Up | OldPhotoLiveAI",
+  title: "No-Login Photo Animation Preview | OldPhotoLive AI",
   description:
-    "Turn old photos into videos with AI free without login. No sign-up needed. Animate your memories instantly online. Start now.",
+    "Try one watermarked 480p old-photo animation preview without an account, then sign in only if you want saved history or higher-quality exports.",
   path: "/no-login",
-  keywords: [
-    "old photo to video AI free without login",
-    "old photo animation no sign up",
-    "animate old photos online free",
-  ],
-  robots: { index: false, follow: true },
 });
 
 export const metadata: Metadata = {
   ...noLoginMetadata,
   title: {
-    absolute:
-      "Old Photo to Video AI Free Without Login - No Sign Up | OldPhotoLiveAI",
+    absolute: "No-Login Photo Animation Preview | OldPhotoLive AI",
   },
 };
 

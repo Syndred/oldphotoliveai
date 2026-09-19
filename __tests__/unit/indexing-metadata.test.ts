@@ -2,7 +2,7 @@ import { buildLocalizedPageMetadata } from "@/lib/seo";
 
 describe("localized page indexing", () => {
   it.each(["zh", "es", "ja"] as const)(
-    "marks %s pages noindex, follow without hreflang alternates",
+    "keeps %s pages in the shared hreflang cluster",
     (locale) => {
       const metadata = buildLocalizedPageMetadata({
         locale,
@@ -11,8 +11,14 @@ describe("localized page indexing", () => {
         path: "/about",
       });
 
-      expect(metadata.robots).toEqual({ index: false, follow: true });
-      expect(metadata.alternates?.languages).toBeUndefined();
+      expect(metadata.robots).toBeUndefined();
+      expect(metadata.alternates?.languages).toMatchObject({
+        en: "https://oldphotoliveai.com/about",
+        "zh-Hans": "https://oldphotoliveai.com/zh/about",
+        es: "https://oldphotoliveai.com/es/about",
+        ja: "https://oldphotoliveai.com/ja/about",
+        "x-default": "https://oldphotoliveai.com/about",
+      });
     }
   );
 });

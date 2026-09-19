@@ -167,12 +167,9 @@ export function buildLocalizedPageMetadata({
 
   return {
     ...baseMetadata,
-    robots:
-      locale === defaultLocale
-        ? options.robots
-        : { index: false, follow: true },
     alternates: {
       canonical: localizedPath,
+      languages: buildLanguageAlternates(path),
     },
     openGraph: {
       ...baseMetadata.openGraph,

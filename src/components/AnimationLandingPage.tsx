@@ -180,9 +180,9 @@ export default function AnimationLandingPage({
 
         <HowItWorksSection
           copy={
-            locale === "en" && slug === "animate"
+            slug === "animate"
               ? ANIMATE_HOW_IT_WORKS
-              : locale === "en" && slug === "bring-to-life"
+              : slug === "bring-to-life"
                 ? BRING_TO_LIFE_HOW_IT_WORKS
                 : undefined
           }

@@ -196,26 +196,23 @@ describe("Navbar", () => {
   it("renders all navigation links", () => {
     __setMockPathname("/");
     render(<Navbar />);
-    expect(screen.getByRole("link", { name: "Photo Animation" })).toHaveAttribute("href", "/animate");
-    expect(screen.getByText("How It Works")).toBeInTheDocument();
-    expect(screen.getByText("Examples")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Animate Photos" })).toHaveAttribute("href", "/animate");
     expect(screen.getByText("Pricing")).toBeInTheDocument();
-    expect(screen.getByText("Other Tools")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Restore Old Photos" })).toHaveAttribute("href", "/restore-old-photos");
-    expect(screen.getByRole("link", { name: "Colorize Old Photos" })).toHaveAttribute("href", "/colorize-old-photos");
-    expect(screen.getByRole("link", { name: "Repair Damaged Photos" })).toHaveAttribute("href", "/repair-damaged-old-photos");
+    expect(screen.getByRole("link", { name: /Restore old photos/ })).toHaveAttribute("href", "/restore-old-photos");
+    expect(screen.getByRole("link", { name: /Colorize old photos/ })).toHaveAttribute("href", "/colorize-old-photos");
+    expect(screen.queryByRole("link", { name: /Repair damaged photos/i })).not.toBeInTheDocument();
     expect(screen.queryByText("History")).not.toBeInTheDocument();
   });
 
-  it("removes the old SEO tool links from the primary navigation", () => {
+  it("keeps English intent pages directly reachable", () => {
     __setMockPathname("/");
     render(<Navbar />);
 
-    expect(screen.queryByRole("link", { name: "Animate Photos" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "No Login" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Free Animation" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Bring to Life" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Photo to Video" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Animate Photos" })).toHaveAttribute("href", "/animate");
+    expect(screen.getByRole("link", { name: "No Login" })).toHaveAttribute("href", "/no-login");
+    expect(screen.getByRole("link", { name: "Free Animation" })).toHaveAttribute("href", "/animate-free");
+    expect(screen.getByRole("link", { name: "Bring to Life" })).toHaveAttribute("href", "/bring-to-life");
+    expect(screen.getByRole("link", { name: "Photo to Video" })).toHaveAttribute("href", "/to-video");
   });
 
   it("does not show English-only SEO links in a non-English navigation", () => {
@@ -238,11 +235,11 @@ describe("Navbar", () => {
     );
   });
 
-  it("links How It Works to the pipeline section", () => {
+  it("keeps product links on final canonical URLs", () => {
     __setMockPathname("/");
     render(<Navbar />);
-    expect(screen.getByText("How It Works").closest("a")).toHaveAttribute("href", "#how-it-works-section");
-    expect(screen.getByText("Examples").closest("a")).toHaveAttribute("href", "#showcase-section");
+    expect(screen.getByRole("link", { name: /Restore old photos/ })).toHaveAttribute("href", "/restore-old-photos");
+    expect(screen.getByRole("link", { name: /Animate old photos/ })).toHaveAttribute("href", "/animate");
   });
 
   it("highlights active History link when on /history", () => {

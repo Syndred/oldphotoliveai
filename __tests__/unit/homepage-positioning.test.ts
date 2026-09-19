@@ -1,41 +1,27 @@
-import {
-  HOME_METADATA,
-  HOME_ANIMATION_FAQS,
-  HOME_PIPELINE_STEPS,
-  HOME_USE_CASES,
-} from "@/content/home-animation";
+import { HOME_SEO_CONTENT } from "@/content/home-seo";
 import { PAGE_SEO_COPY } from "@/content/page-seo";
+import messages from "@/../messages/en.json";
 
-describe("animate-focused homepage", () => {
-  it("uses the approved homepage metadata", () => {
-    expect(HOME_METADATA.title).toBe(
-      "Animate Old Photos with AI — Restore, Colorize & Bring Old Photos to Life Online Free"
+describe("colorizer-focused homepage", () => {
+  it("owns the broad photo-colorization query", () => {
+    expect(PAGE_SEO_COPY.en.home.title).toBe(
+      "Colorize Photo Online Free – AI Photo Colorizer"
     );
-    expect(HOME_METADATA.description).toBe(
-      "Restore, colorize, and animate your old family photos with AI. Upload a vintage photo and watch it come to life in seconds. Free preview."
-    );
-    expect(HOME_METADATA.path).toBe("/");
-    expect(PAGE_SEO_COPY.en.home.title).toBe(HOME_METADATA.title);
-    expect(PAGE_SEO_COPY.en.home.description).toBe(HOME_METADATA.description);
+    expect(messages.landing.hero.title).toBe("Colorize Photos with AI");
+    expect(PAGE_SEO_COPY.en.home.description).toContain("daily free account quota");
   });
 
-  it("defines the complete restore, colorize, animate pipeline", () => {
-    expect(HOME_PIPELINE_STEPS.map((step) => step.title)).toEqual([
-      "Restore",
-      "Colorize",
-      "Animate",
-    ]);
-    expect(HOME_PIPELINE_STEPS.map((step) => step.href)).toEqual([
-      "/restore-old-photos",
-      "/colorize-old-photos",
-      "/animate",
-    ]);
+  it("links colorization to the adjacent restoration and animation tools", () => {
+    const content = HOME_SEO_CONTENT.en;
+    expect(content.colorizeCta).toBe("Colorize B&W photos");
+    expect(content.restoreCta).toBe("Restore old photos");
+    expect(content.animateCta).toBe("Animate portraits");
+    expect(content.contentTitle).toMatch(/Colorize black-and-white photos/i);
   });
 
-  it("provides six use cases and ten factual FAQ entries", () => {
-    expect(HOME_USE_CASES).toHaveLength(6);
-    expect(HOME_ANIMATION_FAQS).toHaveLength(10);
-    expect(HOME_ANIMATION_FAQS[7].answer).toContain("task history");
-    expect(HOME_ANIMATION_FAQS[7].answer).not.toContain("deleted immediately");
+  it("provides factual colorization FAQs", () => {
+    expect(HOME_SEO_CONTENT.en.faqItems).toHaveLength(8);
+    expect(HOME_SEO_CONTENT.en.faqItems[0].answer).toContain("daily free quota");
+    expect(HOME_SEO_CONTENT.en.faqItems[1].answer).toContain("estimate plausible colors");
   });
 });
