@@ -17,10 +17,11 @@
 - `npm run build`：通过；生成 118 个静态页面。仅保留既有 `FooterSection.tsx` `<img>` 性能警告。
 - `git diff --check`：通过。
 
-### 待上线回读
+### 生产与 GSC 回读
 
-- 推送后运行 `node scripts/check-colorizer-seo.mjs https://oldphotoliveai.com`，确认生产 H1、robots、canonical、schema 与 sitemap 全部符合契约。
-- 生产通过后，在 GSC 的 URL 前缀资源 `https://oldphotoliveai.com/` 对 `/colorize-old-photos` 请求编入索引，并记录队列回执；队列回执不等于已经收录。
+- 已推送 `master` 并完成生产切换；`node scripts/check-colorizer-seo.mjs https://oldphotoliveai.com` 通过，13 组重定向及重点页面的 H1、robots、canonical、hreflang、schema 均符合契约。
+- 生产 sitemap 共 38 个唯一 URL，逐条验证均为 200、自指 canonical、可索引；三个 noindex 页面未出现在 sitemap。
+- GSC 的 URL 前缀资源 `https://oldphotoliveai.com/` 显示 `/colorize-old-photos` 已收录；2026-09-21 再次请求编入索引后，回读“已将网址添加到优先抓取队列中”。该回执只证明已入队，不代表 Google 已抓取最新版本。
 
 ## 2026-09-21：五个核心页面 On Page 微调
 
