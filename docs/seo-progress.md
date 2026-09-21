@@ -1,5 +1,27 @@
 # SEO 进度交接
 
+## 2026-09-21：索引清理与核心权重线收口
+
+### 执行结果
+
+- 首页 H1 保持为 `Photo Colorization with AI`，并同步更新生产检查脚本，避免以后回退到 `Colorize Photos with AI`。
+- `/no-login`、`/animate-free`、`/to-video` 均保留现有 URL、内容和自指 canonical，新增 `noindex,follow`；其中 `/to-video` 采用 noindex 分支，因为当前内容仍限定老照片，未改写为泛 `photo to video ai free` 页面。
+- 三个 noindex 页面全部从 sitemap 移除；`/colorize-old-photos`、`/restore-old-photos`、`/animate` 三个核心工具页继续进入 sitemap，更新时间刷新到 2026-09-21。
+- 首页正文入口锚文本统一为 `Colorize old photos`、`Restore old photos`、`Animate old photos`；动画相关页的“继续使用”区只保留可索引页面，并以目标词链接到三项核心工具。
+- 主导航移除 `/no-login`、`/animate-free`、`/to-video` 等低价值入口，产品菜单继续集中指向三个核心工具页，减少站内权重分散。
+- 生产检查脚本新增三个 noindex 页的 200、自指 canonical、robots 与 sitemap 排除契约。
+
+### 本地验证
+
+- `npm test -- --runInBand`：70 个测试套件、655 项测试全部通过。
+- `npm run build`：通过；生成 118 个静态页面。仅保留既有 `FooterSection.tsx` `<img>` 性能警告。
+- `git diff --check`：通过。
+
+### 待上线回读
+
+- 推送后运行 `node scripts/check-colorizer-seo.mjs https://oldphotoliveai.com`，确认生产 H1、robots、canonical、schema 与 sitemap 全部符合契约。
+- 生产通过后，在 GSC 的 URL 前缀资源 `https://oldphotoliveai.com/` 对 `/colorize-old-photos` 请求编入索引，并记录队列回执；队列回执不等于已经收录。
+
 ## 2026-09-21：五个核心页面 On Page 微调
 
 ### 本轮边界
