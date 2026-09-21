@@ -202,7 +202,7 @@ describe("HomePage", () => {
       screen.getAllByRole("link", { name: "Restore old photos" })[0]
     ).toHaveAttribute("href", "/restore-old-photos");
     expect(
-      screen.getAllByRole("link", { name: "Animate portraits" })[0]
+      screen.getAllByRole("link", { name: "Animate old photos" })[0]
     ).toHaveAttribute("href", "/animate");
     expect(
       screen.queryByRole("link", { name: "Repair damaged photos" })

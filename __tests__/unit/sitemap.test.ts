@@ -23,32 +23,26 @@ describe("sitemap", () => {
     );
   });
 
-  it("keeps the English-only no-login page out of localized sitemap entries", () => {
+  it("excludes noindex utility pages", () => {
     const entries = sitemap();
-    const noLoginUrls = entries
-      .map((entry) => entry.url)
-      .filter((url) => /\/(?:zh\/|es\/|ja\/)?no-login$/.test(url));
+    const urls = entries.map((entry) => entry.url);
 
-    expect(noLoginUrls).toEqual(["https://oldphotoliveai.com/no-login"]);
-
-    const noLogin = entries.find(
-      (entry) => entry.url === "https://oldphotoliveai.com/no-login"
+    expect(urls).not.toEqual(
+      expect.arrayContaining([
+        "https://oldphotoliveai.com/no-login",
+        "https://oldphotoliveai.com/animate-free",
+        "https://oldphotoliveai.com/to-video",
+      ])
     );
-    expect(noLogin?.alternates?.languages).toEqual({
-      en: "https://oldphotoliveai.com/no-login",
-      "x-default": "https://oldphotoliveai.com/no-login",
-    });
   });
 
-  it("includes the four English animation search landing pages", () => {
+  it("includes only the indexable English animation pages", () => {
     const entries = sitemap();
     const urls = entries.map((entry) => entry.url);
 
     expect(urls).toEqual(
       expect.arrayContaining([
-        "https://oldphotoliveai.com/animate-free",
         "https://oldphotoliveai.com/bring-to-life",
-        "https://oldphotoliveai.com/to-video",
         "https://oldphotoliveai.com/animate",
       ])
     );

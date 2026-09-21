@@ -13,9 +13,9 @@ describe("colorizer-focused homepage", () => {
 
   it("links colorization to the adjacent restoration and animation tools", () => {
     const content = HOME_SEO_CONTENT.en;
-    expect(content.colorizeCta).toBe("Colorize B&W photos");
+    expect(content.colorizeCta).toBe("Colorize old photos");
     expect(content.restoreCta).toBe("Restore old photos");
-    expect(content.animateCta).toBe("Animate portraits");
+    expect(content.animateCta).toBe("Animate old photos");
     expect(content.contentTitle).toMatch(/Colorize black-and-white photos/i);
   });
 

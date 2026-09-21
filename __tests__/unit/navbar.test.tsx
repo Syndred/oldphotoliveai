@@ -196,7 +196,6 @@ describe("Navbar", () => {
   it("renders all navigation links", () => {
     __setMockPathname("/");
     render(<Navbar />);
-    expect(screen.getByRole("link", { name: "Animate Photos" })).toHaveAttribute("href", "/animate");
     expect(screen.getByText("Pricing")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Restore old photos/ })).toHaveAttribute("href", "/restore-old-photos");
     expect(screen.getByRole("link", { name: /Colorize old photos/ })).toHaveAttribute("href", "/colorize-old-photos");
@@ -204,15 +203,16 @@ describe("Navbar", () => {
     expect(screen.queryByText("History")).not.toBeInTheDocument();
   });
 
-  it("keeps English intent pages directly reachable", () => {
+  it("concentrates product navigation on the three core tools", () => {
     __setMockPathname("/");
     render(<Navbar />);
 
-    expect(screen.getByRole("link", { name: "Animate Photos" })).toHaveAttribute("href", "/animate");
-    expect(screen.getByRole("link", { name: "No Login" })).toHaveAttribute("href", "/no-login");
-    expect(screen.getByRole("link", { name: "Free Animation" })).toHaveAttribute("href", "/animate-free");
-    expect(screen.getByRole("link", { name: "Bring to Life" })).toHaveAttribute("href", "/bring-to-life");
-    expect(screen.getByRole("link", { name: "Photo to Video" })).toHaveAttribute("href", "/to-video");
+    expect(screen.getByRole("link", { name: /Restore old photos/ })).toHaveAttribute("href", "/restore-old-photos");
+    expect(screen.getByRole("link", { name: /Colorize old photos/ })).toHaveAttribute("href", "/colorize-old-photos");
+    expect(screen.getByRole("link", { name: /Animate old photos/ })).toHaveAttribute("href", "/animate");
+    expect(screen.queryByRole("link", { name: "No Login" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Free Animation" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Photo to Video" })).not.toBeInTheDocument();
   });
 
   it("does not show English-only SEO links in a non-English navigation", () => {

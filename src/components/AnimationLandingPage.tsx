@@ -35,7 +35,9 @@ export default function AnimationLandingPage({
   const page = getAnimationLandingPage(slug);
   const isBringToLifeGuide = slug === "bring-to-life";
   const relatedPages = ANIMATION_LANDING_PAGE_SLUGS.filter(
-    (relatedSlug) => relatedSlug !== slug
+    (relatedSlug) =>
+      relatedSlug !== slug &&
+      (relatedSlug === "animate" || relatedSlug === "bring-to-life")
   ).map(getAnimationLandingPage);
 
   const jsonLd = [
@@ -227,18 +229,7 @@ export default function AnimationLandingPage({
                 Continue with the right old-photo workflow
               </h2>
             </div>
-            <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Link
-                href="/no-login"
-                className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-5 transition-colors hover:border-[var(--color-accent)]/40"
-              >
-                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
-                  No-login photo to video
-                </h3>
-                <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)]">
-                  Try one watermarked, low-resolution video preview with no account.
-                </p>
-              </Link>
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
               <Link
                 href="/restore-old-photos"
                 className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-5 transition-colors hover:border-[var(--color-accent)]/40"

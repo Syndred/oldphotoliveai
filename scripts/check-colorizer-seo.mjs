@@ -78,7 +78,7 @@ const pageContracts = [
   {
     path: "/",
     title: "Colorize Photo Online Free – AI Photo Colorizer",
-    h1: "Colorize Photos with AI",
+    h1: "Photo Colorization with AI",
     description: /daily free account quota/,
     canonical: canonicalOrigin,
     hreflangs: ["en", "zh-Hans", "es", "ja", "x-default"],
@@ -86,7 +86,7 @@ const pageContracts = [
   {
     path: "/colorize-old-photos",
     title: "Colorize Old Photos Online Free – AI Old Photo Colorizer | OldPhotoLive AI",
-    h1: "Colorize Old Photos with AI",
+    h1: "Colorize Old Photos with AI — Free Online Photo Colorizer",
     description: /daily free quota/,
     canonical: `${canonicalOrigin}/colorize-old-photos`,
     hreflangs: ["en", "zh-Hans", "es", "ja", "x-default"],
@@ -113,14 +113,6 @@ const pageContracts = [
     h1: "Bring Old Photos to Life with AI",
     description: /Bring old photos to life with AI/,
     canonical: `${canonicalOrigin}/bring-to-life`,
-    hreflangs: ["en", "x-default"],
-  },
-  {
-    path: "/to-video",
-    title: "Photo to Video AI for Old Photos | OldPhotoLive AI",
-    h1: "Turn an Old Photo into Video with AI",
-    description: /photo to video AI/,
-    canonical: `${canonicalOrigin}/to-video`,
     hreflangs: ["en", "x-default"],
   },
 ];
@@ -166,13 +158,31 @@ assert.equal(
 );
 assert.doesNotMatch(repairHtml, /hrefLang=/, "noindex repair page must not join hreflang clusters");
 
+for (const path of ["/no-login", "/animate-free", "/to-video"]) {
+  const response = await fetch(`${origin}${path}`, {
+    redirect: "manual",
+    headers,
+  });
+  assert.equal(response.status, 200, `${path} must remain accessible`);
+  const html = await response.text();
+  assert.match(
+    html,
+    /<meta[^>]+name="robots"[^>]+content="[^"]*noindex/i,
+    `${path} must be noindex`
+  );
+  assert.equal(
+    normalizeUrl(canonicalFrom(html)),
+    `${canonicalOrigin}${path}`,
+    `${path} must keep its self-canonical`
+  );
+}
+
 const expectedSchemas = new Map([
   ["/", ["Organization", "WebSite", "WebApplication", "FAQPage"]],
   ["/colorize-old-photos", ["Organization", "WebSite", "BreadcrumbList", "FAQPage", "SoftwareApplication"]],
   ["/restore-old-photos", ["Organization", "WebSite", "BreadcrumbList", "FAQPage", "SoftwareApplication"]],
   ["/animate", ["Organization", "WebSite", "BreadcrumbList", "WebApplication"]],
   ["/bring-to-life", ["Organization", "WebSite", "BreadcrumbList", "WebPage"]],
-  ["/to-video", ["Organization", "WebSite", "BreadcrumbList", "WebApplication"]],
 ]);
 
 for (const [path, expected] of expectedSchemas) {
@@ -199,6 +209,9 @@ for (const forbidden of [
   `${canonicalOrigin}/restore`,
   `${canonicalOrigin}/animate-old-photos`,
   `${canonicalOrigin}/repair-damaged-old-photos`,
+  `${canonicalOrigin}/no-login`,
+  `${canonicalOrigin}/animate-free`,
+  `${canonicalOrigin}/to-video`,
 ]) {
   assert.ok(!sitemapUrls.includes(forbidden), `sitemap must exclude ${forbidden}`);
 }

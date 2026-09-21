@@ -12,7 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes = [
     {
       path: "/",
-      lastModified: new Date("2026-09-19T00:00:00.000Z"),
+      lastModified: new Date("2026-09-21T00:00:00.000Z"),
       changeFrequency: "weekly",
       priority: 1,
     },
@@ -54,7 +54,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       slug !== "repair-damaged-old-photos"
   ).map((slug) => ({
     path: getToolPagePath(slug),
-    lastModified: new Date("2026-09-19T00:00:00.000Z"),
+    lastModified: new Date("2026-09-21T00:00:00.000Z"),
     changeFrequency: "weekly" as const,
     priority: 0.9,
   }));
@@ -68,15 +68,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const allRoutes = [...staticRoutes, ...toolRoutes, ...blogRoutes];
 
-  const englishAnimationRoutes = ANIMATION_LANDING_PAGE_SLUGS.map((slug) => {
+  const englishAnimationRoutes = ANIMATION_LANDING_PAGE_SLUGS.filter(
+    (slug) => slug === "animate" || slug === "bring-to-life"
+  ).map((slug) => {
     const page = getAnimationLandingPage(slug);
     return {
       url: absoluteLocalizedUrl("en", page.path),
-      lastModified: new Date(
-        slug === "animate-free"
-          ? "2026-07-25T00:00:00.000Z"
-          : "2026-09-19T00:00:00.000Z"
-      ),
+      lastModified: new Date("2026-09-21T00:00:00.000Z"),
       changeFrequency: "weekly" as const,
       priority: 0.9,
       alternates: {
@@ -100,18 +98,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       },
     }))
     ),
-    {
-      url: absoluteLocalizedUrl("en", "/no-login"),
-      lastModified: new Date("2026-07-23T00:00:00.000Z"),
-      changeFrequency: "weekly",
-      priority: 0.8,
-      alternates: {
-        languages: {
-          en: absoluteLocalizedUrl("en", "/no-login"),
-          "x-default": absoluteLocalizedUrl("en", "/no-login"),
-        },
-      },
-    },
     ...englishAnimationRoutes,
   ];
 }

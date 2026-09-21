@@ -8,6 +8,7 @@ const noLoginMetadata = buildPageMetadata({
   description:
     "Try one watermarked 480p old-photo animation preview without an account, then sign in only if you want saved history or higher-quality exports.",
   path: "/no-login",
+  robots: { index: false, follow: true },
 });
 
 export const metadata: Metadata = {

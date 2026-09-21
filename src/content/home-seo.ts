@@ -27,9 +27,9 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
       "Turn black-and-white photos into color for an album, creative project, or personal keepsake. AI estimates colors from visible patterns, so skin tones, clothing, objects, and backgrounds may differ from their real colors. Keep the original image alongside the colorized copy.",
       "Old photo restoration can help when fading, scratches, or low contrast obscure details before colorization. Use the dedicated restoration tool for damaged prints, then return to colorize the cleaner image. A well-lit scan without glare gives the AI more detail to work with; severe damage may still need manual editing.",
     ],
-    colorizeCta: "Colorize B&W photos",
+    colorizeCta: "Colorize old photos",
     restoreCta: "Restore old photos",
-    animateCta: "Animate portraits",
+    animateCta: "Animate old photos",
     repairCta: "Repair damaged photos",
     faqItems: [
       {
