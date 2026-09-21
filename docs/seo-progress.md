@@ -1,5 +1,34 @@
 # SEO 进度交接
 
+## 2026-09-21：五个核心页面 On Page 微调
+
+### 本轮边界
+
+- 未新增或删除页面，未修改任何 slug、canonical、hreflang、robots、redirect 或 sitemap 规则。
+- 继续沿用既定关键词归属：首页 `colorize photo`，`/colorize-old-photos` 承接 `colorize old photos`，`/restore-old-photos` 承接 `restore old photos`，`/animate` 承接 `animate old photos`。
+- `/repair-damaged-old-photos` 继续保留 200、自指 canonical、`noindex,follow`，本轮只增强可见内容与媒体表达。
+
+### 已完成调整
+
+- 首页：H1 从 `Colorize Photos with AI` 改为 `Photo Colorization with AI`；SEO 正文第一段首句自然加入 `photo colorization`。
+- `/colorize-old-photos`：H1 改为 `Colorize Old Photos with AI — Free Online Photo Colorizer`；首段首句保留 exact 词；新增 `How to Colorize Old Photos`、`Before & After Examples`、R2 真实上色前后对比图，以及 JPG/JPEG、PNG、WEBP 支持格式表。
+- `/animate`：复用现有 R2 MP4 演示；H2 明确为 `How It Works` 和 `Supported Photo Formats`；FAQ 增加 `animate old photos`、`bring old photos to life`、`make old photos move` 三种自然问法。
+- `/restore-old-photos`：补充 `old photo restoration`、`photo restoration`、`restore photos` 变体；对比区 H2 改为 `Before & After: Restore Old Photos`。
+- `/repair-damaged-old-photos`：继续复用现有 R2 破损/修复前后对比图；新增 H2 `Types of Damage We Repair`，并把对比区标题明确为 `Before & After: Repair Damaged Old Photos`。
+- 新增 `__tests__/unit/on-page-seo.test.ts`，锁定五页 H1/H2、首段关键词、媒体、格式表和 FAQ 契约。
+
+### 验证记录
+
+- `npm run typecheck`：通过。
+- `npm test -- --runInBand`：70 个测试套件、653 项测试全部通过。
+- `npm run build`：通过；生成 118 个静态页面，仅有既有 `FooterSection.tsx` `<img>` 性能警告和 next-intl webpack cache 提示。
+- 本地 `next start -p 3100` 可见 DOM 回读：五页目标 H1/H2 均存在；上色页有 1 个格式表和含 `colorize old photos` 的前后图 alt；动画页有 3 个可见视频；修复页与破损修复页均渲染 5 组前后对比图。
+- 本地 HTML 回读确认动画页三条目标 FAQ 均进入服务端输出。
+
+### 提交记录
+
+- `aa5a0b0 feat: refine core page on-page seo`
+
 ## 2026-09-19：核心页面关键词与 canonical 收口
 
 ### 目标与边界
