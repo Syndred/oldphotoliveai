@@ -349,19 +349,19 @@ export const ANIMATION_LANDING_PAGES: Record<
     faqTitle: "Questions about animating old photos",
     faqs: [
       {
-        question: "How can I animate old photos online?",
+        question: "How do I animate old photos with AI?",
         answer:
-          "Sign in, upload a clear old portrait to the online AI tool, and use your available daily quota to generate a watermarked 480p preview before choosing an export.",
+          "Sign in, upload a clear old portrait, and use your available daily quota to generate a watermarked 480p preview. Review the short animation before choosing an export.",
       },
       {
-        question: "Can I animate black and white photos?",
+        question: "How can I bring old photos to life?",
         answer:
-          "Yes. Black-and-white portraits can be animated directly, or you can colorize a clean version first if color supports your project.",
+          "Restore a damaged source when needed, upload the clearest portrait, and generate subtle facial motion. Keeping the movement restrained helps bring old photos to life without overwhelming the original image.",
       },
       {
-        question: "What makes an animation look natural?",
+        question: "How can I make old photos move naturally?",
         answer:
-          "A clear single-subject portrait, stable framing, and restrained movement usually produce the most believable old-photo animation.",
+          "Use a clear single-subject portrait with stable framing and visible facial details. Restrained movement usually makes old photos move more naturally than exaggerated effects.",
       },
       {
         question: "Can I use an old photo animation for a memorial?",

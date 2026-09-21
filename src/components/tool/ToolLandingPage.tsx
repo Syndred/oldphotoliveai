@@ -1,4 +1,5 @@
 import { COLORIZER_EXAMPLES } from "@/content/colorizer-examples";
+import BeforeAfterCompare from "@/components/BeforeAfterCompare";
 import Navbar from "@/components/Navbar";
 import FooterSection from "@/app/sections/FooterSection";
 import ShowcaseSection from "@/app/sections/ShowcaseSection";
@@ -22,6 +23,8 @@ import {
 import type { Locale } from "@/i18n/routing";
 import type { TaskWorkflow } from "@/types";
 import { RESTORE_HOW_IT_WORKS } from "@/content/home-animation";
+import { SHOWCASE_SAMPLE_ASSETS } from "@/config/showcase-assets";
+import { resolveShowcaseAssetUrl } from "@/config/showcase";
 
 interface ToolLandingPageProps {
   locale: Locale;
@@ -34,6 +37,24 @@ const TOOL_WORKFLOWS: Record<ToolPageSlug, TaskWorkflow> = {
   "animate-old-photos": "animate",
   "repair-damaged-old-photos": "restore",
 };
+
+const COLORIZER_FORMATS = [
+  {
+    format: "JPG / JPEG",
+    bestFor: "Scanned prints and camera photos",
+    note: "Smaller files; use the highest-quality export available.",
+  },
+  {
+    format: "PNG",
+    bestFor: "Lossless scans and edited archive copies",
+    note: "Preserves detail well, but files are often larger.",
+  },
+  {
+    format: "WEBP",
+    bestFor: "Modern web images and compact uploads",
+    note: "Good quality at a smaller file size.",
+  },
+] as const;
 
 export default function ToolLandingPage({
   locale,
@@ -162,13 +183,23 @@ export default function ToolLandingPage({
             <div className="mx-auto max-w-6xl">
               <h2 className="text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">{tool.showcaseTitle}</h2>
               <p className="mt-4 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">{tool.showcaseSubtitle}</p>
-              <div className="mt-8 grid gap-5 md:grid-cols-3">
-                {COLORIZER_EXAMPLES.map((example) => (
-                  <article key={example.title} className="rounded-2xl border border-white/10 p-5">
-                    <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">{example.title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)]">{example.body}</p>
-                  </article>
-                ))}
+              <div className="mt-8 grid items-start gap-6 lg:grid-cols-[1.05fr,0.95fr]">
+                <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025] p-3">
+                  <BeforeAfterCompare
+                    beforeUrl={resolveShowcaseAssetUrl(SHOWCASE_SAMPLE_ASSETS[0].beforeKey)}
+                    afterUrl={resolveShowcaseAssetUrl(SHOWCASE_SAMPLE_ASSETS[0].colorizedKey)}
+                    beforeAlt="Original black-and-white portrait before using AI to colorize old photos"
+                    afterAlt="Before and after example showing how AI can colorize old photos"
+                  />
+                </div>
+                <div className="grid gap-4">
+                  {COLORIZER_EXAMPLES.map((example) => (
+                    <article key={example.title} className="rounded-2xl border border-white/10 p-5">
+                      <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">{example.title}</h3>
+                      <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)]">{example.body}</p>
+                    </article>
+                  ))}
+                </div>
               </div>
             </div>
           </section>
@@ -238,6 +269,39 @@ export default function ToolLandingPage({
             }
           />
         )}
+
+        {isEnglishColorizer ? (
+          <section className="px-4 py-10 sm:py-14">
+            <div className="mx-auto max-w-5xl">
+              <h2 className="text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">
+                Supported Photo Formats
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                Upload JPG, PNG, or WEBP images up to 10 MB. A clear, high-quality source gives the colorizer more detail to work with.
+              </p>
+              <div className="mt-6 overflow-x-auto rounded-2xl border border-white/10">
+                <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+                  <thead className="bg-white/[0.05] text-[var(--color-text-primary)]">
+                    <tr>
+                      <th className="px-5 py-4 font-semibold" scope="col">Format</th>
+                      <th className="px-5 py-4 font-semibold" scope="col">Best for</th>
+                      <th className="px-5 py-4 font-semibold" scope="col">What to know</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/10 text-[var(--color-text-secondary)]">
+                    {COLORIZER_FORMATS.map((item) => (
+                      <tr key={item.format}>
+                        <th className="px-5 py-4 font-medium text-[var(--color-text-primary)]" scope="row">{item.format}</th>
+                        <td className="px-5 py-4">{item.bestFor}</td>
+                        <td className="px-5 py-4">{item.note}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         <section className="px-4 py-4 sm:py-6">
           <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-[1.2fr,0.8fr]">

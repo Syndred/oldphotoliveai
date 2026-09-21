@@ -169,7 +169,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     introTitle: "Bring faded memories back",
     introBody:
       "Old family photos often lose contrast, collect scratches, and blur in the areas people care about most. This AI photo restoration workflow gives you a fast, natural first pass for portraits, wedding prints, genealogy records, memorial albums, and scanned family archives. Start with the clearest scan you have, restore old photos online, then decide whether to download the restored image, colorize it, or animate the portrait.",
-    showcaseTitle: "Old photo restoration examples",
+    showcaseTitle: "Before & After: Restore Old Photos",
     showcaseSubtitle:
       "Real before-and-after examples focused on contrast recovery, scratch cleanup, and facial detail repair.",
     showcaseKind: "restoration",
@@ -195,12 +195,12 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
       {
         title: "What AI photo restoration can repair",
         body:
-          "AI photo restoration works best on the common problems found in family albums: faded contrast, soft facial detail, small scratches, dust, and paper wear. It can make old portraits easier to recognize, recover clothing and background texture, and create a cleaner image for printing or sharing. Severe missing areas may still need manual retouching, but an AI first pass usually saves time and gives you a stronger version to work from.",
+          "Old photo restoration works best on the common problems found in family albums: faded contrast, soft facial detail, small scratches, dust, and paper wear. This form of photo restoration can make portraits easier to recognize, recover clothing and background texture, and create a cleaner image for printing or sharing. Severe missing areas may still need manual retouching, but an AI first pass usually saves time and gives you a stronger version to work from.",
       },
       {
         title: "Use cases for family archives and genealogy",
         body:
-          "People often restore old photos for memorial videos, genealogy profiles, anniversary gifts, family trees, local history collections, and scanned albums. A restored image is easier to identify, tag, and preserve. If the photo is a portrait, you can also use the restored version as the base for natural colorization or a short animation clip.",
+          "People often restore photos for memorial videos, genealogy profiles, anniversary gifts, family trees, local history collections, and scanned albums. A restored image is easier to identify, tag, and preserve. If the photo is a portrait, you can also use the restored version as the base for natural colorization or a short animation clip.",
       },
       {
         title: "Tips for better restoration results",
@@ -266,8 +266,8 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
   "cardTitle": "Colorize old photos",
   "cardDescription": "Add AI-estimated color to black-and-white family photographs and compare the result with your original.",
   "eyebrow": "AI colorization",
-  "heroTitle": "Colorize Old Photos with AI",
-  "heroDescription": "Colorize old photos with an AI photo colorizer designed for black-and-white family portraits, scanned prints, and everyday snapshots. Upload a clear image, let the workflow restore it and add estimated colors, then download the colorized photo from your result page. You do not need to paint individual areas or choose colors for every face, garment, and background. Start with a scan that keeps the whole photograph visible, and avoid glare, heavy compression, or filters that hide detail. The AI uses visual patterns to suggest plausible colors; it cannot know the exact shades that were present when the photograph was taken. Keep your original file and compare the result before adding it to an album, genealogy project, or family keepsake. Sign in with Google to use your available daily free quota. Processing time and results vary with image quality and demand, and export options depend on your plan and remaining allowance.",
+  "heroTitle": "Colorize Old Photos with AI — Free Online Photo Colorizer",
+  "heroDescription": "Colorize old photos with AI using a free online photo colorizer designed for black-and-white family portraits, scanned prints, and everyday snapshots. Upload a clear image, let the workflow restore it and add estimated colors, then download the colorized photo from your result page. You do not need to paint individual areas or choose colors for every face, garment, and background. Start with a scan that keeps the whole photograph visible, and avoid glare, heavy compression, or filters that hide detail. The AI uses visual patterns to suggest plausible colors; it cannot know the exact shades that were present when the photograph was taken. Keep your original file and compare the result before adding it to an album, genealogy project, or family keepsake. Sign in with Google to use your available daily free quota. Processing time and results vary with image quality and demand, and export options depend on your plan and remaining allowance.",
   "heroHighlights": [
     "Upload a black-and-white photo",
     "Review AI-estimated colors against your original",
@@ -278,10 +278,10 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
   "uploadSubtitle": "Upload a clear scan or black-and-white photo. Sign in to start processing.",
   "introTitle": "How an AI photo colorizer estimates colors",
   "introBody": "An AI photo colorizer uses patterns learned from color images to estimate colors for shapes and textures in a black-and-white photo. Faces, clothing, plants, and skies provide visual clues, but several different colors can produce the same gray tone. This workflow first restores the image, then adds predicted color. The result is an interpretation, not evidence of the original historical colors; compare it with reliable references if accuracy matters.",
-  "showcaseTitle": "Before & After: AI Photo Colorizer Examples",
-  "showcaseSubtitle": "The following are illustrative text descriptions, not real before-and-after results, customer photos, or guarantees. They describe possible changes and limitations; your photograph may produce a different result.",
+  "showcaseTitle": "Before & After Examples",
+  "showcaseSubtitle": "Compare an original black-and-white photo with an AI-colorized result. The example demonstrates the workflow, not a guaranteed result for every photograph.",
   "showcaseKind": "colorization",
-  "benefitsTitle": "How to Colorize Old Photos with AI",
+  "benefitsTitle": "How to Colorize Old Photos",
   "benefits": [
     {
       "title": "1. Sign in and upload your photo",
@@ -478,11 +478,11 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     introTitle: "Repair the damage before it gets worse",
     introBody:
       "Old prints often suffer from scratches, dust, creases, fading, and paper wear. This workflow focuses on cleaning the damage first so the photo is easier to preserve, share, or restore further.",
-    showcaseTitle: "Damage repair examples",
+    showcaseTitle: "Before & After: Repair Damaged Old Photos",
     showcaseSubtitle:
       "Examples focused on faded contrast, visible surface defects, and common family-photo wear.",
     showcaseKind: "restoration",
-    benefitsTitle: "What this workflow is best at",
+    benefitsTitle: "Types of Damage We Repair",
     benefits: [
       {
         title: "Handle the most common print damage",

@@ -7,7 +7,7 @@ describe("colorizer-focused homepage", () => {
     expect(PAGE_SEO_COPY.en.home.title).toBe(
       "Colorize Photo Online Free – AI Photo Colorizer"
     );
-    expect(messages.landing.hero.title).toBe("Colorize Photos with AI");
+    expect(messages.landing.hero.title).toBe("Photo Colorization with AI");
     expect(PAGE_SEO_COPY.en.home.description).toContain("daily free account quota");
   });
 

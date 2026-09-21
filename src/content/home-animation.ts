@@ -35,7 +35,7 @@ export const HOME_ANIMATION_FAQS = [
 export const HOME_HOW_IT_WORKS = { title: "One Photo, Three Steps to a Living Memory", subtitle: "Each step works independently or as a complete pipeline. Start anywhere.", steps: HOME_PIPELINE_STEPS } as const;
 
 export const ANIMATE_HOW_IT_WORKS = {
-  title: "How to Animate an Old Photo",
+  title: "How It Works",
   subtitle: "Create subtle motion from a clear portrait in three steps.",
   steps: [
     { title: "Upload your photo", description: "Drag and drop a clear old portrait. Best results come from front-facing photos with visible facial features." },

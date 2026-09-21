@@ -23,7 +23,7 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
     contentTitle: "Colorize black-and-white photos online",
     sectionTitles: ["One-click AI photo colorizer", "Turn black-and-white photos into color", "Old photo restoration before colorization"],
     contentParagraphs: [
-      "Colorize a photo with AI without painting each area by hand. Upload a clear black-and-white picture, choose colorization, and let the photo colorizer generate a color version to compare with the original. Sign in to use your daily free quota; additional processing and export options depend on your plan.",
+      "Photo colorization adds AI-estimated color without making you paint each area by hand. Upload a clear black-and-white picture, choose colorization, and let the photo colorizer generate a color version to compare with the original. Sign in to use your daily free quota; additional processing and export options depend on your plan.",
       "Turn black-and-white photos into color for an album, creative project, or personal keepsake. AI estimates colors from visible patterns, so skin tones, clothing, objects, and backgrounds may differ from their real colors. Keep the original image alongside the colorized copy.",
       "Old photo restoration can help when fading, scratches, or low contrast obscure details before colorization. Use the dedicated restoration tool for damaged prints, then return to colorize the cleaner image. A well-lit scan without glare gives the AI more detail to work with; severe damage may still need manual editing.",
     ],
