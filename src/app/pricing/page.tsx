@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
 import Navbar from "@/components/Navbar";
+import CheckoutReturn from "@/components/CheckoutReturn";
 import PricingCards from "@/components/PricingCards";
 import type { QuotaInfo, SubscriptionStatus, UserTier } from "@/types";
 
@@ -23,6 +24,7 @@ export default function PricingPage() {
   const locale = useLocale();
   const t = useTranslations("pricing");
   const tQuota = useTranslations("quota");
+  const [paymentRevision, setPaymentRevision] = useState(0);
   const [quota, setQuota] = useState<QuotaInfo | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] =
     useState<SubscriptionStatus | null>(null);
@@ -59,7 +61,7 @@ export default function PricingPage() {
     return () => {
       abortController.abort();
     };
-  }, [status]);
+  }, [status, paymentRevision]);
 
   const sessionTier = parseUserTier(
     (session?.user as Record<string, unknown> | undefined)?.tier
@@ -138,6 +140,7 @@ export default function PricingPage() {
             </div>
           )}
 
+          <CheckoutReturn onConfirmed={() => setPaymentRevision(v => v + 1)} />
           <div className="mt-8">
             <PricingCards
               currentTier={tier}

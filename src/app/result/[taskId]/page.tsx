@@ -2,9 +2,10 @@
 
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import Navbar from "@/components/Navbar";
+import ResultUpgrade from "@/components/ResultUpgrade";
+import type { QuotaInfo } from "@/types";
 import ProgressIndicator from "@/components/ProgressIndicator";
 import BeforeAfterCompare from "@/components/BeforeAfterCompare";
 import VideoPlayer from "@/components/VideoPlayer";
@@ -83,8 +84,9 @@ export default function ResultPage() {
   const [error, setError] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
   const [isFreeTier, setIsFreeTier] = useState(true);
-  const [isAnonymousResult, setIsAnonymousResult] = useState(false);
-  const [showAnonymousUpgrade, setShowAnonymousUpgrade] = useState(false);
+  const [quota, setQuota] = useState<QuotaInfo | null>(null);
+  const [canUpgrade, setCanUpgrade] = useState(false);
+  const [existingUpgradeTaskId, setExistingUpgradeTaskId] = useState<string | undefined>();
   const [initialLoading, setInitialLoading] = useState(true);
   const [needsPolling, setNeedsPolling] = useState(false);
   const [retryAllowed, setRetryAllowed] = useState(false);
@@ -105,6 +107,9 @@ export default function ResultPage() {
       const context = readTaskContext(data, taskContextRef.current);
       taskContextRef.current = context;
       setRetryAllowed(context.retryAllowed);
+      setCanUpgrade(data.canUpgrade === true);
+      if (typeof data.existingUpgradeTaskId === "string" && /^[a-zA-Z0-9-]+$/.test(data.existingUpgradeTaskId)) setExistingUpgradeTaskId(data.existingUpgradeTaskId);
+      if (typeof data.generationTier === "string") setIsFreeTier(data.generationTier === "free");
 
       const commonParams = {
         workflow: context.workflow,
@@ -119,6 +124,9 @@ export default function ResultPage() {
       } else if (status === "completed") {
         trackTaskEventOnce("generation_completed", taskId, context.attemptCount, commonParams);
         trackTaskEventOnce("result_view", taskId, context.attemptCount, commonParams);
+        if (data.generationTier === "pay_as_you_go" || data.generationTier === "professional") {
+          trackTaskEventOnce("paid_result_view", taskId, 1, { ...commonParams, source: data.isUpgrade === true ? "upgrade" : "upload" });
+        }
       } else if (status === "failed") {
         trackTaskEventOnce("generation_failed", taskId, context.attemptCount, {
           ...commonParams,
@@ -137,12 +145,24 @@ export default function ResultPage() {
     [taskId]
   );
 
-  // Fetch user tier for watermark decision
+  useEffect(() => {
+    setResult(null);
+    setError(null);
+    setCanUpgrade(false);
+    setExistingUpgradeTaskId(undefined);
+    setInitialLoading(true);
+    setNeedsPolling(false);
+    setIsFreeTier(true);
+    setRetryAllowed(false);
+    taskContextRef.current = { workflow: "full", accessMode: "authenticated", attemptCount: 1, retryAllowed: false };
+  }, [taskId]);
+
+  // Account allowance controls the remake action; output quality belongs to the task.
   useEffect(() => {
     fetch("/api/quota")
       .then((res) => res.ok ? res.json() : null)
       .then((data) => {
-        if (data?.tier && data.tier !== "free") setIsFreeTier(false);
+        if (data?.tier) setQuota(data);
       })
       .catch(() => { /* default to free tier = show watermark */ });
   }, []);
@@ -151,15 +171,16 @@ export default function ResultPage() {
   useEffect(() => {
     if (!taskId) return;
 
-    fetch(`/api/tasks/${taskId}/status`)
+    const controller = new AbortController();
+    fetch(`/api/tasks/${taskId}/status`, { signal: controller.signal })
       .then((res) =>
         res.ok ? res.json() : Promise.reject(new Error(tErrors("taskNotFound")))
       )
       .then((data) => {
+        if (controller.signal.aborted) return;
         handleTaskStatus(data as Record<string, unknown>);
         const accessMode =
           typeof data.accessMode === "string" ? data.accessMode : "";
-        setIsAnonymousResult(accessMode === "anonymous");
         if (accessMode === "anonymous") {
           setIsFreeTier(true);
         }
@@ -172,9 +193,6 @@ export default function ResultPage() {
         if (completedResult) {
           setNeedsPolling(false);
           setResult(completedResult);
-          if (accessMode === "anonymous") {
-            setShowAnonymousUpgrade(true);
-          }
         } else if (data.status === "failed") {
           setNeedsPolling(false);
           setError(resolveTaskErrorMessage(data.errorMessage, tErrors));
@@ -184,19 +202,18 @@ export default function ResultPage() {
         }
       })
       .catch(() => {
-        // If status API fails, fall back to SSE
-        setNeedsPolling(true);
+        // If status API fails, fall back to SSE. Ignore the previous task after navigation.
+        if (!controller.signal.aborted) setNeedsPolling(true);
       })
-      .finally(() => setInitialLoading(false));
+      .finally(() => { if (!controller.signal.aborted) setInitialLoading(false); });
+    return () => controller.abort();
   }, [handleTaskStatus, taskId, tErrors]);
 
   const handleComplete = useCallback(
     (data: { status: string; progress: number; [key: string]: unknown }) => {
       handleTaskStatus(data);
       if (data.accessMode === "anonymous") {
-        setIsAnonymousResult(true);
         setIsFreeTier(true);
-        setShowAnonymousUpgrade(true);
       }
       setResult(getTaskResult(data) ?? null);
       setError(null);
@@ -359,35 +376,6 @@ export default function ResultPage() {
         {/* Results */}
         {!initialLoading && result && (
           <div className="space-y-8">
-            {isAnonymousResult && showAnonymousUpgrade ? (
-              <section className="rounded-2xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/10 p-5 text-center">
-                <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
-                  Want HD + unlimited?
-                </h2>
-                <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--color-text-secondary)]">
-                  Your no-login preview is ready with a watermark and lower
-                  resolution. Sign up to create more animations, save your
-                  history, and unlock higher-quality exports.
-                </p>
-                <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row">
-                  <button
-                    type="button"
-                    onClick={() => signIn("google", { callbackUrl: "/" })}
-                    className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90"
-                  >
-                    Sign up for HD
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowAnonymousUpgrade(false)}
-                    className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-white/12 px-6 py-3 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/[0.05] hover:text-white"
-                  >
-                    Keep preview
-                  </button>
-                </div>
-              </section>
-            ) : null}
-
             {/* Before / After */}
             {imageResultKind && (
               <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm sm:p-6">
@@ -410,6 +398,8 @@ export default function ResultPage() {
                 <VideoPlayer src={animationAssetUrl} showWatermark={isFreeTier} />
               </section>
             )}
+
+            {canUpgrade && <ResultUpgrade taskId={taskId} quota={quota} workflow={taskContextRef.current.workflow} existingUpgradeTaskId={existingUpgradeTaskId} />}
 
             {/* Download buttons */}
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">

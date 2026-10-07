@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
+import ConversionSummary from "./ConversionSummary";
 import type { AdminUserSnapshot, User, UserTier } from "@/types";
 
 type AuthState = "checking" | "locked" | "ready";
@@ -530,6 +531,8 @@ export default function AdminPanel() {
           </button>
         </div>
       </section>
+
+      <ConversionSummary />
 
       <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
         <form

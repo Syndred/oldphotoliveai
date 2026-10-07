@@ -146,7 +146,36 @@ describe("PricingCards", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockFetch.mockReset();
+    window.history.replaceState(null, "", "/pricing");
     mockUseSession.mockReturnValue({ data: null, status: "unauthenticated" });
+  });
+
+  it("signs in with the selected pack and photo context before requesting checkout", async () => {
+    window.history.replaceState(null, "", "/pricing?taskId=photo-1&returnTo=/restore-old-photos");
+    render(<PricingCards />);
+    fireEvent.click(screen.getAllByText("Buy Credits")[0]);
+    await waitFor(() => expect(mockSignIn).toHaveBeenCalledWith("google", { callbackUrl: "/pricing?plan=starter_pack&resume=1&taskId=photo-1&returnTo=%2Frestore-old-photos" }));
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("consumes login resume once before starting checkout, including after remount", async () => {
+    window.history.replaceState(null, "", "/pricing?plan=starter_pack&resume=1&taskId=photo-1");
+    mockUseSession.mockReturnValue({ data: { user: { tier: "free" } }, status: "authenticated" });
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+    const view = render(<PricingCards />);
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1));
+    expect(window.location.search).not.toContain("resume=");
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({ plan: "starter_pack", locale: "en", taskId: "photo-1" });
+    view.unmount();
+    render(<PricingCards />);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not restart checkout after cancellation even with a stale resume flag", () => {
+    window.history.replaceState(null, "", "/pricing?plan=starter_pack&resume=1&cancelled=true");
+    mockUseSession.mockReturnValue({ data: { user: { tier: "free" } }, status: "authenticated" });
+    render(<PricingCards />);
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it("renders free and credit-pack pricing plans", () => {
@@ -258,7 +287,7 @@ describe("PricingCards", () => {
       expect(mockFetch).toHaveBeenCalledWith("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: "family_pack" }),
+        body: JSON.stringify({ plan: "family_pack", locale: "en" }),
       });
     });
   });
@@ -286,6 +315,7 @@ describe("PricingCards", () => {
   });
 
   it("calls checkout API with the selected credit pack", async () => {
+    mockUseSession.mockReturnValue({ data: { user: { tier: "free" } }, status: "authenticated" });
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ url: "https://checkout.stripe.com/session123" }),
@@ -298,12 +328,13 @@ describe("PricingCards", () => {
       expect(mockFetch).toHaveBeenCalledWith("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: "starter_pack" }),
+        body: JSON.stringify({ plan: "starter_pack", locale: "en" }),
       });
     });
   });
 
   it("shows error message when checkout fails", async () => {
+    mockUseSession.mockReturnValue({ data: { user: { tier: "free" } }, status: "authenticated" });
     mockFetch.mockResolvedValueOnce({
       ok: false,
       json: async () => ({ error: "Unauthorized" }),
@@ -321,6 +352,7 @@ describe("PricingCards", () => {
   });
 
   it("shows loading state during checkout", async () => {
+    mockUseSession.mockReturnValue({ data: { user: { tier: "free" } }, status: "authenticated" });
     let resolvePromise: (value: unknown) => void;
     const promise = new Promise((resolve) => {
       resolvePromise = resolve;
@@ -343,6 +375,7 @@ describe("PricingPage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockFetch.mockReset();
+    window.history.replaceState(null, "", "/pricing");
     mockUseSession.mockReturnValue({ data: null, status: "unauthenticated" });
     mockFetch.mockImplementation(async (input: unknown) => {
       const url = getRequestUrl(input);

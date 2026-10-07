@@ -197,3 +197,31 @@ export function trackTaskEventOnce(
   pendingTaskEvents.delete(key);
   rememberDeliveredTaskEvent(key);
 }
+
+/** Only call with a fulfilled receipt returned by the authenticated checkout status API. */
+export function trackVerifiedPurchase(receipt: {
+  transactionId: string;
+  plan: string;
+  amountTotal: number;
+  currency: string;
+  creditsAdded: number;
+}): void {
+  if (typeof window === "undefined" || !/^[a-f0-9]{64}$/.test(receipt.transactionId) ||
+      !ENUM_VALUE.test(receipt.plan) || !/^[a-zA-Z]{3}$/.test(receipt.currency) ||
+      !Number.isSafeInteger(receipt.amountTotal) || receipt.amountTotal < 0) return;
+  const key = `opla:analytics:purchase:${receipt.transactionId}`;
+  if (hasTaskEventMarker(key)) return;
+  const params = {
+    transaction_id: receipt.transactionId,
+    currency: receipt.currency.toUpperCase(),
+    value: receipt.amountTotal / 100,
+    plan: receipt.plan,
+  };
+  // Bypass the generic event sanitizer only for the strictly validated receipt.
+  if (!sendGaEvent("purchase", params)) {
+    enqueueTaskEvent(key, { eventName: "purchase", params });
+    return;
+  }
+  pendingTaskEvents.delete(key);
+  rememberDeliveredTaskEvent(key);
+}

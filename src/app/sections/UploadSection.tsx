@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
 import UploadZone from "@/components/UploadZone";
@@ -10,6 +10,8 @@ import { trackAnalyticsEvent } from "@/lib/analytics";
 import { getContentSafetyCopy } from "@/lib/content-safety";
 import type { TaskWorkflow } from "@/types";
 import { classifyTaskCreationResponse } from "@/lib/task-create-client";
+import { clearPendingUpload, readPendingUpload, savePendingUpload } from "@/lib/pending-upload";
+import { getConversionCopy } from "@/lib/conversion-copy";
 
 interface UploadSectionProps {
   title?: string;
@@ -32,9 +34,12 @@ export default function UploadSection({
 }: UploadSectionProps = {}) {
   const router = useRouter();
   const pathname = usePathname();
-  const { status } = useSession();
+  const { data: session, status } = useSession();
+  const userId = String((session?.user as Record<string, unknown> | undefined)?.id || "");
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState("");
+  const [quotaExhausted, setQuotaExhausted] = useState(false);
+  const [savedImageKey, setSavedImageKey] = useState<string | null>(null);
   const [retryImageKey, setRetryImageKey] = useState<string | null>(null);
   const [allowanceConsumed, setAllowanceConsumed] = useState<boolean | null>(false);
   const createInFlightRef = useRef(false);
@@ -45,6 +50,13 @@ export default function UploadSection({
   const contentSafety = getContentSafetyCopy(locale);
   const localizedPathname = localizePathname(locale, pathname);
   const isEmbedded = variant === "embedded";
+  const copy = getConversionCopy(locale);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    const pending = readPendingUpload(userId, localizedPathname, workflow);
+    setSavedImageKey(pending?.imageKey ?? null);
+  }, [status, userId, localizedPathname, workflow]);
 
   const containerClasses = isEmbedded
     ? "flex h-full w-full flex-col rounded-[22px] border border-white/10 bg-white/[0.045] p-4 shadow-[0_18px_44px_rgba(0,0,0,0.22)] backdrop-blur-sm sm:p-5"
@@ -67,6 +79,7 @@ export default function UploadSection({
     if (createInFlightRef.current) return;
     createInFlightRef.current = true;
     setRetryImageKey(null);
+    setQuotaExhausted(false);
     setAllowanceConsumed(false);
 
     trackAnalyticsEvent("task_create_started", {
@@ -105,6 +118,12 @@ export default function UploadSection({
         setError(data?.error || tErrors("taskCreateFailed"));
         setAllowanceConsumed(failure.allowanceConsumed);
         setRetryImageKey(failure.retryable ? imageKey : null);
+        if (failure.failureCode === "daily_quota_exhausted" || failure.failureCode === "no_credits") {
+          setQuotaExhausted(true);
+          setSavedImageKey(imageKey);
+          savePendingUpload({ imageKey, workflow, pathname: localizedPathname, userId });
+          trackAnalyticsEvent("upgrade_offer_viewed", { source: "quota_exhausted", workflow });
+        }
         return;
       }
 
@@ -116,6 +135,8 @@ export default function UploadSection({
         replayed: data?.replayed === true,
         allowance_consumed: data?.allowanceConsumed === true,
       });
+      clearPendingUpload();
+      setSavedImageKey(null);
       router.push(`/result/${taskId}`);
     } catch (err) {
       trackAnalyticsEvent("task_create_failed", {
@@ -169,6 +190,17 @@ export default function UploadSection({
         </div>
       )}
 
+      {savedImageKey && !quotaExhausted && (
+        <div className="mb-5 rounded-xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/10 p-4 sm:p-5">
+          <h3 className="font-semibold text-[var(--color-text-primary)]">{copy.savedTitle}</h3>
+          <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">{copy.savedBody}</p>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <button type="button" disabled={isCreating} onClick={() => handleUpload(savedImageKey)} className="min-h-[44px] rounded-lg bg-[var(--color-accent)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">{copy.continue}</button>
+            <button type="button" disabled={isCreating} onClick={() => { clearPendingUpload(); setSavedImageKey(null); }} className="min-h-[44px] rounded-lg border border-white/15 px-4 py-3 text-sm text-[var(--color-text-secondary)]">{copy.dismiss}</button>
+          </div>
+        </div>
+      )}
+
       <UploadZone
         onUpload={handleUpload}
         disabled={isCreating}
@@ -204,7 +236,16 @@ export default function UploadSection({
         </div>
       )}
 
-      {error && (
+      {quotaExhausted && (
+        <div className="mt-5 rounded-xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/10 p-4 sm:p-5">
+          <h3 className="font-semibold text-[var(--color-text-primary)]">{copy.quotaTitle}</h3>
+          <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">{copy.quotaBody}</p>
+          <Link href={`/pricing?plan=starter_pack&returnTo=${encodeURIComponent(localizedPathname)}`} onClick={() => trackAnalyticsEvent("upgrade_clicked", { source: "quota_exhausted", workflow, plan: "starter_pack" })} className="mt-4 inline-flex min-h-[44px] w-full items-center justify-center rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-5 py-3 text-center text-sm font-semibold text-white sm:w-auto">{copy.buyCredits}</Link>
+          <p className="mt-3 text-xs leading-5 text-[var(--color-text-secondary)]">{copy.tomorrow}</p>
+        </div>
+      )}
+
+      {error && !quotaExhausted && (
         <div className="mt-4 text-center" role="alert">
           <p className="text-sm text-red-400">{error}</p>
           <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
@@ -228,14 +269,14 @@ export default function UploadSection({
 
   if (isEmbedded) {
     return (
-      <div id="upload-section" className={wrapperClasses}>
+      <div id="upload-section" className={`scroll-mt-24 ${wrapperClasses}`}>
         {content}
       </div>
     );
   }
 
   return (
-    <section id="upload-section" className={wrapperClasses}>
+    <section id="upload-section" className={`scroll-mt-24 ${wrapperClasses}`}>
       {content}
     </section>
   );

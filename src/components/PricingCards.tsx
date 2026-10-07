@@ -1,15 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { useSession } from "next-auth/react";
-import { useTranslations } from "next-intl";
+import { useEffect, useRef, useState } from "react";
+import { signIn, useSession } from "next-auth/react";
+import { useLocale, useTranslations } from "next-intl";
 import type { UserTier } from "@/types";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import {
   CREDIT_PACKS,
+  isCreditPackPlan,
   type CreditPackPlan,
   PROFESSIONAL_MONTHLY_DISPLAY_PRICE,
 } from "@/lib/billing";
+
+import { localizePathname } from "@/i18n/routing";
+import { getCheckoutCopy } from "@/lib/checkout-copy";
+import { checkoutContext, checkoutLocale, pricingCheckoutPath } from "@/lib/checkout-context";
 
 interface PricingPlan {
   id: "free" | CreditPackPlan | "professional";
@@ -145,7 +150,17 @@ export default function PricingCards({
 }: PricingCardsProps) {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const locale = checkoutLocale(useLocale());
+  const resumed = useRef(false);
+  const copy = getCheckoutCopy(locale);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [photoContext, setPhotoContext] = useState<{ taskId?: string; returnTo?: string }>({});
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setSelectedPlan(params.get("plan"));
+    setPhotoContext(checkoutContext(params, locale));
+  }, [locale]);
   const t = useTranslations("pricing");
   const tErrors = useTranslations("errors");
 
@@ -156,7 +171,37 @@ export default function PricingCards({
   const currentPlanId = currentTier ?? "free";
   const professionalIncludesCredits = currentPlanId === "professional";
 
+  useEffect(() => {
+    if (status !== "authenticated" || resumed.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const plan = params.get("plan");
+    if (params.get("resume") !== "1" || params.has("cancelled") || params.has("session_id") || !plan || (!isCreditPackPlan(plan) && plan !== "professional")) return;
+    resumed.current = true;
+    // Consume the intent before the request so refresh/back never reopens checkout.
+    params.delete("resume");
+    window.history.replaceState(window.history.state, "", `${window.location.pathname}?${params}`);
+    trackAnalyticsEvent("checkout_resumed", { plan });
+    void handleCheckout(plan);
+    // Only authentication changes may consume the return-from-login intent.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
+
   async function handleCheckout(plan: CreditPackPlan | "professional") {
+    const context = checkoutContext(new URLSearchParams(window.location.search), locale);
+    if (status !== "authenticated") {
+      setLoadingPlan(plan);
+      setError(null);
+      trackAnalyticsEvent("sign_in_prompted_checkout", { plan });
+      try {
+        await signIn("google", { callbackUrl: pricingCheckoutPath(locale, context, { plan, resume: "1" }) });
+      } catch {
+        setError(tErrors("checkoutFailed"));
+      } finally {
+        setLoadingPlan(null);
+      }
+      return;
+    }
+
     if (plan !== "professional" && professionalIncludesCredits) {
       setError(tErrors("professionalAlreadyIncludesCredits"));
       return;
@@ -169,7 +214,7 @@ export default function PricingCards({
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, locale, ...context }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -222,6 +267,10 @@ export default function PricingCards({
 
   return (
     <div>
+      {(photoContext.taskId || photoContext.returnTo) && <div className="mb-8 flex flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm leading-6 text-[var(--color-text-secondary)]">{copy.photoContext}</p>
+        <a className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-white/15 px-4 py-2 text-sm text-[var(--color-text-primary)]" href={photoContext.taskId ? localizePathname(locale, `/result/${photoContext.taskId}`) : `${photoContext.returnTo}?resumeUpload=1#upload-section`}>{copy.backPhoto}</a>
+      </div>}
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         {PLANS.filter(
           (p) => !p.hiddenUnlessCurrent || p.id === currentPlanId
@@ -229,7 +278,8 @@ export default function PricingCards({
           const isCurrentPlan =
             (p.id === "free" && currentPlanId === "free") ||
             (p.id === "professional" && currentPlanId === "professional");
-          const isHighlighted = p.highlighted || isCurrentPlan;
+          const isSelected = p.id === selectedPlan;
+          const isHighlighted = p.highlighted || isCurrentPlan || isSelected;
           const checkoutPlan = p.checkoutPlan;
           const periodLabel = p.periodKey
             ? t(p.periodKey, p.periodValues)
@@ -241,7 +291,7 @@ export default function PricingCards({
             <div
               key={p.id}
               data-testid={`plan-${p.id}`}
-              className={`relative flex min-h-full flex-col rounded-2xl border p-6 transition-shadow ${
+              className={`relative flex min-h-full flex-col rounded-2xl border p-6 transition-shadow ${isSelected ? "order-first md:order-none" : ""} ${
                 isHighlighted
                   ? "border-[var(--color-accent)] bg-gradient-to-b from-[var(--color-accent)]/10 to-transparent shadow-lg shadow-[var(--color-accent)]/10"
                   : "border-white/10 bg-white/[0.03]"
@@ -265,6 +315,7 @@ export default function PricingCards({
                 {t(p.descKey)}
               </p>
 
+              {isSelected && <p className="mt-3 text-xs leading-5 text-[var(--color-accent)]">{copy.selected}{status !== "authenticated" ? ` · ${copy.signInContinue}` : ""}</p>}
               <div className="mt-4 flex items-baseline gap-1">
                 <span className="text-3xl font-bold text-[var(--color-text-primary)]">
                   {p.price}
