@@ -130,3 +130,13 @@ describe("atomic task creation", () => {
 });
 
 type _TaskShapeCheck = Task;
+
+it("snapshots purchased quality and keys upgrade replay by source instead of temporary copy", async () => {
+  mockEval.mockResolvedValue(["CREATED", "task-fixed-id", "1"]);
+  await createAuthenticatedTaskAtomic({ user: { ...user, tier: "pay_as_you_go" }, imageKey: "tasks/copy-a/original.jpg", workflow: "restore", upgradeSourceTaskId: "source" });
+  await createAuthenticatedTaskAtomic({ user: { ...user, tier: "pay_as_you_go" }, imageKey: "tasks/copy-b/original.jpg", workflow: "restore", upgradeSourceTaskId: "source" });
+  expect(mockEval.mock.calls[0][1][4]).toBe(mockEval.mock.calls[1][1][4]);
+  expect(mockEval.mock.calls[0][1][4]).toMatch(/^task:upgrade:/);
+  expect(JSON.parse(mockEval.mock.calls[0][2][1])).toMatchObject({ generationTier: "pay_as_you_go", upgradeSourceTaskId: "source" });
+  expect(mockEval.mock.calls[0][2][6]).toBe("upgrade");
+});

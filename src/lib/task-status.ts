@@ -4,6 +4,7 @@ import type {
   TaskFailureStage,
   TaskStatus,
   TaskWorkflow,
+  UserTier,
 } from "@/types";
 import type { TaskAccessMode } from "@/lib/task-access";
 
@@ -29,6 +30,10 @@ export interface PublicTaskStatus {
   progress: number;
   workflow: TaskWorkflow;
   accessMode: TaskAccessMode;
+  generationTier: UserTier;
+  isUpgrade: boolean;
+  existingUpgradeTaskId?: string;
+  canUpgrade: boolean;
   attemptCount: number;
   retryAllowed: boolean;
   requiresManualReview: boolean;
@@ -66,6 +71,9 @@ export function toPublicTaskStatus(
     progress: task.progress,
     workflow: task.workflow ?? "full",
     accessMode,
+    generationTier: getTaskGenerationTier(task),
+    isUpgrade: Boolean(task.upgradeSourceTaskId),
+    canUpgrade: task.status === "completed" && task.violation !== true && getTaskGenerationTier(task) === "free",
     attemptCount,
     retryAllowed:
       task.status === "failed" &&
@@ -100,4 +108,9 @@ export function toPublicTaskStatus(
   }
 
   return response;
+}
+
+/** Legacy priorities were selected from tier when tasks were created. */
+export function getTaskGenerationTier(task: Task): UserTier {
+  return task.generationTier ?? (task.priority === "urgent" ? "professional" : task.priority === "high" ? "pay_as_you_go" : "free");
 }

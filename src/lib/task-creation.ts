@@ -8,6 +8,7 @@ import type { Task, TaskPriority, TaskWorkflow, User } from "@/types";
 export type TaskCreationRejectionCode =
   | "DAILY_QUOTA_EXHAUSTED"
   | "NO_CREDITS"
+  | "PAYMENT_REQUIRED"
   | "QUOTA_NOT_INITIALIZED"
   | "ANONYMOUS_TRIAL_USED";
 
@@ -37,7 +38,8 @@ if not allowedString(KEYS[1]) or not allowedString(KEYS[2]) or
 end
 
 local existing = redis.call('GET', KEYS[5])
-if existing then
+-- A deleted upgrade can be deliberately purchased again; never replay a missing result.
+if existing and (ARGV[7] ~= 'upgrade' or redis.call('GET', 'task:' .. existing)) then
   return {'EXISTING', existing, '-1'}
 end
 
@@ -86,7 +88,11 @@ end
 redis.call('SET', KEYS[2], ARGV[2])
 redis.call('ZADD', KEYS[3], ARGV[3], ARGV[1])
 redis.call('ZADD', KEYS[4], ARGV[4], ARGV[1])
-redis.call('SET', KEYS[5], ARGV[1], 'EX', 86400)
+if ARGV[7] == 'upgrade' then
+  redis.call('SET', KEYS[5], ARGV[1])
+else
+  redis.call('SET', KEYS[5], ARGV[1], 'EX', 86400)
+end
 return {'CREATED', ARGV[1], tostring(remaining)}
 `;
 
@@ -166,6 +172,24 @@ function dedupeDigest(userId: string, imageKey: string, workflow: TaskWorkflow):
     .digest("hex");
 }
 
+/** Recover a purchased remake without copying its source or consuming allowance. */
+export async function getExistingTaskUpgrade(
+  userId: string,
+  source: Pick<Task, "id" | "workflow">
+): Promise<string | undefined> {
+  if (!userId) return undefined;
+  const redis = getRedisClient();
+  const digest = dedupeDigest(userId, source.id, source.workflow ?? "full");
+  const taskId = await redis.get<string>(`task:upgrade:${digest}`);
+  if (typeof taskId !== "string" || !taskId) return undefined;
+  const task = await redis.get<Task>(`task:${taskId}`);
+  // Check both ownership and origin. An anonymous source may be visible to
+  // several accounts on the same browser, but their paid results are private.
+  return task?.id === taskId && task.userId === userId && task.upgradeSourceTaskId === source.id
+    ? taskId
+    : undefined;
+}
+
 function parseNumber(value: unknown): number | undefined {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
@@ -176,8 +200,12 @@ export async function createAuthenticatedTaskAtomic(input: {
   imageKey: string;
   workflow: TaskWorkflow;
   priority?: TaskPriority;
+  upgradeSourceTaskId?: string;
   now?: Date;
 }): Promise<TaskCreationResult> {
+  if (input.upgradeSourceTaskId && input.user.tier === "free") {
+    return { outcome: "rejected", code: "PAYMENT_REQUIRED", remaining: 0 };
+  }
   const now = input.now ?? new Date();
   const priority = input.priority ?? (input.user.tier === "professional"
     ? "urgent"
@@ -185,14 +213,16 @@ export async function createAuthenticatedTaskAtomic(input: {
       ? "high"
       : "normal");
   const task = buildTask(input.user.id, input.imageKey, priority, input.workflow, now);
-  const digest = dedupeDigest(input.user.id, input.imageKey, input.workflow);
+  task.generationTier = input.user.tier;
+  task.upgradeSourceTaskId = input.upgradeSourceTaskId;
+  const digest = dedupeDigest(input.user.id, input.upgradeSourceTaskId ?? input.imageKey, input.workflow);
   const redis = getRedisClient();
   const result = await redis.eval(AUTHENTICATED_CREATE_SCRIPT, [
     `quota:${input.user.id}`,
     `task:${task.id}`,
     `user:${input.user.id}:tasks`,
     "queue:tasks",
-    `task:create:${digest}`,
+    `${input.upgradeSourceTaskId ? "task:upgrade" : "task:create"}:${digest}`,
   ], [
     task.id,
     JSON.stringify(task),
@@ -200,6 +230,7 @@ export async function createAuthenticatedTaskAtomic(input: {
     String(PRIORITY_WEIGHTS[priority] + now.getTime()),
     input.user.tier,
     now.toISOString(),
+    input.upgradeSourceTaskId ? "upgrade" : "create",
   ]) as unknown;
 
   const values = Array.isArray(result) ? result.map(String) : [];
@@ -227,6 +258,7 @@ export async function createAnonymousTaskAtomic(input: {
   const now = input.now ?? new Date();
   const userId = buildAnonymousUserId(input.visitorId);
   const task = buildTask(userId, input.imageKey, "normal", "animate", now);
+  task.generationTier = "free";
   const anonymousUser: User = {
     id: userId,
     googleId: userId,

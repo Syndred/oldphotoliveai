@@ -15,6 +15,8 @@ async function readInput() {
 async function main() {
   const payload = await readInput();
   const strings = new Map(Object.entries(payload.strings));
+  const sets = new Map(Object.entries(payload.sets ?? {}).map(([key, members]) => [key, new Set(members)]));
+  const hashes = new Map(Object.entries(payload.hashes ?? {}).map(([key, fields]) => [key, new Map(Object.entries(fields))]));
   const sortedSets = new Map(
     Object.entries(payload.sortedSets).map(([key, entries]) => [
       key,
@@ -43,9 +45,22 @@ async function main() {
     const key = String(rawArgs[0]);
 
     if (command === "GET") return strings.get(key);
+    if (command === "EXISTS") return strings.has(key) || sortedSets.has(key) || sets.has(key) || hashes.has(key) ? 1 : 0;
+    if (command === "SREM") return sets.get(key)?.delete(String(rawArgs[1])) ? 1 : 0;
+    if (command === "EXPIRE") return 1;
+    if (command === "HINCRBY") {
+      const hash = hashes.get(key) ?? new Map();
+      const field = String(rawArgs[1]);
+      const value = Number(hash.get(field) ?? 0) + Number(rawArgs[2]);
+      hash.set(field, value);
+      hashes.set(key, hash);
+      return value;
+    }
 
     if (command === "TYPE") {
       if (strings.has(key)) return { ok: "string" };
+      if (sets.has(key)) return { ok: "set" };
+      if (hashes.has(key)) return { ok: "hash" };
       if (sortedSets.has(key)) return { ok: "zset" };
       return { ok: "none" };
     }
@@ -111,24 +126,28 @@ async function main() {
   try {
     lua.global.set("KEYS", payload.keys);
     lua.global.set("ARGV", payload.args);
-    lua.global.set("redis", { call: redisCall });
-    lua.global.set("jsonEncode", JSON.stringify);
-    lua.global.set("jsonStringifyValue", JSON.stringify);
+    lua.global.set("redis", { call: redisCall, pcall: (...args) => { try { return redisCall(...args); } catch (error) { return { err: error.message }; } } });
+    lua.global.set("jsonEncode", (value) => JSON.stringify(value, (_key, item) =>
+      item && item.__redis_lua_null === true ? null : item
+    ));
+    lua.global.set("jsonParseValue", JSON.parse);
     lua.global.set("jsonDecodePairs", (value) =>
-      Object.entries(JSON.parse(value))
+      Object.entries(JSON.parse(value)).map(([key, item]) => [key, JSON.stringify(item)])
     );
     await lua.doString(`
-      cjson = {}
+      cjson = {null = {__redis_lua_null = true}}
       cjson.encode = jsonEncode
       cjson.decode = function(value)
         local decoded = {}
         local entries = jsonDecodePairs(value)
         for index = 1, #entries do
-          local rawValue = jsonStringifyValue(entries[index][2])
+          local rawValue = entries[index][2]
           if string.sub(rawValue, 1, 1) == '{' then
             decoded[entries[index][1]] = cjson.decode(rawValue)
-          elseif rawValue ~= 'null' then
-            decoded[entries[index][1]] = entries[index][2]
+          elseif rawValue == 'null' then
+            decoded[entries[index][1]] = cjson.null
+          else
+            decoded[entries[index][1]] = jsonParseValue(rawValue)
           end
         end
         return decoded
@@ -145,6 +164,8 @@ async function main() {
       JSON.stringify({
         result,
         strings: Object.fromEntries(strings),
+        sets: Object.fromEntries(Array.from(sets, ([key, members]) => [key, Array.from(members)])),
+        hashes: Object.fromEntries(Array.from(hashes, ([key, fields]) => [key, Object.fromEntries(fields)])),
         sortedSets: Object.fromEntries(
           Array.from(sortedSets, ([key, set]) => [key, Array.from(set)])
         ),

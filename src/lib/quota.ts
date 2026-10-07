@@ -52,29 +52,33 @@ export async function initializeFreeQuota(userId: string): Promise<void> {
  */
 export async function ensureFreeQuotaInitialized(userId: string): Promise<void> {
   const redis = getRedisClient();
-  const existing = await redis.get(keys.quota(userId));
-  if (existing) return;
-  await initializeFreeQuota(userId);
+  const quota: QuotaInfo = {
+    userId, tier: "free", remaining: 1, dailyLimit: 1,
+    resetAt: getNextUtcMidnight(), credits: 0, creditsExpireAt: null,
+  };
+  // The condition is evaluated by Redis, never against a stale login snapshot.
+  const created = await redis.set(keys.quota(userId), quota, { nx: true });
+  if (created === "OK") await redis.sadd(keys.dailyUsers(), userId);
 }
 
 // ── Clean Expired Credits ───────────────────────────────────────────────────
 
+export const CLEAN_EXPIRED_CREDITS_SCRIPT = `
+local raw = redis.call('GET', KEYS[1])
+if not raw then return 'MISSING' end
+local quota = cjson.decode(raw)
+if (tonumber(quota.credits) or 0) > 0 and type(quota.creditsExpireAt) == 'string' and quota.creditsExpireAt < ARGV[1] then
+  quota.credits = 0
+  quota.creditsExpireAt = cjson.null
+  redis.call('SET', KEYS[1], cjson.encode(quota))
+  return 'CLEANED'
+end
+return 'UNCHANGED'
+`;
+
 export async function cleanExpiredCredits(userId: string): Promise<void> {
-  const redis = getRedisClient();
-  const raw = await redis.get(keys.quota(userId));
-  if (!raw) return;
-
-  const quota = parseQuota(raw);
-
-  if (
-    quota.credits > 0 &&
-    quota.creditsExpireAt &&
-    new Date(quota.creditsExpireAt).getTime() < Date.now()
-  ) {
-    quota.credits = 0;
-    quota.creditsExpireAt = null;
-    await redis.set(keys.quota(userId), quota);
-  }
+  await getRedisClient().eval(CLEAN_EXPIRED_CREDITS_SCRIPT,
+    [keys.quota(userId)], [new Date().toISOString()]);
 }
 
 // ── Check and Decrement Quota ───────────────────────────────────────────────
@@ -214,19 +218,31 @@ export async function resetFreeQuota(userId: string): Promise<void> {
 
 // ── Reset All Daily Quotas ──────────────────────────────────────────────────
 
+export const RESET_DAILY_QUOTA_SCRIPT = `
+local raw = redis.call('GET', KEYS[1])
+if not raw then return 'MISSING' end
+local quota = cjson.decode(raw)
+local userRaw = redis.call('GET', KEYS[2])
+local user = userRaw and cjson.decode(userRaw) or nil
+-- A stale daily-set member cannot overwrite a concurrent credit purchase.
+if quota.tier ~= 'free' or (user and user.tier ~= 'free') then
+  redis.call('SREM', KEYS[3], ARGV[1])
+  return 'NOT_FREE'
+end
+quota.remaining = 1
+quota.resetAt = ARGV[2]
+redis.call('SET', KEYS[1], cjson.encode(quota))
+return 'RESET'
+`;
+
 export async function resetAllDailyQuotas(): Promise<void> {
   const redis = getRedisClient();
   const userIds = await redis.smembers<string[]>(keys.dailyUsers());
-
   if (!userIds || userIds.length === 0) return;
-
+  const resetAt = getNextUtcMidnight();
   for (const userId of userIds) {
-    const raw = await redis.get(keys.quota(userId));
-    if (!raw) continue;
-
-    const quota = parseQuota(raw);
-    quota.remaining = 1;
-    quota.resetAt = getNextUtcMidnight();
-    await redis.set(keys.quota(userId), quota);
+    await redis.eval(RESET_DAILY_QUOTA_SCRIPT,
+      [keys.quota(userId), `user:${userId}`, keys.dailyUsers()],
+      [userId, resetAt]);
   }
 }

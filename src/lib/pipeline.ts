@@ -1,3 +1,5 @@
+import { recordCompletedGeneration } from "@/lib/conversion-metrics";
+import { getTaskGenerationTier } from "./task-status";
 import { getUser } from "./redis";
 import {
   runModel,
@@ -339,10 +341,13 @@ export async function executePipeline(
   }
   const checkpoint = () =>
     assertTaskExecutionOwned(taskId, executionToken, signal);
-  const updateStatus = (
+  const updateStatus = async (
     status: Parameters<typeof updateTaskStatusFenced>[2],
     data?: Partial<typeof task>
-  ) => updateTaskStatusFenced(taskId, executionToken, status, data, signal);
+  ) => {
+    await updateTaskStatusFenced(taskId, executionToken, status, data, signal);
+    if (status === "completed") await recordCompletedGeneration(task);
+  };
 
   const user = await getUser(task.userId);
   await checkpoint();
@@ -357,7 +362,7 @@ export async function executePipeline(
     return;
   }
 
-  const tier = user.tier;
+  const tier = getTaskGenerationTier(task);
   const tierModelConfig = getTierModelConfig(tier);
   const workflow = getTaskWorkflow(task.workflow);
   let failureStage: TaskFailureStage = null;

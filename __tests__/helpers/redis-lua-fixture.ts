@@ -5,6 +5,8 @@ import path from "path";
 interface RunnerResult {
   result: unknown;
   strings: Record<string, string>;
+  sets: Record<string, string[]>;
+  hashes: Record<string, Record<string, number>>;
   sortedSets: Record<string, Array<[string, number]>>;
 }
 
@@ -37,6 +39,12 @@ function runLuaProcess(payload: Record<string, unknown>): Promise<RunnerResult> 
  */
 export class RedisLuaFixture {
   private strings = new Map<string, string>();
+  private sets: Record<string, string[]> = {};
+  private hashes: Record<string, Record<string, number>> = {};
+
+  setMembers(key: string, members: string[]): void { this.sets[key] = members; }
+  getMembers(key: string): string[] { return this.sets[key] ?? []; }
+  getHash(key: string): Record<string, number> { return this.hashes[key] ?? {}; }
   private sortedSets = new Map<string, Map<string, number>>();
   private executionTail: Promise<unknown> = Promise.resolve();
 
@@ -95,12 +103,16 @@ export class RedisLuaFixture {
       keys,
       args,
       strings: Object.fromEntries(this.strings),
+      sets: this.sets,
+      hashes: this.hashes,
       sortedSets: Object.fromEntries(
         Array.from(this.sortedSets, ([key, set]) => [key, Array.from(set)])
       ),
     });
 
     this.strings = new Map(Object.entries(response.strings));
+    this.sets = response.sets;
+    this.hashes = response.hashes;
     this.sortedSets = new Map(
       Object.entries(response.sortedSets).map(([key, entries]) => [
         key,

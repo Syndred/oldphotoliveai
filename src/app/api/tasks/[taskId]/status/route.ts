@@ -2,6 +2,8 @@
 // Requirements: 4.3, 18.5
 
 import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+import { getExistingTaskUpgrade } from "@/lib/task-creation";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 import { getAccessibleTask } from "@/lib/task-access";
 import { toPublicTaskStatus } from "@/lib/task-status";
@@ -22,9 +24,16 @@ export async function GET(request: NextRequest, props: { params: Promise<{ taskI
       );
     }
     schedulePipelineWakeupForStatus(accessibleTask.task.status);
-    return NextResponse.json(
-      toPublicTaskStatus(accessibleTask.task, accessibleTask.mode)
-    );
+    const publicStatus = toPublicTaskStatus(accessibleTask.task, accessibleTask.mode);
+    if (publicStatus.canUpgrade) {
+      const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+      const requesterId = typeof token?.userId === "string" ? token.userId : undefined;
+      if (requesterId) {
+        const existingUpgradeTaskId = await getExistingTaskUpgrade(requesterId, accessibleTask.task);
+        if (existingUpgradeTaskId) publicStatus.existingUpgradeTaskId = existingUpgradeTaskId;
+      }
+    }
+    return NextResponse.json(publicStatus);
   } catch (error) {
     console.error("Get task status failed:", error);
     return NextResponse.json(

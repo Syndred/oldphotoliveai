@@ -7,25 +7,16 @@ import Stripe from "stripe";
 import { getStripeClient } from "@/lib/stripe";
 import { config } from "@/lib/config";
 import { getRedisClient, getUserByEmail, updateUserTier } from "@/lib/redis";
-import { addCredits, initializeFreeQuota } from "@/lib/quota";
+import { initializeFreeQuota } from "@/lib/quota";
 import { sendPaymentEmail } from "@/lib/email";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
-import {
-  CREDIT_PACK_EXPIRATION_DAYS,
-  getCreditPack,
-  isCreditPackPlan,
-  LEGACY_PAY_AS_YOU_GO_CREDITS,
-} from "@/lib/billing";
+import { fulfillPaidCheckout } from "@/lib/checkout-fulfillment";
 
 const EMAIL_EVENT_TTL_SECONDS = 3 * 24 * 60 * 60;
 const PROCESSED_EVENT_TTL_SECONDS = 7 * 24 * 60 * 60;
 
 function getProcessedWebhookKey(eventId: string): string {
   return `stripe:webhook:processed:${eventId}`;
-}
-
-function getFulfilledCheckoutSessionKey(sessionId: string): string {
-  return `stripe:checkout:fulfilled:${sessionId}`;
 }
 
 async function claimWebhookEvent(eventId: string): Promise<boolean> {
@@ -40,24 +31,6 @@ async function claimWebhookEvent(eventId: string): Promise<boolean> {
 async function releaseWebhookEventClaim(eventId: string): Promise<void> {
   const redis = getRedisClient();
   await redis.del(getProcessedWebhookKey(eventId));
-}
-
-async function claimCheckoutSessionFulfillment(
-  sessionId: string
-): Promise<boolean> {
-  const redis = getRedisClient();
-  const result = await redis.set(getFulfilledCheckoutSessionKey(sessionId), "1", {
-    nx: true,
-    ex: PROCESSED_EVENT_TTL_SECONDS,
-  });
-  return result === "OK";
-}
-
-async function releaseCheckoutSessionFulfillmentClaim(
-  sessionId: string
-): Promise<void> {
-  const redis = getRedisClient();
-  await redis.del(getFulfilledCheckoutSessionKey(sessionId));
 }
 
 async function shouldSendWebhookEmail(eventId: string): Promise<boolean> {
@@ -92,39 +65,13 @@ async function fulfillCheckoutSession(
     return;
   }
 
-  const shouldFulfill = await claimCheckoutSessionFulfillment(session.id);
-  if (!shouldFulfill) {
-    return;
-  }
-
-  try {
-    if (isCreditPackPlan(plan)) {
-      const pack = getCreditPack(plan);
-      await addCredits(userId, pack.credits, CREDIT_PACK_EXPIRATION_DAYS);
-      await updateUserTier(userId, "pay_as_you_go");
-    } else if (plan === "pay_as_you_go") {
-      // Legacy one-credit purchases created before credit packs existed.
-      await addCredits(userId, LEGACY_PAY_AS_YOU_GO_CREDITS, 30);
-      await updateUserTier(userId, "pay_as_you_go");
-    } else if (plan === "professional") {
-      // Set tier to professional (Req 6.6)
-      await updateUserTier(userId, "professional");
-    }
-
-    const email =
-      session.customer_details?.email ?? session.customer_email ?? null;
-    if (email && (await shouldSendWebhookEmail(eventId))) {
-      sendPaymentEmail({
-        to: email,
-        type: "payment_success",
-        plan,
-      }).catch((error) => {
-        console.error("Failed to send payment success email:", error);
-      });
-    }
-  } catch (error) {
-    await releaseCheckoutSessionFulfillmentClaim(session.id);
-    throw error;
+  const fulfilled = await fulfillPaidCheckout(session);
+  if (!fulfilled) return;
+  const email = session.customer_details?.email ?? session.customer_email ?? null;
+  if (email && (await shouldSendWebhookEmail(eventId))) {
+    sendPaymentEmail({ to: email, type: "payment_success", plan }).catch((error) => {
+      console.error("Failed to send payment success email:", error);
+    });
   }
 }
 
@@ -167,7 +114,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const shouldProcess = await claimWebhookEvent(event.id);
+    const checkoutEvent = event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded";
+    const shouldProcess = checkoutEvent || await claimWebhookEvent(event.id);
     if (!shouldProcess) {
       return NextResponse.json({ received: true });
     }

@@ -15,6 +15,8 @@ import {
   isCreditPackPlan,
 } from "@/lib/billing";
 
+import { checkoutLocale, safeCheckoutReturnTo, safeCheckoutTaskId, pricingCheckoutPath } from "@/lib/checkout-context";
+
 const VALID_PLANS = [...CREDIT_PACK_PLAN_IDS, "professional"] as const;
 type Plan = (typeof VALID_PLANS)[number];
 
@@ -84,6 +86,8 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { plan } = body as { plan?: string };
+    const paymentLocale = body.locale ? checkoutLocale(body.locale) : locale;
+    const context = { taskId: safeCheckoutTaskId(body.taskId), returnTo: safeCheckoutReturnTo(body.returnTo, paymentLocale) };
 
     if (!plan || !isValidPlan(plan)) {
       return NextResponse.json(
@@ -127,8 +131,8 @@ export async function POST(request: NextRequest) {
     const session = await stripe.checkout.sessions.create({
       mode,
       line_items: [getLineItem(plan)],
-      success_url: `${config.nextauth.url}/pricing?success=true`,
-      cancel_url: `${config.nextauth.url}/pricing?cancelled=true`,
+      success_url: `${config.nextauth.url}${pricingCheckoutPath(paymentLocale, context)}${context.taskId || context.returnTo ? "&" : "?"}session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${config.nextauth.url}${pricingCheckoutPath(paymentLocale, context, { cancelled: "true", plan })}`,
       client_reference_id: userId,
       ...(customer
         ? { customer: customer.id }
@@ -136,6 +140,10 @@ export async function POST(request: NextRequest) {
       metadata: {
         userId,
         plan,
+        product: "oldphotoliveai",
+        locale: paymentLocale,
+        ...(context.taskId ? { taskId: context.taskId } : {}),
+        ...(context.returnTo ? { returnTo: context.returnTo } : {}),
         ...(isCreditPackPlan(plan)
           ? { credits: String(getCreditPack(plan).credits) }
           : {}),

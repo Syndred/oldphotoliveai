@@ -361,6 +361,22 @@ describe("executePipeline", () => {
   });
 
   describe("tier settings", () => {
+    it("preserves free quality after the owner purchases credits", async () => {
+      setupSuccessfulPipeline({ generationTier: "free" });
+      mockGetUser.mockResolvedValue(makeUser({ tier: "pay_as_you_go" }));
+      await executePipeline(TASK_ID, EXECUTION);
+      expect(mockRunModel.mock.calls[0][0]).toBe("restoration");
+      expect(mockApplyImageWatermark).toHaveBeenCalledTimes(2);
+    });
+
+    it("preserves paid quality even if account tier later changes", async () => {
+      setupSuccessfulPipeline({ generationTier: "pay_as_you_go" });
+      mockGetUser.mockResolvedValue(makeUser({ tier: "free" }));
+      await executePipeline(TASK_ID, EXECUTION);
+      expect(mockRunModel.mock.calls[0][0]).toBe("restorationPremium");
+      expect(mockApplyImageWatermark).not.toHaveBeenCalled();
+    });
+
     it("uses the lightweight restoration model for free users", async () => {
       setupSuccessfulPipeline();
       mockGetUser.mockResolvedValue(makeUser({ tier: "free" }));
@@ -378,7 +394,7 @@ describe("executePipeline", () => {
     });
 
     it("uses the premium scratch-repair restoration model for pay_as_you_go users", async () => {
-      setupSuccessfulPipeline();
+      setupSuccessfulPipeline({ generationTier: "pay_as_you_go" });
       mockGetUser.mockResolvedValue(makeUser({ tier: "pay_as_you_go" }));
 
       await executePipeline(TASK_ID, EXECUTION);
@@ -395,7 +411,7 @@ describe("executePipeline", () => {
     });
 
     it("uses the premium scratch-repair restoration model for professional users", async () => {
-      setupSuccessfulPipeline();
+      setupSuccessfulPipeline({ generationTier: "professional" });
       mockGetUser.mockResolvedValue(makeUser({ tier: "professional" }));
 
       await executePipeline(TASK_ID, EXECUTION);
@@ -426,7 +442,7 @@ describe("executePipeline", () => {
     });
 
     it("resizes but does NOT watermark for pay_as_you_go users", async () => {
-      setupSuccessfulPipeline();
+      setupSuccessfulPipeline({ generationTier: "pay_as_you_go" });
       mockGetUser.mockResolvedValue(makeUser({ tier: "pay_as_you_go" }));
 
       await executePipeline(TASK_ID, EXECUTION);
@@ -437,7 +453,7 @@ describe("executePipeline", () => {
     });
 
     it("resizes but does NOT watermark for professional users", async () => {
-      setupSuccessfulPipeline();
+      setupSuccessfulPipeline({ generationTier: "professional" });
       mockGetUser.mockResolvedValue(makeUser({ tier: "professional" }));
 
       await executePipeline(TASK_ID, EXECUTION);
@@ -575,6 +591,7 @@ describe("executePipeline", () => {
       mockGetTask.mockResolvedValue(
         makeTask({
           status: "failed",
+          generationTier: "professional",
           restoredImageKey: RESTORED_KEY,
           colorizedImageKey: COLORIZED_KEY,
         })
@@ -614,6 +631,7 @@ describe("executePipeline", () => {
       mockGetTask.mockResolvedValue(
         makeTask({
           status: "failed",
+          generationTier: "pay_as_you_go",
           restoredImageKey: RESTORED_KEY,
         })
       );

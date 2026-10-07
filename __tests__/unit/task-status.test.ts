@@ -99,3 +99,20 @@ describe("public task status", () => {
     ).toMatchObject({ retryAllowed: true, requiresManualReview: false });
   });
 });
+
+describe("upgrade status", () => {
+  it("offers upgrades for completed anonymous/free results without exposing source IDs", () => {
+    const status = toPublicTaskStatus(makeTask({ status: "completed", generationTier: "free" }), "anonymous");
+    expect(status).toMatchObject({ generationTier: "free", canUpgrade: true, isUpgrade: false });
+    expect(status).not.toHaveProperty("userId");
+  });
+  it("uses legacy task priority and never offers already-paid results again", () => {
+    expect(toPublicTaskStatus(makeTask({ status: "completed", priority: "high", upgradeSourceTaskId: "source-private" }), "authenticated"))
+      .toMatchObject({ generationTier: "pay_as_you_go", canUpgrade: false, isUpgrade: true });
+    expect(toPublicTaskStatus(makeTask({ upgradeSourceTaskId: "source-private" }), "authenticated")).not.toHaveProperty("upgradeSourceTaskId");
+  });
+  it("does not offer blocked or unfinished results", () => {
+    expect(toPublicTaskStatus(makeTask({ status: "completed", violation: true }), "authenticated").canUpgrade).toBe(false);
+    expect(toPublicTaskStatus(makeTask({ status: "restoring" }), "authenticated").canUpgrade).toBe(false);
+  });
+});

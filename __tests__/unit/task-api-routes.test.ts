@@ -1,3 +1,4 @@
+jest.mock("@/lib/task-creation", () => ({ getExistingTaskUpgrade: jest.fn().mockResolvedValue(undefined) }));
 import { NextRequest } from "next/server";
 import type { Task } from "@/types";
 

@@ -1,3 +1,4 @@
+import { RedisLuaFixture } from "../helpers/redis-lua-fixture";
 import {
   initializeFreeQuota,
   ensureFreeQuotaInitialized,
@@ -16,8 +17,22 @@ const sets = new Map<string, Set<string>>();
 
 const redisMock = {
   get: jest.fn(async (key: string) => store.get(key) ?? null),
-  set: jest.fn(async (key: string, value: unknown) => {
+  set: jest.fn(async (key: string, value: unknown, options?: { nx?: boolean }) => {
+    if (options?.nx && store.has(key)) return null;
     store.set(key, value);
+    return "OK";
+  }),
+  eval: jest.fn(async (script: string, keys: string[], args: string[]) => {
+    const lua = new RedisLuaFixture();
+    for (const [key, value] of store) lua.setString(key, typeof value === "string" ? value : JSON.stringify(value));
+    for (const [key, members] of sets) lua.setMembers(key, Array.from(members));
+    const result = await lua.eval(script, keys, args);
+    for (const key of store.keys()) {
+      const raw = lua.getString(key);
+      if (raw !== undefined) store.set(key, JSON.parse(raw));
+    }
+    for (const key of sets.keys()) sets.set(key, new Set(lua.getMembers(key)));
+    return result;
   }),
   sadd: jest.fn(async (key: string, ...members: string[]) => {
     if (!sets.has(key)) sets.set(key, new Set());
@@ -110,6 +125,18 @@ describe("ensureFreeQuotaInitialized", () => {
     expect(quota).not.toBeNull();
     expect(quota!.remaining).toBe(1);
     expect(sets.get("quota:daily:users")?.has("u1")).toBe(true);
+  });
+
+  it("uses Redis NX so a purchase arriving during login cannot be overwritten", async () => {
+    const purchased = { userId: "u1", tier: "pay_as_you_go", remaining: 0, credits: 10, creditsExpireAt: "2099-01-01T00:00:00.000Z" };
+    redisMock.set.mockImplementationOnce(async (key, _quota, options) => {
+      store.set(key, purchased); // checkout wins immediately before Redis evaluates SET
+      expect(options).toEqual({ nx: true });
+      return null;
+    });
+    await ensureFreeQuotaInitialized("u1");
+    expect(getStoredQuota("u1")).toEqual(purchased);
+    expect(redisMock.sadd).not.toHaveBeenCalled();
   });
 
   it("does not overwrite existing quota", async () => {

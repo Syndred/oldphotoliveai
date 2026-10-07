@@ -9,6 +9,7 @@ const mockListSubscriptions = jest.fn();
 const mockRetrieveCustomer = jest.fn();
 const mockRedisSet = jest.fn();
 const mockRedisDel = jest.fn();
+const mockFulfill = jest.fn();
 const mockAddCredits = jest.fn();
 const mockInitializeFreeQuota = jest.fn();
 const mockUpdateUserTier = jest.fn();
@@ -88,6 +89,8 @@ jest.mock("@/lib/quota", () => ({
   initializeFreeQuota: (...args: unknown[]) => mockInitializeFreeQuota(...args),
 }));
 
+jest.mock("@/lib/checkout-fulfillment", () => ({ fulfillPaidCheckout: (...args: unknown[]) => mockFulfill(...args) }));
+
 jest.mock("@/lib/email", () => ({
   sendPaymentEmail: (...args: unknown[]) => mockSendPaymentEmail(...args),
 }));
@@ -141,13 +144,15 @@ describe("Stripe checkout route", () => {
       expect.objectContaining({
         mode: "subscription",
         line_items: [{ price: "price_pro_123", quantity: 1 }],
-        success_url: "https://oldphotoliveai.com/pricing?success=true",
-        cancel_url: "https://oldphotoliveai.com/pricing?cancelled=true",
+        success_url: "https://oldphotoliveai.com/pricing?session_id={CHECKOUT_SESSION_ID}",
+        cancel_url: "https://oldphotoliveai.com/pricing?cancelled=true&plan=professional",
         client_reference_id: "user-123",
         customer: "cus_123",
         metadata: {
           userId: "user-123",
           plan: "professional",
+          product: "oldphotoliveai",
+          locale: "en",
         },
         subscription_data: {
           metadata: {
@@ -211,9 +216,26 @@ describe("Stripe checkout route", () => {
           userId: "user-123",
           plan: "family_pack",
           credits: "25",
+          product: "oldphotoliveai",
+          locale: "en",
         },
       })
     );
+  });
+
+  it("preserves locale and safe photo context in Stripe return URLs without resume", async () => {
+    mockGetToken.mockResolvedValue({ userId: "user-123" });
+    mockCheckoutCreate.mockResolvedValue({ url: "https://checkout.stripe.com/test" });
+    const response = await checkoutPost(new NextRequest("http://localhost/api/stripe/checkout", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan: "starter_pack", locale: "zh", taskId: "photo-1", returnTo: "/restore-old-photos" }),
+    }));
+    expect(response.status).toBe(200);
+    const params = mockCheckoutCreate.mock.calls[0][0];
+    expect(params.success_url).toBe("https://oldphotoliveai.com/zh/pricing?taskId=photo-1&returnTo=%2Fzh%2Frestore-old-photos&session_id={CHECKOUT_SESSION_ID}");
+    expect(params.cancel_url).toContain("/zh/pricing?cancelled=true&plan=starter_pack&taskId=photo-1");
+    expect(params.cancel_url).not.toContain("resume");
+    expect(params.metadata).toMatchObject({ product: "oldphotoliveai", locale: "zh", taskId: "photo-1", returnTo: "/zh/restore-old-photos" });
   });
 
   it("blocks credit-pack checkout for professional users", async () => {
@@ -332,6 +354,7 @@ describe("Stripe webhook route", () => {
     mockGetUser.mockReset();
     mockInitializeFreeQuota.mockReset();
     mockSendPaymentEmail.mockResolvedValue(undefined);
+    mockFulfill.mockReset().mockResolvedValue(true);
   });
 
   it("processes checkout completion only once for duplicate webhook events", async () => {
@@ -351,11 +374,8 @@ describe("Stripe webhook route", () => {
         },
       },
     });
-    mockRedisSet
-      .mockResolvedValueOnce("OK")
-      .mockResolvedValueOnce("OK")
-      .mockResolvedValueOnce("OK")
-      .mockResolvedValueOnce(null);
+    mockRedisSet.mockResolvedValue("OK");
+    mockFulfill.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
 
     const firstRequest = new NextRequest("http://localhost/api/stripe/webhook", {
       method: "POST",
@@ -373,10 +393,9 @@ describe("Stripe webhook route", () => {
 
     expect(firstResponse.status).toBe(200);
     expect(secondResponse.status).toBe(200);
-    expect(mockAddCredits).toHaveBeenCalledTimes(1);
-    expect(mockAddCredits).toHaveBeenCalledWith("user-123", 1, 30);
-    expect(mockUpdateUserTier).toHaveBeenCalledTimes(1);
-    expect(mockUpdateUserTier).toHaveBeenCalledWith("user-123", "pay_as_you_go");
+    expect(mockFulfill).toHaveBeenCalledTimes(2);
+    expect(mockRedisSet.mock.calls.some(([key]: [string]) => key.startsWith("stripe:webhook:processed:"))).toBe(false);
+    expect(mockFulfill).toHaveBeenCalledWith(expect.objectContaining({ id: "cs_123" }));
     expect(mockSendPaymentEmail).toHaveBeenCalledTimes(1);
   });
 
@@ -412,8 +431,7 @@ describe("Stripe webhook route", () => {
     const response = await webhookPost(request);
 
     expect(response.status).toBe(200);
-    expect(mockAddCredits).toHaveBeenCalledWith("user-123", 25, 365);
-    expect(mockUpdateUserTier).toHaveBeenCalledWith("user-123", "pay_as_you_go");
+    expect(mockFulfill).toHaveBeenCalledWith(expect.objectContaining({ metadata: expect.objectContaining({ plan: "family_pack" }) }));
   });
 
   it("waits for async checkout payments before fulfilling credits", async () => {
@@ -485,8 +503,7 @@ describe("Stripe webhook route", () => {
     const succeededResponse = await webhookPost(succeededRequest);
 
     expect(succeededResponse.status).toBe(200);
-    expect(mockAddCredits).toHaveBeenCalledWith("user-123", 1, 30);
-    expect(mockUpdateUserTier).toHaveBeenCalledWith("user-123", "pay_as_you_go");
+    expect(mockFulfill).toHaveBeenCalledWith(expect.objectContaining({ payment_status: "paid" }));
     expect(mockSendPaymentEmail).toHaveBeenCalledTimes(1);
   });
 

@@ -65,6 +65,9 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   workflow?: TaskWorkflow;
+  /** Quality purchased when this task was created; independent of later account changes. */
+  generationTier?: UserTier;
+  upgradeSourceTaskId?: string;
   originalImageKey: string;
   restoredImageKey: string | null;
   colorizedImageKey: string | null;
