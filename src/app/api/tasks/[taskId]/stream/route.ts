@@ -66,7 +66,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ taskI
             return true; // stop polling
           }
           const { task } = accessibleTask;
-          const eventData = toPublicTaskStatus(task, accessMode);
+          const eventData = toPublicTaskStatus(task, accessMode, accessibleTask.downloadUnlocked);
 
           const payload = JSON.stringify(eventData);
           if (payload !== lastEventPayload) {

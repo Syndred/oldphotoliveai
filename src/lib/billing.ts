@@ -46,3 +46,16 @@ export function getCreditPack(plan: CreditPackPlan) {
 export const LEGACY_PAY_AS_YOU_GO_CREDITS = 1;
 
 export const PROFESSIONAL_MONTHLY_DISPLAY_PRICE = "$19.99";
+
+/** One existing result (its photos and video), without account credits. */
+export const SINGLE_PHOTO = {
+  plan: "single_photo",
+  name: "OldPhotoLive AI — Unlock One Result",
+  displayPrice: "$1.99",
+  unitAmount: 199,
+  currency: "usd",
+} as const;
+export type CheckoutPlan = CreditPackPlan | "professional" | typeof SINGLE_PHOTO.plan;
+export function isCheckoutPlan(value: string): value is CheckoutPlan {
+  return isCreditPackPlan(value) || value === "professional" || value === SINGLE_PHOTO.plan;
+}

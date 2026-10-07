@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, act, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 const mockSession = jest.fn();
 const mockPurchase = jest.fn();
@@ -49,8 +49,35 @@ it("shows a verification error without claiming credits arrived", async () => {
 it("keeps paid-but-not-credited status distinct from a completed purchase", async () => {
   mockFetch.mockResolvedValue({ ok: true, json: async () => ({ status: "processing" }) });
   const view = render(<CheckoutReturn />);
-  await waitFor(() => expect(screen.getByText("已收到付款，正在为你添加积分。")).toBeInTheDocument());
+  await waitFor(() => expect(screen.getByText("已收到付款，正在开通购买权益。")).toBeInTheDocument());
   expect(mockPurchase).not.toHaveBeenCalled();
   expect(screen.queryByRole("link")).not.toBeInTheDocument();
   view.unmount();
+});
+
+it("confirms a single-result unlock without claiming credits or Professional access", async () => {
+  mockFetch.mockResolvedValue({ ok: true, json: async () => ({ ...receipt, plan: "single_photo", creditsAdded: 0, amountTotal: 199 }) });
+  render(<CheckoutReturn />);
+  expect(await screen.findByText("付款已确认，当前结果已解锁。")).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "下载当前结果" })).toHaveAttribute("href", "/zh/result/photo-1?unlocked=1");
+  expect(screen.queryByText(/专业版已开通/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/已到账积分/)).not.toBeInTheDocument();
+});
+
+it("stops polling a paid delivery exception, provides support, and allows a manual recheck", async () => {
+  jest.useFakeTimers();
+  mockFetch.mockResolvedValue({ ok: true, json: async () => ({ status: "refund_required", taskId: "photo-1" }) });
+  const refresh = jest.fn();
+  const view = render(<CheckoutReturn onConfirmed={refresh} />);
+  expect(await screen.findByText(/已收到付款，但当前结果交付异常/)).toHaveTextContent("尚未确认退款");
+  expect(screen.getByRole("link", { name: /联系支持/ })).toHaveAttribute("href", "mailto:support@oldphotoliveai.com");
+  expect(screen.queryByRole("link", { name: "下载当前结果" })).not.toBeInTheDocument();
+  expect(mockPurchase).not.toHaveBeenCalled();
+  expect(refresh).not.toHaveBeenCalled();
+  await act(async () => { jest.advanceTimersByTime(30_000); });
+  expect(mockFetch).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole("button", { name: "重新查询" }));
+  await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2));
+  view.unmount();
+  jest.useRealTimers();
 });

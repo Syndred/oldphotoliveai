@@ -34,6 +34,8 @@ export interface PublicTaskStatus {
   isUpgrade: boolean;
   existingUpgradeTaskId?: string;
   canUpgrade: boolean;
+  downloadPolicy?: "preview_v1";
+  downloadUnlocked: boolean;
   attemptCount: number;
   retryAllowed: boolean;
   requiresManualReview: boolean;
@@ -52,7 +54,8 @@ export interface PublicTaskStatus {
  */
 export function toPublicTaskStatus(
   task: Task,
-  accessMode: TaskAccessMode
+  accessMode: TaskAccessMode,
+  downloadUnlocked = false
 ): PublicTaskStatus {
   const hasAmbiguousProviderCreation = Object.values(
     task.providerInvocations ?? {}
@@ -73,6 +76,8 @@ export function toPublicTaskStatus(
     accessMode,
     generationTier: getTaskGenerationTier(task),
     isUpgrade: Boolean(task.upgradeSourceTaskId),
+    ...(task.downloadPolicy === "preview_v1" ? { downloadPolicy: task.downloadPolicy } : {}),
+    downloadUnlocked: task.downloadPolicy !== "preview_v1" || downloadUnlocked,
     canUpgrade: task.status === "completed" && task.violation !== true && getTaskGenerationTier(task) === "free",
     attemptCount,
     retryAllowed:

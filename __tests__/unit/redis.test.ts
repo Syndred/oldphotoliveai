@@ -451,3 +451,24 @@ describe("retryTask", () => {
     await expect(retryTask("no-task")).rejects.toThrow("Task not found");
   });
 });
+
+describe("account ownership of a purchased anonymous result", () => {
+  it("allows only the grant's account to recover the task without its original cookie", async () => {
+    const { getTaskOwnedByUser } = await import("@/lib/redis");
+    const task = { id: "preview-task", userId: "anonymous:visitor", downloadPolicy: "preview_v1" } as Task;
+    (store as Map<string, unknown>).set("task:preview-task", task);
+    (store as Map<string, unknown>).set("download:grant:preview-task", { userId: "buyer", taskId: task.id, scope: "result" });
+    expect(await getTaskOwnedByUser(task.id, "buyer")).toEqual(task);
+    expect(await getTaskOwnedByUser(task.id, "another-account")).toBeNull();
+  });
+  it("does not let a mismatched task grant or legacy task become another account's photo", async () => {
+    const { getTaskOwnedByUser } = await import("@/lib/redis");
+    const task = { id: "preview-task", userId: "anonymous:visitor", downloadPolicy: "preview_v1" } as Task;
+    (store as Map<string, unknown>).set("task:preview-task", task);
+    (store as Map<string, unknown>).set("download:grant:preview-task", { userId: "buyer", taskId: "other-task", scope: "result" });
+    expect(await getTaskOwnedByUser(task.id, "buyer")).toBeNull();
+    (store as Map<string, unknown>).set("task:preview-task", { ...task, downloadPolicy: undefined });
+    (store as Map<string, unknown>).set("download:grant:preview-task", { userId: "buyer", taskId: task.id, scope: "result" });
+    expect(await getTaskOwnedByUser(task.id, "buyer")).toBeNull();
+  });
+});

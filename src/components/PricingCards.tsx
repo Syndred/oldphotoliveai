@@ -7,12 +7,15 @@ import type { UserTier } from "@/types";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import {
   CREDIT_PACKS,
+  SINGLE_PHOTO,
   isCreditPackPlan,
   type CreditPackPlan,
   PROFESSIONAL_MONTHLY_DISPLAY_PRICE,
 } from "@/lib/billing";
 
 import { localizePathname } from "@/i18n/routing";
+import { SUPPORT_EMAIL } from "@/lib/site";
+import { getDownloadCopy } from "@/lib/download-copy";
 import { getCheckoutCopy } from "@/lib/checkout-copy";
 import { checkoutContext, checkoutLocale, pricingCheckoutPath } from "@/lib/checkout-context";
 
@@ -150,10 +153,14 @@ export default function PricingCards({
 }: PricingCardsProps) {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [checkoutReview, setCheckoutReview] = useState(false);
   const { data: session, status } = useSession();
   const locale = checkoutLocale(useLocale());
   const resumed = useRef(false);
   const copy = getCheckoutCopy(locale);
+  const downloadCopy = getDownloadCopy(locale);
+  const [singleState, setSingleState] = useState<"none" | "checking" | "eligible" | "unlocked" | "unavailable">("none");
+  const [singleWorkflow, setSingleWorkflow] = useState<string | undefined>();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [photoContext, setPhotoContext] = useState<{ taskId?: string; returnTo?: string }>({});
   useEffect(() => {
@@ -161,6 +168,20 @@ export default function PricingCards({
     setSelectedPlan(params.get("plan"));
     setPhotoContext(checkoutContext(params, locale));
   }, [locale]);
+  useEffect(() => {
+    if (!photoContext.taskId) { setSingleState("none"); return; }
+    const controller = new AbortController();
+    setSingleState("checking");
+    fetch(`/api/tasks/${encodeURIComponent(photoContext.taskId)}/status`, { signal: controller.signal, cache: "no-store" })
+      .then(async response => {
+        if (!response.ok) throw new Error("unavailable");
+        const task = await response.json();
+        if (controller.signal.aborted) return;
+        setSingleWorkflow(typeof task.workflow === "string" ? task.workflow : undefined);
+        setSingleState(task.downloadUnlocked === true ? "unlocked" : task.status === "completed" && task.downloadPolicy === "preview_v1" ? "eligible" : "unavailable");
+      }).catch(() => { if (!controller.signal.aborted) setSingleState("unavailable"); });
+    return () => controller.abort();
+  }, [photoContext.taskId, status]);
   const t = useTranslations("pricing");
   const tErrors = useTranslations("errors");
 
@@ -175,19 +196,22 @@ export default function PricingCards({
     if (status !== "authenticated" || resumed.current) return;
     const params = new URLSearchParams(window.location.search);
     const plan = params.get("plan");
-    if (params.get("resume") !== "1" || params.has("cancelled") || params.has("session_id") || !plan || (!isCreditPackPlan(plan) && plan !== "professional")) return;
+    if (params.get("resume") !== "1" || params.has("cancelled") || params.has("session_id") || !plan || (!isCreditPackPlan(plan) && plan !== "professional" && plan !== "single_photo")) return;
+    if (plan === "single_photo" && singleState !== "eligible") return;
     resumed.current = true;
     // Consume the intent before the request so refresh/back never reopens checkout.
     params.delete("resume");
     window.history.replaceState(window.history.state, "", `${window.location.pathname}?${params}`);
     trackAnalyticsEvent("checkout_resumed", { plan });
     void handleCheckout(plan);
-    // Only authentication changes may consume the return-from-login intent.
+    // Single-result returns also wait for verified task eligibility.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [status, singleState]);
 
-  async function handleCheckout(plan: CreditPackPlan | "professional") {
+  async function handleCheckout(plan: CreditPackPlan | "professional" | "single_photo") {
+    if (checkoutReview) return;
     const context = checkoutContext(new URLSearchParams(window.location.search), locale);
+    if (plan === "single_photo" && (!context.taskId || singleState !== "eligible")) { setError(downloadCopy.unavailable); return; }
     if (status !== "authenticated") {
       setLoadingPlan(plan);
       setError(null);
@@ -218,6 +242,7 @@ export default function PricingCards({
       });
       const data = await res.json();
       if (!res.ok) {
+        if (data.code === "CHECKOUT_REVIEW_REQUIRED") { setCheckoutReview(true); setError(copy.checkoutReview); return; }
         // Show friendly message for unavailable payment feature
         if (res.status === 503) {
           throw new Error(tErrors("paymentUnavailable"));
@@ -267,10 +292,29 @@ export default function PricingCards({
 
   return (
     <div>
-      {(photoContext.taskId || photoContext.returnTo) && <div className="mb-8 flex flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:flex-row sm:items-center sm:justify-between">
+      {photoContext.taskId ? <a href={localizePathname(locale, `/result/${photoContext.taskId}`)} className="mb-4 inline-flex min-h-11 items-center gap-2 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"><span aria-hidden="true">←</span>{copy.backPhoto}</a> : photoContext.returnTo && <div className="mb-8 flex flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm leading-6 text-[var(--color-text-secondary)]">{copy.photoContext}</p>
         <a className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-white/15 px-4 py-2 text-sm text-[var(--color-text-primary)]" href={photoContext.taskId ? localizePathname(locale, `/result/${photoContext.taskId}`) : `${photoContext.returnTo}?resumeUpload=1#upload-section`}>{copy.backPhoto}</a>
       </div>}
+      <section data-testid="plan-single_photo" className="mb-8 rounded-2xl border border-[var(--color-accent)]/35 bg-[var(--color-accent)]/10 p-5 sm:p-6">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="max-w-2xl">
+            <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{downloadCopy.card} <span className="ml-3 text-2xl">{SINGLE_PHOTO.displayPrice}</span></h2>
+            {photoContext.taskId ? <>
+              <p className="mt-3 text-sm leading-6 text-[var(--color-text-secondary)]">{downloadCopy.compactSummary}</p>
+              <p className="mt-2 text-xs leading-5 text-[var(--color-text-secondary)]">{singleWorkflow === "restore" || singleWorkflow === "colorize" ? downloadCopy.compactImage : downloadCopy.compactVideo}</p>
+              <p className="mt-2 text-xs leading-5 text-[var(--color-text-secondary)]">{downloadCopy.compactTerms}</p>
+            </> : <>
+              <p className="mt-3 text-sm leading-6 text-[var(--color-text-secondary)]">{downloadCopy.terms}</p>
+              <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">{downloadCopy.body}</p>
+            </>}
+          </div>
+          {singleState === "eligible" && !professionalIncludesCredits ? <button type="button" onClick={() => handleCheckout("single_photo")} disabled={checkoutReview || loadingPlan !== null || status === "loading"} className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-lg bg-[var(--color-accent)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{loadingPlan === "single_photo" ? t("redirecting") : downloadCopy.buy}</button>
+            : singleState === "checking" ? <p role="status" className="text-sm text-[var(--color-text-secondary)]">{downloadCopy.checking}</p>
+            : photoContext.taskId ? <a href={localizePathname(locale, `/result/${photoContext.taskId}`)} className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-lg border border-white/20 px-5 py-3 text-sm font-semibold text-[var(--color-text-primary)]">{downloadCopy.open}</a>
+            : <a href={`${localizePathname(locale, "/")}#upload-section`} className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-lg bg-[var(--color-accent)] px-5 py-3 text-sm font-semibold text-white">{downloadCopy.preview}</a>}
+        </div>
+      </section>
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         {PLANS.filter(
           (p) => !p.hiddenUnlessCurrent || p.id === currentPlanId
@@ -351,7 +395,7 @@ export default function PricingCards({
                       </span>
                       <button
                         onClick={() => handleBillingPortal()}
-                        disabled={loadingPlan !== null}
+                        disabled={checkoutReview || loadingPlan !== null}
                         className="w-full rounded-lg bg-[var(--color-accent)] py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent)]/90 disabled:opacity-50 min-h-[44px]"
                       >
                         {loadingPlan === "manage_subscription"
@@ -372,7 +416,7 @@ export default function PricingCards({
                   <div className="space-y-3">
                     <button
                       onClick={() => handleCheckout(checkoutPlan)}
-                      disabled={loadingPlan !== null}
+                      disabled={checkoutReview || loadingPlan !== null}
                       className={`w-full rounded-lg py-3 text-sm font-medium transition-colors min-h-[44px] ${
                         p.highlighted
                           ? "bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent)]/90"
@@ -395,6 +439,7 @@ export default function PricingCards({
         })}
       </div>
 
+      {checkoutReview && <div className="mt-5"><a href={`mailto:${SUPPORT_EMAIL}`} className="inline-flex min-h-11 items-center rounded-xl border border-white/20 px-4 py-2 text-sm font-medium text-[var(--color-text-primary)]">{copy.contactSupport} · {SUPPORT_EMAIL}</a></div>}
       {error && (
         <p className="mt-4 text-center text-sm text-red-400" role="alert">
           {error}

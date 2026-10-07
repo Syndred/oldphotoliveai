@@ -27,7 +27,7 @@ const FAQS = [
   {
     question: "What happens after my free no-login preview?",
     answer:
-      "After the preview is ready, you can sign up if you want HD exports, more animations, and saved task history.",
+      "After the preview is ready, sign in to unlock that same result for $1.99 or 1 credit. The video remains 480p. HD regeneration is optional and creates a new version.",
   },
   {
     question: "What type of old photo works best?",
@@ -37,7 +37,7 @@ const FAQS = [
   {
     question: "Will my free preview include a watermark?",
     answer:
-      "Yes. The no-login version outputs a watermarked, lower-resolution preview. Sign up when you want HD output without the free-preview limits.",
+      "Yes. The no-login version provides a watermarked 480p preview. After sign-in, $1.99 or 1 credit unlocks the same result without the preview watermark. Registration alone does not unlock downloads or HD.",
   },
 ];
 
@@ -226,7 +226,7 @@ export default function NoLoginToolPage({ locale }: NoLoginToolPageProps) {
                 {
                   title: "Upgrade only after seeing it",
                   body:
-                    "After the preview, sign up only if you want HD quality, more animations, downloads, and saved history.",
+                    "After the preview, sign in to unlock the same generated images and video for $1.99 or 1 credit. No regeneration or resolution increase is included.",
                 },
               ].map((step) => (
                 <article

@@ -18,8 +18,16 @@ jest.mock("@/lib/redis", () => ({
 }));
 
 const mockDeleteTaskFiles = jest.fn<Promise<void>, [string, Array<string | null | undefined>]>();
+const mockDeletePrivateTaskFiles = jest.fn();
+const mockBeginDeletion = jest.fn();
+const mockReleaseDeletion = jest.fn();
+jest.mock("@/lib/task-download", () => ({
+  beginTaskDownloadDeletion: (...args: unknown[]) => mockBeginDeletion(...args),
+  releaseTaskDownloadDeletion: (...args: unknown[]) => mockReleaseDeletion(...args),
+}));
 
 jest.mock("@/lib/r2", () => ({
+  deletePrivateTaskFiles: (...args: unknown[]) => mockDeletePrivateTaskFiles(...args),
   deleteTaskFiles: (...args: unknown[]) =>
     mockDeleteTaskFiles(
       args[0] as string,
@@ -82,6 +90,9 @@ beforeEach(() => {
   mockDeleteTask.mockReset();
   mockGetTaskOwnedByUser.mockReset();
   mockDeleteTaskFiles.mockReset();
+  mockDeletePrivateTaskFiles.mockReset().mockResolvedValue(undefined);
+  mockBeginDeletion.mockReset().mockResolvedValue(true);
+  mockReleaseDeletion.mockReset().mockResolvedValue(undefined);
 });
 
 describe("GET /api/history", () => {
@@ -128,6 +139,33 @@ describe("GET /api/history", () => {
 });
 
 describe("DELETE /api/history", () => {
+  it("does not remove either bucket while a single-result payment is pending", async () => {
+    mockGetToken.mockResolvedValue({ userId: "user-001" });
+    mockGetTaskOwnedByUser.mockResolvedValue(makeFakeTask({ downloadPolicy: "preview_v1", masterAssets: { restored: "master.jpg" } }));
+    mockBeginDeletion.mockResolvedValue(false);
+    const response = await DELETE(makeDeleteRequest(["task-001"]));
+    expect((await response.json()).results).toEqual([{ id: "task-001", deleted: false }]);
+    expect(mockDeleteTaskFiles).not.toHaveBeenCalled();
+    expect(mockDeletePrivateTaskFiles).not.toHaveBeenCalled();
+  });
+  it("keeps the deletion guard after a partial storage failure", async () => {
+    mockGetToken.mockResolvedValue({ userId: "user-001" });
+    mockGetTaskOwnedByUser.mockResolvedValue(makeFakeTask({ downloadPolicy: "preview_v1", masterAssets: { restored: "master.jpg" } }));
+    mockDeleteTaskFiles.mockRejectedValue(new Error("storage unavailable"));
+    const response = await DELETE(makeDeleteRequest(["task-001"]));
+    expect((await response.json()).results[0].deleted).toBe(false);
+    expect(mockDeletePrivateTaskFiles).toHaveBeenCalledWith("task-001", ["master.jpg"]);
+    expect(mockReleaseDeletion).not.toHaveBeenCalled();
+    expect(mockDeleteTask).not.toHaveBeenCalled();
+  });
+  it("cleans private masters and releases the guard only after task deletion", async () => {
+    mockGetToken.mockResolvedValue({ userId: "user-001" });
+    mockGetTaskOwnedByUser.mockResolvedValue(makeFakeTask({ downloadPolicy: "preview_v1", masterAssets: { restored: "master.jpg" } }));
+    mockDeleteTask.mockResolvedValue(true);
+    await DELETE(makeDeleteRequest(["task-001"]));
+    expect(mockDeletePrivateTaskFiles).toHaveBeenCalledWith("task-001", ["master.jpg"]);
+    expect(mockReleaseDeletion).toHaveBeenCalledWith("task-001");
+  });
   it("returns 401 when not authenticated", async () => {
     mockGetToken.mockResolvedValue(null);
 

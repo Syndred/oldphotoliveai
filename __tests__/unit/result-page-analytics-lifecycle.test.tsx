@@ -11,6 +11,7 @@ jest.mock("next/navigation", () => ({
 }));
 jest.mock("next-auth/react", () => ({ signIn: jest.fn() }));
 jest.mock("next-intl", () => ({
+  useLocale: () => "en",
   useTranslations: () => mockTranslate,
 }));
 jest.mock("@/components/Navbar", () => () => <nav />);

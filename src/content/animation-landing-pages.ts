@@ -49,13 +49,13 @@ export const ANIMATION_LANDING_PAGES: Record<
     highlights: [
       "Use one old portrait as the source for a short AI video preview.",
       "Gentle motion works best for faces, memorial photos, and family archives.",
-      "See the result before choosing an HD, watermark-free export.",
+      "See the result before paying $1.99 or 1 credit to download the same result without the preview watermark. Optional HD regeneration is separate.",
     ],
     benefits: [
       {
         title: "Start with a free preview",
         body:
-          "A preview lets you check whether the face, framing, and motion feel right before you spend credits on a higher-quality version.",
+          "Check the face, framing, and motion for free. Pay $1.99 or 1 credit only if you want to download the same result without the preview watermark. A new HD version is a separate generation.",
       },
       {
         title: "Keep memories recognizable",
@@ -90,7 +90,7 @@ export const ANIMATION_LANDING_PAGES: Record<
       {
         question: "Can I animate old photos with AI for free?",
         answer:
-          "Yes. Sign in and use the shared daily free account quota for a watermarked 480p preview, then choose a paid option only if you need more processing or a higher-quality export.",
+          "Yes. Sign in for your daily watermarked 480p preview. Downloading that same result costs $1.99 or 1 credit; it does not increase resolution. An HD remake is optional and may change the result.",
       },
       {
         question: "What old photos work best for animation?",
@@ -176,7 +176,7 @@ export const ANIMATION_LANDING_PAGES: Record<
       {
         question: "Can AI bring old photos to life for free?",
         answer:
-          "The dedicated animation tool lets signed-in free accounts use one shared daily allowance for a watermarked 480p preview. Paid options add capacity and export choices.",
+          "The animation tool provides one daily watermarked 480p preview after sign-in. Unlock the same result for $1.99 or 1 credit to download it. Optional HD regeneration creates a new version.",
       },
       {
         question: "Is AI animation suitable for memorial photos?",
@@ -222,7 +222,7 @@ export const ANIMATION_LANDING_PAGES: Record<
     highlights: [
       "Upload a still photo and receive a short video without editing software.",
       "Portraits with a centered, visible face are the most reliable input.",
-      "Review the preview before you choose HD output or additional creations.",
+      "Preview for free, then unlock the same result for $1.99 or 1 credit. HD regeneration is separate.",
     ],
     benefits: [
       {
@@ -263,7 +263,7 @@ export const ANIMATION_LANDING_PAGES: Record<
       {
         question: "Can I convert an old photo to video with AI for free?",
         answer:
-          "Yes. Sign in and use the shared daily free account quota for a watermarked 480p preview, then choose a higher-quality output only when you need it.",
+          "Yes. Sign in for your daily watermarked 480p preview. Unlock the same result for $1.99 or 1 credit if you want to download it. An HD remake is optional and generates a new version.",
       },
       {
         question: "Do I need to install an app?",

@@ -50,3 +50,17 @@ it("never restores another user's retained upload", () => {
   expect(screen.queryByRole("button", { name: "Continue with this photo" })).not.toBeInTheDocument();
   expect(mockFetch).not.toHaveBeenCalled();
 });
+
+it("discloses paid downloads before a free upload", () => {
+  render(<UploadSection workflow="animate" />);
+  const notice = screen.getByText(/Generate a free watermarked preview first/);
+  expect(notice).toHaveTextContent("$1.99");
+  expect(notice).toHaveTextContent("does not increase resolution");
+  expect(notice.compareDocumentPosition(screen.getByRole("button", { name: "Upload a photo" })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+});
+it("keeps the old paid generation promise explicit before uploading", () => {
+  mockSession.mockReturnValue({ status: "authenticated", data: { user: { id: "user-1", tier: "pay_as_you_go" } } });
+  render(<UploadSection workflow="animate" />);
+  expect(screen.getByText(/This generation uses 1 credit and includes downloads/)).toBeInTheDocument();
+  expect(screen.queryByText(/Generate a free watermarked preview first/)).not.toBeInTheDocument();
+});

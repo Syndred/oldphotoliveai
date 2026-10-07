@@ -214,6 +214,7 @@ export async function createAuthenticatedTaskAtomic(input: {
       : "normal");
   const task = buildTask(input.user.id, input.imageKey, priority, input.workflow, now);
   task.generationTier = input.user.tier;
+  if (input.user.tier === "free" && process.env.DOWNLOAD_PREVIEW_ENABLED === "true") task.downloadPolicy = "preview_v1";
   task.upgradeSourceTaskId = input.upgradeSourceTaskId;
   const digest = dedupeDigest(input.user.id, input.upgradeSourceTaskId ?? input.imageKey, input.workflow);
   const redis = getRedisClient();
@@ -259,6 +260,7 @@ export async function createAnonymousTaskAtomic(input: {
   const userId = buildAnonymousUserId(input.visitorId);
   const task = buildTask(userId, input.imageKey, "normal", "animate", now);
   task.generationTier = "free";
+  if (process.env.DOWNLOAD_PREVIEW_ENABLED === "true") task.downloadPolicy = "preview_v1";
   const anonymousUser: User = {
     id: userId,
     googleId: userId,

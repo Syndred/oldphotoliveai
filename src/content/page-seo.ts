@@ -26,7 +26,7 @@ export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
     pricing: {
       title: "Pricing",
       description:
-        "Choose the right plan for AI photo restoration, colorization, and animation. Start free or upgrade for watermark-free exports and higher output quality.",
+        "Preview AI photo restoration, colorization, and animation for free. Unlock the same result for $1.99 or use credits. Optional HD regeneration is separate.",
     },
     login: {
       title: "Sign In",

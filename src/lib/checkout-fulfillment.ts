@@ -1,6 +1,7 @@
 import type Stripe from "stripe";
 import { getRedisClient } from "@/lib/redis";
-import { CREDIT_PACK_EXPIRATION_DAYS, getCreditPack, isCreditPackPlan, LEGACY_PAY_AS_YOU_GO_CREDITS } from "@/lib/billing";
+import { CREDIT_PACK_EXPIRATION_DAYS, getCreditPack, isCreditPackPlan, LEGACY_PAY_AS_YOU_GO_CREDITS, SINGLE_PHOTO } from "@/lib/billing";
+import { DOWNLOAD_ELIGIBILITY_LUA, taskDownloadGrantKey, taskDownloadPendingKey, taskDownloadDeletingKey } from "@/lib/task-download";
 import { checkoutLocale, safeCheckoutReturnTo, safeCheckoutTaskId } from "@/lib/checkout-context";
 
 export interface CheckoutReceipt {
@@ -8,6 +9,9 @@ export interface CheckoutReceipt {
   userId: string;
   plan: string;
   creditsAdded: number;
+  fulfillmentKind?: "credits" | "task_unlock" | "professional";
+  unlockedTaskId?: string;
+  assetScope?: "result";
   amountTotal: number | null;
   currency: string | null;
   fulfilledAt: string;
@@ -35,9 +39,11 @@ if receipt.creditsAdded > 0 then
   quota.creditsExpireAt = ARGV[2]
   if user.tier ~= 'professional' then user.tier = 'pay_as_you_go' end
   quota.tier = user.tier
-else
+elseif receipt.plan == 'professional' then
   user.tier = 'professional'
   quota.tier = 'professional'
+else
+  return 'INVALID_PLAN'
 end
 user.updatedAt = receipt.fulfilledAt
 local userJson = cjson.encode(user)
@@ -67,6 +73,8 @@ export async function fulfillPaidCheckout(session: Stripe.Checkout.Session): Pro
   const userId = session.metadata?.userId;
   const plan = session.metadata?.plan;
   if (!userId || !plan || session.payment_status !== "paid") return false;
+  if (session.metadata?.product && session.metadata.product !== "oldphotoliveai") return false;
+  if (plan === SINGLE_PHOTO.plan) return fulfillSinglePhotoCheckout(session);
   if (!isCreditPackPlan(plan) && plan !== "pay_as_you_go" && plan !== "professional") return false;
   if (session.metadata?.product && session.metadata.product !== "oldphotoliveai") return false;
   const credits = isCreditPackPlan(plan) ? getCreditPack(plan).credits : plan === "pay_as_you_go" ? LEGACY_PAY_AS_YOU_GO_CREDITS : 0;
@@ -74,6 +82,7 @@ export async function fulfillPaidCheckout(session: Stripe.Checkout.Session): Pro
   const locale = checkoutLocale(session.metadata?.locale);
   const receipt: CheckoutReceipt = {
     transactionId: session.id, userId, plan, creditsAdded: credits,
+    fulfillmentKind: plan === "professional" ? "professional" : "credits",
     amountTotal: session.amount_total, currency: session.currency,
     fulfilledAt: now.toISOString(), locale,
     taskId: safeCheckoutTaskId(session.metadata?.taskId),
@@ -86,4 +95,104 @@ export async function fulfillPaidCheckout(session: Stripe.Checkout.Session): Pro
   if (result === "FULFILLED") return true;
   if (result === "ALREADY_FULFILLED" || result === "LEGACY_FULFILLED") return false;
   throw new Error(`Checkout fulfillment failed: ${String(result)}`);
+}
+
+
+export interface CheckoutRefundRequired {
+  userId: string;
+  taskId?: string;
+  transactionId: string;
+  reason: string;
+  amountTotal: number | null;
+  currency: string | null;
+  recordedAt: string;
+}
+export const checkoutRefundRequiredKey = (id: string) => `stripe:checkout:refund_required:${id}`;
+export async function getCheckoutRefundRequired(sessionId: string): Promise<CheckoutRefundRequired | null> {
+  const raw = await getRedisClient().get<CheckoutRefundRequired | string>(checkoutRefundRequiredKey(sessionId));
+  return typeof raw === "string" ? JSON.parse(raw) as CheckoutRefundRequired : raw;
+}
+export const RECORD_CHECKOUT_ISSUE_SCRIPT = `
+if redis.call('EXISTS', KEYS[1]) == 1 then return 'ALREADY_RECORDED' end
+redis.call('SET', KEYS[1], ARGV[1])
+local metricType = redis.call('TYPE', KEYS[2]).ok
+if metricType == 'none' or metricType == 'hash' then
+  redis.pcall('HINCRBY', KEYS[2], 'fulfillment_issues', 1)
+  redis.pcall('EXPIRE', KEYS[2], 34560000)
+end
+return 'RECORDED'
+`;
+async function recordCheckoutIssue(issue: CheckoutRefundRequired): Promise<void> {
+  await getRedisClient().eval(RECORD_CHECKOUT_ISSUE_SCRIPT,
+    [checkoutRefundRequiredKey(issue.transactionId), `conversion:${issue.recordedAt.slice(0, 10)}`], [JSON.stringify(issue)]);
+}
+export const SINGLE_PHOTO_FULFILL_SCRIPT = DOWNLOAD_ELIGIBILITY_LUA + `
+if redis.call('EXISTS', KEYS[1]) == 1 then return 'ALREADY_FULFILLED' end
+local receipt = cjson.decode(ARGV[1])
+local grant = cjson.decode(ARGV[2])
+local function refundRequired(reason)
+  if redis.call('EXISTS', KEYS[8]) == 0 then
+    redis.call('SET', KEYS[8], cjson.encode({userId=receipt.userId,taskId=receipt.taskId,transactionId=receipt.transactionId,reason=reason,amountTotal=receipt.amountTotal,currency=receipt.currency,recordedAt=receipt.fulfilledAt}))
+    local metricType = redis.call('TYPE', KEYS[7]).ok
+    if metricType == 'none' or metricType == 'hash' then
+      redis.pcall('HINCRBY', KEYS[7], 'fulfillment_issues', 1)
+      redis.pcall('EXPIRE', KEYS[7], 34560000)
+    end
+  end
+  return 'REFUND_REQUIRED'
+end
+for i = 1, 5 do if not stringKey(KEYS[i]) then return refundRequired('INVALID_KEY') end end
+local historyType = redis.call('TYPE', KEYS[6]).ok
+if historyType ~= 'none' and historyType ~= 'zset' then return refundRequired('INVALID_HISTORY') end
+if redis.call('EXISTS', KEYS[9]) ~= 1 then return refundRequired('USER_NOT_FOUND') end
+if redis.call('EXISTS', KEYS[5]) == 1 then return refundRequired('TASK_DELETING') end
+local taskRaw = redis.call('GET', KEYS[2])
+if not taskRaw then return refundRequired('TASK_NOT_FOUND') end
+local task = cjson.decode(taskRaw)
+if not eligible(task) then return refundRequired('RESULT_UNAVAILABLE') end
+local pendingRaw = redis.call('GET', KEYS[4])
+if not pendingRaw then return refundRequired('ORDER_NOT_FOUND') end
+local pending = cjson.decode(pendingRaw)
+if pending.orderId ~= ARGV[3] or pending.userId ~= receipt.userId or pending.taskId ~= task.id or pending.ownerUserId ~= task.userId then return refundRequired('ORDER_MISMATCH') end
+if pending.sessionId and pending.sessionId ~= receipt.transactionId then return refundRequired('SESSION_MISMATCH') end
+if redis.call('EXISTS', KEYS[3]) == 1 then return refundRequired('DUPLICATE_PAYMENT') end
+-- Every write below is part of the same Redis transaction; no quota or tier writes.
+redis.call('SET', KEYS[3], ARGV[2])
+redis.call('SET', KEYS[1], ARGV[1])
+redis.call('ZADD', KEYS[6], ARGV[4], task.id)
+redis.call('DEL', KEYS[4])
+local metricType = redis.call('TYPE', KEYS[7]).ok
+if metricType == 'none' or metricType == 'hash' then
+  redis.pcall('HINCRBY', KEYS[7], 'purchases', 1)
+  redis.pcall('HINCRBY', KEYS[7], 'single_photo_purchases', 1)
+  redis.pcall('HINCRBY', KEYS[7], 'revenue_minor_usd', receipt.amountTotal)
+  redis.pcall('EXPIRE', KEYS[7], 34560000)
+end
+return 'FULFILLED'
+`;
+async function fulfillSinglePhotoCheckout(session: Stripe.Checkout.Session): Promise<boolean> {
+  const userId = session.metadata!.userId;
+  const taskId = safeCheckoutTaskId(session.metadata?.taskId);
+  const orderId = session.metadata?.orderId;
+  if (session.metadata?.product !== "oldphotoliveai" || session.metadata?.scope !== "result" || !taskId || !orderId || session.amount_total !== SINGLE_PHOTO.unitAmount || session.currency !== SINGLE_PHOTO.currency) {
+    await recordCheckoutIssue({
+      userId, taskId, transactionId: session.id, reason: "INVALID_SINGLE_PHOTO_PAYMENT",
+      amountTotal: session.amount_total, currency: session.currency, recordedAt: new Date().toISOString(),
+    });
+    return false;
+  }
+  const now = new Date();
+  const locale = checkoutLocale(session.metadata?.locale);
+  const receipt: CheckoutReceipt = {
+    userId, taskId, transactionId: session.id, plan: SINGLE_PHOTO.plan, creditsAdded: 0,
+    fulfillmentKind: "task_unlock", unlockedTaskId: taskId, assetScope: "result",
+    amountTotal: session.amount_total, currency: session.currency, fulfilledAt: now.toISOString(), locale,
+  };
+  const grant = { userId, taskId, source: "single_photo", scope: "result", creditsDebited: 0, grantedAt: now.toISOString(), checkoutSessionId: session.id };
+  const result = await getRedisClient().eval(SINGLE_PHOTO_FULFILL_SCRIPT,
+    [checkoutReceiptKey(session.id), `task:${taskId}`, taskDownloadGrantKey(taskId), taskDownloadPendingKey(taskId), taskDownloadDeletingKey(taskId), `user:${userId}:tasks`, `conversion:${now.toISOString().slice(0,10)}`, checkoutRefundRequiredKey(session.id), `user:${userId}`],
+    [JSON.stringify(receipt), JSON.stringify(grant), orderId, String(now.getTime())]);
+  if (result === "FULFILLED") return true;
+  if (result === "ALREADY_FULFILLED" || result === "REFUND_REQUIRED") return false;
+  throw new Error(`Single-result fulfillment failed: ${String(result)}`);
 }

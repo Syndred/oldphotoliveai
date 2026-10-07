@@ -7,6 +7,10 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ['ffmpeg-static'],
+  outputFileTracingIncludes: {
+    '/api/worker/pipeline': ['./node_modules/ffmpeg-static/ffmpeg'],
+  },
   async redirects() {
     return [...LEGACY_REDIRECTS];
   },

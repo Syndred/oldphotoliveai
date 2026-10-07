@@ -24,7 +24,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ taskI
       );
     }
     schedulePipelineWakeupForStatus(accessibleTask.task.status);
-    const publicStatus = toPublicTaskStatus(accessibleTask.task, accessibleTask.mode);
+    const publicStatus = toPublicTaskStatus(accessibleTask.task, accessibleTask.mode, accessibleTask.downloadUnlocked);
     if (publicStatus.canUpgrade) {
       const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
       const requesterId = typeof token?.userId === "string" ? token.userId : undefined;
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ taskI
         if (existingUpgradeTaskId) publicStatus.existingUpgradeTaskId = existingUpgradeTaskId;
       }
     }
-    return NextResponse.json(publicStatus);
+    return NextResponse.json(publicStatus, { headers: { "Cache-Control": "private, no-store, max-age=0" } });
   } catch (error) {
     console.error("Get task status failed:", error);
     return NextResponse.json(

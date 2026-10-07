@@ -140,3 +140,28 @@ it("snapshots purchased quality and keys upgrade replay by source instead of tem
   expect(JSON.parse(mockEval.mock.calls[0][2][1])).toMatchObject({ generationTier: "pay_as_you_go", upgradeSourceTaskId: "source" });
   expect(mockEval.mock.calls[0][2][6]).toBe("upgrade");
 });
+
+
+describe("preview policy rollout", () => {
+  const oldFlag = process.env.DOWNLOAD_PREVIEW_ENABLED;
+  afterEach(() => {
+    if (oldFlag === undefined) delete process.env.DOWNLOAD_PREVIEW_ENABLED;
+    else process.env.DOWNLOAD_PREVIEW_ENABLED = oldFlag;
+  });
+  it("stamps only new free tasks after explicit feature enablement", async () => {
+    process.env.DOWNLOAD_PREVIEW_ENABLED = "true";
+    mockEval.mockResolvedValue(["CREATED", "task-fixed-id", "0"]);
+    const free = await createAuthenticatedTaskAtomic({ user, imageKey: "source", workflow: "restore" });
+    const paid = await createAuthenticatedTaskAtomic({ user: { ...user, tier: "pay_as_you_go" }, imageKey: "source", workflow: "restore" });
+    expect(free).toMatchObject({ task: { downloadPolicy: "preview_v1" } });
+    expect(paid.outcome === "created" && paid.task.downloadPolicy).toBeUndefined();
+    const anonymous = await createAnonymousTaskAtomic({ visitorId: "visitor", imageKey: "source" });
+    expect(anonymous).toMatchObject({ task: { downloadPolicy: "preview_v1" } });
+  });
+  it("preserves legacy creation when the feature flag is absent", async () => {
+    delete process.env.DOWNLOAD_PREVIEW_ENABLED;
+    mockEval.mockResolvedValue(["CREATED", "task-fixed-id", "0"]);
+    const result = await createAuthenticatedTaskAtomic({ user, imageKey: "source", workflow: "restore" });
+    expect(result.outcome === "created" && result.task.downloadPolicy).toBeUndefined();
+  });
+});

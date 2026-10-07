@@ -286,10 +286,15 @@ export async function getTaskOwnedByUser(
   userId: string
 ): Promise<Task | null> {
   const task = await getTask(taskId);
-  if (!task || task.userId !== userId) {
-    return null;
+  if (!task) return null;
+  if (task.userId === userId) return task;
+  // An anonymous preview bought while signed in also belongs in the buyer's
+  // account. The cookie that created it never grants access to the clean files.
+  if (task.downloadPolicy === "preview_v1") {
+    const grant = await getRedisClient().get<{ taskId: string; userId: string; scope: string }>(`download:grant:${taskId}`);
+    if (grant?.taskId === taskId && grant.userId === userId && grant.scope === "result") return task;
   }
-  return task;
+  return null;
 }
 
 export async function getAnonymousTrialTaskId(
@@ -446,15 +451,16 @@ export async function retryTask(taskId: string): Promise<Task> {
 
 export async function deleteTask(taskId: string, userId: string): Promise<boolean> {
   const redis = getRedisClient();
-  const task = await redis.get<Task>(keys.task(taskId));
+  const task = await getTaskOwnedByUser(taskId, userId);
   if (!task) return false;
-
-  // Verify ownership
-  if (task.userId !== userId) return false;
+  const grant = task.downloadPolicy === "preview_v1"
+    ? await redis.get<{ userId: string }>(`download:grant:${taskId}`) : null;
 
   // Remove task data and from user's sorted set
   await redis.del(keys.task(taskId));
-  await redis.zrem(keys.userTasks(userId), taskId);
+  await redis.zrem(keys.userTasks(task.userId), taskId);
+  if (grant?.userId && grant.userId !== task.userId) await redis.zrem(keys.userTasks(grant.userId), taskId);
+  if (task.downloadPolicy === "preview_v1") await redis.del(`download:grant:${taskId}`);
 
   return true;
 }

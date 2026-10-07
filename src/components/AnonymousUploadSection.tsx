@@ -123,6 +123,8 @@ export default function AnonymousUploadSection({
         )}
       </div>
 
+      <p className="mb-4 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-[var(--color-text-secondary)]">Free watermarked preview first. Unlock this photo’s generated images and video for $1.99 after sign-in if you like the result. One-time payment, no subscription. The same 480p video is unlocked, not regenerated or upgraded to HD.</p>
+
       <UploadZone
         onUpload={handleUpload}
         disabled={isCreating}
@@ -172,7 +174,7 @@ export default function AnonymousUploadSection({
               onClick={() => signIn("google", { callbackUrl: `/${locale}` })}
               className="mt-3 inline-flex min-h-[44px] items-center justify-center rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
             >
-              Want HD + unlimited? Sign up
+              Sign in for more options
             </button>
           ) : null}
         </div>

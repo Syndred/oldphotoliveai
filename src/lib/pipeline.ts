@@ -7,8 +7,10 @@ import {
   ProviderCreationUnknownError,
   ReplicatePredictionCreateRejectedError,
 } from "./replicate";
-import { uploadToR2, getR2CdnUrl } from "./r2";
-import { applyImageWatermark, resizeImage } from "./watermark";
+import { uploadToR2, getR2CdnUrl, uploadPrivateToR2, getPrivateObjectFromR2, getPrivateR2SignedUrl, assertPrivateR2Configured } from "./r2";
+import { createVideoPreview } from "./video-preview";
+import sharp from "sharp";
+import { applyImageWatermark, applyPreviewWatermark, resizeImage } from "./watermark";
 import {
   checkImage,
   checkText,
@@ -368,6 +370,110 @@ export async function executePipeline(
   let failureStage: TaskFailureStage = null;
 
   try {
+    if (task.downloadPolicy === "preview_v1") {
+      assertPrivateR2Configured();
+      // A task's delivery policy is immutable. Never use watermarked previews
+      // as model inputs, and never place clean generated assets in the CDN bucket.
+      const masterAssets = { ...task.masterAssets };
+      const previews = {
+        restored: task.restoredImageKey,
+        colorized: task.colorizedImageKey,
+        animation: task.animationVideoKey,
+      };
+      const readMaster = async (key: string): Promise<Buffer> => {
+        const object = await getPrivateObjectFromR2(key);
+        if (!object.Body || (object.ContentLength ?? 0) > DOWNLOAD_MAX_BYTES) throw new Error("MASTER_ASSET_UNAVAILABLE");
+        const buffer = Buffer.from(await object.Body.transformToByteArray());
+        if (buffer.length > DOWNLOAD_MAX_BYTES) throw new Error("MASTER_ASSET_TOO_LARGE");
+        await checkpoint();
+        return buffer;
+      };
+      const saveMaster = async (kind: "restored" | "colorized" | "animation", buffer: Buffer) => {
+        const isVideo = kind === "animation";
+        const key = `tasks/${taskId}/master-${kind}-${uuidv4()}.${isVideo ? "mp4" : "jpg"}`;
+        await uploadPrivateToR2(buffer, key, isVideo ? "video/mp4" : "image/jpeg");
+        await checkpoint();
+        masterAssets[kind] = key;
+        // Persist before deriving a preview, so a failed encoder never reruns AI.
+        await updateStatus(failureStage!, { masterAssets: { ...masterAssets } });
+      };
+      const prepareImage = async (kind: "restored" | "colorized", generate: () => Promise<string>) => {
+        let clean: Buffer | undefined;
+        if (!masterAssets[kind]) {
+          const outputUrl = await generate();
+          await assertImageAllowed(outputUrl, kind);
+          await checkpoint();
+          clean = await sharp(await resizeImage(await downloadBuffer(outputUrl), tier)).jpeg().toBuffer();
+          await checkpoint();
+          await saveMaster(kind, clean);
+        }
+        if (!previews[kind]) {
+          clean ??= await readMaster(masterAssets[kind]!);
+          const preview = await applyPreviewWatermark(clean);
+          await checkpoint();
+          const previewKey = createDerivedAssetKey(taskId, kind, "jpg");
+          await uploadToR2(preview, previewKey, "image/jpeg");
+          await checkpoint();
+          previews[kind] = previewKey;
+          await updateStatus(failureStage!, {
+            [kind === "restored" ? "restoredImageKey" : "colorizedImageKey"]: previewKey,
+            masterAssets: { ...masterAssets },
+          });
+        }
+      };
+
+      failureStage = "restoring";
+      await updateStatus("restoring");
+      await prepareImage("restored", async () => {
+        const originalUrl = getR2CdnUrl(task.originalImageKey);
+        await assertSourceImageAccessible(originalUrl);
+        await assertImageAllowed(originalUrl, "source");
+        await checkpoint();
+        return runModel(tierModelConfig.restoration.modelKey, tierModelConfig.restoration.createInput(originalUrl), { taskId, stage: "restoring", executionToken, signal });
+      });
+
+      if (needsColorization(workflow)) {
+        failureStage = "colorizing";
+        await updateStatus("colorizing");
+        await prepareImage("colorized", async () => runModel("colorization", {
+          image: await getPrivateR2SignedUrl(masterAssets.restored!),
+          ...tierModelConfig.colorization,
+        }, { taskId, stage: "colorizing", executionToken, signal }));
+      }
+
+      if (needsAnimation(workflow)) {
+        failureStage = "animating";
+        await updateStatus("animating");
+        let cleanVideo: Buffer | undefined;
+        if (!masterAssets.animation) {
+          await assertAnimationPromptAllowed();
+          await checkpoint();
+          const inputUrl = await getPrivateR2SignedUrl(masterAssets.colorized ?? masterAssets.restored!);
+          const outputUrl = await runModel(tierModelConfig.animation.modelKey, tierModelConfig.animation.createInput(inputUrl), { taskId, stage: "animating", executionToken, signal });
+          cleanVideo = await downloadBuffer(outputUrl);
+          await checkpoint();
+          await saveMaster("animation", cleanVideo);
+        }
+        if (!previews.animation) {
+          cleanVideo ??= await readMaster(masterAssets.animation!);
+          const preview = await createVideoPreview(cleanVideo, signal);
+          await checkpoint();
+          const previewKey = createDerivedAssetKey(taskId, "animation", "mp4");
+          await uploadToR2(preview, previewKey, "video/mp4");
+          await checkpoint();
+          previews.animation = previewKey;
+        }
+      }
+      await updateStatus("completed", {
+        restoredImageKey: previews.restored,
+        colorizedImageKey: previews.colorized,
+        animationVideoKey: previews.animation,
+        masterAssets: { ...masterAssets },
+        errorMessage: null, internalErrorMessage: null, failureStage: null, violation: false,
+      });
+      return;
+    }
+
     let restoredKey = task.restoredImageKey;
     let restoredCdnUrl: string | null = restoredKey ? getR2CdnUrl(restoredKey) : null;
 

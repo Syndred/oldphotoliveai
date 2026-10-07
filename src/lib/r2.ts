@@ -7,9 +7,12 @@ import {
   DeleteObjectCommand,
   ListObjectsV2Command,
   GetObjectCommand,
+  HeadObjectCommand,
+  type HeadObjectCommandOutput,
   type GetObjectCommandOutput,
 } from "@aws-sdk/client-s3";
 import { config } from "./config";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 function encodeObjectKeyForUrl(key: string): string {
   return key.split("/").map((segment) => encodeURIComponent(segment)).join("/");
@@ -216,4 +219,70 @@ export function r2BodyToWebStream(
   }
 
   return null;
+}
+
+let _privateS3Client: S3Client | null = null;
+function getPrivateS3Client(): S3Client {
+  const accessKeyId = process.env.R2_PRIVATE_ACCESS_KEY_ID?.trim();
+  const secretAccessKey = process.env.R2_PRIVATE_SECRET_ACCESS_KEY?.trim();
+  if (Boolean(accessKeyId) !== Boolean(secretAccessKey)) throw new Error("PRIVATE_MASTER_CREDENTIALS_INCOMPLETE");
+  if (!accessKeyId || !secretAccessKey) return getS3Client();
+  if (!_privateS3Client) {
+    _privateS3Client = new S3Client({
+      region: "auto", endpoint: `https://${config.r2.accountId}.r2.cloudflarestorage.com`,
+      credentials: { accessKeyId, secretAccessKey },
+    });
+  }
+  return _privateS3Client;
+}
+
+/** Clean masters must never share the bucket exposed by the public CDN. */
+function privateBucketName(): string {
+  const name = process.env.R2_PRIVATE_BUCKET_NAME?.trim();
+  if (!name || name === config.r2.bucketName) throw new Error("PRIVATE_MASTER_BUCKET_NOT_CONFIGURED");
+  return name;
+}
+
+export async function uploadPrivateToR2(file: Buffer, key: string, contentType: string): Promise<string> {
+  await getPrivateS3Client().send(new PutObjectCommand({
+    Bucket: privateBucketName(), Key: key, Body: file, ContentType: contentType,
+    CacheControl: "private, no-store, max-age=0",
+  }));
+  return key;
+}
+
+export async function getPrivateObjectFromR2(key: string, options: { range?: string } = {}): Promise<GetObjectCommandOutput> {
+  return getPrivateS3Client().send(new GetObjectCommand({
+    Bucket: privateBucketName(), Key: key,
+    ...(options.range ? { Range: options.range } : {}),
+  }));
+}
+
+/** For server-side model inputs only; never include in public task status. */
+export async function getPrivateR2SignedUrl(key: string): Promise<string> {
+  return getSignedUrl(getPrivateS3Client(), new GetObjectCommand({ Bucket: privateBucketName(), Key: key }), { expiresIn: 900 });
+}
+
+export async function deletePrivateTaskFiles(taskId: string, extraKeys: Array<string | null | undefined> = []): Promise<void> {
+  const client = getPrivateS3Client();
+  const bucket = privateBucketName();
+  const prefix = `tasks/${taskId}/`;
+  let continuationToken: string | undefined;
+  const keys = new Set(extraKeys.filter((key): key is string => Boolean(key?.trim())));
+  do {
+    const result = await client.send(new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix, ContinuationToken: continuationToken }));
+    for (const object of result.Contents ?? []) if (object.Key) keys.add(object.Key);
+    continuationToken = result.IsTruncated ? result.NextContinuationToken : undefined;
+  } while (continuationToken);
+  await Promise.all(Array.from(keys, key => client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }))));
+}
+
+export async function headPrivateObjectFromR2(key: string): Promise<HeadObjectCommandOutput> {
+  return getPrivateS3Client().send(new HeadObjectCommand({ Bucket: privateBucketName(), Key: key }));
+}
+
+/** Validate rollout configuration before a worker starts chargeable model calls. */
+export function assertPrivateR2Configured(): void {
+  privateBucketName();
+  getPrivateS3Client();
 }

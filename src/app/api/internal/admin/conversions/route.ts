@@ -19,6 +19,11 @@ export async function GET(request: NextRequest) {
         generationsCompleted: Number(counts?.generations_completed ?? 0),
         paidGenerationsCompleted: Number(counts?.paid_generations_completed ?? 0),
         hdRemakesCompleted: Number(counts?.hd_remakes_completed ?? 0),
+        previewsCompleted: Number(counts?.preview_generations_completed ?? 0),
+        singlePhotoPurchases: Number(counts?.single_photo_purchases ?? 0),
+        creditUnlocks: Number(counts?.credit_unlocks ?? 0),
+        resultDownloadRequests: Number(counts?.result_download_requests ?? 0),
+        fulfillmentIssues: Number(counts?.fulfillment_issues ?? 0),
       };
     }));
     return NextResponse.json({ timezone: "UTC", scope: "since_instrumentation", daily }, { headers: { "Cache-Control": "no-store" } });

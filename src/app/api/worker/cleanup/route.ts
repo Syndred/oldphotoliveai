@@ -4,7 +4,7 @@
 import { NextResponse } from "next/server";
 import { config } from "@/lib/config";
 import { getRedisClient, hardDeleteTask } from "@/lib/redis";
-import { deleteTaskFiles } from "@/lib/r2";
+import { deleteTaskFiles, deletePrivateTaskFiles } from "@/lib/r2";
 import { removeFromQueue } from "@/lib/queue";
 import type { Task } from "@/types";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
@@ -68,6 +68,9 @@ async function cleanupFailedTasks(): Promise<number> {
       if (now - anchorTimestamp <= SEVEN_DAYS_MS) continue;
 
       try {
+        if (task.downloadPolicy === "preview_v1") {
+          await deletePrivateTaskFiles(task.id, Object.values(task.masterAssets ?? {}));
+        }
         await deleteTaskFiles(task.id, [
           task.originalImageKey,
           task.restoredImageKey,

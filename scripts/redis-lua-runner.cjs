@@ -45,6 +45,10 @@ async function main() {
     const key = String(rawArgs[0]);
 
     if (command === "GET") return strings.get(key);
+    if (command === "DEL") {
+      const existed = strings.delete(key) || sets.delete(key) || hashes.delete(key) || sortedSets.delete(key);
+      return existed ? 1 : 0;
+    }
     if (command === "EXISTS") return strings.has(key) || sortedSets.has(key) || sets.has(key) || hashes.has(key) ? 1 : 0;
     if (command === "SREM") return sets.get(key)?.delete(String(rawArgs[1])) ? 1 : 0;
     if (command === "EXPIRE") return 1;

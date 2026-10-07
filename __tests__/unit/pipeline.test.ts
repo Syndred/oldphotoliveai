@@ -4,8 +4,10 @@ import {
   ReplicatePredictionCreateRejectedError,
   runModel,
 } from "@/lib/replicate";
-import { uploadToR2, getR2CdnUrl } from "@/lib/r2";
-import { applyImageWatermark, resizeImage } from "@/lib/watermark";
+import { uploadToR2, getR2CdnUrl, uploadPrivateToR2, getPrivateObjectFromR2, getPrivateR2SignedUrl } from "@/lib/r2";
+import { createVideoPreview } from "@/lib/video-preview";
+import sharp from "sharp";
+import { applyImageWatermark, applyPreviewWatermark, resizeImage } from "@/lib/watermark";
 import { checkImage, CONTENT_REJECTED_MESSAGE } from "@/lib/moderation";
 import type { Task, User } from "@/types";
 
@@ -19,6 +21,7 @@ jest.mock("@/lib/replicate", () => ({
   runModel: jest.fn(),
 }));
 jest.mock("@/lib/r2");
+jest.mock("@/lib/video-preview", () => ({ createVideoPreview: jest.fn() }));
 jest.mock("@/lib/watermark");
 jest.mock("@/lib/moderation", () => ({
   checkImage: jest.fn().mockResolvedValue({ passed: true }),
@@ -904,5 +907,50 @@ describe("executePipeline", () => {
         violation: true,
       });
     });
+  });
+});
+
+
+describe("private masters with derived previews", () => {
+  const masterRestored = `tasks/${TASK_ID}/master-restored-${ASSET_UUID}.jpg`;
+  const masterColorized = `tasks/${TASK_ID}/master-colorized-${ASSET_UUID}.jpg`;
+  const masterVideo = `tasks/${TASK_ID}/master-animation-${ASSET_UUID}.mp4`;
+  beforeEach(() => {
+    jest.mocked(uploadPrivateToR2).mockReset().mockResolvedValue("private-key");
+    jest.mocked(getPrivateObjectFromR2).mockReset();
+    jest.mocked(getPrivateR2SignedUrl).mockReset().mockImplementation(async key => `https://private.test/${key}?signed=secret`);
+    jest.mocked(createVideoPreview).mockReset().mockResolvedValue(Buffer.from("watermarked-video"));
+  });
+  it("keeps all clean images/video private and passes only signed clean inputs downstream", async () => {
+    setupSuccessfulPipeline({ downloadPolicy: "preview_v1", generationTier: "free" });
+    mockResizeImage.mockResolvedValue(await sharp({ create: { width: 40, height: 40, channels: 3, background: "red" } }).jpeg().toBuffer());
+    jest.mocked(applyPreviewWatermark).mockResolvedValue(Buffer.from("watermarked-image"));
+    await executePipeline(TASK_ID, EXECUTION);
+    expect(uploadPrivateToR2).toHaveBeenCalledTimes(3);
+    expect(mockUploadToR2.mock.calls.map(call => call[0].toString())).toEqual(["watermarked-image", "watermarked-image", "watermarked-video"]);
+    expect(mockRunModel.mock.calls[1][1]).toMatchObject({ image: `https://private.test/${masterRestored}?signed=secret` });
+    expect(mockRunModel.mock.calls[2][1]).toMatchObject({ input_image: `https://private.test/${masterColorized}?signed=secret` });
+    expect(mockRunModel.mock.calls[2][0]).toBe("animationFree");
+    expect(mockGetR2CdnUrl.mock.calls.every(([key]) => !key.includes("master-"))).toBe(true);
+    expect(mockUpdateTaskStatus).toHaveBeenLastCalledWith(TASK_ID, "completed", expect.objectContaining({ masterAssets: { restored: masterRestored, colorized: masterColorized, animation: masterVideo } }));
+  });
+  it("retries video watermarking from the persisted master without another model charge", async () => {
+    setupSuccessfulPipeline({ downloadPolicy: "preview_v1", generationTier: "free", workflow: "animate", restoredImageKey: RESTORED_KEY, masterAssets: { restored: masterRestored, animation: masterVideo } });
+    jest.mocked(getPrivateObjectFromR2).mockResolvedValue({ Body: { transformToByteArray: async () => new Uint8Array([1, 2, 3]) } } as never);
+    await executePipeline(TASK_ID, EXECUTION);
+    expect(mockRunModel).not.toHaveBeenCalled();
+    expect(uploadPrivateToR2).not.toHaveBeenCalled();
+    expect(createVideoPreview).toHaveBeenCalledWith(Buffer.from([1, 2, 3]), EXECUTION.signal);
+    expect(mockUploadToR2).toHaveBeenCalledWith(Buffer.from("watermarked-video"), ANIMATION_KEY, "video/mp4");
+  });
+  it("records the clean video before watermark failure and never publishes it", async () => {
+    setupSuccessfulPipeline({ downloadPolicy: "preview_v1", workflow: "animate", restoredImageKey: RESTORED_KEY, masterAssets: { restored: masterRestored } });
+    mockRunModel.mockReset().mockResolvedValue("https://provider/video.mp4");
+    mockFetch.mockReset().mockResolvedValue({ ok: true, arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer });
+    jest.mocked(createVideoPreview).mockRejectedValue(new Error("VIDEO_PREVIEW_ENCODING_FAILED"));
+    await executePipeline(TASK_ID, EXECUTION);
+    expect(mockUpdateTaskStatus).toHaveBeenCalledWith(TASK_ID, "animating", { masterAssets: { restored: masterRestored, animation: masterVideo } });
+    expect(mockUploadToR2).not.toHaveBeenCalled();
+    expect(mockUpdateTaskStatus).toHaveBeenLastCalledWith(TASK_ID, "failed", expect.objectContaining({ failureStage: "animating" }));
   });
 });

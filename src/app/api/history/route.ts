@@ -5,7 +5,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { getUserTasks, deleteTask, getTaskOwnedByUser } from "@/lib/redis";
-import { deleteTaskFiles } from "@/lib/r2";
+import { deleteTaskFiles, deletePrivateTaskFiles } from "@/lib/r2";
+import { beginTaskDownloadDeletion, releaseTaskDownloadDeletion } from "@/lib/task-download";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 import { buildTaskAssetUrl } from "@/lib/task-assets";
 
@@ -114,12 +115,22 @@ export async function DELETE(request: NextRequest) {
     const results: { id: string; deleted: boolean }[] = [];
 
     for (const taskId of taskIds) {
+      let downloadDeletionClaimed = false;
+      let deletionComplete = false;
       try {
         // Verify ownership before deleting files to prevent IDOR-style abuse.
         const task = await getTaskOwnedByUser(taskId, userId);
         if (!task) {
           results.push({ id: taskId, deleted: false });
           continue;
+        }
+        if (task.downloadPolicy === "preview_v1") {
+          downloadDeletionClaimed = await beginTaskDownloadDeletion(taskId);
+          if (!downloadDeletionClaimed) {
+            results.push({ id: taskId, deleted: false });
+            continue;
+          }
+          await deletePrivateTaskFiles(taskId, Object.values(task.masterAssets ?? {}));
         }
 
         await deleteTaskFiles(taskId, [
@@ -131,9 +142,12 @@ export async function DELETE(request: NextRequest) {
 
         // Delete from Redis
         const deleted = await deleteTask(taskId, userId);
+        deletionComplete = deleted;
         results.push({ id: taskId, deleted });
       } catch {
         results.push({ id: taskId, deleted: false });
+      } finally {
+        if (downloadDeletionClaimed && deletionComplete) await releaseTaskDownloadDeletion(taskId);
       }
     }
 

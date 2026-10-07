@@ -11,6 +11,7 @@ import { getContentSafetyCopy } from "@/lib/content-safety";
 import type { TaskWorkflow } from "@/types";
 import { classifyTaskCreationResponse } from "@/lib/task-create-client";
 import { clearPendingUpload, readPendingUpload, savePendingUpload } from "@/lib/pending-upload";
+import { getDownloadCopy } from "@/lib/download-copy";
 import { getConversionCopy } from "@/lib/conversion-copy";
 
 interface UploadSectionProps {
@@ -51,6 +52,8 @@ export default function UploadSection({
   const localizedPathname = localizePathname(locale, pathname);
   const isEmbedded = variant === "embedded";
   const copy = getConversionCopy(locale);
+  const downloadCopy = getDownloadCopy(locale);
+  const accountTier = (session?.user as Record<string, unknown> | undefined)?.tier;
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -200,6 +203,8 @@ export default function UploadSection({
           </div>
         </div>
       )}
+
+      <p className="mb-4 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-[var(--color-text-secondary)]">{accountTier === "professional" ? downloadCopy.proBefore : accountTier === "pay_as_you_go" ? downloadCopy.paidBefore : downloadCopy.before}</p>
 
       <UploadZone
         onUpload={handleUpload}

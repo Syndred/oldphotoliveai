@@ -21,6 +21,8 @@ function escapeHtml(input: string): string {
 
 function formatPlanLabel(plan?: string | null): string {
   switch (plan) {
+    case "single_photo":
+      return "Single Result Unlock";
     case "starter_pack":
       return "Starter Pack";
     case "family_pack":
@@ -50,7 +52,7 @@ function buildEmailContent(params: SendPaymentEmailParams): {
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111827;">
           <h2 style="margin: 0 0 12px;">Payment successful</h2>
-          <p>Thanks for your purchase. Your ${safePlan} access has been activated.</p>
+          <p>${params.plan === "single_photo" ? `Thanks for your purchase. Your ${safePlan} is ready: you can now download the photos and any video included in this result.` : `Thanks for your purchase. Your ${safePlan} access has been activated.`}</p>
           <p>You can continue at <a href="${pricingUrl}">${SITE_URL.replace("https://", "")}</a>.</p>
           <p>If you need billing help, contact <a href="mailto:${safeSupportEmail}">${safeSupportEmail}</a>.</p>
           <p style="margin-top: 20px; color: #6b7280; font-size: 12px;">

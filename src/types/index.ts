@@ -68,6 +68,10 @@ export interface Task {
   /** Quality purchased when this task was created; independent of later account changes. */
   generationTier?: UserTier;
   upgradeSourceTaskId?: string;
+  /** Only new free tasks opt in; absent means legacy download rights. */
+  downloadPolicy?: "preview_v1";
+  /** Private bucket keys. Never serialize these in public task responses. */
+  masterAssets?: Partial<Record<"restored" | "colorized" | "animation", string>>;
   originalImageKey: string;
   restoredImageKey: string | null;
   colorizedImageKey: string | null;

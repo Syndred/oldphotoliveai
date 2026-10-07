@@ -5,7 +5,7 @@ jest.mock("@/lib/redis", () => ({ getRedisClient: () => ({ eval: mockEval }) }))
 beforeEach(() => mockEval.mockReset());
 it("records aggregate paid delivery without photo keys or user identifiers", async () => {
   await recordCompletedGeneration({ id: "task", generationTier: "pay_as_you_go", upgradeSourceTaskId: "source", originalImageKey: "private", userId: "private-owner" } as Task);
-  expect(mockEval).toHaveBeenCalledWith(expect.any(String), ["conversion:completed:task", expect.stringMatching(/^conversion:\d{4}-\d{2}-\d{2}$/)], ["1", "1"]);
+  expect(mockEval).toHaveBeenCalledWith(expect.any(String), ["conversion:completed:task", expect.stringMatching(/^conversion:\d{4}-\d{2}-\d{2}$/)], ["1", "1", "0"]);
   expect(JSON.stringify(mockEval.mock.calls)).not.toContain("private");
 });
 it("never propagates analytics failure into paid generation", async () => {

@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import { PREVIEW_WATERMARK_SVG } from "./preview-watermark-svg";
 import { UserTier, RESOLUTION_CONFIG } from "@/types";
 
 /**
@@ -110,4 +111,23 @@ export async function resizeImage(
       withoutEnlargement: true,
     })
     .toBuffer();
+}
+
+
+/** Font-independent, visibly labelled preview strip shared by images and video. */
+export async function createPreviewWatermarkPng(width = 600): Promise<Buffer> {
+  return sharp(Buffer.from(PREVIEW_WATERMARK_SVG)).resize(Math.max(1, Math.round(width))).png().toBuffer();
+}
+
+export async function applyPreviewWatermark(imageBuffer: Buffer): Promise<Buffer> {
+  const metadata = await sharp(imageBuffer).metadata();
+  if (!metadata.width || !metadata.height) throw new Error("PREVIEW_IMAGE_DIMENSIONS_MISSING");
+  const width = Math.max(1, Math.round(metadata.width * 0.82));
+  const watermark = await createPreviewWatermarkPng(width);
+  const height = (await sharp(watermark).metadata()).height!;
+  return sharp(imageBuffer).composite([{
+    input: watermark,
+    left: Math.max(0, Math.floor((metadata.width - width) / 2)),
+    top: Math.max(0, Math.min(metadata.height - height, Math.round(metadata.height * 0.75 - height / 2))),
+  }]).toBuffer();
 }

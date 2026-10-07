@@ -3,12 +3,14 @@ import type { NextRequest } from "next/server";
 import type { Task } from "@/types";
 import { getAnonymousVisitorId } from "@/lib/anonymous";
 import { getAnonymousTaskOwnedByVisitor, getTaskOwnedByUser } from "@/lib/redis";
+import { hasTaskDownloadAccess } from "@/lib/task-download";
 
 export type TaskAccessMode = "authenticated" | "anonymous";
 
 export interface AccessibleTaskResult {
   task: Task;
   mode: TaskAccessMode;
+  downloadUnlocked?: boolean;
 }
 
 export async function getAccessibleTask(
@@ -24,7 +26,7 @@ export async function getAccessibleTask(
   if (userId) {
     const task = await getTaskOwnedByUser(taskId, userId);
     if (task) {
-      return { task, mode: "authenticated" };
+      return { task, mode: "authenticated", downloadUnlocked: task.downloadPolicy === "preview_v1" ? await hasTaskDownloadAccess(taskId, userId) : true };
     }
   }
 
@@ -34,5 +36,11 @@ export async function getAccessibleTask(
   }
 
   const anonymousTask = await getAnonymousTaskOwnedByVisitor(taskId, visitorId);
-  return anonymousTask ? { task: anonymousTask, mode: "anonymous" } : null;
+  return anonymousTask ? {
+    task: anonymousTask,
+    mode: "anonymous",
+    downloadUnlocked: anonymousTask.downloadPolicy === "preview_v1"
+      ? Boolean(userId && await hasTaskDownloadAccess(taskId, userId))
+      : true,
+  } : null;
 }

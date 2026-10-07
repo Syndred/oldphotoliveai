@@ -6,6 +6,8 @@ import { useLocale, useTranslations } from "next-intl";
 import Navbar from "@/components/Navbar";
 import CheckoutReturn from "@/components/CheckoutReturn";
 import PricingCards from "@/components/PricingCards";
+import { safeCheckoutTaskId } from "@/lib/checkout-context";
+import { getDownloadCopy } from "@/lib/download-copy";
 import type { QuotaInfo, SubscriptionStatus, UserTier } from "@/types";
 
 function parseUserTier(value: unknown): UserTier | null {
@@ -23,6 +25,9 @@ export default function PricingPage() {
   const { data: session, status } = useSession();
   const locale = useLocale();
   const t = useTranslations("pricing");
+  const downloadCopy = getDownloadCopy(locale);
+  const [contextTaskId, setContextTaskId] = useState<string | undefined>();
+  useEffect(() => { setContextTaskId(safeCheckoutTaskId(new URLSearchParams(window.location.search).get("taskId"))); }, []);
   const tQuota = useTranslations("quota");
   const [paymentRevision, setPaymentRevision] = useState(0);
   const [quota, setQuota] = useState<QuotaInfo | null>(null);
@@ -90,8 +95,9 @@ export default function PricingPage() {
     <div className="min-h-screen bg-[var(--color-primary-bg)]">
       <Navbar />
 
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:py-16">
+      <main className={`mx-auto max-w-6xl px-4 ${contextTaskId ? "py-6 sm:py-10" : "py-10 sm:py-16"}`}>
         <section aria-labelledby="pricing-title">
+          {contextTaskId ? <h1 id="pricing-title" className="text-2xl font-bold text-[var(--color-text-primary)] sm:text-3xl">{downloadCopy.title}</h1> : <>
           <p className="text-center text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
             {t("eyebrow")}
           </p>
@@ -140,9 +146,11 @@ export default function PricingPage() {
             </div>
           )}
 
+          </>}
           <CheckoutReturn onConfirmed={() => setPaymentRevision(v => v + 1)} />
-          <div className="mt-8">
+          <div className={contextTaskId ? "mt-4" : "mt-8"}>
             <PricingCards
+              key={paymentRevision}
               currentTier={tier}
               hasActiveStripeSubscription={Boolean(
                 subscriptionStatus?.hasActiveSubscription

@@ -145,7 +145,7 @@ function getRequestUrl(input: unknown): string {
 describe("PricingCards", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockFetch.mockReset();
+    mockFetch.mockReset().mockResolvedValue({ ok: false, json: async () => ({}) });
     window.history.replaceState(null, "", "/pricing");
     mockUseSession.mockReturnValue({ data: null, status: "unauthenticated" });
   });
@@ -155,7 +155,8 @@ describe("PricingCards", () => {
     render(<PricingCards />);
     fireEvent.click(screen.getAllByText("Buy Credits")[0]);
     await waitFor(() => expect(mockSignIn).toHaveBeenCalledWith("google", { callbackUrl: "/pricing?plan=starter_pack&resume=1&taskId=photo-1&returnTo=%2Frestore-old-photos" }));
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(mockFetch).toHaveBeenCalledWith("/api/tasks/photo-1/status", expect.any(Object));
+    expect(mockFetch.mock.calls.some(([url]) => url === "/api/stripe/checkout")).toBe(false);
   });
 
   it("consumes login resume once before starting checkout, including after remount", async () => {
@@ -163,12 +164,12 @@ describe("PricingCards", () => {
     mockUseSession.mockReturnValue({ data: { user: { tier: "free" } }, status: "authenticated" });
     mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
     const view = render(<PricingCards />);
-    await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(mockFetch.mock.calls.filter(([url]) => url === "/api/stripe/checkout")).toHaveLength(1));
     expect(window.location.search).not.toContain("resume=");
     expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({ plan: "starter_pack", locale: "en", taskId: "photo-1" });
     view.unmount();
     render(<PricingCards />);
-    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(mockFetch.mock.calls.filter(([url]) => url === "/api/stripe/checkout")).toHaveLength(1);
   });
 
   it("does not restart checkout after cancellation even with a stale resume flag", () => {
@@ -607,4 +608,82 @@ describe("PricingPage", () => {
     });
     expect(screen.queryByText("Buy Credits")).not.toBeInTheDocument();
   });
+});
+
+describe("single-result purchasing", () => {
+  beforeEach(() => {
+    jest.clearAllMocks(); mockFetch.mockReset();
+    window.history.replaceState(null, "", "/pricing");
+    mockUseSession.mockReturnValue({ data: null, status: "unauthenticated" });
+  });
+  it("offers preview first without a task and never starts single checkout", () => {
+    render(<PricingCards />);
+    expect(screen.getByRole("link", { name: "Preview first — free" })).toHaveAttribute("href", "/#upload-section");
+    expect(screen.queryByRole("button", { name: "Unlock this result — $1.99" })).not.toBeInTheDocument();
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+  it.each([
+    { status: "completed", downloadPolicy: "preview_v1", downloadUnlocked: true },
+    { status: "pending", downloadPolicy: "preview_v1", downloadUnlocked: false },
+    { status: "completed", downloadUnlocked: false },
+  ])("never sells an ineligible result: %j", async task => {
+    window.history.replaceState(null, "", "/pricing?taskId=photo-1&plan=single_photo");
+    mockFetch.mockResolvedValue({ ok: true, json: async () => task });
+    render(<PricingCards />);
+    await screen.findByRole("link", { name: "Open your result" });
+    expect(screen.queryByRole("button", { name: "Unlock this result — $1.99" })).not.toBeInTheDocument();
+  });
+  it("checks eligibility before offering login with the exact result intent", async () => {
+    window.history.replaceState(null, "", "/pricing?taskId=photo-1&plan=single_photo");
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({ status: "completed", downloadPolicy: "preview_v1", downloadUnlocked: false }) });
+    render(<PricingCards />);
+    fireEvent.click(await screen.findByRole("button", { name: "Unlock this result — $1.99" }));
+    await waitFor(() => expect(mockSignIn).toHaveBeenCalledWith("google", { callbackUrl: "/pricing?plan=single_photo&resume=1&taskId=photo-1" }));
+    expect(mockFetch.mock.calls.some(([url]) => url === "/api/stripe/checkout")).toBe(false);
+  });
+});
+
+it("resumes a single-result checkout only after authenticated eligibility verification", async () => {
+  jest.clearAllMocks(); mockFetch.mockReset();
+  window.history.replaceState(null, "", "/pricing?taskId=photo-1&plan=single_photo&resume=1");
+  mockUseSession.mockReturnValue({ data: { user: { tier: "free" } }, status: "authenticated" });
+  let confirm!: (value: unknown) => void;
+  mockFetch.mockImplementation((url: string) => url.endsWith("/status") ? new Promise(resolve => { confirm = resolve; }) : Promise.resolve({ ok: true, json: async () => ({}) }));
+  render(<PricingCards />);
+  await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("/api/tasks/photo-1/status", expect.any(Object)));
+  expect(mockFetch.mock.calls.some(([url]) => url === "/api/stripe/checkout")).toBe(false);
+  await act(async () => confirm({ ok: true, json: async () => ({ status: "completed", downloadPolicy: "preview_v1", downloadUnlocked: false }) }));
+  await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("/api/stripe/checkout", expect.objectContaining({ body: JSON.stringify({ plan: "single_photo", locale: "en", taskId: "photo-1" }) })));
+  expect(window.location.search).not.toContain("resume=");
+  expect(mockFetch.mock.calls.filter(([url]) => url === "/api/stripe/checkout")).toHaveLength(1);
+});
+
+it("stops repeat checkout attempts and offers support when payment state needs review", async () => {
+  jest.clearAllMocks(); mockFetch.mockReset();
+  window.history.replaceState(null, "", "/pricing");
+  mockUseSession.mockReturnValue({ data: { user: { tier: "free" } }, status: "authenticated" });
+  mockFetch.mockResolvedValue({ ok: false, status: 409, json: async () => ({ code: "CHECKOUT_REVIEW_REQUIRED" }) });
+  render(<PricingCards />);
+  fireEvent.click(screen.getAllByText("Buy Credits")[0]);
+  expect(await screen.findByRole("alert")).toHaveTextContent("payment status");
+  expect(screen.getByRole("link", { name: /Contact support/ })).toHaveAttribute("href", "mailto:support@oldphotoliveai.com");
+  for (const button of screen.getAllByText("Buy Credits")) expect(button).toBeDisabled();
+  expect(mockFetch).toHaveBeenCalledTimes(1);
+});
+
+it("puts the single-result offer ahead of the generic pricing hero for task context", async () => {
+  jest.clearAllMocks(); mockFetch.mockReset();
+  window.history.replaceState(null, "", "/pricing?taskId=photo-1&plan=single_photo");
+  mockUseSession.mockReturnValue({ data: { user: { tier: "free" } }, status: "authenticated" });
+  mockFetch.mockImplementation(async (url: string) => ({ ok: true, json: async () => url.endsWith("/status") ? { status: "completed", workflow: "animate", downloadPolicy: "preview_v1", downloadUnlocked: false } : { tier: "free" } }));
+  render(<PricingPage />);
+  expect(await screen.findByRole("heading", { level: 1, name: "Keep this result" })).toBeInTheDocument();
+  expect(screen.queryByRole("heading", { name: "Pay Once, Restore When You Need" })).not.toBeInTheDocument();
+  expect(screen.queryByTestId("current-plan-summary")).not.toBeInTheDocument();
+  const card = screen.getByTestId("plan-single_photo");
+  expect(card).toHaveTextContent("Same result. No preview watermark. No regeneration.");
+  expect(card).toHaveTextContent("Video stays 480p.");
+  expect(card).not.toHaveTextContent("Does not include another generation.");
+  expect(card.compareDocumentPosition(screen.getByTestId("plan-starter_pack")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(await screen.findByRole("button", { name: "Unlock this result — $1.99" })).toBeInTheDocument();
 });

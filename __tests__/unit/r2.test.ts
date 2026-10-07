@@ -1,4 +1,6 @@
-import { uploadToR2, getR2CdnUrl, deleteFromR2, deleteTaskFiles, getS3Client } from "@/lib/r2";
+const mockSignUrl = jest.fn();
+jest.mock("@aws-sdk/s3-request-presigner", () => ({ getSignedUrl: (...args: unknown[]) => mockSignUrl(...args) }));
+import { uploadToR2, getR2CdnUrl, deleteFromR2, deleteTaskFiles, getS3Client, uploadPrivateToR2, getPrivateObjectFromR2, getPrivateR2SignedUrl, headPrivateObjectFromR2, deletePrivateTaskFiles } from "@/lib/r2";
 
 // ── Mock @aws-sdk/client-s3 ────────────────────────────────────────────────
 const sendMock = jest.fn().mockResolvedValue({});
@@ -152,5 +154,55 @@ describe("deleteTaskFiles", () => {
     await deleteTaskFiles("no-contents");
 
     expect(sendMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+
+describe("private master bucket", () => {
+  const previousBucket = process.env.R2_PRIVATE_BUCKET_NAME;
+  afterEach(() => {
+    if (previousBucket === undefined) delete process.env.R2_PRIVATE_BUCKET_NAME;
+    else process.env.R2_PRIVATE_BUCKET_NAME = previousBucket;
+    delete process.env.R2_PRIVATE_ACCESS_KEY_ID;
+    delete process.env.R2_PRIVATE_SECRET_ACCESS_KEY;
+  });
+  it("fails closed if the private bucket is missing or points at the public bucket", async () => {
+    delete process.env.R2_PRIVATE_BUCKET_NAME;
+    await expect(uploadPrivateToR2(Buffer.from("clean"), "key", "video/mp4")).rejects.toThrow("PRIVATE_MASTER_BUCKET_NOT_CONFIGURED");
+    process.env.R2_PRIVATE_BUCKET_NAME = "test-bucket";
+    await expect(getPrivateObjectFromR2("key")).rejects.toThrow("PRIVATE_MASTER_BUCKET_NOT_CONFIGURED");
+    expect(sendMock).not.toHaveBeenCalled();
+  });
+  it("uploads clean masters only into the private bucket and disables caching", async () => {
+    process.env.R2_PRIVATE_BUCKET_NAME = "private-masters";
+    await uploadPrivateToR2(Buffer.from("clean"), "tasks/task/master.mp4", "video/mp4");
+    expect(sendMock.mock.calls[0][0].input).toMatchObject({ Bucket: "private-masters", Key: "tasks/task/master.mp4", CacheControl: "private, no-store, max-age=0" });
+  });
+  it("uses private range reads and HEAD for authorized delivery/readiness checks", async () => {
+    process.env.R2_PRIVATE_BUCKET_NAME = "private-masters";
+    await getPrivateObjectFromR2("key", { range: "bytes=0-99" });
+    await headPrivateObjectFromR2("key");
+    expect(sendMock.mock.calls[0][0].input).toMatchObject({ Bucket: "private-masters", Key: "key", Range: "bytes=0-99" });
+    expect(sendMock.mock.calls[1][0].input).toEqual({ Bucket: "private-masters", Key: "key" });
+  });
+  it("signs a limited server-side model input without using the public domain", async () => {
+    process.env.R2_PRIVATE_BUCKET_NAME = "private-masters";
+    mockSignUrl.mockResolvedValueOnce("https://s3.private/master?signature=server-only");
+    expect(await getPrivateR2SignedUrl("master")).toContain("signature");
+    expect(mockSignUrl.mock.calls[0][1].input).toEqual({ Bucket: "private-masters", Key: "master" });
+    expect(mockSignUrl.mock.calls[0][2]).toEqual({ expiresIn: 900 });
+  });
+  it("cleans private objects including all listing pages without touching the public bucket", async () => {
+    process.env.R2_PRIVATE_BUCKET_NAME = "private-masters";
+    sendMock.mockResolvedValueOnce({ Contents: [{ Key: "tasks/task/master.jpg" }], IsTruncated: true, NextContinuationToken: "next" }).mockResolvedValueOnce({ Contents: [{ Key: "tasks/task/master.mp4" }] });
+    await deletePrivateTaskFiles("task");
+    expect(sendMock.mock.calls).toHaveLength(4);
+    expect(sendMock.mock.calls.every(([command]) => command.input.Bucket === "private-masters")).toBe(true);
+    expect(sendMock.mock.calls[1][0].input.ContinuationToken).toBe("next");
+  });
+  it("refuses incomplete private credentials instead of silently falling back", async () => {
+    process.env.R2_PRIVATE_BUCKET_NAME = "private-masters";
+    process.env.R2_PRIVATE_ACCESS_KEY_ID = "only-half";
+    await expect(headPrivateObjectFromR2("key")).rejects.toThrow("PRIVATE_MASTER_CREDENTIALS_INCOMPLETE");
   });
 });

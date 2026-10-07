@@ -7,8 +7,8 @@ import AdminPanel from "@/components/admin/AdminPanel";
 jest.mock("next-auth/react", () => ({ useSession: () => ({ data: null }) }));
 const mockFetch = jest.fn();
 const data = { timezone: "UTC", scope: "since_instrumentation", daily: [
-  { date: "2026-10-07", purchases: 2, revenueMinorUsd: 1498, generationsCompleted: 15, paidGenerationsCompleted: 4, hdRemakesCompleted: 3 },
-  { date: "2026-10-06", purchases: 1, revenueMinorUsd: 499, generationsCompleted: 11, paidGenerationsCompleted: 5, hdRemakesCompleted: 2 },
+  { date: "2026-10-07", purchases: 2, revenueMinorUsd: 1498, generationsCompleted: 15, paidGenerationsCompleted: 4, hdRemakesCompleted: 3, previewsCompleted: 5, singlePhotoPurchases: 1, creditUnlocks: 2, resultDownloadRequests: 3, fulfillmentIssues: 0 },
+  { date: "2026-10-06", purchases: 1, revenueMinorUsd: 499, generationsCompleted: 11, paidGenerationsCompleted: 5, hdRemakesCompleted: 2, previewsCompleted: 7, singlePhotoPurchases: 0, creditUnlocks: 1, resultDownloadRequests: 0, fulfillmentIssues: 1 },
 ] };
 beforeEach(() => { mockFetch.mockReset(); global.fetch = mockFetch; });
 
@@ -19,11 +19,11 @@ it("shows a loading state without inventing zero revenue or orders", () => {
   expect(screen.getByRole("button", { name: "加载中…" })).toBeDisabled();
   expect(screen.queryByRole("definition")).not.toBeInTheDocument();
 });
-it("aggregates the five metrics and keeps the statistics scope explicit", async () => {
+it("aggregates payment, delivery and experiment metrics and keeps the statistics scope explicit", async () => {
   mockFetch.mockResolvedValue({ ok: true, json: async () => data });
   render(<ConversionSummary />);
   await screen.findByText("$19.97");
-  for (const [label, value] of [["付款订单", "3"], ["收款金额（美元）", "$19.97"], ["生成完成", "26"], ["付费生成完成", "9"], ["高清重制完成", "5"]]) {
+  for (const [label, value] of [["已履约付款订单", "3"], ["已履约收款（美元）", "$19.97"], ["生成完成", "26"], ["付费生成完成", "9"], ["高清重制完成", "5"], ["实验预览完成", "12"], ["单张付款订单", "1"], ["积分解锁结果", "3"], ["已解锁结果下载请求", "3"], ["付款交付异常", "1"]]) {
     expect(within(screen.getByText(label).parentElement!).getByRole("definition")).toHaveTextContent(value);
   }
   expect(screen.getByText(/从本次统计功能上线开始记录/)).toHaveTextContent("UTC");

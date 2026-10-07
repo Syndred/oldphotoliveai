@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getObjectFromR2, r2BodyToWebStream } from "@/lib/r2";
+import { getObjectFromR2, getPrivateObjectFromR2, r2BodyToWebStream } from "@/lib/r2";
 import {
   getTaskAssetFilename,
   isTaskAssetKind,
@@ -7,6 +7,7 @@ import {
 } from "@/lib/task-assets";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 import { getAccessibleTask } from "@/lib/task-access";
+import { recordResultDownloadRequest } from "@/lib/conversion-metrics";
 
 export const runtime = "nodejs";
 
@@ -48,7 +49,19 @@ export async function GET(request: NextRequest, props: TaskAssetRouteContext) {
   }
   const { task } = accessibleTask;
 
-  const key = resolveTaskAssetKey(task, kindParam);
+  const shouldDownload = request.nextUrl.searchParams.get("download") === "1";
+  const gatedResult = task.downloadPolicy === "preview_v1" && kindParam !== "original";
+  if (gatedResult && shouldDownload && !accessibleTask.downloadUnlocked) {
+    return NextResponse.json({ error: "Unlock this result to download it.", code: "DOWNLOAD_LOCKED" }, {
+      status: 403, headers: { "Cache-Control": "private, no-store, max-age=0" },
+    });
+  }
+  // Never infer access from download=1 or a caller-supplied key. Inline playback
+  // and Range requests follow the very same account entitlement boundary.
+  const useMaster = gatedResult && accessibleTask.downloadUnlocked === true;
+  const key = useMaster
+    ? task.masterAssets?.[kindParam] ?? null
+    : resolveTaskAssetKey(task, kindParam);
   if (!key) {
     return NextResponse.json(
       { error: getErrorMessage("taskNotFound", locale) },
@@ -57,10 +70,9 @@ export async function GET(request: NextRequest, props: TaskAssetRouteContext) {
   }
 
   const range = normalizeRangeHeader(request.headers.get("range"));
-  const shouldDownload = request.nextUrl.searchParams.get("download") === "1";
 
   try {
-    const object = await getObjectFromR2(key, range ? { range } : {});
+    const object = await (useMaster ? getPrivateObjectFromR2 : getObjectFromR2)(key, range ? { range } : {});
     const stream = r2BodyToWebStream(object.Body);
 
     if (!stream) {
@@ -104,6 +116,7 @@ export async function GET(request: NextRequest, props: TaskAssetRouteContext) {
         "Content-Disposition",
         `attachment; filename="${getTaskAssetFilename(kindParam)}"`
       );
+      if (useMaster) await recordResultDownloadRequest(task.id);
     }
 
     return new Response(stream, {

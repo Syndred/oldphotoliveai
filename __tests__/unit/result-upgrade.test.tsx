@@ -73,3 +73,15 @@ it("recovers an already charged HD job after the last credit and a lost response
   expect(screen.queryByRole("link", { name: /Create an HD version/ })).not.toBeInTheDocument();
   expect(mockFetch.mock.calls.every(([url]) => !String(url).endsWith("/upgrade"))).toBe(true);
 });
+
+it.each([false, true])("gates new preview downloads and keeps HD remaking secondary: unlocked=%s", async (unlocked) => {
+  mockFetch.mockImplementation(async (url: string) => ({ ok: true, json: async () => url === "/api/quota" ? { tier: "free", credits: 0 } : {
+    accessMode: "authenticated", status: "completed", workflow: "animate", generationTier: "free", canUpgrade: true, downloadPolicy: "preview_v1", downloadUnlocked: unlocked,
+    originalImageKey: "tasks/source/original.jpg", restoredImageKey: "tasks/source/restored.jpg", animationVideoKey: "tasks/source/video.mp4",
+  } }));
+  render(<ResultPage />);
+  await screen.findByTestId("video");
+  await waitFor(() => expect(Boolean(screen.queryByRole("link", { name: "downloadVideo" }))).toBe(unlocked));
+  expect(Boolean(screen.queryByText("Optional: create a new HD version"))).toBe(unlocked);
+  if (!unlocked) expect(screen.getByRole("link", { name: "Unlock this result — $1.99" })).toBeInTheDocument();
+});

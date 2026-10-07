@@ -2,9 +2,11 @@
 
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Navbar from "@/components/Navbar";
 import ResultUpgrade from "@/components/ResultUpgrade";
+import ResultDownload from "@/components/ResultDownload";
+import { getDownloadCopy } from "@/lib/download-copy";
 import type { QuotaInfo } from "@/types";
 import ProgressIndicator from "@/components/ProgressIndicator";
 import BeforeAfterCompare from "@/components/BeforeAfterCompare";
@@ -86,6 +88,9 @@ export default function ResultPage() {
   const [isFreeTier, setIsFreeTier] = useState(true);
   const [quota, setQuota] = useState<QuotaInfo | null>(null);
   const [canUpgrade, setCanUpgrade] = useState(false);
+  const [previewPolicy, setPreviewPolicy] = useState(false);
+  const [downloadUnlocked, setDownloadUnlocked] = useState(false);
+  const downloadCopy = getDownloadCopy(useLocale());
   const [existingUpgradeTaskId, setExistingUpgradeTaskId] = useState<string | undefined>();
   const [initialLoading, setInitialLoading] = useState(true);
   const [needsPolling, setNeedsPolling] = useState(false);
@@ -108,6 +113,8 @@ export default function ResultPage() {
       taskContextRef.current = context;
       setRetryAllowed(context.retryAllowed);
       setCanUpgrade(data.canUpgrade === true);
+      setPreviewPolicy(data.downloadPolicy === "preview_v1");
+      setDownloadUnlocked(data.downloadUnlocked === true);
       if (typeof data.existingUpgradeTaskId === "string" && /^[a-zA-Z0-9-]+$/.test(data.existingUpgradeTaskId)) setExistingUpgradeTaskId(data.existingUpgradeTaskId);
       if (typeof data.generationTier === "string") setIsFreeTier(data.generationTier === "free");
 
@@ -149,6 +156,8 @@ export default function ResultPage() {
     setResult(null);
     setError(null);
     setCanUpgrade(false);
+    setPreviewPolicy(false);
+    setDownloadUnlocked(false);
     setExistingUpgradeTaskId(undefined);
     setInitialLoading(true);
     setNeedsPolling(false);
@@ -295,14 +304,15 @@ export default function ResultPage() {
     : result?.restoredImageKey
     ? "restored"
     : null;
+  const assetVersion = previewPolicy && downloadUnlocked ? "&unlocked=1" : "";
   const imageAssetUrl = imageResultKind
-    ? buildTaskAssetUrl(taskId, imageResultKind)
+    ? buildTaskAssetUrl(taskId, imageResultKind) + assetVersion
     : "";
   const imageDownloadUrl = imageResultKind
     ? buildTaskAssetUrl(taskId, imageResultKind, { download: true })
     : "";
   const animationAssetUrl = result?.animationVideoKey
-    ? buildTaskAssetUrl(taskId, "animation")
+    ? buildTaskAssetUrl(taskId, "animation") + assetVersion
     : "";
   const animationDownloadUrl = result?.animationVideoKey
     ? buildTaskAssetUrl(taskId, "animation", { download: true })
@@ -395,14 +405,27 @@ export default function ResultPage() {
                 <h2 className="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">
                   {tResult("animation")}
                 </h2>
-                <VideoPlayer src={animationAssetUrl} showWatermark={isFreeTier} />
+                <VideoPlayer src={animationAssetUrl} showWatermark={isFreeTier && !previewPolicy} />
               </section>
             )}
 
-            {canUpgrade && <ResultUpgrade taskId={taskId} quota={quota} workflow={taskContextRef.current.workflow} existingUpgradeTaskId={existingUpgradeTaskId} />}
+            {previewPolicy && <ResultDownload taskId={taskId} quota={quota} unlocked={downloadUnlocked} workflow={taskContextRef.current.workflow} onUnlocked={async () => {
+              const response = await fetch(`/api/tasks/${encodeURIComponent(taskId)}/status`, { cache: "no-store" });
+              if (!response.ok) throw new Error("status unavailable");
+              const data = await response.json();
+              if (data.downloadUnlocked !== true) throw new Error("unlock not confirmed");
+              handleTaskStatus(data);
+              fetch("/api/quota").then(res => res.ok ? res.json() : null).then(data => { if (data?.tier) setQuota(data); }).catch(() => undefined);
+            }} />}
+            {canUpgrade && (!previewPolicy || downloadUnlocked) && (previewPolicy ? (
+              <details className="rounded-2xl border border-white/10 p-4 sm:p-5">
+                <summary className="cursor-pointer py-2 text-sm font-medium text-[var(--color-text-secondary)]">{downloadCopy.optional}</summary>
+                <div className="mt-4"><ResultUpgrade taskId={taskId} quota={quota} workflow={taskContextRef.current.workflow} existingUpgradeTaskId={existingUpgradeTaskId} /></div>
+              </details>
+            ) : <ResultUpgrade taskId={taskId} quota={quota} workflow={taskContextRef.current.workflow} existingUpgradeTaskId={existingUpgradeTaskId} />)}
 
             {/* Download buttons */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+            {(!previewPolicy || downloadUnlocked) && <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
               {imageResultKind && (
                 <a
                   href={imageDownloadUrl}
@@ -447,7 +470,7 @@ export default function ResultPage() {
                   {tResult("downloadVideo")}
                 </a>
               )}
-            </div>
+            </div>}
           </div>
         )}
       </main>
