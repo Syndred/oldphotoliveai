@@ -88,3 +88,12 @@ docs/REPLICATE_SECURITY.md     # Replicate 安全配置指南
 - 新任务固定生成品质，买包不会把旧低清预览误标为高清。匿名旧结果保留 cookie 归属校验。
 - 已增加升级/登录续购/可信 purchase/付费结果浏览事件和服务端付款、交付汇总；详情和最终上线证据见 `docs/conversion-progress.md`。
 - 最终全量回归 85 套 / 762 条通过，typecheck、production build 通过；手机/桌面生产构建模拟流程验收完成。代码 `8794e80` 已在 Vercel Production READY，正式域名游客购买登录跳转、API 权限和管理员统计已核验；未进行真实扣款，不等同于已证明转化率提升。
+
+
+## 2026-10-07 单结果下载实验（代码验收完成，待授权上线）
+
+- 分支 `codex/single-result-unlock`：新免费任务改为带水印预览；USD 1.99 / 1 积分解锁本次同一成品，不重新生成。旧任务与既有付费权益保留。
+- 无水印母版使用独立私有 R2 桶，图片/视频预览真实写入水印。新增单张 Checkout、永久下载授权、恢复/删除竞态保护及转化统计。
+- 最终 92 套 / 839 条测试、typecheck、生产构建通过；最终构建手机/桌面模拟流程已验收。没有真实扣款、没有生产开启。
+- 已创建 `oldphotoliveai-private-results`，但原 S3 密钥访问新桶 403。等待用户登录 Cloudflare，并确认创建仅限新桶的专用读写密钥及保存到 Vercel。不得直接开启实验或发布不匹配的价格文案。
+- 完整启用清单、回退边界与交接见 `docs/single-result-experiment.md`；不确定支付恢复见 `docs/SINGLE_RESULT_CHECKOUT_RECOVERY.md`。
