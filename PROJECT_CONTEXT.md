@@ -121,3 +121,4 @@ docs/REPLICATE_SECURITY.md     # Replicate 安全配置指南
 - 西语、日语、`/en` 旧路径单跳 301 到最终英文页并保留订单参数；中文 SEO 仅保留首页、价格、上色三页。中文 result/history/login/admin 继续可用并 noindex，法律链接直达英文条款。
 - 主页面、FAQ、metadata、JSON-LD 统一 USD 1.99 单张预付、完整无水印结果、无需订阅；最高 2K，不承诺原始分辨率或固定分钟交付。
 - 迁移细节、关键词归属、文件对应附件清单、最终测试和线上证据见 `docs/seo-progress.md` 最新章节。此处不把 SEO 发布视为 Google 已重新收录或转化率已提高。
+- 最终代码 `c0f8bd7` 已上线，Vercel `dpl_CUdFXSLts7EiMWfPsVikd1DLm33E` READY；103 套 / 1017 项回归、构建、类型检查、lint 与正式 HTTP/HEAD 验收通过。正式 sitemap 为 15 个唯一可索引 200 地址，桌面/手机首屏与英中切换已验收；历史权益、登录及付款结果路径仍按兼容规则保留。

@@ -62,9 +62,12 @@
 
 - 最终全量回归：103 套 / 1017 项通过。typecheck、lint、production build 通过；仅既有 Footer img 警告。
 - 本地 production build 已验证桌面 1440×960、手机 390×844：对比滑块键盘从 50→52、FAQ 展开、语言仅两项、中文切换与站内目标正常；费用表格宽 640px，页面宽仍为 390px。
-- 最终本地真实 HTTP 脚本通过：34 组公开迁移及各自尾斜杠版本均单跳 301，目标 200，查询参数保留；API/静态资源尾斜杠仍为 308；10 页 TDK/H1、canonical、hreflang/schema 通过，sitemap 15 个唯一、可索引、自指 canonical、200 URL。
+- 最终本地真实 HTTP 脚本通过：34 组代表性公开迁移（含尾斜杠版本）均单跳 301，目标 200，查询参数保留；API/静态资源尾斜杠仍为 308；10 页 TDK/H1、canonical、hreflang/schema 通过，sitemap 15 个唯一、可索引、自指 canonical、200 URL。
 - A4 审查时点共 426 条命中，逐条分类：测试/fixtures 224、历史文档 41、后端等级/兼容 79、内部 admin 25、watermark-free 无水印 26、pricing.free 键 4（值均按张付费）、error-free 免责声明 1、旧 URL/类型 9、SEO 脚本 5、FreeBSD 依赖 12。无客户可见免费生成承诺；原始扫描为本地忽略文件 `.vercel/seo-free-audit.txt`，不把后端旧等级改名以免损坏历史权益。
-- 生产发布与最后 HTTP/sitemap/当前 bundle 回读：待本节下方填写最终证据。未进行真实扣款或 AI 调用；本轮 SEO 验收不替代付款后交付验收。
+- 生产代码 `c0f8bd7497d77f5ba1898ce9a160be7e1339d4e0` 已推送 master；Vercel `dpl_CUdFXSLts7EiMWfPsVikd1DLm33E` 为 READY，已绑定 `oldphotoliveai.com` / `www.oldphotoliveai.com`。正式站完整 HTTP 脚本通过；另以 `curl -I` 验证附件列出的五条旧路径，均返回 301 并保留查询参数。
+- 正式 Chrome 验收通过：1440×960 首页两行品牌 H1、上色左右布局；390×844 上色页无横向溢出，当前旧积分账户上传按钮从 580px 开始（未登录本地为 604px）；费用表格在 640px 容器内滚动，页面宽仍 390px；价格→指南真实点击成功，语言仅英中两项，英文指南切中文回 `/zh`。
+- 当前生产 DOM 与源码契约一致，部署 git SHA 已回读；公共共享 chunk 351 与本地构建逐字节相同。生产与本地公开分析配置不同，未声称所有 chunk 哈希相同。测试、HTTP、HEAD、部署、资源与截图证据保存在本地忽略的 `.vercel/seo-*`。
+- 未进行真实扣款或 AI 调用；本轮 SEO 验收不替代付款后交付验收。没有提交新的 GSC 索引请求或证明 Google 已抓取新版本；发布和可抓取检查不代表排名或付费转化率已提升。
 
 
 ## 2026-09-21：索引清理与核心权重线收口
