@@ -79,7 +79,7 @@ export default function HomePageView({
           <div className="mt-5 flex flex-wrap justify-center gap-3">
             <Link
               href="/colorize-old-photos"
-              className="inline-flex min-h-[44px] items-center rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent)]/90"
+              className="inline-flex min-h-[44px] items-center rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-[#17130a] transition-colors hover:bg-[var(--color-accent)]/90"
             >
               {homeSeo.colorizeCta}
             </Link>
@@ -133,7 +133,7 @@ export default function HomePageView({
             <div className="mt-7 flex flex-wrap gap-3">
               <Link
                 href="/colorize-old-photos"
-                className="inline-flex min-h-[44px] items-center rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent)]/90"
+                className="inline-flex min-h-[44px] items-center rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-[#17130a] transition-colors hover:bg-[var(--color-accent)]/90"
               >
                 {homeSeo.colorizeCta}
               </Link>
