@@ -128,6 +128,16 @@ async function ensureAuthenticated(
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Preserve Next's previous 308 behavior for API/static slash URLs. Public
+  // page URLs instead combine slash + locale normalization in the 301 below.
+  const isNonPagePath = pathname === "/api/" || pathname.startsWith("/api/") || pathname.startsWith("/_next/") || /\.[^/]+\/$/.test(pathname);
+  if (isNonPagePath && pathname.endsWith("/")) {
+    const url = new URL(request.url);
+    url.pathname = pathname.slice(0, -1);
+    return NextResponse.redirect(url, 308);
+  }
+  if (pathname.startsWith("/_next/")) return NextResponse.next();
+
   if (!pathname.startsWith("/api/")) {
     // Normalize public aliases before next-intl rewrites to internal /en routes.
     const locale = getPathLocale(pathname) ?? defaultLocale;
@@ -146,8 +156,8 @@ export async function middleware(request: NextRequest) {
       }
     }
     const canonicalPath = localizePathname(canonicalLocale, destinationPath);
-    if (pathname.replace(/\/$/, "") !== canonicalPath.replace(/\/$/, "")) {
-      const url = request.nextUrl.clone();
+    if (pathname !== canonicalPath) {
+      const url = new URL(request.url);
       url.pathname = canonicalPath;
       return NextResponse.redirect(url, 301);
     }

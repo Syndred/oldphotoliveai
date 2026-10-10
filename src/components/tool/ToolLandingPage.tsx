@@ -138,19 +138,21 @@ export default function ToolLandingPage({
                 </li>
               </ol>
             </nav>
-            <div className="grid items-stretch gap-8 lg:grid-cols-[0.9fr,1.1fr]">
-              <div className="flex h-full flex-col">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
-                  {tool.eyebrow}
-                </p>
-                <h1 className="mt-4 text-3xl font-bold leading-tight text-[var(--color-text-primary)] sm:text-5xl">
-                  {tool.heroTitle}
-                </h1>
-                <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
-                  {tool.heroDescription}
-                </p>
+            <div className={`grid items-stretch gap-8 lg:grid-cols-[0.9fr,1.1fr] ${isColorizer ? "lg:grid-rows-[auto,1fr] lg:gap-y-6" : ""}`}>
+              <div className={isColorizer ? "contents" : "flex h-full flex-col"}>
+                <div className={isColorizer ? "lg:col-start-1 lg:row-start-1" : undefined}>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
+                    {tool.eyebrow}
+                  </p>
+                  <h1 className="mt-4 text-3xl font-bold leading-tight text-[var(--color-text-primary)] sm:text-5xl">
+                    {tool.heroTitle}
+                  </h1>
+                  <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                    {tool.heroDescription}
+                  </p>
+                </div>
 
-                <div className="mt-6 grid gap-3">
+                <div className={isColorizer ? "order-3 grid self-start gap-3 lg:col-start-1 lg:row-start-2" : "mt-6 grid gap-3"}>
                   {tool.heroHighlights.map((highlight) => (
                     <div
                       key={highlight}
@@ -166,7 +168,7 @@ export default function ToolLandingPage({
                 analyticsSource={tool.slug}
                 variant="embedded"
                 showHeader={false}
-                className="h-full"
+                className={isColorizer ? "order-2 h-full lg:col-start-2 lg:row-start-1 lg:row-span-2" : "h-full"}
                 workflow={TOOL_WORKFLOWS[tool.slug]}
               />
             </div>

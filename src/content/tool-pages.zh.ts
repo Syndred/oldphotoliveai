@@ -95,7 +95,7 @@ export const TOOL_PAGE_TRANSLATIONS_ZH: Record<
   "cardDescription": "为黑白家庭照片添加 AI 推测的色彩，并与原图对照。",
   "eyebrow": "AI 上色",
   "heroTitle": "用 AI 给黑白老照片上色",
-  "heroDescription": "上传清晰的黑白扫描件，无需逐块手工涂色，就能为人物、衣物和背景添加自然的色彩。AI 根据图像线索推测颜色，无法知道拍摄时的真实色调。请保留原图，并对照上色后的细节，再决定是否用于家庭相册或历史项目。",
+  "heroDescription": "用 AI 为黑白老照片添加自然的彩色效果。上传清晰扫描件，先修复再上色，完成后下载无水印图片。",
   "heroHighlights": [
     "先修复图像，再添加推测的色彩",
     "对照原图检查人物、衣物和细节",

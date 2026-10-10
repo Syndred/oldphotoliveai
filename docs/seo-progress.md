@@ -28,6 +28,7 @@
 ### 迁移与应用兼容
 
 - /en、/es、/ja 前缀统一单跳 301 到英文最终地址；先解析 colorize / restore / animate-old-photos 别名，保留完整查询参数。
+- 旧链接带尾斜杠时也直接 301 到最终地址，避免 Next 默认去斜杠形成两跳；API 与静态文件仍保持原有 308 规范化，正常静态资源不进入 middleware。
 - /zh 公开 SEO 只留三页；其余公开中文旧页 301 到 /zh。
 - 功能性例外：中文 result/history/login/admin 保留原路径并 noindex；中文旧法律 URL 直接 301 到英文 /terms、/privacy，站内链接直达英文正文。
 - 旧西语/日语支付结果和登录路径迁到英文同一路径，订单参数保留。checkout returnTo 使用最终工具 URL，避免付款后再跳转到已撤语言页面。
@@ -43,6 +44,7 @@
 - 对比图补齐前后状态 alt，并给共享 BeforeAfterCompare 加非空回退。继续使用真实 01-before.jpg / 01-colorized.jpg，不虚构另两组照片，也不重命名共享 R2 资源；Family / Garden / Wedding 是明确的场景文字示例。
 - 新费用指南复用现有博客布局、FAQ、导航与 Link；Article / FAQPage / BreadcrumbList 与正文对应。第三方人工价格仅写检查后报价，源码保留待核验数字的 TODO。
 - pricing 链接到费用指南，指南回链到购买、修复、上色；手机表格在容器内横向滚动，按钮间隔保留 12px、最小点击高度 44px；本轮页面的金色主按钮用深色文字，修正低对比度。
+- 英中上色首屏简述缩为两句；手机顺序为标题/简述、上传区、三条卖点，桌面继续左右两列。390×844 下上传按钮从 604px 处开始；首页标题在 1440px 桌面为两行，避免末行孤立 AI。
 
 ### 文件 → 改动 → 附件条目
 
@@ -50,17 +52,17 @@
 | --- | --- | --- |
 | messages/*.json、content/page-seo.ts、home-seo.ts、home-animation.ts、animation-landing-pages.ts、blog.ts、app/[locale]/page.tsx、app/page.tsx | 去免费、品牌总览、独立页文案、绝对 TDK | A、B、E1 |
 | app/[locale]/pricing/page.tsx、app/pricing/layout.tsx、lib/single-run-copy.ts、lib/download-copy.ts、lib/anonymous.ts、components/NoLoginToolPage.tsx、app/[locale]/no-login/page.tsx | 价格、历史结果、去废弃试用文案、schema 1.99 | A、B3 |
-| config/redirects.cjs、middleware.ts、i18n/routing.ts、request.ts、navigation.ts、lib/checkout-context.ts | 单跳迁移、规范链接、URL 决定语言、保留订单上下文 | C、D、F |
+| next.config.mjs、config/redirects.cjs、middleware.ts、i18n/routing.ts、request.ts、navigation.ts、lib/checkout-context.ts | 单跳迁移、尾斜杠规范化、URL 决定语言、保留订单上下文 | C、D、F |
 | app/sitemap.ts、lib/seo.ts、Navbar.tsx、LanguageSwitcher.tsx、FooterSection.tsx、PricingCards.tsx | sitemap/hreflang、双语言导航、法律直链 | C、D |
-| content/tool-pages.ts、tool-pages.zh.ts、components/tool/ToolLandingPage.tsx、BeforeAfterCompare.tsx | 上色归属、独立 FAQ、真实参数与 alt | B2、E1–E3 |
+| content/tool-pages.ts、tool-pages.zh.ts、components/tool/ToolLandingPage.tsx、BeforeAfterCompare.tsx、HeroSection.tsx、HomePageView.tsx | 上色归属、独立 FAQ、真实参数与 alt、首屏布局与对比度 | B2、E1–E3 |
 | content/photo-restoration-cost.ts、components/PhotoRestorationCostPage.tsx、app/[locale]/photo-restoration-cost/page.tsx、app/pricing/page.tsx | 费用指南、真实对比与内链 | E4 |
 | __tests__/unit/*、scripts/check-colorizer-seo.mjs | 路由/支付上下文/SEO/UI 契约与真实 HTTP 验收 | G |
 
 ### 验收状态
 
-- 最终全量回归：103 套 / 983 项通过。typecheck、lint、production build 通过；仅既有 Footer img 警告。
+- 最终全量回归：103 套 / 1017 项通过。typecheck、lint、production build 通过；仅既有 Footer img 警告。
 - 本地 production build 已验证桌面 1440×960、手机 390×844：对比滑块键盘从 50→52、FAQ 展开、语言仅两项、中文切换与站内目标正常；费用表格宽 640px，页面宽仍为 390px。
-- 最终本地真实 HTTP 脚本通过：全部代表性迁移为单跳 301，目标 200，查询参数保留；10 页 TDK/H1、canonical、hreflang/schema 通过，sitemap 15 个唯一、可索引、自指 canonical、200 URL。
+- 最终本地真实 HTTP 脚本通过：34 组公开迁移及各自尾斜杠版本均单跳 301，目标 200，查询参数保留；API/静态资源尾斜杠仍为 308；10 页 TDK/H1、canonical、hreflang/schema 通过，sitemap 15 个唯一、可索引、自指 canonical、200 URL。
 - A4 审查时点共 426 条命中，逐条分类：测试/fixtures 224、历史文档 41、后端等级/兼容 79、内部 admin 25、watermark-free 无水印 26、pricing.free 键 4（值均按张付费）、error-free 免责声明 1、旧 URL/类型 9、SEO 脚本 5、FreeBSD 依赖 12。无客户可见免费生成承诺；原始扫描为本地忽略文件 `.vercel/seo-free-audit.txt`，不把后端旧等级改名以免损坏历史权益。
 - 生产发布与最后 HTTP/sitemap/当前 bundle 回读：待本节下方填写最终证据。未进行真实扣款或 AI 调用；本轮 SEO 验收不替代付款后交付验收。
 

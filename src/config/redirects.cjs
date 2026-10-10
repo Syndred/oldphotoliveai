@@ -7,7 +7,7 @@ const ALIASES = {
   "animate-old-photos": "animate",
 };
 
-const LEGACY_REDIRECTS = [
+const PUBLIC_REDIRECTS = [
   ...["en", "es", "ja"].flatMap((locale) => [
     ...Object.entries(ALIASES).map(([source, destination]) => ({
       source: `/${locale}/${source}`,
@@ -38,9 +38,26 @@ const LEGACY_REDIRECTS = [
   { source: "/zh/privacy", destination: "/privacy", statusCode: 301 },
   { source: "/zh/terms", destination: "/terms", statusCode: 301 },
   {
-    source: "/zh/:path((?!pricing$|colorize-old-photos$|result(?:/|$)|history(?:/|$)|login(?:/|$)|admin(?:/|$)).*)",
+    source: "/zh/:path((?!pricing/?$|colorize-old-photos/?$|result(?:/|$)|history(?:/|$)|login(?:/|$)|admin(?:/|$)).*)",
     destination: "/zh",
     statusCode: 301,
+  },
+];
+
+// Next uses strict source matching: explicitly cover slash-suffixed legacy URLs
+// before the generic locale migration so aliases still reach their final URL.
+const LEGACY_REDIRECTS = [
+  ...PUBLIC_REDIRECTS.flatMap((rule) => [
+    rule,
+    { ...rule, source: `${rule.source}/` },
+  ]),
+  // Keep static-file slash normalization in Next's configuration layer. Next's
+  // middleware invokes its matcher again after stripping the slash, so a
+  // slash-only middleware matcher cannot handle normally excluded files.
+  {
+    source: "/:file((?:[^/]+/)*[^/]+\\.[^/]+)/",
+    destination: "/:file",
+    statusCode: 308,
   },
 ];
 

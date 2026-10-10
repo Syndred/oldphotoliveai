@@ -266,7 +266,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
   "cardDescription": "Add AI-estimated color to black-and-white family photographs and compare the result with your original.",
   "eyebrow": "AI colorization",
   "heroTitle": "Photo Colorization with AI",
-  "heroDescription": "Turn black-and-white prints into natural-looking color without painting each face, garment, and background by hand. Start with a clear scan that preserves the whole photograph. The AI uses visual patterns to suggest plausible colors; it cannot know the exact shades present when the photograph was taken. Keep your original and compare the colorized copy before adding it to a family album or historical project.",
+  "heroDescription": "Turn black-and-white photos into natural-looking color with AI. Upload a clear scan to restore, colorize, and download the finished photo without a watermark.",
   "heroHighlights": [
     "Restore the image before adding estimated color",
     "Compare faces, clothing, and fine details with the original",

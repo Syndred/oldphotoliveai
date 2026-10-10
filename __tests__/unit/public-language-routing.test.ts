@@ -8,7 +8,7 @@ import { languageSwitchPathname, publicNavigationHref, publicPathname, routing }
 // Exercise Next's real custom-route parser rather than mocking route resolution.
 function redirectDestination(pathname: string, headers: Record<string, string> = {}) {
   for (const rule of LEGACY_REDIRECTS) {
-    const params = getPathMatch(rule.source)(pathname);
+    const params = getPathMatch(rule.source, { strict: true })(pathname);
     if (params && matchHas({ headers } as IncomingMessage, {}, undefined, rule.missing)) {
       return prepareDestination({ destination: rule.destination, params, query: { orderId: "order-123", session_id: "cs-return" }, appendParamsToQuery: false });
     }
@@ -19,6 +19,13 @@ function redirectDestination(pathname: string, headers: Record<string, string> =
 describe("public language migration routes", () => {
   it.each([
     ["/en/colorize", "/colorize-old-photos"],
+    ["/en/colorize/", "/colorize-old-photos"],
+    ["/en/restore-old-photos/", "/restore-old-photos"],
+    ["/es/", "/"],
+    ["/ja/", "/"],
+    ["/es/colorize-old-photos/", "/colorize-old-photos"],
+    ["/ja/pricing/", "/pricing"],
+    ["/zh/animate-old-photos/", "/zh"],
     ["/en/restore-old-photos", "/restore-old-photos"],
     ["/en/privacy", "/privacy"],
     ["/es/colorize", "/colorize-old-photos"],
@@ -41,7 +48,7 @@ describe("public language migration routes", () => {
     expect(redirectDestination(to)).toBeUndefined();
   });
 
-  it.each(["/zh", "/zh/pricing", "/zh/colorize-old-photos", "/zh/result/task-123", "/zh/history", "/zh/login", "/zh/admin"])("preserves %s", pathname => {
+  it.each(["/zh", "/zh/pricing", "/zh/pricing/", "/zh/colorize-old-photos", "/zh/colorize-old-photos/", "/zh/result/task-123", "/zh/history", "/zh/login", "/zh/admin"])("preserves %s", pathname => {
     expect(redirectDestination(pathname)).toBeUndefined();
   });
 
@@ -50,6 +57,14 @@ describe("public language migration routes", () => {
       expect(redirectDestination(pathname, { "x-next-intl-locale": "en" })).toBeUndefined();
       expect(redirectDestination(pathname)).toBeDefined();
     }
+  });
+
+  it.each(["/brand-icon.png/", "/favicon.ico/", "/sitemap.xml/", "/examples/photo.jpg/"])("normalizes static %s in the configuration layer", path => {
+    const result = redirectDestination(path);
+    expect(result?.parsedDestination.pathname).toBe(path.slice(0, -1));
+    expect(result?.parsedDestination.query).toEqual({ orderId: "order-123", session_id: "cs-return" });
+    expect(LEGACY_REDIRECTS.find(rule => getPathMatch(rule.source, { strict: true })(path))?.statusCode).toBe(308);
+    expect(redirectDestination(path.slice(0, -1))).toBeUndefined();
   });
 
   it("does not advertise redirected translations in hreflang or middleware headers", () => {

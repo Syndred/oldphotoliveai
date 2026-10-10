@@ -7,6 +7,9 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Public migrations normalize locale + trailing slash together in one hop.
+  // API middleware and file redirects retain their previous 308 behavior.
+  skipTrailingSlashRedirect: true,
   serverExternalPackages: ['ffmpeg-static'],
   outputFileTracingIncludes: {
     '/api/worker/pipeline': ['./node_modules/ffmpeg-static/ffmpeg'],

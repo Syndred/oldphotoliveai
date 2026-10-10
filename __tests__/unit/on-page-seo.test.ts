@@ -25,7 +25,8 @@ describe("five-page on-page SEO contracts", () => {
       "Photo Colorization with AI"
     );
     expect(colorizer.pricingBody).toContain("pay before processing");
-    expect(colorizer.heroDescription).toContain("The AI uses visual patterns to suggest plausible colors");
+    expect(colorizer.heroDescription).toContain("Upload a clear scan");
+    expect(colorizer.introBody).toContain("The result is an interpretation, not evidence of the original historical colors");
     expect(colorizer.heroDescription).not.toMatch(/free quota|free preview|unlock the same result/i);
     expect(colorizer.benefitsTitle).toBe("How to Colorize Black and White Photos");
     expect(colorizer.showcaseTitle).toBe("Before & After Examples");

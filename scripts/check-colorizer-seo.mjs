@@ -48,6 +48,17 @@ function schemaTypes(html) {
 
 const redirects = [
   ["/en", "/"],
+  ["/es/", "/"],
+  ["/ja/", "/"],
+  ["/en/colorize/", "/colorize-old-photos"],
+  ["/en/restore-old-photos/", "/restore-old-photos"],
+  ["/es/colorize-old-photos/", "/colorize-old-photos"],
+  ["/ja/pricing/", "/pricing"],
+  ["/zh/animate-old-photos/", "/zh"],
+  ["/pricing/", "/pricing"],
+  ["/zh/pricing/", "/zh/pricing"],
+  ["/zh/", "/zh"],
+  ["/zh/colorize-old-photos/", "/zh/colorize-old-photos"],
   ["/colorize", "/colorize-old-photos"],
   ["/en/colorize", "/colorize-old-photos"],
   ["/zh/colorize", "/zh/colorize-old-photos"],
@@ -85,6 +96,15 @@ for (const [from, to] of redirects) {
   const destination = await fetch(`${origin}${to}`, { redirect: "manual", headers });
   assert.equal(destination.status, 200, `${from} destination must be a direct 200`);
   console.log(`301 ${from} -> ${to} (query preserved; destination 200)`);
+}
+
+// API and static-file slash normalization retains the framework's 308 contract.
+for (const path of ["/api/quota/", "/brand-icon.png/", "/favicon.ico/", "/sitemap.xml/"]) {
+  const response = await fetch(`${origin}${path}?orderId=slash-proof`, { redirect: "manual", headers });
+  assert.equal(response.status, 308, `${path} must retain non-page slash normalization`);
+  const location = new URL(response.headers.get("location"), origin);
+  assert.equal(location.pathname, path.slice(0, -1));
+  assert.equal(location.search, "?orderId=slash-proof");
 }
 
 // Client-supplied next-intl headers must not bypass public canonical redirects.
