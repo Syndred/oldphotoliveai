@@ -114,3 +114,10 @@ docs/REPLICATE_SECURITY.md     # Replicate 安全配置指南
 - 生产预付款边界已检查：合成 free 用户 quota `remaining=0`，真实 R2 上传成功，直接生成返回 `402 PAYMENT_REQUIRED`；草稿重放保持同一 `orderId`，两次 Checkout 返回同一 Stripe Session URL。会话为 USD 199 cents、`unpaid`、`payment_intent=null`，付款前 Redis 不存在生成任务且用户仍为 free。
 - Chrome 已打开正式 Live mode Stripe，美元价格与产品确认是 `Process One Photo / US$1.99`，银行卡、Apple Pay、Link 表单正常。未填写卡号或点击支付，无真实扣款或 AI 调用；该验收只证明结账创建与付款前边界，不代表完整支付交付链路通过。验收会话已过期，合成用户、订单、quota、receipt、索引及两张 R2 图片已清理；正式页面手机无横向溢出、错误日志为空。
 - 真实付款后的 webhook、生成成品、下载及生产退款须独立证明；Checkout 创建本身不是成交。
+
+## 2026-10-10 SEO 与单张预付口径收敛
+
+- 当前 SEO 决策替代早期免费与四语种方案：首页归品牌/三功能总览，photo colorization 归 `/colorize-old-photos`；新增 `/photo-restoration-cost` 费用指南。
+- 西语、日语、`/en` 旧路径单跳 301 到最终英文页并保留订单参数；中文 SEO 仅保留首页、价格、上色三页。中文 result/history/login/admin 继续可用并 noindex，法律链接直达英文条款。
+- 主页面、FAQ、metadata、JSON-LD 统一 USD 1.99 单张预付、完整无水印结果、无需订阅；最高 2K，不承诺原始分辨率或固定分钟交付。
+- 迁移细节、关键词归属、文件对应附件清单、最终测试和线上证据见 `docs/seo-progress.md` 最新章节。此处不把 SEO 发布视为 Google 已重新收录或转化率已提高。

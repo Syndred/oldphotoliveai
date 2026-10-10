@@ -1,5 +1,70 @@
 # SEO 进度交接
 
+## 2026-10-10：单张预付口径与 SEO 收敛
+
+本节替代下方历史记录中的免费试用文案、四语种 SEO 和首页上色主词归属。附件的 GSC / KD / 引用域数字是历史输入，本轮没有重新采集，不作为当前流量或排名证据。
+
+### 当前页面职责与关键词归属
+
+| 最终 URL | 当前职责 / 主意图 |
+| --- | --- |
+| / | OldPhotoLive AI 品牌与修复、上色、动态化总览 |
+| /colorize-old-photos | photo colorization 主落地页；black-and-white / old-photo / AI colorizer 变体 |
+| /restore-old-photos | restore old photos / photo restoration 工具 |
+| /animate | animate old photos 工具 |
+| /bring-to-life | bring old photos to life 教程，导向 /animate |
+| /photo-restoration-cost | photo restoration cost；AI 单张费用与人工报价差异 |
+| /pricing | 购买与交付条件；不复制工具页内容 |
+| /blog | 教程索引 |
+| /blog/how-to-colorize-black-and-white-photos-for-free | 保留旧 slug，正文讲上色流程，不承接免费产品意图 |
+| /about、/privacy、/terms | 品牌与法律信任页 |
+| /zh、/zh/pricing、/zh/colorize-old-photos | 对应中文品牌、购买、黑白照片上色三页 |
+
+- 英文首页 title：OldPhotoLive AI – AI Photo Restoration, Colorization & Animation；H1：Restore, Colorize & Animate Old Photos with AI。
+- 中文首页 title：老照片修复与上色 - OldPhotoLive AI；独立绝对标题避免追加旧动画标题。
+- 上色页价格放在描述后半段，输出明确最高 2K，避免承诺原始全分辨率。价格页突出 USD 1.99 / 单张、完整无水印结果、无需订阅。
+- 首页原流程保持：英文上传上色，中文上传完整修复/上色/动画；上传区明确显示本次处理功能，三项工具入口可选择对应流程。
+
+### 迁移与应用兼容
+
+- /en、/es、/ja 前缀统一单跳 301 到英文最终地址；先解析 colorize / restore / animate-old-photos 别名，保留完整查询参数。
+- /zh 公开 SEO 只留三页；其余公开中文旧页 301 到 /zh。
+- 功能性例外：中文 result/history/login/admin 保留原路径并 noindex；中文旧法律 URL 直接 301 到英文 /terms、/privacy，站内链接直达英文正文。
+- 旧西语/日语支付结果和登录路径迁到英文同一路径，订单参数保留。checkout returnTo 使用最终工具 URL，避免付款后再跳转到已撤语言页面。
+- 语言切换仅 English / 简体中文；无中文版本的工具链接直达英文页，切换中文回 /zh。真实翻译页才加入 en / zh-Hans / x-default 对应关系。
+- next-intl 内部 /en rewrite 使用转发标头排除配置层 301，已修复 Node production build 的重定向循环；外部伪造该标头仍由 middleware 规范为 301。
+- 不按 User-Agent 改内容。原有 repair-damaged-old-photos / no-login / animate-free / to-video 的 noindex,follow 保留，本轮没有新增工具 noindex。
+
+### 文案、内容与结构化数据
+
+- 去除客户可见免费生成/额度/预览承诺；技术失败保障统一 retry at no extra cost。未使用的免费价格键删除；历史会员管理键保留给旧权益。
+- 上色 FAQ 独立回答家族照片、档案、家谱、历史颜色、打印、损伤与失败；付费流程集中在上传说明与价格区。
+- 参数来源：MAX_FILE_SIZE（10 MB）、RESOLUTION_CONFIG.payAsYouGo（2048×2048、保持比例、不放大小图），处理通常几分钟但不承诺 SLA；确证技术失败一次免额外费用重试，确认无法交付退款，违规/未知状态按真实规则处理。
+- 对比图补齐前后状态 alt，并给共享 BeforeAfterCompare 加非空回退。继续使用真实 01-before.jpg / 01-colorized.jpg，不虚构另两组照片，也不重命名共享 R2 资源；Family / Garden / Wedding 是明确的场景文字示例。
+- 新费用指南复用现有博客布局、FAQ、导航与 Link；Article / FAQPage / BreadcrumbList 与正文对应。第三方人工价格仅写检查后报价，源码保留待核验数字的 TODO。
+- pricing 链接到费用指南，指南回链到购买、修复、上色；手机表格在容器内横向滚动，按钮间隔保留 12px、最小点击高度 44px；本轮页面的金色主按钮用深色文字，修正低对比度。
+
+### 文件 → 改动 → 附件条目
+
+| 文件 / 模块 | 改动 | 条目 |
+| --- | --- | --- |
+| messages/*.json、content/page-seo.ts、home-seo.ts、home-animation.ts、animation-landing-pages.ts、blog.ts、app/[locale]/page.tsx、app/page.tsx | 去免费、品牌总览、独立页文案、绝对 TDK | A、B、E1 |
+| app/[locale]/pricing/page.tsx、app/pricing/layout.tsx、lib/single-run-copy.ts、lib/download-copy.ts、lib/anonymous.ts、components/NoLoginToolPage.tsx、app/[locale]/no-login/page.tsx | 价格、历史结果、去废弃试用文案、schema 1.99 | A、B3 |
+| config/redirects.cjs、middleware.ts、i18n/routing.ts、request.ts、navigation.ts、lib/checkout-context.ts | 单跳迁移、规范链接、URL 决定语言、保留订单上下文 | C、D、F |
+| app/sitemap.ts、lib/seo.ts、Navbar.tsx、LanguageSwitcher.tsx、FooterSection.tsx、PricingCards.tsx | sitemap/hreflang、双语言导航、法律直链 | C、D |
+| content/tool-pages.ts、tool-pages.zh.ts、components/tool/ToolLandingPage.tsx、BeforeAfterCompare.tsx | 上色归属、独立 FAQ、真实参数与 alt | B2、E1–E3 |
+| content/photo-restoration-cost.ts、components/PhotoRestorationCostPage.tsx、app/[locale]/photo-restoration-cost/page.tsx、app/pricing/page.tsx | 费用指南、真实对比与内链 | E4 |
+| __tests__/unit/*、scripts/check-colorizer-seo.mjs | 路由/支付上下文/SEO/UI 契约与真实 HTTP 验收 | G |
+
+### 验收状态
+
+- 最终全量回归：103 套 / 983 项通过。typecheck、lint、production build 通过；仅既有 Footer img 警告。
+- 本地 production build 已验证桌面 1440×960、手机 390×844：对比滑块键盘从 50→52、FAQ 展开、语言仅两项、中文切换与站内目标正常；费用表格宽 640px，页面宽仍为 390px。
+- 最终本地真实 HTTP 脚本通过：全部代表性迁移为单跳 301，目标 200，查询参数保留；10 页 TDK/H1、canonical、hreflang/schema 通过，sitemap 15 个唯一、可索引、自指 canonical、200 URL。
+- A4 审查时点共 426 条命中，逐条分类：测试/fixtures 224、历史文档 41、后端等级/兼容 79、内部 admin 25、watermark-free 无水印 26、pricing.free 键 4（值均按张付费）、error-free 免责声明 1、旧 URL/类型 9、SEO 脚本 5、FreeBSD 依赖 12。无客户可见免费生成承诺；原始扫描为本地忽略文件 `.vercel/seo-free-audit.txt`，不把后端旧等级改名以免损坏历史权益。
+- 生产发布与最后 HTTP/sitemap/当前 bundle 回读：待本节下方填写最终证据。未进行真实扣款或 AI 调用；本轮 SEO 验收不替代付款后交付验收。
+
+
 ## 2026-09-21：索引清理与核心权重线收口
 
 ### 执行结果

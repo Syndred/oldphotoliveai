@@ -1,5 +1,7 @@
 # Colorizer SEO migration — 2026-09-11
 
+> 历史记录：以下免费试用、四语种 SEO、首页上色归属已被 2026-10-10 的单张预付与 SEO 收敛方案替代。当前规则和上线验收请查看 [中文 SEO 进度交接](seo-progress.md)。
+
 ## Implemented
 
 - Middleware returns HTTP 301 for `/en` → `/`, and `/colorize`, `/en/colorize`, `/en/colorize-old-photos` → `/colorize-old-photos`. Query strings are preserved.
