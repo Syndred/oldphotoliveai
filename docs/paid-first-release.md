@@ -20,10 +20,17 @@
 
 ## 验收
 
-- production build、typecheck、lint通过；仅保留 Footer 既有 img 警告。
+- 最终自动化回归 99 个套件 / 930 项全部通过；typecheck、lint、production build 通过，仅保留 Footer 既有 img 警告。
 - 最终构建浏览器验收：1440×960桌面、390×844手机，上传→订单、本地模拟付款回执→结果下载、退款 pending→succeeded重新查询均通过；手机无横向溢出，按钮与卡片间距已自查。
 - 上述付款与退款 UI 使用明确隔离的本地 API fixture，没有调用真实 Stripe 或模型，不能用它宣称生产收款/退款成功。
-- 生产发布与新 Stripe 会话创建验收待发布后记录。未实际扣款前，不宣称新单成交或完整付费交付链路验收。
+- 已发布代码 `a4cb96ea5de60c1472e0cecea8612ef99420d171`，Vercel Production 部署 `dpl_EurP17d6FEk3tPXpuypwxqMqYLAK` 状态为 READY。
+- 正式域名 `/zh/pricing` 已确认展示单张 USD 1.99、先付款后处理、无水印，以及一次技术重试/确认无法交付退款政策。
+- 生产预付款边界和 Checkout 创建检查通过：合成 free 用户的 `/api/quota` 返回 `remaining=0`；真实 R2 上传成功；直接调用 `/api/tasks` 返回 `402 PAYMENT_REQUIRED`；创建草稿与重放返回同一 `orderId`。
+- 同一订单两次 `single_run` Checkout 返回同一 Stripe Session URL；读取 Stripe 会话确认 `amount_total=199`、`currency=usd`、`payment_status=unpaid`、`payment_intent=null`。付款前 Redis 中没有生成任务，用户等级仍为 `free`。
+- Chrome 已打开正式 Live mode Stripe Checkout，选择美元后确认产品为 `Process One Photo`、金额 `US$1.99`，银行卡、Apple Pay 和 Link 表单正常显示。仅验收结账页可达与定价、幂等和付款前不生成边界，没有填写卡号、点击支付、真实扣款或调用 AI。
+- 合成验收清理完成：Stripe 会话已确认为 `expired / unpaid`，未发生扣款；合成用户、quota、订单、receipt 与清理索引已移除，两张 R2 验收图片 HEAD 确认 404；没有创建生成任务或调用 provider。
+- 正式域名 HTTP 200 与部署 aliases 对应，已加载新价格页资源 `pricing/page-6ec0ae7120f63e94.js`；生产手机宽度与内容宽度均为390，无横向溢出，浏览器错误日志为空。
+- 未执行真实付款，因而不宣称新单成交、生产退款成功或完整付费交付链路验收；付款后 webhook/生成成品/下载与真实退款仍需独立生产证据。
 
 ## 运维
 

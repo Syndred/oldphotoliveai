@@ -99,7 +99,7 @@ docs/REPLICATE_SECURITY.md     # Replicate 安全配置指南
 - 完整启用清单、回退边界与交接见 `docs/single-result-experiment.md`；不确定支付恢复见 `docs/SINGLE_RESULT_CHECKOUT_RECOVERY.md`。
 
 
-## 2026-10-10 单张预付方案（用户已授权上线）
+## 2026-10-10 单张预付方案（已部署，真实付款交付待验收）
 
 - 取消新增匿名/登录免费生成；后端返回 `402 PAYMENT_REQUIRED`，旧免费额度记录不再代表可生成权益。
 - 上传照片并登录后，USD 1.99 购买本张照片的当前功能（修复/上色/动态化/完整流程）；付款确认后生成，完整无水印结果，不订阅。
@@ -109,4 +109,8 @@ docs/REPLICATE_SECURITY.md     # Replicate 安全配置指南
 - 已付款单张任务不能取消或在交付/退款未解决时删除；弃付订单及临时原图超过7天后按原子围栏安全清理，保留支付未决证据及已引用原图。
 - 新方案走现有付费存储，不需要新私有桶；`DOWNLOAD_PREVIEW_ENABLED` 未启用，旧单结果试验被替代，不再销售新 `single_photo`。
 - 四语种页面、FAQ、条款与结构化价格同步；Chinese handoff见 `docs/paid-first-release.md`，恢复手册见 `docs/PHOTO_ORDER_RECOVERY.md`。
-- 验收与生产部署结果将在正式域名校验后补齐；真实 Stripe 扣款和新订单成品交付须独立证明，Checkout 创建本身不是成交。
+- 最终 99 套 / 930 项测试全部通过，typecheck、lint、production build 通过，仅保留 Footer 既有 img 警告。最终构建的 1440×960 桌面和 390×844 手机 UI 验收通过；模拟付款回执与退款状态使用本地 API fixture，不代表真实 Stripe 收退款。
+- 代码 `a4cb96ea5de60c1472e0cecea8612ef99420d171` 已部署到 Vercel Production，部署 `dpl_EurP17d6FEk3tPXpuypwxqMqYLAK` 为 READY；正式 `/zh/pricing` 已显示单张 USD 1.99、先付款后处理、无水印、一次技术重试及确认无法交付退款政策。
+- 生产预付款边界已检查：合成 free 用户 quota `remaining=0`，真实 R2 上传成功，直接生成返回 `402 PAYMENT_REQUIRED`；草稿重放保持同一 `orderId`，两次 Checkout 返回同一 Stripe Session URL。会话为 USD 199 cents、`unpaid`、`payment_intent=null`，付款前 Redis 不存在生成任务且用户仍为 free。
+- Chrome 已打开正式 Live mode Stripe，美元价格与产品确认是 `Process One Photo / US$1.99`，银行卡、Apple Pay、Link 表单正常。未填写卡号或点击支付，无真实扣款或 AI 调用；该验收只证明结账创建与付款前边界，不代表完整支付交付链路通过。验收会话已过期，合成用户、订单、quota、receipt、索引及两张 R2 图片已清理；正式页面手机无横向溢出、错误日志为空。
+- 真实付款后的 webhook、生成成品、下载及生产退款须独立证明；Checkout 创建本身不是成交。
