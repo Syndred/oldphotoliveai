@@ -13,6 +13,7 @@ import { buildFaqJsonLd } from "@/lib/seo";
 import { defaultLocale, type Locale } from "@/i18n/routing";
 import { HOME_SEO_CONTENT } from "@/content/home-seo";
 import { Link } from "@/i18n/navigation";
+import { getSingleRunCopy, singleRunWorkflowLabel } from "@/lib/single-run-copy";
 
 interface HomePageViewProps {
   locale?: Locale;
@@ -28,6 +29,8 @@ export default function HomePageView({
   locale = defaultLocale,
 }: HomePageViewProps) {
   const homeSeo = HOME_SEO_CONTENT[locale] ?? HOME_SEO_CONTENT.en;
+  const uploadWorkflow = locale === "en" ? "colorize" : "full";
+  const runCopy = getSingleRunCopy(locale);
   // Organization and WebSite schemas live in the root layout. Keep the
   // homepage application and visible FAQ entities unique to this page.
   const jsonLd = [
@@ -63,12 +66,15 @@ export default function HomePageView({
 
       <main>
         <HeroSection>
+          <p className="mt-7 rounded-full border border-white/12 bg-white/[0.04] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)]">
+            {runCopy.selectedTool}: {singleRunWorkflowLabel(locale, uploadWorkflow)}
+          </p>
           <UploadSection
             variant="embedded"
             showHeader={false}
             analyticsSource="home_hero"
-            workflow={locale === "en" ? "colorize" : "full"}
-            className="mt-8 max-w-4xl"
+            workflow={uploadWorkflow}
+            className="mt-3 max-w-4xl"
           />
           <div className="mt-5 flex flex-wrap justify-center gap-3">
             <Link

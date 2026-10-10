@@ -174,6 +174,19 @@ beforeEach(() => {
 });
 
 describe("HomePage", () => {
+  it.each([
+    ["en", "This upload: Photo colorization"],
+    ["zh", "本次处理: 修复、上色并生成动画"],
+  ] as const)("discloses the %s upload workflow before the photo is selected", (locale, label) => {
+    mockUseLocale.mockReturnValue(locale);
+    __setMockLocale(locale);
+    render(<HomePageView locale={locale} />);
+    const hero = screen.getByTestId("hero-section");
+    expect(hero).toContainElement(screen.getByText(label));
+    expect(screen.getByText(label).compareDocumentPosition(screen.getByTestId("upload-zone")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
   it.each(["zh", "es", "ja"] as const)("preserves the full workflow on the %s homepage", async (locale) => {
     mockUseLocale.mockReturnValue(locale);
     __setMockLocale(locale);
