@@ -1,7 +1,8 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import NextLink from "next/link";
+import { publicPathname, type Locale } from "@/i18n/routing";
 import BrandLogo from "@/components/BrandLogo";
 
 const FOOTER_LINKS = [
@@ -14,6 +15,7 @@ const FOOTER_LINKS = [
 ] as const;
 
 export default function FooterSection() {
+  const locale = useLocale() as Locale;
   const t = useTranslations("landing.footer");
 
   return (
@@ -28,13 +30,13 @@ export default function FooterSection() {
 
         <nav aria-label="Footer navigation" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:justify-end">
           {FOOTER_LINKS.map((link) => (
-            <Link
+            <NextLink
               key={link.href}
-              href={link.href}
+              href={publicPathname(locale, link.href)}
               className="text-sm text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text-primary)]"
             >
               {t(`links.${link.key}`)}
-            </Link>
+            </NextLink>
           ))}
         </nav>
       </div>

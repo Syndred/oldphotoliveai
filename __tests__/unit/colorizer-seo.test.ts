@@ -22,10 +22,20 @@ describe('canonical colorizer URLs', () => {
     const colorizer = getToolPage('en', 'colorize-old-photos');
     const restoration = getToolPage('en', 'restore-old-photos');
 
-    expect(colorizer.title).toBe('Colorize Old Photos Online – AI Old Photo Colorizer');
-    expect(colorizer.heroTitle).toBe('Colorize Old Photos with AI — Online Photo Colorizer');
+    expect(colorizer.title).toBe('Photo Colorization with AI – Colorize Black and White Photos Online');
+    expect(colorizer.heroTitle).toBe('Photo Colorization with AI');
     expect(colorizer.keywords).toContain('old photo colorizer');
     expect(getToolPagePath('restore-old-photos')).toBe('/restore-old-photos');
     expect(restoration.heroTitle).toBe('Restore Old Photos with AI');
+  });
+
+  it('avoids unsupported output promises and duplicated payment answers', () => {
+    for (const locale of ['en', 'zh'] as const) {
+      const colorizer = getToolPage(locale, 'colorize-old-photos');
+      expect(new Set(colorizer.faqs.map(item => item.answer)).size).toBe(colorizer.faqs.length);
+      expect(colorizer.description).not.toMatch(/full-resolution|无限|原始分辨率/i);
+      expect(colorizer.keywords.join(' ')).not.toMatch(/\bfree\b|免费/i);
+      expect(colorizer.faqs.map(item => item.answer).filter(answer => answer.includes('$1.99'))).toHaveLength(0);
+    }
   });
 });

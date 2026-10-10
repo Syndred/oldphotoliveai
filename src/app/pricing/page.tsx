@@ -8,6 +8,7 @@ import CheckoutReturn from "@/components/CheckoutReturn";
 import PricingCards from "@/components/PricingCards";
 import { safeCheckoutTaskId } from "@/lib/checkout-context";
 import { getSingleRunCopy } from "@/lib/single-run-copy";
+import { Link } from "@/i18n/navigation";
 import type { QuotaInfo, SubscriptionStatus, UserTier } from "@/types";
 
 function parseUserTier(value: unknown): UserTier | null {
@@ -106,6 +107,11 @@ export default function PricingPage() {
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
             {t("subtitle")}
+          </p>
+          <p className="mt-4 text-center text-sm leading-6">
+            <Link href="/photo-restoration-cost" className="text-[var(--color-accent)] underline decoration-[var(--color-accent)]/40 underline-offset-4 hover:decoration-[var(--color-accent)]">
+              {locale === "zh" ? "AI 与人工修复费用对比（英文）" : "Compare AI and manual photo restoration costs"}
+            </Link>
           </p>
           <div className="mx-auto mt-6 grid max-w-3xl gap-3 sm:grid-cols-3">
             {["valueProp1", "valueProp2", "valueProp3"].map((key) => (

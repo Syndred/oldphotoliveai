@@ -195,7 +195,7 @@
       "subtitle": "Preserve a family memory with AI restoration, colorization, or animation. One photo from $1.99, a complete result without a watermark, and no subscription.",
       "signal1": "Restoration, colorization & animation",
       "signal2": "One photo from $1.99",
-      "signal3": "Results in minutes",
+      "signal3": "Usually a few minutes",
       "signal4": "No watermark",
       "cta": "Upload a photo"
     },
@@ -263,7 +263,7 @@
       "q1": "What types of photos work best?",
       "a1": "Our AI works best with portrait photos, family photos, and landscape images. The higher the original resolution, the better the results.",
       "q2": "How long does processing take?",
-      "a2": "Most photos are processed within 1-3 minutes. Complex restorations or animations may take slightly longer.",
+      "a2": "Processing usually takes a few minutes. Image quality, selected tools, provider availability, and queue demand can extend the wait; this is not a guaranteed delivery time.",
       "q3": "Is my data safe?",
       "a3": "Yes. Your photos are processed securely, and we use trusted providers for authentication, payments, storage, and analytics. Media may remain available in your history until you delete it or we remove it for operational or compliance reasons. See our Privacy Policy for details.",
       "q4": "Can I use the results commercially?",

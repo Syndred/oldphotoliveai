@@ -92,7 +92,7 @@ export async function applyImageWatermark(
 /**
  * Resize an image based on user tier using RESOLUTION_CONFIG.
  * Uses `fit: 'inside'` to maintain aspect ratio.
- * Free tier: max 800×600, Paid tiers: max 1920×1080.
+ * Legacy free tier: max 800×600, Paid tiers: max 2048×2048.
  */
 export async function resizeImage(
   imageBuffer: Buffer,

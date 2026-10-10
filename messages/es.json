@@ -195,7 +195,7 @@
       "subtitle": "Sube una foto antigua y elige el resultado que necesitas: reparar daño, colorizar blanco y negro o crear un clip corto de retrato.",
       "signal1": "Solo restaurar, colorizar o animar",
       "signal2": "Una foto desde $1.99",
-      "signal3": "Resultados en minutos",
+      "signal3": "Normalmente unos minutos",
       "signal4": "Sin marca de agua",
       "cta": "Subir una foto"
     },
@@ -263,7 +263,7 @@
       "q1": "¿Qué tipos de fotos funcionan mejor?",
       "a1": "Nuestra IA funciona mejor con retratos, fotos familiares y paisajes. Cuanto mayor sea la resolución original, mejor será el resultado.",
       "q2": "¿Cuánto tarda el procesamiento?",
-      "a2": "La mayoría de las fotos se procesan en 1-3 minutos. Las restauraciones o animaciones complejas pueden tardar un poco más.",
+      "a2": "El procesamiento suele tardar unos minutos. La calidad de la imagen, la herramienta, la disponibilidad del proveedor y la cola pueden aumentar la espera; no es un plazo garantizado.",
       "q3": "¿Están seguros mis datos?",
       "a3": "Sí. Tus fotos se procesan de forma segura y usamos proveedores de confianza para autenticación, pagos, almacenamiento y analítica. Los archivos pueden seguir disponibles en tu historial hasta que los elimines o los retiremos por razones operativas o de cumplimiento. Consulta la Política de privacidad para más detalles.",
       "q4": "¿Puedo usar los resultados con fines comerciales?",

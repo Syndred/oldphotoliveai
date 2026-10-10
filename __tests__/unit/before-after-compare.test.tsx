@@ -110,6 +110,12 @@ describe("BeforeAfterCompare", () => {
     expect(images[1]).toHaveAttribute("src", defaultProps.beforeUrl);
   });
 
+  it("keeps comparison images accessible when an empty alt override is supplied", () => {
+    render(<BeforeAfterCompare {...defaultProps} beforeAlt=" " afterAlt="" />);
+    expect(screen.getByAltText("Before")).toBeInTheDocument();
+    expect(screen.getByAltText("After")).toBeInTheDocument();
+  });
+
   it("uses default labels 'Before' and 'After'", () => {
     render(<BeforeAfterCompare {...defaultProps} />);
     expect(screen.getByText("Before")).toBeInTheDocument();

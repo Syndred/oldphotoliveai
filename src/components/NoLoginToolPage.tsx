@@ -15,8 +15,8 @@ import type { Locale } from "@/i18n/routing";
 
 const FAQS = [
   { question: "Can I upload a photo without login?", answer: "Yes. Choose and upload your photo first. Then sign in with Google and pay $1.99 before animation begins. Your upload is kept through sign-in." },
-  { question: "Is photo animation free?", answer: "No. One photo with the selected tool costs $1.99, paid before processing. There is no subscription, and the complete result has no watermark." },
-  { question: "What if processing fails?", answer: "A confirmed technical failure includes one free retry. If we confirm that the result cannot be delivered, we refund that purchase. Content violations follow our Terms; uncertain delivery needs support review." },
+  { question: "How much does one photo animation cost?", answer: "One photo with the selected tool costs $1.99, paid before processing. There is no subscription, and the complete result has no watermark." },
+  { question: "What if processing fails?", answer: "A confirmed technical failure includes one retry at no extra cost. If we confirm that the result cannot be delivered, we refund that purchase. Content violations follow our Terms; uncertain delivery needs support review." },
   { question: "What type of old photo works best?", answer: "Clear portraits, scanned family prints, wedding photos, and vintage studio portraits work best. Avoid tiny, blurry, or heavily cropped faces." },
   { question: "Can I download the video?", answer: "Yes. The completed paid result includes a watermark-free video download. Keep your original photo as well." },
 ];
@@ -76,11 +76,11 @@ export default function NoLoginToolPage({ locale }: NoLoginToolPageProps) {
       path: "/no-login",
       locale,
       keywords: [
-        "old photo to video AI free without login",
-        "old photo animation no sign up",
-        "animate old photos online free",
+        "upload old photos before login",
+        "old photo animation online",
+        "animate old photos with AI",
       ],
-      price: "0.00",
+      price: "1.99",
     }),
   ];
 

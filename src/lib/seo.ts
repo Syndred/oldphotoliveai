@@ -7,7 +7,8 @@ import {
 } from "@/lib/site";
 import {
   defaultLocale,
-  locales,
+  hasChinesePublicPage,
+  isApplicationPath,
   localizePathname,
   type Locale,
 } from "@/i18n/routing";
@@ -84,7 +85,7 @@ export function absoluteLocalizedUrl(locale: Locale, path = "/"): string {
 
 export function buildLanguageAlternates(path = "/") {
   const languages = Object.fromEntries(
-    locales.map((locale) => [
+    (hasChinesePublicPage(path) ? ["en", "zh"] as const : ["en"] as const).map((locale) => [
       HREFLANG_BY_LOCALE[locale],
       absoluteLocalizedUrl(locale, path),
     ])
@@ -169,7 +170,9 @@ export function buildLocalizedPageMetadata({
     ...baseMetadata,
     alternates: {
       canonical: localizedPath,
-      languages: buildLanguageAlternates(path),
+      ...(!isApplicationPath(path) && !(options.robots && typeof options.robots === "object" && options.robots.index === false)
+        ? { languages: buildLanguageAlternates(path) }
+        : {}),
     },
     openGraph: {
       ...baseMetadata.openGraph,

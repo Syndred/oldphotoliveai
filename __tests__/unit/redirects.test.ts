@@ -1,7 +1,7 @@
 import { LEGACY_REDIRECTS } from "@/config/redirects.cjs";
 
-describe("legacy English redirects", () => {
-  it("redirects explicit aliases before the generic /en fallback", () => {
+describe("legacy language redirects", () => {
+  it("redirects explicit aliases before generic locale fallbacks", () => {
     expect(LEGACY_REDIRECTS).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

@@ -15,9 +15,9 @@ export async function generateMetadata(props: LocalizedNoLoginPageProps): Promis
 
   const metadata = buildLocalizedPageMetadata({
     locale,
-    title: "No-Login Photo Animation Preview | OldPhotoLive AI",
+    title: "Upload an Old Photo Before Login | OldPhotoLive AI",
     description:
-      "Try one watermarked 480p old-photo animation preview without an account, then sign in only if you want saved history or higher-quality exports.",
+      "Upload your photo first, then sign in and pay $1.99 before AI animation begins. Get a complete result without a watermark or subscription.",
     path: "/no-login",
     robots: { index: false, follow: true },
   });
@@ -25,7 +25,7 @@ export async function generateMetadata(props: LocalizedNoLoginPageProps): Promis
   return {
     ...metadata,
     title: {
-      absolute: "No-Login Photo Animation Preview | OldPhotoLive AI",
+      absolute: "Upload an Old Photo Before Login | OldPhotoLive AI",
     },
     alternates: {
       canonical: "https://oldphotoliveai.com/no-login",

@@ -232,10 +232,10 @@ describe("Stripe checkout route", () => {
     }));
     expect(response.status).toBe(200);
     const params = mockCheckoutCreate.mock.calls[0][0];
-    expect(params.success_url).toBe("https://oldphotoliveai.com/zh/pricing?taskId=photo-1&returnTo=%2Fzh%2Frestore-old-photos&session_id={CHECKOUT_SESSION_ID}");
+    expect(params.success_url).toBe("https://oldphotoliveai.com/zh/pricing?taskId=photo-1&returnTo=%2Frestore-old-photos&session_id={CHECKOUT_SESSION_ID}");
     expect(params.cancel_url).toContain("/zh/pricing?cancelled=true&plan=starter_pack&taskId=photo-1");
     expect(params.cancel_url).not.toContain("resume");
-    expect(params.metadata).toMatchObject({ product: "oldphotoliveai", locale: "zh", taskId: "photo-1", returnTo: "/zh/restore-old-photos" });
+    expect(params.metadata).toMatchObject({ product: "oldphotoliveai", locale: "zh", taskId: "photo-1", returnTo: "/restore-old-photos" });
   });
 
   it("blocks credit-pack checkout for professional users", async () => {

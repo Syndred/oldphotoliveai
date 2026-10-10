@@ -10,6 +10,8 @@ import {
   defaultLocale,
   getPathLocale,
   isValidLocale,
+  isApplicationPath,
+  hasChinesePublicPage,
   localizePathname,
   routing,
   stripLocaleFromPathname,
@@ -39,14 +41,6 @@ const PERMANENT_PUBLIC_ALIASES: Record<string, string> = {
   "/restore": "/restore-old-photos",
   "/animate-old-photos": "/animate",
 };
-
-const ENGLISH_ONLY_PUBLIC_PATHS = new Set([
-  "/animate",
-  "/animate-free",
-  "/bring-to-life",
-  "/to-video",
-  "/no-login",
-]);
 
 function isProtectedApiRoute(pathname: string): boolean {
   return PROTECTED_API_ROUTES.some((route) => pathname.startsWith(route));
@@ -139,16 +133,20 @@ export async function middleware(request: NextRequest) {
     const locale = getPathLocale(pathname) ?? defaultLocale;
     const basePath = stripLocaleFromPathname(pathname).replace(/\/$/, "") || "/";
     const finalBasePath = PERMANENT_PUBLIC_ALIASES[basePath] ?? basePath;
-    const isEnglishOnlyPath = ENGLISH_ONLY_PUBLIC_PATHS.has(finalBasePath);
-    const canonicalPath = localizePathname(
-      isEnglishOnlyPath ? defaultLocale : locale,
-      finalBasePath
-    );
-    if (
-      getPathLocale(pathname) === "en" ||
-      finalBasePath !== basePath ||
-      (locale !== defaultLocale && isEnglishOnlyPath)
-    ) {
+    const applicationPath = isApplicationPath(basePath);
+    let canonicalLocale = locale;
+    let destinationPath = finalBasePath;
+    if (locale === "es" || locale === "ja") {
+      canonicalLocale = defaultLocale;
+    } else if (!applicationPath && locale === "zh" && !hasChinesePublicPage(finalBasePath)) {
+      if (finalBasePath === "/terms" || finalBasePath === "/privacy") {
+        canonicalLocale = defaultLocale;
+      } else {
+        destinationPath = "/";
+      }
+    }
+    const canonicalPath = localizePathname(canonicalLocale, destinationPath);
+    if (pathname.replace(/\/$/, "") !== canonicalPath.replace(/\/$/, "")) {
       const url = request.nextUrl.clone();
       url.pathname = canonicalPath;
       return NextResponse.redirect(url, 301);

@@ -225,6 +225,17 @@ describe("Navbar", () => {
     expect(screen.queryByRole("link", { name: "Bring to Life" })).not.toBeInTheDocument();
   });
 
+  it("links Chinese navigation directly to maintained pages and English secondary tools", () => {
+    __setMockLocale("zh");
+    __setMockPathname("/");
+    mockUseLocale.mockReturnValue("zh");
+    render(<Navbar />);
+    expect(screen.getByText("OldPhotoLive AI").closest("a")).toHaveAttribute("href", "/zh");
+    expect(screen.getByText("Pricing").closest("a")).toHaveAttribute("href", "/zh/pricing");
+    expect(screen.getByRole("link", { name: /修复旧照片/ })).toHaveAttribute("href", "/restore-old-photos");
+    expect(screen.getByRole("link", { name: /给老照片上色/ })).toHaveAttribute("href", "/zh/colorize-old-photos");
+  });
+
   it("links point to correct routes", () => {
     __setMockPathname("/");
     render(<Navbar />);

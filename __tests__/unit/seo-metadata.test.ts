@@ -24,16 +24,17 @@ import { generateMetadata as animateFreeMetadata } from "@/app/[locale]/animate-
 import { generateMetadata as toVideoMetadata } from "@/app/[locale]/to-video/page";
 
 describe("SEO metadata ownership", () => {
-  it("assigns the broad colorizer term to the English homepage", async () => {
+  it("uses the English homepage as the brand and photo tools overview", async () => {
     const metadata = await homeMetadata({
       params: Promise.resolve({ locale: "en" }),
     });
 
     expect(metadata.title).toEqual({
-      absolute: "Colorize Photo Online – AI Photo Colorizer",
+      absolute: "OldPhotoLive AI – AI Photo Restoration, Colorization & Animation",
     });
-    expect(metadata.description).toMatch(/pay \$1.99 before processing/);
-    expect(metadata.keywords).toContain("colorize photo");
+    expect(metadata.description).toMatch(/One photo from \$1.99/);
+    expect(metadata.keywords).toContain("OldPhotoLive AI");
+    expect(metadata.keywords).not.toContain("colorize photo");
     expect(metadata.keywords).not.toContain("colorize old photos");
   });
 

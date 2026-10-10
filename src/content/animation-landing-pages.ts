@@ -35,7 +35,7 @@ export const ANIMATION_LANDING_PAGES: Record<
     path: "/animate-free",
     title: "Animate Old Photos with AI - Bring Photos to Life | OldPhotoLiveAI",
     description:
-      "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+      "Animate a clear old portrait with gentle AI motion. One photo from $1.99, complete watermark-free video, no subscription.",
     keywords: [
       "animate photos online",
     ],
@@ -45,17 +45,17 @@ export const ANIMATION_LANDING_PAGES: Record<
     eyebrow: "AI animation from $1.99",
     h1: "Animate Old Photos with AI",
     heroDescription:
-      "Turn a still family portrait into a short video after sign-in. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+      "Create a short AI video from a clear family portrait, with gentle movement around the face. Sign in and pay for the selected workflow before processing; your completed video includes a watermark-free download.",
     highlights: [
       "Use one old portrait as the source for a short AI video.",
       "Gentle motion works best for faces, memorial photos, and family archives.",
-      "Upload a photo, sign in, and pay $1.99 before processing. Your selected tool delivers the complete result without a watermark. No subscription is required.",
+      "The completed animation includes a watermark-free video download.",
     ],
     benefits: [
       {
-        title: "Start with one photo for $1.99",
+        title: "Download the complete video",
         body:
-          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+          "The completed animation is ready to save without a watermark. Keep it beside the original portrait in your digital album, or include it in a family slideshow.",
       },
       {
         title: "Keep memories recognizable",
@@ -90,7 +90,7 @@ export const ANIMATION_LANDING_PAGES: Record<
       {
         question: "How much does AI photo animation cost?",
         answer:
-          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+          "The selected animation workflow costs $1.99 for one uploaded portrait. Pay before processing; the completed watermark-free video is included without a subscription.",
       },
       {
         question: "What old photos work best for animation?",
@@ -119,7 +119,7 @@ export const ANIMATION_LANDING_PAGES: Record<
     path: "/bring-to-life",
     title: "Bring Old Photos to Life with AI | OldPhotoLive AI",
     description:
-      "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required. Turn a family portrait into a short, natural video and share a memory in a new way.",
+      "Bring old photos to life with AI. Create a subtle family memory video from $1.99 per photo, with a watermark-free result and no subscription.",
     keywords: [
       "bring old photos to life",
       "bring family photos to life",
@@ -176,7 +176,7 @@ export const ANIMATION_LANDING_PAGES: Record<
       {
         question: "How much does it cost to bring an old photo to life?",
         answer:
-          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+          "A single-photo order starts at $1.99 for the portrait and selected workflow. The completed memory video has no watermark, and no subscription is required.",
       },
       {
         question: "Is AI animation suitable for memorial photos?",
@@ -205,7 +205,7 @@ export const ANIMATION_LANDING_PAGES: Record<
     path: "/to-video",
     title: "Photo to Video AI for Old Photos | OldPhotoLive AI",
     description:
-      "Use photo to video AI for an old portrait. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+      "Convert an old portrait to video with photo-to-video AI. One photo from $1.99, complete watermark-free output, no subscription.",
     keywords: [
       "photo to video AI",
       "old photo to video AI online",
@@ -222,7 +222,7 @@ export const ANIMATION_LANDING_PAGES: Record<
     highlights: [
       "Upload a still photo and receive a short video without editing software.",
       "Portraits with a centered, visible face are the most reliable input.",
-      "Upload a photo, sign in, and pay $1.99 before processing. Your selected tool delivers the complete result without a watermark. No subscription is required.",
+      "The finished clip is ready to download without a watermark.",
     ],
     benefits: [
       {
@@ -263,7 +263,7 @@ export const ANIMATION_LANDING_PAGES: Record<
       {
         question: "How much does converting an old photo to video cost?",
         answer:
-          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+          "Photo-to-video processing costs $1.99 for one photo and the selected workflow. The purchase includes the completed watermark-free clip, without a recurring subscription.",
       },
       {
         question: "Do I need to install an app?",
@@ -292,7 +292,7 @@ export const ANIMATION_LANDING_PAGES: Record<
     path: "/animate",
     title: "Animate Old Photos with AI – Online Photo Animation",
     description:
-      "Animate old photos with AI after sign-in. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+      "Animate old photos with AI using subtle facial motion. From $1.99 per photo, with a complete watermark-free video and no subscription.",
     keywords: [
       "animate old photos",
       "animate photos",
@@ -306,7 +306,7 @@ export const ANIMATION_LANDING_PAGES: Record<
     eyebrow: "AI photo animation",
     h1: "Animate Old Photos with AI",
     heroDescription:
-      "Animate old photos online with AI and turn a familiar portrait into a short, natural-motion clip. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+      "Make a clear old portrait move with subtle AI facial animation. Pay $1.99 for this photo and selected workflow before processing, then review and download the complete watermark-free video. No subscription is required.",
     highlights: [
       "Animate a vintage portrait from a single uploaded photo.",
       "Use short, natural motion that suits family memories and archives.",
@@ -351,7 +351,7 @@ export const ANIMATION_LANDING_PAGES: Record<
       {
         question: "How do I animate old photos with AI?",
         answer:
-          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required. Review and download the completed short animation.",
+          "Choose a clear portrait, sign in, and pay $1.99 before the animation workflow starts. Follow the progress, check the finished motion against the original, then download the complete video without a watermark.",
       },
       {
         question: "How can I bring old photos to life?",

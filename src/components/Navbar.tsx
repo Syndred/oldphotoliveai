@@ -7,9 +7,9 @@ import { useLocale, useTranslations } from "next-intl";
 import AuthButton from "./AuthButton";
 import BrandLogo from "./BrandLogo";
 import LanguageSwitcher from "./LanguageSwitcher";
-import { Link, usePathname } from "@/i18n/navigation";
+import { usePathname } from "@/i18n/navigation";
 import { getToolPagePath, getToolPageSummaries } from "@/content/tool-pages";
-import type { Locale } from "@/i18n/routing";
+import { publicPathname, type Locale } from "@/i18n/routing";
 import type { QuotaInfo, UserTier } from "@/types";
 
 const NAV_LINKS = [
@@ -94,8 +94,8 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-[var(--color-primary-bg)]/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6">
         {/* Logo */}
-        <Link
-          href="/"
+        <NextLink
+          href={publicPathname(locale, "/")}
           className="block min-w-0 max-w-[58vw] sm:max-w-none"
         >
           <BrandLogo
@@ -103,7 +103,7 @@ export default function Navbar() {
             className="max-w-full"
             iconClassName="h-9 w-9 sm:h-10 sm:w-10"
           />
-        </Link>
+        </NextLink>
 
         {/* Desktop Navigation Links */}
         <div className="hidden sm:flex items-center gap-1 sm:gap-2">
@@ -131,9 +131,8 @@ export default function Navbar() {
             </button>
             <div className="invisible absolute left-0 top-full z-50 w-72 translate-y-2 rounded-xl border border-white/10 bg-[var(--color-primary-bg)]/95 p-2 opacity-0 shadow-[0_18px_45px_rgba(0,0,0,0.35)] backdrop-blur-md transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
               {productLinks.map((tool) => {
-                const href = getToolPagePath(tool.slug);
-                const isActive = pathname.startsWith(href);
-                const isEnglishOnly = tool.slug === "animate-old-photos";
+                const href = publicPathname(locale, getToolPagePath(tool.slug));
+                const isActive = pathname.startsWith(getToolPagePath(tool.slug));
                 const className = `block rounded-lg px-3 py-2.5 transition-colors ${
                   isActive
                     ? "bg-white/[0.08] text-white"
@@ -150,15 +149,9 @@ export default function Navbar() {
                   </>
                 );
                 return (
-                  isEnglishOnly ? (
-                    <NextLink key={tool.slug} href={href} className={className}>
-                      {content}
-                    </NextLink>
-                  ) : (
-                    <Link key={tool.slug} href={href} className={className}>
-                      {content}
-                    </Link>
-                  )
+                  <NextLink key={tool.slug} href={href} className={className}>
+                    {content}
+                  </NextLink>
                 );
               })}
             </div>
@@ -167,9 +160,9 @@ export default function Navbar() {
             const isActive =
               link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
             return (
-              <Link
+              <NextLink
                 key={link.href}
-                href={link.href}
+                href={publicPathname(locale, link.href)}
                 className={`rounded-md px-2 py-2 text-sm transition-colors min-h-[44px] flex items-center sm:px-3 ${
                   isActive
                     ? "text-white"
@@ -177,7 +170,7 @@ export default function Navbar() {
                 }`}
               >
                 {t(link.labelKey)}
-              </Link>
+              </NextLink>
             );
           })}
         </div>
@@ -234,15 +227,14 @@ export default function Navbar() {
             {t("products")}
           </div>
           {productLinks.map((tool) => {
-            const href = getToolPagePath(tool.slug);
-            const isActive = pathname.startsWith(href);
-            const isEnglishOnly = tool.slug === "animate-old-photos";
+            const href = publicPathname(locale, getToolPagePath(tool.slug));
+            const isActive = pathname.startsWith(getToolPagePath(tool.slug));
             const className = `block rounded-md px-3 py-2.5 text-sm transition-colors min-h-[44px] ${
               isActive
                 ? "text-white"
                 : "text-[var(--color-text-secondary)] hover:text-white"
             }`;
-            return isEnglishOnly ? (
+            return (
               <NextLink
                 key={tool.slug}
                 href={href}
@@ -251,24 +243,15 @@ export default function Navbar() {
               >
                 {tool.cardTitle}
               </NextLink>
-            ) : (
-              <Link
-                key={tool.slug}
-                href={href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={className}
-              >
-                {tool.cardTitle}
-              </Link>
             );
           })}
           {navLinks.map((link) => {
             const isActive =
               link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
             return (
-              <Link
+              <NextLink
                 key={link.href}
-                href={link.href}
+                href={publicPathname(locale, link.href)}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block rounded-md px-3 py-2.5 text-sm transition-colors min-h-[44px] ${
                   isActive
@@ -277,7 +260,7 @@ export default function Navbar() {
                 }`}
               >
                 {t(link.labelKey)}
-              </Link>
+              </NextLink>
             );
           })}
         </div>

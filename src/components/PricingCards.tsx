@@ -13,7 +13,7 @@ import {
   PROFESSIONAL_MONTHLY_DISPLAY_PRICE,
 } from "@/lib/billing";
 
-import { localizePathname } from "@/i18n/routing";
+import { localizePathname, publicPathname } from "@/i18n/routing";
 import { SUPPORT_EMAIL } from "@/lib/site";
 import { getSingleRunCopy, singleRunWorkflowLabel } from "@/lib/single-run-copy";
 import { getCheckoutCopy } from "@/lib/checkout-copy";
@@ -292,13 +292,13 @@ export default function PricingCards({
             <p className="mt-3 text-3xl font-bold text-[var(--color-text-primary)]">{SINGLE_RUN.displayPrice} <span className="text-sm font-normal">USD</span></p>
             <p className="mt-3 text-sm leading-6 text-[var(--color-text-secondary)]">{photoContext.orderId ? singleRunWorkflowLabel(locale, singleWorkflow) : runCopy.summary}</p>
           </div>
-          {photoContext.orderId && status === "unauthenticated" ? <button type="button" onClick={async () => { try { await signIn("google", { callbackUrl: pricingCheckoutPath(locale, photoContext) }); } catch { setError(tErrors("checkoutFailed")); } }} className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-lg bg-[var(--color-accent)] px-5 py-3 text-sm font-semibold text-white">{copy.login}</button> : singleState === "eligible" ? <button type="button" onClick={() => handleCheckout("single_run")} disabled={checkoutReview || loadingPlan !== null || status === "loading"} className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-lg bg-[var(--color-accent)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{loadingPlan === "single_run" ? t("redirecting") : runCopy.buy}</button>
+          {photoContext.orderId && status === "unauthenticated" ? <button type="button" onClick={async () => { try { await signIn("google", { callbackUrl: pricingCheckoutPath(locale, photoContext) }); } catch { setError(tErrors("checkoutFailed")); } }} className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-lg bg-[var(--color-accent)] px-5 py-3 text-sm font-semibold text-[#17130a]">{copy.login}</button> : singleState === "eligible" ? <button type="button" onClick={() => handleCheckout("single_run")} disabled={checkoutReview || loadingPlan !== null || status === "loading"} className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-lg bg-[var(--color-accent)] px-5 py-3 text-sm font-semibold text-[#17130a] disabled:opacity-50">{loadingPlan === "single_run" ? t("redirecting") : runCopy.buy}</button>
             : singleState === "checking" ? <p role="status" className="text-sm text-[var(--color-text-secondary)]">{runCopy.checking}</p>
             : singleState === "unlocked" && orderTaskId ? <a href={localizePathname(locale, `/result/${orderTaskId}`)} className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-lg border border-white/20 px-5 py-3 text-sm font-semibold text-[var(--color-text-primary)]">{runCopy.open}</a>
-            : <a href={`${localizePathname(locale, "/")}#upload-section`} className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-lg bg-[var(--color-accent)] px-5 py-3 text-sm font-semibold text-white">{runCopy.upload}</a>}
+            : <a href={`${localizePathname(locale, "/")}#upload-section`} className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-lg bg-[var(--color-accent)] px-5 py-3 text-sm font-semibold text-[#17130a]">{runCopy.upload}</a>}
         </div>
         {(singleState === "unavailable" || singleState === "expired") && <p role="alert" className="mt-4 text-sm leading-6 text-amber-200">{singleState === "expired" ? runCopy.expired : runCopy.unavailable}</p>}
-        <p className="mt-5 text-xs leading-6 text-[var(--color-text-secondary)]">{runCopy.terms} <a className="underline" href={localizePathname(locale, "/terms")}>{t("termsLink")}</a></p>
+        <p className="mt-5 text-xs leading-6 text-[var(--color-text-secondary)]">{runCopy.terms} <a className="underline" href={publicPathname(locale, "/terms")}>{t("termsLink")}</a></p>
       </section>
       {!photoContext.orderId && <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {PLANS.filter(

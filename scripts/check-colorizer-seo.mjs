@@ -12,6 +12,9 @@ function firstCapture(match) {
 function match(html, pattern, message) {
   const value = firstCapture(html.match(pattern))
     ?.replace(/<[^>]+>/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;|&#39;/g, "'")
     .replace(/\s+/g, " ")
     .trim();
   assert.ok(value, message);
@@ -51,12 +54,22 @@ const redirects = [
   ["/restore", "/restore-old-photos"],
   ["/en/restore", "/restore-old-photos"],
   ["/en/restore-old-photos", "/restore-old-photos"],
-  ["/zh/restore", "/zh/restore-old-photos"],
+  ["/zh/restore", "/zh"],
   ["/animate-old-photos", "/animate"],
   ["/en/animate-old-photos", "/animate"],
-  ["/zh/animate-old-photos", "/animate"],
-  ["/zh/animate", "/animate"],
+  ["/zh/animate-old-photos", "/zh"],
+  ["/zh/animate", "/zh"],
   ["/es/no-login", "/no-login"],
+  ["/es/colorize-old-photos", "/colorize-old-photos"],
+  ["/es/colorize", "/colorize-old-photos"],
+  ["/ja/pricing", "/pricing"],
+  ["/ja/animate-old-photos", "/animate"],
+  ["/en/privacy", "/privacy"],
+  ["/zh/blog/old-photo-scan", "/zh"],
+  ["/zh/photo-restoration-cost", "/zh"],
+  ["/zh/unknown-old-page", "/zh"],
+  ["/zh/terms", "/terms"],
+  ["/zh/privacy", "/privacy"],
 ];
 
 for (const [from, to] of redirects) {
@@ -74,36 +87,65 @@ for (const [from, to] of redirects) {
   console.log(`301 ${from} -> ${to} (query preserved; destination 200)`);
 }
 
+// Client-supplied next-intl headers must not bypass public canonical redirects.
+for (const [from, to] of [["/en", "/"], ["/en/colorize", "/colorize-old-photos"], ["/en/pricing", "/pricing"]]) {
+  const response = await fetch(`${origin}${from}?orderId=proof&session_id=cs-proof`, { redirect: "manual", headers: { ...headers, "x-next-intl-locale": "en" } });
+  assert.equal(response.status, 301, `${from} must normalize even with a client intl header`);
+  const location = new URL(response.headers.get("location"), origin);
+  assert.equal(location.pathname, to);
+  assert.equal(location.search, "?orderId=proof&session_id=cs-proof");
+}
+
+// Application migrations retain their path/query, then defer to normal auth.
+for (const locale of ["es", "ja"]) {
+  for (const path of ["/result/legacy-task", "/history", "/login", "/admin"]) {
+    const response = await fetch(`${origin}/${locale}${path}?orderId=legacy&session_id=cs-return`, { redirect: "manual", headers });
+    assert.equal(response.status, 301, `${locale}${path} must migrate permanently`);
+    const location = new URL(response.headers.get("location"), origin);
+    assert.equal(location.pathname, path);
+    assert.equal(location.search, "?orderId=legacy&session_id=cs-return");
+  }
+}
+for (const path of ["/zh/login", "/zh/admin"]) {
+  const response = await fetch(`${origin}${path}`, { redirect: "manual", headers });
+  assert.equal(response.status, 200, `${path} must remain accessible`);
+  assert.match(await response.text(), /<meta[^>]+name="robots"[^>]+content="[^"]*noindex/i);
+}
+// A returning guest's existing result remains a Chinese application route.
+const legacyResult = await fetch(`${origin}/zh/result/legacy-task`, { redirect: "manual", headers: { ...headers, Cookie: "NEXT_LOCALE=zh; opla_anon_visitor=seo-route-proof" } });
+assert.equal(legacyResult.status, 200, "Chinese result route must survive public-page consolidation");
+assert.match(await legacyResult.text(), /<meta[^>]+name="robots"[^>]+content="[^"]*noindex/i);
+
 const pageContracts = [
   {
     path: "/",
-    title: "Colorize Photo Online Free – AI Photo Colorizer",
-    h1: "Photo Colorization with AI",
-    description: /daily free account quota/,
+    title: "OldPhotoLive AI – AI Photo Restoration, Colorization & Animation",
+    h1: "Restore, Colorize & Animate Old Photos with AI",
+    description: /One photo from \$1\.99, watermark-free result, no subscription/,
     canonical: canonicalOrigin,
-    hreflangs: ["en", "zh-Hans", "es", "ja", "x-default"],
+    hreflangs: ["en", "zh-Hans", "x-default"],
   },
   {
     path: "/colorize-old-photos",
-    title: "Colorize Old Photos Online Free – AI Old Photo Colorizer | OldPhotoLive AI",
-    h1: "Colorize Old Photos with AI — Free Online Photo Colorizer",
-    description: /daily free quota/,
+    title: "Photo Colorization with AI – Colorize Black and White Photos Online | OldPhotoLive AI",
+    h1: "Photo Colorization with AI",
+    description: /watermark-free result with images up to 2K — \$1\.99 per photo, no subscription/,
     canonical: `${canonicalOrigin}/colorize-old-photos`,
-    hreflangs: ["en", "zh-Hans", "es", "ja", "x-default"],
+    hreflangs: ["en", "zh-Hans", "x-default"],
   },
   {
     path: "/restore-old-photos",
-    title: "Restore Old Photos Online Free – AI Photo Restoration | OldPhotoLive AI",
+    title: "Restore Old Photos Online – AI Photo Restoration | OldPhotoLive AI",
     h1: "Restore Old Photos with AI",
     description: /Restore old damaged photos online with AI/,
     canonical: `${canonicalOrigin}/restore-old-photos`,
-    hreflangs: ["en", "zh-Hans", "es", "ja", "x-default"],
+    hreflangs: ["en", "x-default"],
   },
   {
     path: "/animate",
     title: "Animate Old Photos with AI – Online Photo Animation",
     h1: "Animate Old Photos with AI",
-    description: /daily free quota/,
+    description: /Animate old photos with AI.*\$1\.99 per photo.*no subscription/,
     canonical: `${canonicalOrigin}/animate`,
     hreflangs: ["en", "x-default"],
   },
@@ -113,6 +155,46 @@ const pageContracts = [
     h1: "Bring Old Photos to Life with AI",
     description: /Bring old photos to life with AI/,
     canonical: `${canonicalOrigin}/bring-to-life`,
+    hreflangs: ["en", "x-default"],
+  },
+  {
+    path: "/pricing",
+    title: "Pricing – One Photo from $1.99, No Subscription | OldPhotoLive AI",
+    h1: "Pay Once, Restore When You Need",
+    description: /One photo from \$1\.99/,
+    canonical: `${canonicalOrigin}/pricing`,
+    hreflangs: ["en", "zh-Hans", "x-default"],
+  },
+  {
+    path: "/zh",
+    title: "老照片修复与上色 - OldPhotoLive AI",
+    h1: "OldPhotoLive AI：在线修复、上色并动态化旧照片",
+    description: /单张 \$1\.99/,
+    canonical: `${canonicalOrigin}/zh`,
+    hreflangs: ["en", "zh-Hans", "x-default"],
+  },
+  {
+    path: "/zh/pricing",
+    title: "价格 – 单张 $1.99，无需订阅 | OldPhotoLive AI",
+    h1: "按需购买，用完再补",
+    description: /单张 \$1\.99/,
+    canonical: `${canonicalOrigin}/zh/pricing`,
+    hreflangs: ["en", "zh-Hans", "x-default"],
+  },
+  {
+    path: "/zh/colorize-old-photos",
+    title: "AI 黑白照片上色 – 在线给老照片上色 | OldPhotoLive AI",
+    h1: "用 AI 给黑白老照片上色",
+    description: /\$1\.99/,
+    canonical: `${canonicalOrigin}/zh/colorize-old-photos`,
+    hreflangs: ["en", "zh-Hans", "x-default"],
+  },
+  {
+    path: "/photo-restoration-cost",
+    title: "Photo Restoration Cost – What You Pay for AI vs Manual Restoration | OldPhotoLive AI",
+    h1: "What does photo restoration cost?",
+    description: /manual studio quote/,
+    canonical: `${canonicalOrigin}/photo-restoration-cost`,
     hreflangs: ["en", "x-default"],
   },
 ];
@@ -137,11 +219,14 @@ for (const contract of pageContracts) {
   assert.equal(normalizeUrl(canonicalFrom(html)), normalizeUrl(contract.canonical));
   assert.equal((html.match(/<h1\b/g) || []).length, 1, `${contract.path} must have one H1`);
   assert.doesNotMatch(html, /<meta[^>]+name="robots"[^>]+content="[^"]*noindex/i);
+  assert.doesNotMatch(html, /free trial|free credits|daily free|free daily|無料で|無料プレビュー|免费额度|免费生成|gratis/i, `${contract.path} must not advertise free processing`);
+  assert.doesNotMatch(html, /hrefLang="(?:es|ja)"/i, `${contract.path} must not advertise retired languages`);
   for (const lang of contract.hreflangs) {
     assert.match(html, new RegExp(`hrefLang="${lang}"`), `${contract.path} missing ${lang}`);
   }
   assert.doesNotMatch(html, /href="\/restore(?:[?#"])/, `${contract.path} links to legacy /restore`);
   assert.doesNotMatch(html, /href="\/en(?:\/|"|\?)/, `${contract.path} links to legacy /en`);
+  assert.doesNotMatch(html, /href="\/zh\/(?:terms|privacy)(?:[?#"])/, `${contract.path} links to a redirected legal page`);
   console.log(`200 ${contract.path}: title, H1, description, canonical and hreflang verified`);
 }
 
@@ -183,6 +268,7 @@ const expectedSchemas = new Map([
   ["/restore-old-photos", ["Organization", "WebSite", "BreadcrumbList", "FAQPage", "SoftwareApplication"]],
   ["/animate", ["Organization", "WebSite", "BreadcrumbList", "WebApplication"]],
   ["/bring-to-life", ["Organization", "WebSite", "BreadcrumbList", "WebPage"]],
+  ["/photo-restoration-cost", ["Organization", "WebSite", "Article", "BreadcrumbList", "FAQPage"]],
 ]);
 
 for (const [path, expected] of expectedSchemas) {
@@ -192,6 +278,11 @@ for (const [path, expected] of expectedSchemas) {
 assert.match(pageHtml.get("/bring-to-life"), /href="\/animate"/);
 assert.match(pageHtml.get("/animate"), /href="\/restore-old-photos"/);
 assert.match(pageHtml.get("/animate"), /href="\/colorize-old-photos"/);
+assert.match(pageHtml.get("/pricing"), /href="\/photo-restoration-cost"/, "cost guide must have an incoming internal link");
+assert.match(pageHtml.get("/colorize-old-photos"), /2048/);
+assert.match(pageHtml.get("/colorize-old-photos"), /10 MB/);
+assert.match(pageHtml.get("/colorize-old-photos"), /at no extra cost/);
+assert.doesNotMatch(pageHtml.get("/colorize-old-photos"), /<img[^>]+alt=""/i, "comparison images must have descriptive alt text");
 
 const robotsResponse = await fetch(`${origin}/robots.txt`);
 assert.equal(robotsResponse.status, 200);
@@ -215,7 +306,15 @@ for (const forbidden of [
 ]) {
   assert.ok(!sitemapUrls.includes(forbidden), `sitemap must exclude ${forbidden}`);
 }
-assert.ok(!sitemapUrls.some((url) => /\/en(?:\/|$)/.test(url)), "sitemap must exclude /en aliases");
+assert.ok(!sitemapUrls.some((url) => /\/(en|es|ja)(?:\/|$)/.test(new URL(url).pathname)), "sitemap must exclude migrated language URLs");
+assert.deepEqual(sitemapUrls.filter(url => new URL(url).pathname.startsWith("/zh")).sort(), [
+  `${canonicalOrigin}/zh`, `${canonicalOrigin}/zh/pricing`, `${canonicalOrigin}/zh/colorize-old-photos`,
+].sort(), "Chinese sitemap must include only three maintained pages");
+assert.ok(sitemapUrls.includes(`${canonicalOrigin}/photo-restoration-cost`));
+for (const href of [...sitemap.matchAll(/<xhtml:link[^>]+href="([^"]+)"/g)].map(match => match[1])) {
+  assert.ok(!/\/(en|es|ja)(?:\/|$)/.test(new URL(href).pathname), `hreflang must not point to migrated ${href}`);
+  assert.ok(!new URL(href).pathname.startsWith("/zh/") || ["/zh/pricing", "/zh/colorize-old-photos"].includes(new URL(href).pathname), `hreflang must not point to secondary Chinese ${href}`);
+}
 
 for (const url of sitemapUrls) {
   const path = new URL(url).pathname;

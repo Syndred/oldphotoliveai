@@ -2,7 +2,7 @@ import { MetadataRoute } from "next";
 import { getBlogPosts } from "@/content/blog";
 import { ANIMATION_LANDING_PAGE_SLUGS, getAnimationLandingPage } from "@/content/animation-landing-pages";
 import { TOOL_PAGE_SLUGS, getToolPagePath } from "@/content/tool-pages";
-import { locales, type Locale } from "@/i18n/routing";
+import { hasChinesePublicPage } from "@/i18n/routing";
 import {
   absoluteLocalizedUrl,
   buildLanguageAlternates,
@@ -12,9 +12,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes = [
     {
       path: "/",
-      lastModified: new Date("2026-09-21T00:00:00.000Z"),
+      lastModified: new Date("2026-10-10T00:00:00.000Z"),
       changeFrequency: "weekly",
       priority: 1,
+    },
+    {
+      path: "/photo-restoration-cost",
+      lastModified: new Date("2026-10-10T00:00:00.000Z"),
+      changeFrequency: "monthly",
+      priority: 0.7,
     },
     {
       path: "/about",
@@ -24,7 +30,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       path: "/pricing",
-      lastModified: new Date("2026-03-18T00:00:00.000Z"),
+      lastModified: new Date("2026-10-10T00:00:00.000Z"),
       changeFrequency: "monthly",
       priority: 0.8,
     },
@@ -54,7 +60,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       slug !== "repair-damaged-old-photos"
   ).map((slug) => ({
     path: getToolPagePath(slug),
-    lastModified: new Date("2026-09-21T00:00:00.000Z"),
+    lastModified: new Date("2026-10-10T00:00:00.000Z"),
     changeFrequency: "weekly" as const,
     priority: 0.9,
   }));
@@ -74,7 +80,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     const page = getAnimationLandingPage(slug);
     return {
       url: absoluteLocalizedUrl("en", page.path),
-      lastModified: new Date("2026-09-21T00:00:00.000Z"),
+      lastModified: new Date("2026-10-10T00:00:00.000Z"),
       changeFrequency: "weekly" as const,
       priority: 0.9,
       alternates: {
@@ -87,16 +93,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
   });
 
   return [
-    ...locales.flatMap((locale) =>
-    allRoutes.map((route) => ({
-      url: absoluteLocalizedUrl(locale as Locale, route.path),
-      lastModified: route.lastModified,
-      changeFrequency: route.changeFrequency,
-      priority: route.priority,
-      alternates: {
-        languages: buildLanguageAlternates(route.path),
-      },
-    }))
+    ...allRoutes.flatMap((route) =>
+      (hasChinesePublicPage(route.path) ? ["en", "zh"] as const : ["en"] as const).map((locale) => ({
+        url: absoluteLocalizedUrl(locale, route.path),
+        lastModified: route.lastModified,
+        changeFrequency: route.changeFrequency,
+        priority: route.priority,
+        alternates: { languages: buildLanguageAlternates(route.path) },
+      }))
     ),
     ...englishAnimationRoutes,
   ];

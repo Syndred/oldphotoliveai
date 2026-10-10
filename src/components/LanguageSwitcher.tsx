@@ -6,8 +6,9 @@ import { useSearchParams } from "next/navigation";
 import { usePathname } from "@/i18n/navigation";
 import {
   LOCALE_COOKIE,
-  locales,
-  localizePathname,
+  publicLocales,
+  languageSwitchPathname,
+  type PublicLocale,
   type Locale,
 } from "@/i18n/routing";
 import { navigateTo } from "@/lib/browser";
@@ -48,7 +49,7 @@ export default function LanguageSwitcher() {
     };
   }, []);
 
-  function switchLocale(locale: Locale) {
+  function switchLocale(locale: PublicLocale) {
     if (locale === currentLocale) {
       setOpen(false);
       return;
@@ -59,7 +60,7 @@ export default function LanguageSwitcher() {
     const queryString = new URLSearchParams(
       Array.from(searchParams.entries())
     ).toString();
-    const targetPath = localizePathname(locale, pathname);
+    const targetPath = languageSwitchPathname(locale, pathname);
     const targetUrl = queryString ? `${targetPath}?${queryString}` : targetPath;
 
     document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=31536000; SameSite=Lax`;
@@ -99,7 +100,7 @@ export default function LanguageSwitcher() {
           aria-label="Language options"
           className="absolute right-0 z-50 mt-2 w-44 rounded-xl border border-[var(--color-border)] bg-[var(--color-primary-bg)]/95 p-1.5 shadow-[0_18px_40px_rgba(0,0,0,0.38)] backdrop-blur-md"
         >
-          {locales.map((locale) => {
+          {publicLocales.map((locale) => {
             const isCurrent = locale === currentLocale;
 
             return (

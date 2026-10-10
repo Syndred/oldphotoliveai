@@ -113,11 +113,12 @@ function getTranslation(
   namespace: string,
   key: string
 ) {
-  const dictionary = translations[locale] as Record<string, string>;
+  const dictionary = (translations[locale] ?? translations.en) as Record<string, string>;
   return dictionary[`${namespace}.${key}`] ?? key;
 }
 
 jest.mock("next-intl", () => ({
+  useLocale: () => mockLocale,
   useTranslations:
     (namespace: string) =>
     (key: string) =>
@@ -151,7 +152,7 @@ beforeEach(() => {
 });
 
 describe("FooterSection", () => {
-  it("renders locale-prefixed about, privacy, and terms links", () => {
+  it("links directly to canonical about, privacy, and terms pages", () => {
     render(<FooterSection />);
 
     expect(screen.getByText("About").closest("a")).toHaveAttribute(
@@ -166,6 +167,14 @@ describe("FooterSection", () => {
       "href",
       "/terms"
     );
+  });
+  it("uses English legal pages directly from the Chinese footer", () => {
+    mockLocale = "zh";
+    __setMockLocale("zh");
+    render(<FooterSection />);
+    expect(screen.getByText("Privacy").closest("a")).toHaveAttribute("href", "/privacy");
+    expect(screen.getByText("Terms").closest("a")).toHaveAttribute("href", "/terms");
+    expect(screen.getByText("Pricing").closest("a")).toHaveAttribute("href", "/zh/pricing");
   });
 });
 

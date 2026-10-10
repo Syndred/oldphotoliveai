@@ -95,7 +95,7 @@ export default function BeforeAfterCompare({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={afterUrl}
-          alt={afterAlt ?? resolvedAfterLabel}
+          alt={afterAlt?.trim() || resolvedAfterLabel}
           className="absolute inset-0 h-full w-full object-contain"
         />
 
@@ -107,7 +107,7 @@ export default function BeforeAfterCompare({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={beforeUrl}
-            alt={beforeAlt ?? resolvedBeforeLabel}
+            alt={beforeAlt?.trim() || resolvedBeforeLabel}
             className="absolute inset-0 h-full w-full object-contain"
           />
         </div>

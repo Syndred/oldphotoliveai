@@ -1,4 +1,4 @@
-import { isValidLocale, localizePathname, stripLocaleFromPathname, type Locale } from "@/i18n/routing";
+import { isValidLocale, publicPathname, stripLocaleFromPathname, type Locale } from "@/i18n/routing";
 
 const TOOL_PATHS = new Set(["/", "/restore-old-photos", "/animate", "/to-video", "/bring-to-life", "/restore", "/animate-free", "/colorize-old-photos", "/repair-damaged-old-photos", "/no-login"]);
 export function checkoutLocale(value: unknown): Locale {
@@ -10,7 +10,7 @@ export function safeCheckoutTaskId(value: unknown): string | undefined {
 export function safeCheckoutReturnTo(value: unknown, locale: Locale): string | undefined {
   if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//") || /[\\?#%]/.test(value)) return undefined;
   const path = stripLocaleFromPathname(value);
-  return TOOL_PATHS.has(path) ? localizePathname(locale, path) : undefined;
+  return TOOL_PATHS.has(path) ? publicPathname(locale, path) : undefined;
 }
 export function checkoutContext(params: URLSearchParams, locale: Locale) {
   return { orderId: safeCheckoutTaskId(params.get("orderId")), taskId: safeCheckoutTaskId(params.get("taskId")), returnTo: safeCheckoutReturnTo(params.get("returnTo"), locale) };
@@ -20,5 +20,5 @@ export function pricingCheckoutPath(locale: Locale, context: { orderId?: string;
   if (context.orderId) params.set("orderId", context.orderId);
   if (context.taskId) params.set("taskId", context.taskId);
   if (context.returnTo) params.set("returnTo", context.returnTo);
-  return `${localizePathname(locale, "/pricing")}${params.size ? `?${params}` : ""}`;
+  return `${publicPathname(locale, "/pricing")}${params.size ? `?${params}` : ""}`;
 }

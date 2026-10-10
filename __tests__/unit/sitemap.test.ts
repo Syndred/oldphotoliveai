@@ -1,26 +1,28 @@
 import sitemap from "@/app/sitemap";
 
 describe("sitemap", () => {
-  it("includes localized about pages", () => {
+  it("publishes only English content plus the three maintained Chinese pages", () => {
     const entries = sitemap();
-    const aboutUrls = entries
-      .map((entry) => entry.url)
-      .filter((url) => /\/(?:zh\/|es\/|ja\/)?about$/.test(url));
+    const chineseUrls = entries.map(entry => entry.url).filter(url => url.includes("/zh"));
+    expect(chineseUrls.sort()).toEqual([
+      "https://oldphotoliveai.com/zh",
+      "https://oldphotoliveai.com/zh/colorize-old-photos",
+      "https://oldphotoliveai.com/zh/pricing",
+    ].sort());
+    expect(entries.some(entry => /\/(es|ja|en)(?:\/|$)/.test(new URL(entry.url).pathname))).toBe(false);
+    const about = entries.find(entry => entry.url === "https://oldphotoliveai.com/about");
+    expect(about?.alternates?.languages).toEqual({
+      en: "https://oldphotoliveai.com/about",
+      "x-default": "https://oldphotoliveai.com/about",
+    });
+  });
 
-    expect(aboutUrls).toEqual([
-      "https://oldphotoliveai.com/about",
-      "https://oldphotoliveai.com/zh/about",
-      "https://oldphotoliveai.com/es/about",
-      "https://oldphotoliveai.com/ja/about",
-    ]);
-
-    const enAbout = entries.find(
-      (entry) => entry.url === "https://oldphotoliveai.com/about"
-    );
-
-    expect(enAbout?.alternates?.languages?.["x-default"]).toBe(
-      "https://oldphotoliveai.com/about"
-    );
+  it("adds the English restoration cost guide without redirected language alternates", () => {
+    const cost = sitemap().find(entry => entry.url.endsWith("/photo-restoration-cost"));
+    expect(cost?.alternates?.languages).toEqual({
+      en: "https://oldphotoliveai.com/photo-restoration-cost",
+      "x-default": "https://oldphotoliveai.com/photo-restoration-cost",
+    });
   });
 
   it("excludes noindex utility pages", () => {

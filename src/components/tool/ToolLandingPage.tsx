@@ -25,6 +25,8 @@ import type { TaskWorkflow } from "@/types";
 import { RESTORE_HOW_IT_WORKS } from "@/content/home-animation";
 import { SHOWCASE_SAMPLE_ASSETS } from "@/config/showcase-assets";
 import { resolveShowcaseAssetUrl } from "@/config/showcase";
+import { MAX_FILE_SIZE } from "@/lib/validation";
+import { RESOLUTION_CONFIG } from "@/types";
 
 interface ToolLandingPageProps {
   locale: Locale;
@@ -56,11 +58,40 @@ const COLORIZER_FORMATS = [
   },
 ] as const;
 
+const COLORIZER_DETAILS = {
+  en: {
+    title: "Photo formats, output, and processing",
+    summary: "Check the supported file types, image limits, and delivery conditions before starting a colorization job.",
+    formats: "Supported files",
+    output: "Image resolution",
+    outputBody: `Up to ${RESOLUTION_CONFIG.payAsYouGo.maxWidth} × ${RESOLUTION_CONFIG.payAsYouGo.maxHeight} pixels (2K), preserving aspect ratio. Smaller generated images are not enlarged; original scan resolution is not guaranteed.`,
+    timing: "Processing time",
+    timingBody: "Usually a few minutes. Image quality, provider availability, and queue demand can extend processing; this is not a guaranteed delivery time.",
+    support: "Technical failures and refunds",
+    supportBody: "One retry at no extra cost after a confirmed technical failure. A refund is issued if delivery is confirmed impossible. Content-policy rejections are not refunded; uncertain processing or payment states require review. Bank arrival times vary.",
+    formatBody: `JPEG / JPG, PNG, and WebP, up to ${MAX_FILE_SIZE / (1024 * 1024)} MB per photo. Use a clear scan with minimal glare or compression.`,
+  },
+  zh: {
+    title: "支持格式、输出与处理说明",
+    summary: "开始上色前，请确认支持的文件类型、图片上限和交付条件。",
+    formats: "支持文件",
+    output: "图片分辨率",
+    outputBody: `最高 ${RESOLUTION_CONFIG.payAsYouGo.maxWidth} × ${RESOLUTION_CONFIG.payAsYouGo.maxHeight} 像素（2K），保留原比例。生成图片较小时不会放大，不保证保留扫描原图的全部分辨率。`,
+    timing: "处理时长",
+    timingBody: "通常需要数分钟。原图质量、服务可用性和排队情况可能延长处理，这不是保证交付时间。",
+    support: "技术失败与退款",
+    supportBody: "确认技术失败后可免额外费用重试一次；确认无法交付时退款。内容违规拒绝不退款，处理或付款状态不明确时须先核对。银行到账时间可能不同。",
+    formatBody: `JPEG / JPG、PNG、WebP，单张最大 ${MAX_FILE_SIZE / (1024 * 1024)} MB。建议使用清晰扫描件，避免反光和重度压缩。`,
+  },
+} as const;
+
 export default function ToolLandingPage({
   locale,
   slug,
 }: ToolLandingPageProps) {
   const isEnglishColorizer = locale === "en" && slug === "colorize-old-photos";
+  const isColorizer = slug === "colorize-old-photos";
+  const colorizerDetails = locale === "zh" ? COLORIZER_DETAILS.zh : COLORIZER_DETAILS.en;
   const tool = getToolPage(locale, slug);
   const toolPath = getToolPagePath(slug);
   const sectionCopy = getToolSectionCopy(locale);
@@ -146,7 +177,7 @@ export default function ToolLandingPage({
             >
               <a
                 href="#upload-section"
-                className="inline-flex min-h-[44px] items-center rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent)]/90"
+                className="inline-flex min-h-[44px] items-center rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-[#17130a] transition-colors hover:bg-[var(--color-accent)]/90"
               >
                 {tool.primaryCtaLabel}
               </a>
@@ -188,8 +219,8 @@ export default function ToolLandingPage({
                   <BeforeAfterCompare
                     beforeUrl={resolveShowcaseAssetUrl(SHOWCASE_SAMPLE_ASSETS[0].beforeKey)}
                     afterUrl={resolveShowcaseAssetUrl(SHOWCASE_SAMPLE_ASSETS[0].colorizedKey)}
-                    beforeAlt="Original black-and-white portrait before using AI to colorize old photos"
-                    afterAlt="Before and after example showing how AI can colorize old photos"
+                    beforeAlt="Black-and-white family photograph before AI photo colorization"
+                    afterAlt="AI-colorized copy of the family photograph with estimated color"
                   />
                 </div>
                 <div className="grid gap-4">
@@ -241,7 +272,7 @@ export default function ToolLandingPage({
           </div>
         </section>
 
-        {locale === "en" && tool.guideSections?.length ? (
+        {(locale === "en" || (locale === "zh" && isColorizer)) && tool.guideSections?.length ? (
           <section className="px-4 py-10 sm:py-14">
             <div className="mx-auto max-w-5xl">
               <div className="space-y-8">
@@ -260,7 +291,7 @@ export default function ToolLandingPage({
           </section>
         ) : null}
 
-        {!isEnglishColorizer && (
+        {!isColorizer && (
           <HowItWorksSection
             copy={
               locale === "en" && slug === "restore-old-photos"
@@ -270,16 +301,29 @@ export default function ToolLandingPage({
           />
         )}
 
-        {isEnglishColorizer ? (
+        {isColorizer ? (
           <section className="px-4 py-10 sm:py-14">
             <div className="mx-auto max-w-5xl">
               <h2 className="text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">
-                Supported Photo Formats
+                {colorizerDetails.title}
               </h2>
               <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
-                Upload JPG, PNG, or WEBP images up to 10 MB. A clear, high-quality source gives the colorizer more detail to work with.
+                {colorizerDetails.summary}
               </p>
-              <div className="mt-6 overflow-x-auto rounded-2xl border border-white/10">
+              <dl className="mt-6 grid gap-4 sm:grid-cols-2">
+                {[
+                  [colorizerDetails.output, colorizerDetails.outputBody],
+                  [colorizerDetails.timing, colorizerDetails.timingBody],
+                  [colorizerDetails.formats, colorizerDetails.formatBody],
+                  [colorizerDetails.support, colorizerDetails.supportBody],
+                ].map(([title, body]) => (
+                  <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
+                    <dt className="text-lg font-semibold text-[var(--color-text-primary)]">{title}</dt>
+                    <dd className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)]">{body}</dd>
+                  </div>
+                ))}
+              </dl>
+              {locale === "en" ? <div className="mt-6 overflow-x-auto rounded-2xl border border-white/10">
                 <table className="w-full min-w-[640px] border-collapse text-left text-sm">
                   <thead className="bg-white/[0.05] text-[var(--color-text-primary)]">
                     <tr>
@@ -298,7 +342,7 @@ export default function ToolLandingPage({
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </div> : null}
             </div>
           </section>
         ) : null}

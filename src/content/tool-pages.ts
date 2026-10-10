@@ -146,7 +146,6 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
       "restore old photos",
       "old photo restoration",
       "ai photo restoration",
-      "restore old photos online free",
       "fix old photos",
       "repair old photos",
     ],
@@ -208,9 +207,9 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
           "Use the highest-resolution scan you can, crop away empty borders only after scanning, and avoid photographing glossy prints under direct light. If a photo is extremely dark, try a scan that preserves as much detail as possible instead of over-brightening it before upload. The more real detail the AI can see, the better it can restore old photos online.",
       },
     ],
-    pricingTitle: "Choose the plan that fits your archive",
+    pricingTitle: "Restore one photo at a time",
     pricingBody:
-      "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required. Earlier results keep their existing download access.",
+      "Pay $1.99 for one uploaded photo and the selected restoration workflow. The completed result includes downloads without a watermark. No subscription is required.",
     faqTitle: "Questions about restoring old photos",
     faqs: [
       {
@@ -254,46 +253,46 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
   },
   "colorize-old-photos": {
   "slug": "colorize-old-photos",
-  "title": "Colorize Old Photos Online – AI Old Photo Colorizer",
-  "description": "Colorize old photos online with an AI photo colorizer. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+  "title": "Photo Colorization with AI – Colorize Black and White Photos Online",
+  "description": "Turn black-and-white photos into natural-looking color with AI. Keep a watermark-free result with images up to 2K — $1.99 per photo, no subscription.",
   "keywords": [
+    "photo colorization",
+    "colorize black and white photos",
+    "AI photo colorizer",
     "colorize old photos",
-    "old photo colorizer",
-    "colorize old photos free",
-    "restore and colorize old photos",
-    "colorize vintage photos"
+    "old photo colorizer"
   ],
   "cardTitle": "Colorize old photos",
   "cardDescription": "Add AI-estimated color to black-and-white family photographs and compare the result with your original.",
   "eyebrow": "AI colorization",
-  "heroTitle": "Colorize Old Photos with AI — Online Photo Colorizer",
-  "heroDescription": "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required. You do not need to paint individual areas or choose colors for every face, garment, and background. Start with a scan that keeps the whole photograph visible, and avoid glare, heavy compression, or filters that hide detail. The AI uses visual patterns to suggest plausible colors; it cannot know the exact shades that were present when the photograph was taken. Keep your original file and compare the result before adding it to an album, genealogy project, or family keepsake. Processing time and results vary with image quality and demand, and export options depend on your plan and remaining allowance.",
+  "heroTitle": "Photo Colorization with AI",
+  "heroDescription": "Turn black-and-white prints into natural-looking color without painting each face, garment, and background by hand. Start with a clear scan that preserves the whole photograph. The AI uses visual patterns to suggest plausible colors; it cannot know the exact shades present when the photograph was taken. Keep your original and compare the colorized copy before adding it to a family album or historical project.",
   "heroHighlights": [
-    "Upload a black-and-white photo",
-    "Review AI-estimated colors against your original",
-    "Upload, sign in, then pay $1.99 to process"
+    "Restore the image before adding estimated color",
+    "Compare faces, clothing, and fine details with the original",
+    "Download the finished image without a watermark"
   ],
   "primaryCtaLabel": "Colorize a photo now",
   "uploadTitle": "Upload a photo to colorize",
-  "uploadSubtitle": "Upload a clear scan or black-and-white photo. Sign in to start processing.",
+  "uploadSubtitle": "Upload a clear scan or black-and-white photo to prepare your single-photo order.",
   "introTitle": "How an AI photo colorizer estimates colors",
   "introBody": "An AI photo colorizer uses patterns learned from color images to estimate colors for shapes and textures in a black-and-white photo. Faces, clothing, plants, and skies provide visual clues, but several different colors can produce the same gray tone. This workflow first restores the image, then adds predicted color. The result is an interpretation, not evidence of the original historical colors; compare it with reliable references if accuracy matters.",
   "showcaseTitle": "Before & After Examples",
   "showcaseSubtitle": "Compare an original black-and-white photo with an AI-colorized result. The example demonstrates the workflow, not a guaranteed result for every photograph.",
   "showcaseKind": "colorization",
-  "benefitsTitle": "How to Colorize Old Photos",
+  "benefitsTitle": "How to Colorize Black and White Photos",
   "benefits": [
     {
-      "title": "1. Sign in and upload your photo",
-      "body": "Sign in with Google, then upload a clear black-and-white scan using the upload area on this page. Keep the original file, include the whole photograph, and avoid glare or heavy compression."
+      "title": "1. Prepare a clear source",
+      "body": "Scan the print or photograph it in even light. Include the whole image and avoid glare, strong filters, or heavy compression. You can upload before signing in."
     },
     {
-      "title": "2. Let AI restore and add color",
-      "body": "The colorization workflow first restores the image and then estimates colors for the scene. Wait for processing to finish; timing depends on the image, service availability, and queue demand."
+      "title": "2. Choose colorization",
+      "body": "The workflow restores the image and estimates color. Processing usually takes a few minutes, with longer waits possible when demand is high."
     },
     {
-      "title": "3. Compare and download the result",
-      "body": "On the result page, compare the colorized image with your original, paying attention to faces, clothing, and fine details. Download the finished image if it suits your project, while keeping the original as your reference."
+      "title": "3. Compare and save",
+      "body": "Review faces, clothing, and fine details against the original. Save the complete colorized result without a watermark, while keeping the source as your reference."
     }
   ],
   "guideSections": [
@@ -306,37 +305,41 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
       "body": "A colorized photograph can offer a new way to view a family memory, but it should not replace the source in an archive. Label shared copies as AI-colorized, especially in genealogy records or historical projects. Use dated reference photographs or family knowledge to judge whether suggested colors are plausible."
     }
   ],
-  "pricingTitle": "Photo pricing and sign-in requirements",
-  "pricingBody": "Sign in with Google to create or access your account before starting colorization on this page. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required. Paid generations already include downloads.",
-  "faqTitle": "FAQ: Colorize old photos online",
+  "pricingTitle": "One photo, one payment",
+  "pricingBody": "Colorization costs $1.99 for one uploaded photo and the selected workflow. Sign in with Google and pay before processing; the complete result includes watermark-free downloads. No subscription is required.",
+  "faqTitle": "Questions about AI photo colorization",
   "faqs": [
     {
-      "question": "How do I colorize old photos with AI?",
-      "answer": "Sign in with Google and upload a clear black-and-white image on this page. The workflow restores the image and adds estimated color, then you can compare the result with your original and download the finished photo."
+      "question": "How do I colorize a black-and-white photo?",
+      "answer": "Upload a clear JPEG, PNG, or WebP image, choose colorization, and sign in to access your order. The tool restores the image before estimating color. When processing finishes, compare and download the result from its result page."
     },
     {
-      "question": "What is the best AI photo colorizer free option for my photo?",
-      "answer": "There is no single best option for every photograph. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required."
+      "question": "Is colorization suitable for family photos?",
+      "answer": "Clear portraits, wedding prints, and family groups can be useful sources. Check each face and garment after processing, especially small faces in group photographs. Ask relatives about known clothing or setting colors rather than treating AI guesses as facts."
     },
     {
-      "question": "Can I colorize old photos online without installing software?",
-      "answer": "Yes. Upload and review the photo in your browser without installing a desktop editing application. This colorization page requires Google sign-in and an available processing allowance."
+      "question": "How should I use colorization in an archive or genealogy project?",
+      "answer": "Preserve the unedited scan as the master file and save the colorized version separately. Label it as AI-colorized, and keep the source date, people, location, and any known color references with the record."
+    },
+    {
+      "question": "Can I use it for historical photographs?",
+      "answer": "Use the result as an illustration, not evidence of historical color. Uniforms, flags, interiors, and skin tones may be estimated incorrectly. Compare those details with dated color photographs, museum records, or other reliable references before publication."
     },
     {
       "question": "Will AI recover the real historical colors?",
-      "answer": "No. A black-and-white image does not contain enough information to identify every original color. AI predicts plausible shades, so uniforms, skin tones, furniture, and clothing may differ from reality. Keep the original and label the output as AI-colorized."
+      "answer": "No. A grayscale image does not uniquely identify the original colors. The model predicts plausible shades and may also change fine details; a natural-looking result does not establish historical accuracy."
     },
     {
-      "question": "Can I download my colorized photo?",
-      "answer": "There is no free generation. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required. Previously paid generations already include downloads, and earlier results retain their download access."
+      "question": "Can I download and print the colorized result?",
+      "answer": "The completed result includes a download without a watermark. Images fit within 2048 × 2048 pixels, preserve their aspect ratio, and may be smaller depending on the generated source. Check dimensions and detail before choosing a print size."
     },
     {
-      "question": "Does this tool repair damaged photos before colorization?",
-      "answer": "Yes. The existing colorization workflow includes restoration before adding color. It may improve fading and common defects, but severe tears, missing areas, or very small faces can still produce imperfect results."
+      "question": "Does colorization also repair damage?",
+      "answer": "The workflow includes restoration before colorization and can improve fading and common surface defects. Severe tears, missing faces, unreadable lettering, or very small details may require manual restoration."
     },
     {
-      "question": "Do I need to register, and is colorization unlimited?",
-      "answer": "You need to sign in with Google to create or access an account on this page. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required."
+      "question": "What if processing fails?",
+      "answer": "A confirmed technical failure can be retried once at no extra cost. If delivery is confirmed impossible, the order is refunded. Content-policy rejections are not refunded; uncertain provider or payment states need review before another attempt. Refund arrival depends on the payment provider and bank."
     }
   ],
   "relatedTitle": "More old-photo workflows",
@@ -414,9 +417,9 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
           "Centered portraits generally animate better than full-body photos, crowded scenes, or images with hidden faces. Very blurry eyes, missing facial regions, or strong glare can limit the quality of motion. If the first result is not ideal, try a cleaner crop or restore the photo again before creating the animation.",
       },
     ],
-    pricingTitle: "Choose the right credit pack",
+    pricingTitle: "One photo, one payment",
     pricingBody:
-      "Use a small credit pack for occasional animation projects, or choose a larger pack when creating clips from family archives or client work.",
+      "Pay $1.99 for one photo and the selected animation workflow. The completed result includes downloads, with no subscription required.",
     faqTitle: "Questions about animating old photos",
     faqs: [
       {
@@ -517,9 +520,9 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
           "Scan at a high resolution when possible, keep the print flat, and avoid reflections across glossy paper. If you only have a phone camera, place the photo near soft window light and shoot straight down. A stable, evenly lit input gives the repair model a better chance to remove scratches and creases naturally.",
       },
     ],
-    pricingTitle: "Choose a plan for a few repairs or a full archive",
+    pricingTitle: "Repair one photo at a time",
     pricingBody:
-      "Buy credits for a handful of damaged prints, or choose a larger pack when restoring albums, family archives, or client collections.",
+      "Pay $1.99 for one uploaded photo and the selected repair workflow. Review the complete result and download it without a watermark. No subscription is required.",
     faqTitle: "Questions about repairing damaged old photos",
     faqs: [
       {

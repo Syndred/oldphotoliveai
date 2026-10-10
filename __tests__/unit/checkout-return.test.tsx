@@ -30,7 +30,7 @@ it("shows credited payment and returns to the same photo without starting a gene
 it("restores a pending upload through an allowlisted localized tool route", async () => {
   mockFetch.mockResolvedValue({ ok: true, json: async () => ({ ...receipt, taskId: undefined, returnTo: "/zh/restore-old-photos" }) });
   render(<CheckoutReturn />);
-  expect(await screen.findByRole("link", { name: "继续处理已上传的照片" })).toHaveAttribute("href", "/zh/restore-old-photos?resumeUpload=1#upload-section");
+  expect(await screen.findByRole("link", { name: "继续处理已上传的照片" })).toHaveAttribute("href", "/restore-old-photos?resumeUpload=1#upload-section");
 });
 it("does not trust success=true or fire a purchase from a URL flag", () => {
   window.history.replaceState(null, "", "/zh/pricing?success=true");

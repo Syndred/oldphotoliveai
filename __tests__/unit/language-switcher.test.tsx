@@ -56,7 +56,7 @@ describe("LanguageSwitcher", () => {
     expect(screen.getByText("\u7b80\u4f53\u4e2d\u6587")).toBeInTheDocument();
   });
 
-  it("opens a menu with four language options", () => {
+  it("opens a menu with only maintained public language options", () => {
     render(<LanguageSwitcher />);
 
     fireEvent.click(screen.getByRole("button", { name: "Open language menu" }));
@@ -70,12 +70,8 @@ describe("LanguageSwitcher", () => {
         name: "\u7b80\u4f53\u4e2d\u6587",
       })
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("menuitemradio", { name: "Espa\u00f1ol" })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("menuitemradio", { name: "\u65e5\u672c\u8a9e" })
-    ).toBeInTheDocument();
+    expect(screen.queryByRole("menuitemradio", { name: "Espa\u00f1ol" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitemradio", { name: "\u65e5\u672c\u8a9e" })).not.toBeInTheDocument();
   });
 
   it("marks the current locale as selected", () => {
@@ -99,11 +95,28 @@ describe("LanguageSwitcher", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Open language menu" }));
     fireEvent.click(
-      screen.getByRole("menuitemradio", { name: "Espa\u00f1ol" })
+      screen.getByRole("menuitemradio", { name: "\u7b80\u4f53\u4e2d\u6587" })
     );
 
-    expect(mockNavigateTo).toHaveBeenCalledWith("/es/pricing?tab=billing");
-    expect(document.cookie).toContain("NEXT_LOCALE=es");
+    expect(mockNavigateTo).toHaveBeenCalledWith("/zh/pricing?tab=billing");
+    expect(document.cookie).toContain("NEXT_LOCALE=zh");
+  });
+
+  it("opens the Chinese home from an English-only article", () => {
+    __setMockPathname("/blog/restore-faded-family-photos");
+    render(<LanguageSwitcher />);
+    fireEvent.click(screen.getByRole("button", { name: "Open language menu" }));
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "简体中文" }));
+    expect(mockNavigateTo).toHaveBeenCalledWith("/zh");
+  });
+
+  it("preserves result ids and query parameters when switching display language", () => {
+    __setMockPathname("/result/task-123");
+    mockSearchParamsEntries.mockReturnValue([["token", "return-proof"]]);
+    render(<LanguageSwitcher />);
+    fireEvent.click(screen.getByRole("button", { name: "Open language menu" }));
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "简体中文" }));
+    expect(mockNavigateTo).toHaveBeenCalledWith("/zh/result/task-123?token=return-proof");
   });
 
   it("closes the menu without navigation when clicking the current locale", () => {

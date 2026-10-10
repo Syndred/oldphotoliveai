@@ -7,7 +7,7 @@ export const HOME_METADATA = {
 
 export const HOME_PIPELINE_STEPS = [
   { title: "Restore", href: "/restore-old-photos", description: "Remove scratches, noise, folds, and blur from old and damaged photos. Our AI cleanup prepares your image for the next steps." },
-  { title: "Colorize", href: "/colorize-old-photos", description: "Add natural, realistic color to black and white photos. The AI uses patterns learned from millions of photographs to infer plausible colors." },
+  { title: "Colorize", href: "/colorize-old-photos", description: "Add natural-looking color to black-and-white photos. The AI uses visual patterns to estimate plausible colors; it cannot verify the original shades." },
   { title: "Animate", href: "/animate", description: "Bring faces to life with subtle, natural motion — a gentle smile, a blink, or a turn of the head. Respectful, not cartoonish." },
 ] as const;
 
@@ -40,8 +40,8 @@ export const ANIMATE_HOW_IT_WORKS = {
   subtitle: "Create subtle motion from a clear portrait in three steps.",
   steps: [
     { title: "Upload your photo", description: "Drag and drop a clear old portrait. Best results come from front-facing photos with visible facial features." },
-    { title: "AI creates motion", description: "Our model analyzes the face and adds subtle, natural movement — a blink, a gentle smile, or a slight head turn." },
-    { title: "Preview and download", description: "Watch the animation preview, then download the available video quality when you are happy with the result." },
+    { title: "Pay and create motion", description: "Sign in and pay for the selected tool before processing. AI analyzes the face and adds motion such as a blink, smile, or slight head turn." },
+    { title: "Review and download", description: "Review the completed animation and download the video without a watermark. Keep the original photo alongside your result." },
   ],
 } as const;
 
