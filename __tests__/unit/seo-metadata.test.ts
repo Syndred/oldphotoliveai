@@ -30,9 +30,9 @@ describe("SEO metadata ownership", () => {
     });
 
     expect(metadata.title).toEqual({
-      absolute: "Colorize Photo Online Free – AI Photo Colorizer",
+      absolute: "Colorize Photo Online – AI Photo Colorizer",
     });
-    expect(metadata.description).toMatch(/daily free account quota/);
+    expect(metadata.description).toMatch(/pay \$1.99 before processing/);
     expect(metadata.keywords).toContain("colorize photo");
     expect(metadata.keywords).not.toContain("colorize old photos");
   });

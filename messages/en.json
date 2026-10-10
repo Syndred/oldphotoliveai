@@ -62,11 +62,11 @@
   "pricing": {
     "eyebrow": "One-time credit packs",
     "title": "Pay Once, Restore When You Need",
-    "subtitle": "Preview for free. Unlock the same result for $1.99, or use credits. Optional HD regeneration creates a new version and may change the result.",
-    "valueProp1": "Free daily preview",
-    "valueProp2": "Same-result downloads",
-    "valueProp3": "Credits valid for 1 year",
-    "free": "Free",
+    "subtitle": "Process one photo for $1.99 before generation, or use a credit pack for more photos. Complete results without watermarks; no subscription required.",
+    "valueProp1": "One photo from $1.99",
+    "valueProp2": "Pay before processing",
+    "valueProp3": "No watermark or subscription",
+    "free": "Pay per photo",
     "payAsYouGo": "Credits",
     "professional": "Professional",
     "starterPack": "Starter Pack",
@@ -88,29 +88,29 @@
     "creditPackPeriod": "/ {count} {count, plural, one {credit} other {credits}}",
     "payAsYouGoPeriod": "/ {count} {count, plural, one {credit} other {credits}}",
     "professionalPeriod": "/ month",
-    "freePriceNote": "One free watermarked preview per day. New preview downloads require an unlock.",
+    "freePriceNote": "One photo from $1.99",
     "starterPackPriceNote": "About $0.50 per credit for trying key photos.",
     "familyPackPriceNote": "About $0.40 per credit for a small family album.",
     "archivePackPriceNote": "About $0.33 per credit for larger batches.",
     "professionalPriceNote": "Monthly plan for albums, batches, and client work.",
-    "freeDesc": "Check the result before choosing a paid download.",
+    "freeDesc": "One photo from $1.99",
     "starterPackDesc": "A low-risk pack for first purchases.",
     "familyPackDesc": "Enough credits for a keepsake set or gift.",
     "archivePackDesc": "Process a larger batch at a lower per-credit cost.",
     "professionalDesc": "Process more family photos with priority output.",
-    "freeFeature1": "1 free preview per day",
-    "freeFeature2": "Watermarked image preview",
-    "freeFeature3": "480p animation preview",
-    "freeFeature4": "Unlock this result from $1.99",
-    "starterPackFeature1": "10 credits: unlocks or new generations",
+    "freeFeature1": "One photo from $1.99",
+    "freeFeature2": "One photo from $1.99",
+    "freeFeature3": "One photo from $1.99",
+    "freeFeature4": "One photo from $1.99",
+    "starterPackFeature1": "10 credits for photo processing",
     "starterPackFeature2": "New generations: images up to 2K",
     "starterPackFeature3": "New generations: 720p HD video",
     "starterPackFeature4": "Watermark-free downloads",
-    "familyPackFeature1": "25 credits: unlocks or new generations",
+    "familyPackFeature1": "25 credits for photo processing",
     "familyPackFeature2": "New generations: images up to 2K",
     "familyPackFeature3": "New generations: 720p HD video",
     "familyPackFeature4": "Watermark-free downloads",
-    "archivePackFeature1": "60 credits: unlocks or new generations",
+    "archivePackFeature1": "60 credits for photo processing",
     "archivePackFeature2": "New generations: images up to 2K",
     "archivePackFeature3": "New generations: 720p HD video",
     "archivePackFeature4": "Watermark-free downloads",
@@ -123,7 +123,8 @@
     "proFeature3": "1080p premium video",
     "proFeature4": "Watermark-free downloads",
     "proFeature5": "Priority processing for large batches",
-    "buyPack": "Buy Credits"
+    "buyPack": "Buy Credits",
+    "termsLink": "Terms"
   },
   "history": {
     "title": "Processing History",
@@ -157,7 +158,7 @@
     "uploadStorageNetworkError": "Storage service is temporarily unreachable. Please try again.",
     "uploadSupportHint": "Ref: {requestId} ({code})",
     "uploadCancelled": "Upload was cancelled.",
-    "quotaExceeded": "Daily free quota used up. Upgrade or try again tomorrow.",
+    "quotaExceeded": "Payment is required before processing. Choose one photo for $1.99 or use a credit pack.",
     "creditsExpired": "Credits have expired. Please purchase again.",
     "professionalAlreadyIncludesCredits": "Professional already includes unlimited restorations. No extra credits are needed.",
     "rateLimited": "Too many requests. Please try again later.",
@@ -184,7 +185,8 @@
     "creationAllowanceMayBeUsed": "The request may have used your allowance. Retry the same uploaded photo first; an existing result will reopen without another charge.",
     "retrySamePhoto": "Retry same photo",
     "taskIdsRequired": "Please select at least one task.",
-    "taskBatchTooLarge": "You can delete up to 50 tasks at once."
+    "taskBatchTooLarge": "You can delete up to 50 tasks at once.",
+    "paymentRequired": "Payment is required before processing. Choose one photo for $1.99 or use a credit pack."
   },
   "auth": {
     "signInWith": "Sign in with Google",
@@ -198,12 +200,12 @@
   "landing": {
     "hero": {
       "title": "Photo Colorization with AI",
-      "subtitle": "Use our AI photo colorizer to turn black-and-white pictures into color. Upload a clear scan and start with your free daily account quota.",
+      "subtitle": "Process one photo for $1.99 before generation, or use a credit pack for more photos. Complete results without watermarks; no subscription required.",
       "signal1": "AI black-and-white photo colorizer",
-      "signal2": "Free daily trial",
+      "signal2": "One photo from $1.99",
       "signal3": "Results in minutes",
-      "signal4": "HD exports on paid packs",
-      "cta": "Try It Free"
+      "signal4": "No watermark",
+      "cta": "Upload a photo"
     },
     "showcase": {
       "title": "Real Results by Scenario",
@@ -398,7 +400,7 @@
         },
         "payments": {
           "title": "7. Payments, Credits, and Subscriptions",
-          "body": "Paid plans, credits, and subscriptions are processed by Stripe. Pay-as-you-go credits are currently sold in fixed packs and may expire after the period disclosed at purchase. Professional subscriptions renew automatically according to the billing cycle you choose at checkout unless canceled before renewal. Except where required by law, fees are non-refundable, and you are responsible for applicable taxes, chargebacks, and unpaid amounts."
+          "body": "Paid plans, credits, and subscriptions are processed by Stripe. Pay-as-you-go credits are currently sold in fixed packs and may expire after the period disclosed at purchase. Professional subscriptions renew automatically according to the billing cycle you choose at checkout unless canceled before renewal. Except where required by law or under the single-photo technical-failure policy below, fees are non-refundable, and you are responsible for applicable taxes, chargebacks, and unpaid amounts. For a single-photo purchase, a confirmed technical failure includes one free retry. If we confirm we cannot deliver the result, we refund that purchase. Content-policy violations remain non-refundable. Uncertain delivery is reviewed by support."
         },
         "termination": {
           "title": "8. Suspension and Termination",

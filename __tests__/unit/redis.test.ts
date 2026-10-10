@@ -355,6 +355,12 @@ describe("getUserTasks", () => {
 });
 
 describe("cancelTask", () => {
+  it("does not cancel a prepaid single-photo order before delivery", async () => {
+    const task = await createTask({userId:"u1",originalImageKey:"img.jpg",priority:"high"});
+    await updateTaskStatus(task.id,"pending",{purchaseOrderId:"order-1"});
+    expect(await cancelTask(task.id)).toBe(false);
+    expect((await getTask(task.id))?.status).toBe("pending");
+  });
   it("cancels a pending task and returns true", async () => {
     const task = await createTask({
       userId: "u1",

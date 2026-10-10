@@ -11,7 +11,7 @@ export default function HomeAnimationHero() {
         <div className="flex flex-col justify-center">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">Restore · Colorize · Animate</p>
           <h1 className="mt-4 bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-accent)] bg-clip-text text-4xl font-bold leading-tight text-transparent sm:text-5xl md:text-6xl">Bring Old Photos to Life with AI</h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--color-text-secondary)] sm:text-lg">Restore, colorize, and animate your old family photos — all in one place, with a free preview.</p>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--color-text-secondary)] sm:text-lg">Restore, colorize, and animate your old family photos — all in one place. Process one photo from $1.99, with no subscription.</p>
           <div className="mt-7 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-black/25 p-2">
             <video controls loop muted playsInline preload="none" poster={resolveShowcaseAssetUrl(demo.colorizedKey)} width={960} height={720} aria-label="AI animation demo of a restored and colorized old family photo" className="aspect-[4/3] w-full rounded-xl object-cover">
               <source src={resolveShowcaseAssetUrl(demo.animationKey)} type="video/mp4" />
@@ -30,7 +30,7 @@ export default function HomeAnimationHero() {
       <div className="mx-auto mt-8 grid max-w-6xl gap-3 border-y border-white/10 py-4 text-center text-sm text-[var(--color-text-secondary)] sm:grid-cols-3">
         <span>Photos brought to life every day</span>
         <span>Restore, colorize &amp; animate in one workflow</span>
-        <span>Free account quota available</span>
+        <span>One photo from $1.99 · No watermark</span>
       </div>
     </section>
   );

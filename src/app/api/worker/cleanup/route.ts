@@ -3,11 +3,14 @@
 
 import { NextResponse } from "next/server";
 import { config } from "@/lib/config";
-import { getRedisClient, hardDeleteTask } from "@/lib/redis";
+import { getRedisClient, getTask, hardDeleteTask } from "@/lib/redis";
 import { deleteTaskFiles, deletePrivateTaskFiles } from "@/lib/r2";
 import { removeFromQueue } from "@/lib/queue";
 import type { Task } from "@/types";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
+import { processPendingPhotoOrderRefunds, reconcileTaskPhotoOrderRefund } from "@/lib/photo-order-refund";
+import { cleanupUnpaidPhotoOrders } from "@/lib/photo-order";
+import { cleanupUploadedPhotos } from "@/lib/upload-cleanup";
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -47,6 +50,11 @@ async function cleanupFailedTasks(): Promise<number> {
   const now = Date.now();
   let cleaned = 0;
   let cursor = "0";
+  await processPendingPhotoOrderRefunds();
+  try { await cleanupUnpaidPhotoOrders(3); }
+  catch { console.error(JSON.stringify({ message: "photo_order_draft_cleanup_failed" })); }
+  try { await cleanupUploadedPhotos(3); }
+  catch { console.error(JSON.stringify({ message: "upload_cleanup_failed" })); }
 
   do {
     const [nextCursor, taskKeys] = await redis.scan(cursor, {
@@ -68,6 +76,12 @@ async function cleanupFailedTasks(): Promise<number> {
       if (now - anchorTimestamp <= SEVEN_DAYS_MS) continue;
 
       try {
+        if (task.purchaseOrderId && !task.violation) {
+          await reconcileTaskPhotoOrderRefund(task.id, { retentionExpired: true, process: false });
+          // Keep the source/evidence while delivery or money is unresolved.
+          const current = await getTask(task.id);
+          if (current?.refundStatus !== "succeeded") continue;
+        }
         if (task.downloadPolicy === "preview_v1") {
           await deletePrivateTaskFiles(task.id, Object.values(task.masterAssets ?? {}));
         }

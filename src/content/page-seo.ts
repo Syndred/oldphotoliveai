@@ -19,14 +19,14 @@ interface SeoDictionary {
 export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
   en: {
     home: {
-      title: "Colorize Photo Online Free – AI Photo Colorizer",
+      title: "Colorize Photo Online – AI Photo Colorizer",
       description:
-        "Colorize a photo online with AI. Turn black-and-white photos into color using your daily free account quota, then restore or animate old photos when needed.",
+        "Colorize a photo online with AI. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
     },
     pricing: {
       title: "Pricing",
       description:
-        "Preview AI photo restoration, colorization, and animation for free. Unlock the same result for $1.99 or use credits. Optional HD regeneration is separate.",
+        "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
     },
     login: {
       title: "Sign In",
@@ -62,12 +62,12 @@ export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
     home: {
       title: "老照片修复与上色",
       description:
-        "使用 AI 给黑白照片上色、修复破损旧照片，并将复古人像动态化。可免费试用，无需先注册即可开始。",
+        "上传照片并登录后，先支付 $1.99 再开始所选功能的处理，交付完整无水印结果，无需订阅。已有积分或专业版权益仍可使用。",
     },
     pricing: {
       title: "价格",
       description:
-        "选择适合你的 AI 照片修复、上色和动态化方案。可先免费体验，也可升级到无水印与更高分辨率导出。",
+        "上传照片并登录后，先支付 $1.99 再开始所选功能的处理，交付完整无水印结果，无需订阅。已有积分或专业版权益仍可使用。",
     },
     login: {
       title: "登录",
@@ -101,12 +101,12 @@ export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
     home: {
       title: "Restaura y coloriza fotos",
       description:
-        "Coloriza fotos en blanco y negro, restaura imágenes antiguas dañadas y anima retratos vintage con IA. Gratis para probar, sin registro inicial.",
+        "Sube una foto, inicia sesión y paga $1.99 antes de procesarla con la herramienta seleccionada. Resultado completo sin marca de agua ni suscripción. También puedes usar tus créditos o plan profesional.",
     },
     pricing: {
       title: "Precios",
       description:
-        "Elige el plan adecuado para restauración, colorización y animación de fotos con IA. Empieza gratis o mejora para exportaciones sin marca de agua y mayor calidad.",
+        "Sube una foto, inicia sesión y paga $1.99 antes de procesarla con la herramienta seleccionada. Resultado completo sin marca de agua ni suscripción. También puedes usar tus créditos o plan profesional.",
     },
     login: {
       title: "Iniciar sesión",
@@ -142,12 +142,12 @@ export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
     home: {
       title: "古い写真の修復とカラー化",
       description:
-        "AI で白黒写真をカラー化し、傷んだ古い写真を修復し、ビンテージポートレートをアニメーション化できます。無料で試せます。",
+        "写真をアップロードしてログイン後、選択した機能の処理前に$1.99を支払います。透かしなしの完全な結果で、定期購入は不要です。既存のクレジットやプロプランも利用できます。",
     },
     pricing: {
       title: "料金",
       description:
-        "AI 写真修復、カラー化、アニメーションに最適なプランを選べます。無料で始めることも、透かしなし高品質出力にアップグレードすることもできます。",
+        "写真をアップロードしてログイン後、選択した機能の処理前に$1.99を支払います。透かしなしの完全な結果で、定期購入は不要です。既存のクレジットやプロプランも利用できます。",
     },
     login: {
       title: "ログイン",

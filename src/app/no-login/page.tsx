@@ -4,9 +4,9 @@ import { defaultLocale } from "@/i18n/routing";
 import { buildPageMetadata } from "@/lib/seo";
 
 const noLoginMetadata = buildPageMetadata({
-  title: "No-Login Photo Animation Preview | OldPhotoLive AI",
+  title: "Upload Before Login — Photo Animation | OldPhotoLive AI",
   description:
-    "Try one watermarked 480p old-photo animation preview without an account, then sign in only if you want saved history or higher-quality exports.",
+    "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
   path: "/no-login",
   robots: { index: false, follow: true },
 });
@@ -14,7 +14,7 @@ const noLoginMetadata = buildPageMetadata({
 export const metadata: Metadata = {
   ...noLoginMetadata,
   title: {
-    absolute: "No-Login Photo Animation Preview | OldPhotoLive AI",
+    absolute: "Upload Before Login — Photo Animation | OldPhotoLive AI",
   },
 };
 

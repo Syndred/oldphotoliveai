@@ -137,11 +137,11 @@ const BLOG_DATE_LOCALES: Record<Locale, string> = {
 
 const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
   en: {
-    title: "How to Colorize Black and White Photos for Free with AI",
+    title: "How to Colorize Black and White Photos with AI",
     description:
-      "Learn how to colorize black and white photos for free online with AI, prepare old family scans, avoid common mistakes, and restore faded photos before adding color.",
+      "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
     excerpt:
-      "A practical guide to turning black and white family photos into natural color online, with scan tips, AI colorizer steps, restoration advice, and free workflow options.",
+      "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
     eyebrow: "AI photo colorization guide",
     readingTime: "8 min read",
     keywords: [
@@ -180,7 +180,7 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
       {
         heading: "Step 3: Use an AI colorizer and compare the result",
         body: [
-          "Once the image is ready, upload it to an AI photo colorizer. OldPhotoLive AI lets you start with a free workflow, so you can try colorization before deciding whether you need higher-resolution exports, watermark-free downloads, or more credits.",
+          "Once the image is ready, upload it to an AI photo colorizer. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
           "After processing, compare the colorized version with the original black and white photo. Look at faces first. Natural skin tones are usually the strongest sign of a good result.",
         ],
       },
@@ -199,10 +199,10 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
         ],
       },
       {
-        heading: "When free colorization is enough and when to upgrade",
+        heading: "Choosing one photo or a credit pack",
         body: [
-          "Free AI colorization is usually enough when you want to test one or two family photos, preview the style, or decide whether a scan is worth restoring.",
-          "Paid plans make more sense when you are processing a full family archive, need higher-resolution downloads, want watermark-free exports, or plan to create animations from restored portraits.",
+          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
         ],
       },
     ],
@@ -210,7 +210,7 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
       {
         question: "Can I colorize black and white photos for free?",
         answer:
-          "Yes. OldPhotoLive AI lets you start with a free workflow so you can test AI photo colorization before upgrading for more credits, HD exports, or watermark-free downloads.",
+          "There is no free generation. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
       },
       {
         question: "Should I restore an old photo before colorizing it?",
@@ -230,9 +230,9 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
     ],
   },
   zh: {
-    title: "如何免费用 AI 给黑白照片上色",
+    title: "AI 照片上色与单张付费处理",
     description:
-      "学习如何在线免费给黑白照片上色：包括老照片扫描技巧、先修复再上色的流程、常见错误，以及什么时候需要高清无水印导出。",
+      "上传照片并登录后，先支付 $1.99 再开始所选功能的处理，交付完整无水印结果，无需订阅。已有积分或专业版权益仍可使用。",
     excerpt:
       "一篇面向家庭旧照的 AI 上色指南，讲清楚如何准备扫描件、修复破损照片、获得更自然的肤色和背景颜色。",
     eyebrow: "AI 黑白照片上色指南",
@@ -278,9 +278,9 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
         ],
       },
       {
-        heading: "什么时候免费版够用，什么时候值得升级",
+        heading: "AI 照片上色与单张付费处理",
         body: [
-          "如果只是测试一两张家庭照片，免费流程通常已经够用。你可以先看上色风格是否自然，再决定要不要继续处理整本相册。",
+          "上传照片并登录后，先支付 $1.99 再开始所选功能的处理，交付完整无水印结果，无需订阅。已有积分或专业版权益仍可使用。",
           "如果你要批量整理家族照片、需要高清下载、无水印结果，或者还要把人像做成动态视频，那么选择合适的付费点数包会更省时间。",
         ],
       },
@@ -289,7 +289,7 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
       {
         question: "黑白照片可以免费用 AI 上色吗？",
         answer:
-          "可以。OldPhotoLive AI 提供免费流程，适合先测试上色效果；如果需要更多次数、高清导出或无水印结果，再升级即可。",
+          "上传照片并登录后，先支付 $1.99 再开始所选功能的处理，交付完整无水印结果，无需订阅。已有积分或专业版权益仍可使用。",
       },
       {
         question: "上色前一定要先修复旧照片吗？",
@@ -309,9 +309,9 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
     ],
   },
   es: {
-    title: "Como colorear fotos en blanco y negro gratis con IA",
+    title: "Colorización con IA y pago por foto",
     description:
-      "Aprende a colorear fotos en blanco y negro gratis online con IA, preparar escaneos familiares, evitar errores comunes y restaurar fotos descoloridas antes de anadir color.",
+      "Sube una foto, inicia sesión y paga $1.99 antes de procesarla con la herramienta seleccionada. Resultado completo sin marca de agua ni suscripción. También puedes usar tus créditos o plan profesional.",
     excerpt:
       "Una guia practica para convertir fotos familiares en blanco y negro en imagenes con color natural, con consejos de escaneo, restauracion y exportacion.",
     eyebrow: "Guia de colorizacion con IA",
@@ -357,9 +357,9 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
         ],
       },
       {
-        heading: "Cuando basta el plan gratis y cuando conviene pagar",
+        heading: "Colorización con IA y pago por foto",
         body: [
-          "La colorizacion gratis basta para probar una o dos fotos y decidir si el estilo funciona para tu archivo familiar.",
+          "Sube una foto, inicia sesión y paga $1.99 antes de procesarla con la herramienta seleccionada. Resultado completo sin marca de agua ni suscripción. También puedes usar tus créditos o plan profesional.",
           "Los planes de pago tienen mas sentido si necesitas exportaciones HD, resultados sin marca de agua, mas creditos o animaciones a partir de retratos restaurados.",
         ],
       },
@@ -368,7 +368,7 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
       {
         question: "Puedo colorear fotos en blanco y negro gratis?",
         answer:
-          "Si. OldPhotoLive AI ofrece un flujo gratuito para probar la colorizacion antes de pagar por mas creditos, exportaciones HD o resultados sin marca de agua.",
+          "Sube una foto, inicia sesión y paga $1.99 antes de procesarla con la herramienta seleccionada. Resultado completo sin marca de agua ni suscripción. También puedes usar tus créditos o plan profesional.",
       },
       {
         question: "Conviene restaurar una foto antes de colorearla?",
@@ -388,9 +388,9 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
     ],
   },
   ja: {
-    title: "AI で白黒写真を無料カラー化する方法",
+    title: "AI 写真カラー化と写真ごとの料金",
     description:
-      "白黒写真をオンラインで無料カラー化する流れ、古い家族写真のスキャン準備、よくある失敗、カラー化前に修復すべきケースを解説します。",
+      "写真をアップロードしてログイン後、選択した機能の処理前に$1.99を支払います。透かしなしの完全な結果で、定期購入は不要です。既存のクレジットやプロプランも利用できます。",
     excerpt:
       "古い白黒の家族写真を自然なカラー写真に近づけるための実践ガイドです。スキャン、AI 修復、カラー化、保存の手順をまとめました。",
     eyebrow: "AI 写真カラー化ガイド",
@@ -436,9 +436,9 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
         ],
       },
       {
-        heading: "無料版で十分な場合とアップグレードすべき場合",
+        heading: "AI 写真カラー化と写真ごとの料金",
         body: [
-          "1、2 枚の写真で雰囲気を試すだけなら、無料のワークフローで十分です。まず一番大切な写真から試して、仕上がりを確認しましょう。",
+          "写真をアップロードしてログイン後、選択した機能の処理前に$1.99を支払います。透かしなしの完全な結果で、定期購入は不要です。既存のクレジットやプロプランも利用できます。",
           "大量の家族アルバムを処理したい場合、HD ダウンロード、透かしなしの出力、人物写真のアニメーションが必要な場合は、有料プランが向いています。",
         ],
       },
@@ -447,7 +447,7 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
       {
         question: "白黒写真を無料でカラー化できますか？",
         answer:
-          "はい。OldPhotoLive AI では無料ワークフローで AI カラー化を試せます。より多くの回数、HD 出力、透かしなしの結果が必要な場合はアップグレードできます。",
+          "写真をアップロードしてログイン後、選択した機能の処理前に$1.99を支払います。透かしなしの完全な結果で、定期購入は不要です。既存のクレジットやプロプランも利用できます。",
       },
       {
         question: "カラー化の前に写真修復は必要ですか？",

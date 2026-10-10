@@ -1,3 +1,4 @@
+import { schedulePipelineWakeupForStatus } from "@/lib/worker-wakeup";
 // Stripe Webhook Handler
 // Requirements: 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 18.5
 
@@ -66,6 +67,7 @@ async function fulfillCheckoutSession(
   }
 
   const fulfilled = await fulfillPaidCheckout(session);
+  if (plan === "single_run") schedulePipelineWakeupForStatus("pending");
   if (!fulfilled) return;
   const email = session.customer_details?.email ?? session.customer_email ?? null;
   if (email && (await shouldSendWebhookEmail(eventId))) {

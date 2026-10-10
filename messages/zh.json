@@ -62,11 +62,11 @@
   "pricing": {
     "eyebrow": "一次性点数包",
     "title": "按需购买，用完再补",
-    "subtitle": "先免费预览，满意后支付 $1.99 或使用积分解锁同一成品。可选的高清重制会重新生成，结果可能变化。",
-    "valueProp1": "每日免费预览",
-    "valueProp2": "解锁同一成品下载",
-    "valueProp3": "点数有效期 1 年",
-    "free": "免费版",
+    "subtitle": "每张照片先付 $1.99 再生成，也可购买积分包处理更多照片。交付完整无水印结果，无需订阅。",
+    "valueProp1": "单张 $1.99 起",
+    "valueProp2": "先付款，再处理",
+    "valueProp3": "无水印，不订阅",
+    "free": "按张付费",
     "payAsYouGo": "点数包",
     "professional": "专业版",
     "starterPack": "入门包",
@@ -88,29 +88,29 @@
     "creditPackPeriod": "/ {count} 个积分",
     "payAsYouGoPeriod": "/ {count} 个积分",
     "professionalPeriod": "/ 月",
-    "freePriceNote": "每天一次带水印预览，新预览需解锁后下载。",
+    "freePriceNote": "单张 $1.99 起",
     "starterPackPriceNote": "约 $0.50/积分，适合先试几张重要照片。",
     "familyPackPriceNote": "约 $0.40/积分，适合一个小型家庭相册。",
     "archivePackPriceNote": "约 $0.33/积分，适合更大批量处理。",
     "professionalPriceNote": "月度方案，适合家庭相册、批量处理和持续创作。",
-    "freeDesc": "先看效果，再决定是否购买下载。",
+    "freeDesc": "单张 $1.99 起",
     "starterPackDesc": "首购门槛低，适合先验证效果。",
     "familyPackDesc": "足够处理一组纪念照片或礼物照片。",
     "archivePackDesc": "用更低单价处理更多旧照片。",
     "professionalDesc": "用优先处理完成更多家庭照片。",
-    "freeFeature1": "每天 1 次免费预览",
-    "freeFeature2": "带水印图片预览",
-    "freeFeature3": "480p 动态预览",
-    "freeFeature4": "$1.99 起解锁当前结果",
-    "starterPackFeature1": "10 积分，可用于解锁或重新生成",
+    "freeFeature1": "单张 $1.99 起",
+    "freeFeature2": "单张 $1.99 起",
+    "freeFeature3": "单张 $1.99 起",
+    "freeFeature4": "单张 $1.99 起",
+    "starterPackFeature1": "10 积分，用于照片处理",
     "starterPackFeature2": "新生成图片最高 2K",
     "starterPackFeature3": "新生成视频为 720p 高清",
     "starterPackFeature4": "无水印下载",
-    "familyPackFeature1": "25 积分，可用于解锁或重新生成",
+    "familyPackFeature1": "25 积分，用于照片处理",
     "familyPackFeature2": "新生成图片最高 2K",
     "familyPackFeature3": "新生成视频为 720p 高清",
     "familyPackFeature4": "无水印下载",
-    "archivePackFeature1": "60 积分，可用于解锁或重新生成",
+    "archivePackFeature1": "60 积分，用于照片处理",
     "archivePackFeature2": "新生成图片最高 2K",
     "archivePackFeature3": "新生成视频为 720p 高清",
     "archivePackFeature4": "无水印下载",
@@ -123,7 +123,8 @@
     "proFeature3": "1080p 高级视频",
     "proFeature4": "无水印下载",
     "proFeature5": "大批量任务优先处理",
-    "buyPack": "购买点数"
+    "buyPack": "购买点数",
+    "termsLink": "服务条款"
   },
   "history": {
     "title": "处理历史",
@@ -157,7 +158,7 @@
     "uploadStorageNetworkError": "暂时无法连接存储服务，请稍后重试。",
     "uploadSupportHint": "参考编号：{requestId}（{code}）",
     "uploadCancelled": "上传已取消。",
-    "quotaExceeded": "今日免费额度已用完，请升级或明天再试。",
+    "quotaExceeded": "处理前需付款。可选择单张 $1.99 或使用积分包。",
     "creditsExpired": "积分已过期，请重新购买。",
     "professionalAlreadyIncludesCredits": "专业版已包含无限次修复，无需额外购买积分。",
     "rateLimited": "请求过于频繁，请稍后再试。",
@@ -184,7 +185,8 @@
     "creationAllowanceMayBeUsed": "本次请求可能已消耗额度。请先用同一张已上传照片重试；若任务已创建，将直接恢复原结果且不会再次扣费。",
     "retrySamePhoto": "重试同一张照片",
     "taskIdsRequired": "请至少选择一个任务。",
-    "taskBatchTooLarge": "单次最多可删除 50 个任务。"
+    "taskBatchTooLarge": "单次最多可删除 50 个任务。",
+    "paymentRequired": "处理前需付款。可选择单张 $1.99 或使用积分包。"
   },
   "auth": {
     "signInWith": "使用 Google 登录",
@@ -200,10 +202,10 @@
       "title": "OldPhotoLive AI：在线修复、上色并动态化旧照片",
       "subtitle": "上传一张旧照片，按需要选择修复损伤、给黑白照片上色，或生成一段自然的人像动态短片。",
       "signal1": "可只修复、只上色或只动态化",
-      "signal2": "每日免费试用",
+      "signal2": "单张 $1.99 起",
       "signal3": "几分钟出结果",
-      "signal4": "付费点数支持高清导出",
-      "cta": "免费试用"
+      "signal4": "无水印成品",
+      "cta": "上传照片"
     },
     "showcase": {
       "title": "不同场景的真实效果",
@@ -398,7 +400,7 @@
         },
         "payments": {
           "title": "7. 支付、积分与订阅",
-          "body": "付费套餐、积分和订阅均通过 Stripe 处理。按次付费积分目前以固定额度出售，并可能在购买时披露的期限后过期。专业版订阅会按照结账时选择的计费周期自动续费，除非你在下一次续费前取消。除法律另有要求外，已支付费用通常不予退还，你需自行承担适用税费、拒付以及未结清款项。"
+          "body": "付费套餐、积分和订阅均通过 Stripe 处理。按次付费积分目前以固定额度出售，并可能在购买时披露的期限后过期。专业版订阅会按照结账时选择的计费周期自动续费，除非你在下一次续费前取消。除法律另有要求或下述单张照片技术失败退款政策适用外，已支付费用通常不予退还，你需自行承担适用税费、拒付以及未结清款项。 单张照片订单确认技术失败后可免费重试一次；如确认无法交付结果，我们将退还该笔购买费用。内容违规仍不予退款。交付状态不确定时由支持团队核对。"
         },
         "termination": {
           "title": "8. 暂停与终止",

@@ -219,7 +219,7 @@ export function buildSoftwareApplicationJsonLd({
   keywords,
   applicationCategory = "MultimediaApplication",
   operatingSystem = "Web",
-  price = "0",
+  price = "1.99",
   priceCurrency = "USD",
 }: SoftwareApplicationJsonLdOptions) {
   return {

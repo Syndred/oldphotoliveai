@@ -81,3 +81,11 @@ it("stops polling a paid delivery exception, provides support, and allows a manu
   view.unmount();
   jest.useRealTimers();
 });
+
+it("confirms single-run processing without claiming credits or completed downloads", async () => {
+  mockFetch.mockResolvedValue({ ok: true, json: async () => ({ ...receipt, plan: "single_run", fulfillmentKind: "photo_processing", creditsAdded: 0, amountTotal: 199 }) });
+  render(<CheckoutReturn />);
+  expect(await screen.findByText("付款已确认，正在处理照片")).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "查看照片处理状态" })).toHaveAttribute("href", "/zh/result/photo-1");
+  expect(screen.queryByText(/积分已到账|当前结果已解锁|专业版已开通/)).not.toBeInTheDocument();
+});

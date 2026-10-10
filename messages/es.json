@@ -62,11 +62,11 @@
   "pricing": {
     "eyebrow": "Paquetes de creditos de un solo pago",
     "title": "Paga una vez y restaura cuando lo necesites",
-    "subtitle": "Previsualiza gratis. Desbloquea el mismo resultado por 1,99 US$ o con créditos. La regeneración HD opcional crea una nueva versión que puede variar.",
-    "valueProp1": "Vista previa diaria gratis",
-    "valueProp2": "Descarga del mismo resultado",
-    "valueProp3": "Creditos validos por 1 ano",
-    "free": "Gratis",
+    "subtitle": "Paga $1.99 antes de procesar una foto o usa un paquete de créditos para más fotos. Resultados completos sin marca de agua ni suscripción.",
+    "valueProp1": "Una foto desde $1.99",
+    "valueProp2": "Pago antes del procesamiento",
+    "valueProp3": "Sin marca de agua ni suscripción",
+    "free": "Pago por foto",
     "payAsYouGo": "Creditos",
     "professional": "Profesional",
     "starterPack": "Pack inicial",
@@ -88,29 +88,29 @@
     "creditPackPeriod": "/ {count} {count, plural, one {credito} other {creditos}}",
     "payAsYouGoPeriod": "/ {count} {count, plural, one {credito} other {creditos}}",
     "professionalPeriod": "/ mes",
-    "freePriceNote": "Una vista previa diaria con marca de agua. Las nuevas vistas previas requieren desbloqueo para descargar.",
+    "freePriceNote": "Una foto desde $1.99",
     "starterPackPriceNote": "Aprox. $0.50 por credito para probar fotos importantes.",
     "familyPackPriceNote": "Aprox. $0.40 por credito para un album familiar pequeno.",
     "archivePackPriceNote": "Aprox. $0.33 por credito para lotes mas grandes.",
     "professionalPriceNote": "Plan mensual para albumes, lotes y trabajo frecuente.",
-    "freeDesc": "Revisa el resultado antes de pagar por la descarga.",
+    "freeDesc": "Una foto desde $1.99",
     "starterPackDesc": "Un paquete de bajo riesgo para la primera compra.",
     "familyPackDesc": "Suficientes creditos para un recuerdo o regalo.",
     "archivePackDesc": "Procesa mas fotos con menor costo por credito.",
     "professionalDesc": "Procesa mas fotos familiares con prioridad.",
-    "freeFeature1": "1 vista previa gratis al día",
-    "freeFeature2": "Vista previa de imagen con marca de agua",
-    "freeFeature3": "Vista previa de vídeo 480p",
-    "freeFeature4": "Desbloquea el resultado desde 1,99 US$",
-    "starterPackFeature1": "10 créditos: desbloqueos o generaciones",
+    "freeFeature1": "Una foto desde $1.99",
+    "freeFeature2": "Una foto desde $1.99",
+    "freeFeature3": "Una foto desde $1.99",
+    "freeFeature4": "Una foto desde $1.99",
+    "starterPackFeature1": "10 créditos de procesamiento",
     "starterPackFeature2": "Nuevas generaciones: imágenes hasta 2K",
     "starterPackFeature3": "Nuevas generaciones: vídeo HD 720p",
     "starterPackFeature4": "Descargas sin marca de agua",
-    "familyPackFeature1": "25 créditos: desbloqueos o generaciones",
+    "familyPackFeature1": "25 créditos de procesamiento",
     "familyPackFeature2": "Nuevas generaciones: imágenes hasta 2K",
     "familyPackFeature3": "Nuevas generaciones: vídeo HD 720p",
     "familyPackFeature4": "Descargas sin marca de agua",
-    "archivePackFeature1": "60 créditos: desbloqueos o generaciones",
+    "archivePackFeature1": "60 créditos de procesamiento",
     "archivePackFeature2": "Nuevas generaciones: imágenes hasta 2K",
     "archivePackFeature3": "Nuevas generaciones: vídeo HD 720p",
     "archivePackFeature4": "Descargas sin marca de agua",
@@ -123,7 +123,8 @@
     "proFeature3": "Video premium 1080p",
     "proFeature4": "Descargas sin marca de agua",
     "proFeature5": "Procesamiento prioritario para lotes grandes",
-    "buyPack": "Comprar creditos"
+    "buyPack": "Comprar creditos",
+    "termsLink": "Términos"
   },
   "history": {
     "title": "Historial de procesamiento",
@@ -157,7 +158,7 @@
     "uploadStorageNetworkError": "No se puede acceder temporalmente al servicio de almacenamiento. Inténtalo de nuevo.",
     "uploadSupportHint": "Ref: {requestId} ({code})",
     "uploadCancelled": "La subida fue cancelada.",
-    "quotaExceeded": "La cuota diaria gratuita se ha agotado. Mejora tu plan o vuelve mañana.",
+    "quotaExceeded": "Paga antes de procesar: una foto por $1.99 o un paquete de créditos.",
     "creditsExpired": "Tus créditos han caducado. Cómpralos de nuevo.",
     "professionalAlreadyIncludesCredits": "Professional ya incluye restauraciones ilimitadas. No necesitas comprar créditos extra.",
     "rateLimited": "Demasiadas solicitudes. Inténtalo de nuevo más tarde.",
@@ -184,7 +185,8 @@
     "creationAllowanceMayBeUsed": "Es posible que la solicitud haya consumido tu cuota. Reintenta primero con la misma foto subida; si el resultado ya existe, se abrirá sin otro cargo.",
     "retrySamePhoto": "Reintentar la misma foto",
     "taskIdsRequired": "Selecciona al menos una tarea.",
-    "taskBatchTooLarge": "Solo puedes eliminar hasta 50 tareas a la vez."
+    "taskBatchTooLarge": "Solo puedes eliminar hasta 50 tareas a la vez.",
+    "paymentRequired": "Paga antes de procesar: una foto por $1.99 o un paquete de créditos."
   },
   "auth": {
     "signInWith": "Iniciar sesión con Google",
@@ -200,10 +202,10 @@
       "title": "OldPhotoLive AI: restaura, coloriza y anima fotos antiguas",
       "subtitle": "Sube una foto antigua y elige el resultado que necesitas: reparar daño, colorizar blanco y negro o crear un clip corto de retrato.",
       "signal1": "Solo restaurar, colorizar o animar",
-      "signal2": "Prueba diaria gratis",
+      "signal2": "Una foto desde $1.99",
       "signal3": "Resultados en minutos",
-      "signal4": "Exportaciones HD con paquetes pagos",
-      "cta": "Pruébalo gratis"
+      "signal4": "Sin marca de agua",
+      "cta": "Subir una foto"
     },
     "showcase": {
       "title": "Resultados reales por escenario",
@@ -382,7 +384,7 @@
         },
         "payments": {
           "title": "7. Pagos, créditos y suscripciones",
-          "body": "Los planes de pago, los créditos y las suscripciones se procesan a través de Stripe. Los créditos de pago por uso se venden actualmente en paquetes fijos y pueden caducar tras el período indicado en la compra. Las suscripciones Professional se renuevan automáticamente según el ciclo elegido en el checkout, salvo que se cancelen antes de la renovación. Salvo que la ley exija lo contrario, las tarifas no son reembolsables y eres responsable de impuestos aplicables, devoluciones de cargos e importes pendientes."
+          "body": "Los planes de pago, los créditos y las suscripciones se procesan a través de Stripe. Los créditos de pago por uso se venden actualmente en paquetes fijos y pueden caducar tras el período indicado en la compra. Las suscripciones Professional se renuevan automáticamente según el ciclo elegido en el checkout, salvo que se cancelen antes de la renovación. Salvo que la ley exija lo contrario o se aplique la política de fallo técnico de una foto descrita a continuación, las tarifas no son reembolsables y eres responsable de impuestos aplicables, devoluciones de cargos e importes pendientes. Una compra individual incluye un reintento gratuito tras un fallo técnico confirmado. Si confirmamos que no podemos entregar el resultado, reembolsamos esa compra. Las infracciones de contenido no son reembolsables. Soporte revisa los casos de entrega incierta."
         },
         "termination": {
           "title": "8. Suspensión y terminación",

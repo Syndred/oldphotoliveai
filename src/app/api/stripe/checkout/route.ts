@@ -7,8 +7,9 @@ import type Stripe from "stripe";
 import { getToken } from "next-auth/jwt";
 import { getStripeClient, getOrCreateStripeCustomer } from "@/lib/stripe";
 import { config } from "@/lib/config";
-import { getAccessibleTask } from "@/lib/task-access";
-import { TaskCheckoutReviewRequiredError, getTaskCheckoutReviewResponse, assertTaskDownloadMastersAvailable, isTaskDownloadEligible, reserveTaskDownloadCheckout, recoverTaskDownloadCheckoutSession, releaseExpiredTaskDownloadCheckout } from "@/lib/task-download";
+import { TaskCheckoutReviewRequiredError, getTaskCheckoutReviewResponse } from "@/lib/task-download";
+import { assertPhotoOrderSourceExists, getPhotoOrderOwnedByUser, isPhotoOrderId, reservePhotoOrderCheckout, recoverPhotoOrderCheckoutSession, expirePhotoOrderCheckout } from "@/lib/photo-order";
+import { schedulePipelineWakeupForStatus } from "@/lib/worker-wakeup";
 import { fulfillPaidCheckout } from "@/lib/checkout-fulfillment";
 import { getUser } from "@/lib/redis";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
@@ -84,7 +85,9 @@ export async function POST(request: NextRequest) {
         ? token.name
         : undefined;
 
-    const body = await request.json();
+    let body: Record<string, unknown>;
+    try { body = await request.json(); } catch { return NextResponse.json({ error: getErrorMessage("checkoutFailed", locale) }, { status: 400 }); }
+    if (!body || typeof body !== "object" || Array.isArray(body)) return NextResponse.json({ error: getErrorMessage("checkoutFailed", locale) }, { status: 400 });
     const { plan } = body as { plan?: string };
     const paymentLocale = body.locale ? checkoutLocale(body.locale) : locale;
     const context = { taskId: safeCheckoutTaskId(body.taskId), returnTo: safeCheckoutReturnTo(body.returnTo, paymentLocale) };
@@ -109,34 +112,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (plan === "single_photo") {
-      if (!context.taskId || !user) return NextResponse.json({ code: "RESULT_UNAVAILABLE", error: getErrorMessage("taskNotFound", locale) }, { status: 404 });
-      const accessible = await getAccessibleTask(request, context.taskId);
-      if (!accessible || !isTaskDownloadEligible(accessible.task)) return NextResponse.json({ code: "RESULT_UNAVAILABLE", error: getErrorMessage("taskNotFound", locale) }, { status: 404 });
-      await assertTaskDownloadMastersAvailable(accessible.task);
-      const singleParams: Stripe.Checkout.SessionCreateParams = {
-        mode: "payment", line_items: [getLineItem("single_photo")],
-        payment_method_types: ["card"],
-        client_reference_id: userId,
-        ...(customerEmail ? { customer_email: customerEmail } : {}),
-        expires_at: Math.floor(Date.now() / 1000) + 60 * 60,
-        success_url: `${config.nextauth.url}${pricingCheckoutPath(paymentLocale, { taskId: context.taskId })}&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${config.nextauth.url}${pricingCheckoutPath(paymentLocale, { taskId: context.taskId }, { cancelled: "true", plan })}`,
-        metadata: { userId, plan, product: "oldphotoliveai", scope: "result", locale: paymentLocale, taskId: context.taskId },
-      };
-      // A task-global reservation prevents another account/cookie from buying
-      // the same result while checkout is open. Only Stripe-confirmed expiry
-      // can release it; an uncertain network response must remain protected.
+    if (plan === "single_photo") return NextResponse.json({ code: "PLAN_RETIRED", error: "This offer is no longer available. Upload a photo to start a new order." }, { status: 410 });
+
+    if (plan === "single_run") {
+      if (!user || !isPhotoOrderId(body.orderId)) return NextResponse.json({ error: "Order not found" }, { status: 404 });
+      let order = await getPhotoOrderOwnedByUser(body.orderId, userId);
+      if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
       for (let attempt = 0; attempt < 2; attempt++) {
-        const reservation = await reserveTaskDownloadCheckout({ userId, taskId: context.taskId, ownerUserId: accessible.task.userId, params: singleParams });
-        if (reservation.outcome === "rejected") return NextResponse.json({ code: reservation.code, error: getErrorMessage("checkoutFailed", locale) }, { status: 409 });
-        const session = await recoverTaskDownloadCheckoutSession(reservation.pending);
+        if (order.status === "paid" && order.paidSessionId) return NextResponse.json({ url: `${config.nextauth.url}${pricingCheckoutPath(paymentLocale, {}, { orderId: order.id, session_id: order.paidSessionId })}` });
+        if (order.status === "expired") return NextResponse.json({ code: "ORDER_EXPIRED", error: "This order has expired. Please upload your photo again." }, { status: 410 });
+        if (order.status !== "unpaid") throw new TaskCheckoutReviewRequiredError();
+        // Once Stripe creation has begun, recover it even if the source later
+        // becomes unavailable: creating another order would risk a second charge.
+        if (!order.checkout) await assertPhotoOrderSourceExists(order.imageKey);
+        order = await reservePhotoOrderCheckout(order, customerEmail);
+        const session = await recoverPhotoOrderCheckoutSession(order);
         if (session.payment_status === "paid") {
           await fulfillPaidCheckout(session);
-          return NextResponse.json({ url: `${config.nextauth.url}${pricingCheckoutPath(paymentLocale, { taskId: context.taskId }, { session_id: session.id })}` });
+          schedulePipelineWakeupForStatus("pending");
+          return NextResponse.json({ url: `${config.nextauth.url}${pricingCheckoutPath(paymentLocale, {}, { orderId: order.id, session_id: session.id })}` });
         }
         if (session.status === "expired" && session.payment_status === "unpaid") {
-          await releaseExpiredTaskDownloadCheckout(reservation.pending);
+          await expirePhotoOrderCheckout(order, session);
+          order = (await getPhotoOrderOwnedByUser(order.id, userId))!;
+          if (!order) throw new TaskCheckoutReviewRequiredError();
           continue;
         }
         if (session.status !== "open" || !session.url) return NextResponse.json({ code: "PAYMENT_PROCESSING", error: getErrorMessage("checkoutFailed", locale) }, { status: 409 });

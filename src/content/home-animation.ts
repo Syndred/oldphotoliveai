@@ -1,6 +1,6 @@
 export const HOME_METADATA = {
-  title: "Animate Old Photos with AI — Restore, Colorize & Bring Old Photos to Life Online Free",
-  description: "Restore, colorize, and animate your old family photos with AI. Upload a vintage photo and watch it come to life in seconds. Free preview.",
+  title: "Animate Old Photos with AI — Restore, Colorize & Bring Old Photos to Life Online",
+  description: "Restore, colorize, and animate your old family photos with AI. Upload a vintage photo and watch it come to life in seconds. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
   path: "/",
 } as const;
 
@@ -29,7 +29,7 @@ export const HOME_ANIMATION_FAQS = [
   { question: "Can I use the animated result commercially?", answer: "You may use outputs for personal or commercial projects when you have the necessary rights to the source photo and your use complies with our Terms. You remain responsible for permissions, publicity rights, and any disclosure requirements that apply to AI-generated media." },
   { question: "Is my photo kept private?", answer: "Photos are transferred securely and processed by the providers needed to run the service. Uploaded and generated media can remain available in your task history until you delete it or it is removed under our retention practices. We do not publish your family photos as public examples without permission. See the Privacy Policy for details." },
   { question: "How is this different from other photo animation tools?", answer: "OldPhotoLive AI combines restoration, colorization, and animation in one workflow. The focus is on subtle, respectful results for family memories rather than exaggerated effects, while still letting you use restoration, colorization, or animation independently." },
-  { question: "Is there a free version?", answer: "Yes. A first-time visitor can create one watermarked 480p animation preview without signing up. Sign in and pay $1.99 or use 1 credit to download that same result without the preview watermark. Unlocking does not increase resolution. Optional HD regeneration creates a new version." },
+  { question: "Is there a free version?", answer: "There is no free generation. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required." },
 ] as const;
 
 export const HOME_HOW_IT_WORKS = { title: "One Photo, Three Steps to a Living Memory", subtitle: "Each step works independently or as a complete pipeline. Start anywhere.", steps: HOME_PIPELINE_STEPS } as const;

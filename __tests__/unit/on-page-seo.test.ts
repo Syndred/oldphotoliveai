@@ -22,9 +22,11 @@ describe("five-page on-page SEO contracts", () => {
     const component = projectFile("src/components/tool/ToolLandingPage.tsx");
 
     expect(colorizer.heroTitle).toBe(
-      "Colorize Old Photos with AI — Free Online Photo Colorizer"
+      "Colorize Old Photos with AI — Online Photo Colorizer"
     );
-    expect(colorizer.heroDescription).toMatch(/^Colorize old photos\b/);
+    expect(colorizer.heroDescription).toContain("pay $1.99 before processing");
+    expect(colorizer.heroDescription).toContain("The AI uses visual patterns to suggest plausible colors");
+    expect(colorizer.heroDescription).not.toMatch(/free quota|free preview|unlock the same result/i);
     expect(colorizer.benefitsTitle).toBe("How to Colorize Old Photos");
     expect(colorizer.showcaseTitle).toBe("Before & After Examples");
     expect(component).toContain("<BeforeAfterCompare");

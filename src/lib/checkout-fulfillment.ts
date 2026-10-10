@@ -1,3 +1,4 @@
+import { fulfillPhotoOrderPaidSession } from "@/lib/photo-order";
 import type Stripe from "stripe";
 import { getRedisClient } from "@/lib/redis";
 import { CREDIT_PACK_EXPIRATION_DAYS, getCreditPack, isCreditPackPlan, LEGACY_PAY_AS_YOU_GO_CREDITS, SINGLE_PHOTO } from "@/lib/billing";
@@ -9,7 +10,7 @@ export interface CheckoutReceipt {
   userId: string;
   plan: string;
   creditsAdded: number;
-  fulfillmentKind?: "credits" | "task_unlock" | "professional";
+  fulfillmentKind?: "credits" | "task_unlock" | "professional" | "photo_processing";
   unlockedTaskId?: string;
   assetScope?: "result";
   amountTotal: number | null;
@@ -17,6 +18,7 @@ export interface CheckoutReceipt {
   fulfilledAt: string;
   locale: string;
   taskId?: string;
+  orderId?: string;
   returnTo?: string;
 }
 export const checkoutReceiptKey = (id: string) => `stripe:checkout:receipt:${id}`;
@@ -74,6 +76,13 @@ export async function fulfillPaidCheckout(session: Stripe.Checkout.Session): Pro
   const plan = session.metadata?.plan;
   if (!userId || !plan || session.payment_status !== "paid") return false;
   if (session.metadata?.product && session.metadata.product !== "oldphotoliveai") return false;
+  if (plan === "single_run") {
+    try { return await fulfillPhotoOrderPaidSession(session); }
+    catch (error) {
+      await recordCheckoutIssue({ userId, taskId: safeCheckoutTaskId(session.metadata?.taskId), transactionId: session.id, reason: error instanceof Error ? error.message : "PHOTO_ORDER_FULFILLMENT_DEFERRED", amountTotal: session.amount_total, currency: session.currency, recordedAt: new Date().toISOString() });
+      throw error;
+    }
+  }
   if (plan === SINGLE_PHOTO.plan) return fulfillSinglePhotoCheckout(session);
   if (!isCreditPackPlan(plan) && plan !== "pay_as_you_go" && plan !== "professional") return false;
   if (session.metadata?.product && session.metadata.product !== "oldphotoliveai") return false;

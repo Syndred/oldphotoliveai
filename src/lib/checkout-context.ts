@@ -13,10 +13,11 @@ export function safeCheckoutReturnTo(value: unknown, locale: Locale): string | u
   return TOOL_PATHS.has(path) ? localizePathname(locale, path) : undefined;
 }
 export function checkoutContext(params: URLSearchParams, locale: Locale) {
-  return { taskId: safeCheckoutTaskId(params.get("taskId")), returnTo: safeCheckoutReturnTo(params.get("returnTo"), locale) };
+  return { orderId: safeCheckoutTaskId(params.get("orderId")), taskId: safeCheckoutTaskId(params.get("taskId")), returnTo: safeCheckoutReturnTo(params.get("returnTo"), locale) };
 }
-export function pricingCheckoutPath(locale: Locale, context: { taskId?: string; returnTo?: string }, extra: Record<string, string> = {}) {
+export function pricingCheckoutPath(locale: Locale, context: { orderId?: string; taskId?: string; returnTo?: string }, extra: Record<string, string> = {}) {
   const params = new URLSearchParams(extra);
+  if (context.orderId) params.set("orderId", context.orderId);
   if (context.taskId) params.set("taskId", context.taskId);
   if (context.returnTo) params.set("returnTo", context.returnTo);
   return `${localizePathname(locale, "/pricing")}${params.size ? `?${params}` : ""}`;

@@ -24,7 +24,8 @@ export function readPendingUpload(userId: string, pathname: string, workflow: Ta
       clearPendingUpload();
       return null;
     }
-    if (!userId || value.userId !== userId || value.pathname !== pathname || value.workflow !== workflow || typeof value.imageKey !== "string") return null;
+    if (!userId || (value.userId && value.userId !== userId) || value.pathname !== pathname || value.workflow !== workflow || typeof value.imageKey !== "string") return null;
+    if (!value.userId) { value.userId = userId; sessionStorage.setItem(KEY, JSON.stringify(value)); }
     return value;
   } catch { return null; }
 }

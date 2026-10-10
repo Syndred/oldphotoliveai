@@ -15,6 +15,7 @@ import { getTask } from "@/lib/redis";
 import { beginTaskExecution } from "@/lib/task-execution";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 import type { TaskStatus } from "@/types";
+import { processPendingPhotoOrderRefunds, reconcileTaskPhotoOrderRefund } from "@/lib/photo-order-refund";
 
 const LOCK_RENEW_INTERVAL_MS = 90_000;
 const SELF_CHAIN_TRANSPORT_ATTEMPTS = 3;
@@ -112,7 +113,7 @@ async function runPipelineWorker(): Promise<void> {
 
         // Recovered terminal claims are acknowledged without re-execution.
         const task = await getTask(taskId);
-        if (task && !TERMINAL_STATUSES.has(task.status)) {
+        if (task && !task.refundStatus && !TERMINAL_STATUSES.has(task.status)) {
           const beginResult = await beginTaskExecution(taskId, claim, lease);
           if (beginResult === "started") {
             await executePipeline(taskId, {
@@ -156,6 +157,14 @@ async function runPipelineWorker(): Promise<void> {
 
     if (claim && !executionError && !lockConflict) {
       await triggerNextTaskIfQueued();
+    }
+    try {
+      if (claim) await reconcileTaskPhotoOrderRefund(claim.taskId, { process: false });
+      await processPendingPhotoOrderRefunds(1);
+    } catch {
+      // Durable reservations remain for cron/status recovery. Do not turn
+      // payment transport failures into another generation attempt.
+      console.error(JSON.stringify({ message: "photo_refund_worker_recovery_failed" }));
     }
   }
 

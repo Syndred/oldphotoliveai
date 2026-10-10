@@ -14,6 +14,9 @@ if not ok or type(task) ~= 'table' then
   return {'ERROR', 'INVALID_TASK'}
 end
 local attempts = tonumber(task.attemptCount) or 1
+if type(task.refundStatus) == 'string' then
+  return {'REJECTED', 'REFUND_IN_PROGRESS'}
+end
 if task.status == 'queued' then
   return {'ALREADY_QUEUED', tostring(attempts)}
 end
@@ -36,6 +39,9 @@ if task.failureCode == 'provider_creation_unknown' then
 end
 if task.status ~= 'failed' then
   return {'REJECTED', 'NOT_FAILED'}
+end
+if type(task.purchaseOrderId) == 'string' and (attempts >= 2 or task.deliveryUnrecoverable == true) then
+  return {'REJECTED', 'RETRY_LIMIT_REACHED'}
 end
 attempts = attempts + 1
 task.status = 'queued'
@@ -71,7 +77,7 @@ export async function retryTaskAtomic(
   | { outcome: "retried" | "already_queued"; attemptCount: number }
   | {
       outcome: "rejected";
-      code: "CONTENT_VIOLATION" | "MANUAL_REVIEW_REQUIRED" | "NOT_FAILED";
+      code: "CONTENT_VIOLATION" | "MANUAL_REVIEW_REQUIRED" | "NOT_FAILED" | "REFUND_IN_PROGRESS" | "RETRY_LIMIT_REACHED";
     }
 > {
   const score = PRIORITY_WEIGHTS[task.priority] + now.getTime();
@@ -93,6 +99,8 @@ export async function retryTaskAtomic(
       code: values[1] as
         | "CONTENT_VIOLATION"
         | "MANUAL_REVIEW_REQUIRED"
+        | "REFUND_IN_PROGRESS"
+        | "RETRY_LIMIT_REACHED"
         | "NOT_FAILED",
     };
   }

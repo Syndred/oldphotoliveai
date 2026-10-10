@@ -2,6 +2,14 @@ const mockAfter = jest.fn();
 const mockResetAllDailyQuotas = jest.fn();
 const mockRedisScan = jest.fn();
 const mockGetRedisClient = jest.fn(() => ({ scan: mockRedisScan }));
+jest.mock("@/lib/upload-cleanup", () => ({ cleanupUploadedPhotos: jest.fn().mockResolvedValue({ checked: 0, deleted: 0, deferred: 0, skipped: 0 }) }));
+jest.mock("@/lib/photo-order-refund", () => ({
+  processPendingPhotoOrderRefunds: jest.fn().mockResolvedValue(undefined),
+  reconcileTaskPhotoOrderRefund: jest.fn().mockResolvedValue(undefined),
+}));
+jest.mock("@/lib/photo-order", () => ({
+  cleanupUnpaidPhotoOrders: jest.fn().mockResolvedValue({ checked: 0, deleted: 0, deferred: 0 }),
+}));
 
 jest.mock("next/server", () => ({
   ...jest.requireActual("next/server"),

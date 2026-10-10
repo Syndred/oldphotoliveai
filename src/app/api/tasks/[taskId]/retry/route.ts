@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 import { getAccessibleTask } from "@/lib/task-access";
 import { retryTaskAtomic } from "@/lib/task-retry";
+import { reconcileTaskPhotoOrderRefund } from "@/lib/photo-order-refund";
+import { after } from "next/server";
 
 export async function POST(request: NextRequest, props: { params: Promise<{ taskId: string }> }) {
   const params = await props.params;
@@ -35,6 +37,12 @@ export async function POST(request: NextRequest, props: { params: Promise<{ task
 
     const result = await retryTaskAtomic(task);
     if (result.outcome === "rejected") {
+      if (task.purchaseOrderId && !task.violation) {
+        after(async () => {
+          try { await reconcileTaskPhotoOrderRefund(task.id); }
+          catch { console.error(JSON.stringify({ message: "photo_refund_retry_recovery_failed" })); }
+        });
+      }
       return NextResponse.json(
         { error: getErrorMessage("retryFailed", locale), code: result.code },
         { status: 400 }

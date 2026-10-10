@@ -13,6 +13,12 @@ const mockExecutePipeline = jest.fn();
 const mockBeginTaskExecution = jest.fn();
 const mockGetTask = jest.fn();
 const mockRedisSet = jest.fn();
+const mockReconcileRefund = jest.fn();
+const mockProcessRefunds = jest.fn();
+jest.mock("@/lib/photo-order-refund", () => ({
+  reconcileTaskPhotoOrderRefund: (...args: unknown[]) => mockReconcileRefund(...args),
+  processPendingPhotoOrderRefunds: (...args: unknown[]) => mockProcessRefunds(...args),
+}));
 const mockAfterCallbacks: Array<() => unknown | Promise<unknown>> = [];
 const mockAfter = jest.fn((callback: () => unknown | Promise<unknown>) => {
   mockAfterCallbacks.push(callback);
@@ -351,4 +357,13 @@ describe("pipeline worker claims", () => {
       expect(mockReleaseLock).toHaveBeenCalledWith(lease);
     }
   );
+  it("will not execute a refunded task even if a stale queue item says queued", async () => {
+    mockGetTask.mockResolvedValue({ ...task, purchaseOrderId: "order-1", refundStatus: "pending" });
+    await POST(request());
+    await runAfterTasks();
+    expect(mockExecutePipeline).not.toHaveBeenCalled();
+    expect(mockBeginTaskExecution).not.toHaveBeenCalled();
+    expect(mockReconcileRefund).toHaveBeenCalledWith(task.id, { process: false });
+    expect(mockProcessRefunds).toHaveBeenCalledWith(1);
+  });
 });

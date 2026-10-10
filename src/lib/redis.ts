@@ -384,6 +384,7 @@ export async function cancelTask(taskId: string): Promise<boolean> {
   const redis = getRedisClient();
   const task = await redis.get<Task>(keys.task(taskId));
   if (!task) return false;
+  if (task.purchaseOrderId) return false;
 
   // Only allow cancellation of pending or queued tasks
   if (task.status !== "pending" && task.status !== "queued") {

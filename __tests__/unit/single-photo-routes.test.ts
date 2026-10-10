@@ -17,6 +17,7 @@ jest.mock("@/lib/config", () => ({ config: { stripe: { isEnabled: true, priceIds
 jest.mock("@/lib/redis", () => ({ getRedisClient: () => ({ eval: mockEval, get: mockGet, set: mockSet }), getUser: (id: string) => mockGet(`user:${id}`) }));
 jest.mock("@/lib/r2", () => ({ headPrivateObjectFromR2: (...args: unknown[]) => mockHead(...args) }));
 jest.mock("@/lib/stripe", () => ({ getStripeClient: () => ({ checkout: { sessions: { create: mockCreate, retrieve: mockRetrieve, expire: mockExpire } } }) }));
+import { reserveTaskDownloadCheckout, recoverTaskDownloadCheckoutSession } from "@/lib/task-download";
 import { POST as checkout } from "@/app/api/stripe/checkout/route";
 import { GET as status } from "@/app/api/stripe/checkout/status/route";
 import { POST as unlock } from "@/app/api/tasks/[taskId]/unlock/route";
@@ -46,38 +47,32 @@ beforeEach(() => {
   mockRetrieve.mockImplementation(async () => stripeSession);
   mockExpire.mockImplementation(async () => { stripeSession = { ...stripeSession, status: "expired" }; return stripeSession; });
 });
-it("creates a $1.99 task-bound result checkout and reuses it instead of creating a second charge", async () => {
+async function seedLegacyCheckout(create = true) {
+  const reservation = await reserveTaskDownloadCheckout({ userId: "buyer", taskId: "photo1", ownerUserId: "anon1", params: {
+    mode: "payment", metadata: { product: "oldphotoliveai", plan: "single_photo", userId: "buyer", taskId: "photo1", locale: "zh", scope: "result" },
+  } });
+  if (reservation.outcome === "rejected") throw new Error(reservation.code);
+  if (create) await recoverTaskDownloadCheckoutSession(reservation.pending);
+}
+it("retires new single_photo sales without creating or recovering a Stripe session", async () => {
   const first = await checkout(checkoutRequest());
-  expect(first.status).toBe(200);
-  expect(await first.json()).toEqual({ url: "https://checkout.stripe.com/test-single" });
-  const params = mockCreate.mock.calls[0][0];
-  expect(params.metadata).toMatchObject({ taskId: "photo1", plan: "single_photo", scope: "result", userId: "buyer", locale: "zh", product: "oldphotoliveai" });
-  expect(params.line_items[0].price_data).toMatchObject({ unit_amount: 199, currency: "usd" });
-  expect(params.success_url).toContain("/zh/pricing?taskId=photo1&session_id={CHECKOUT_SESSION_ID}");
-  expect(params.cancel_url).not.toContain("resume=");
-  expect((await checkout(checkoutRequest())).status).toBe(200);
-  expect(mockCreate).toHaveBeenCalledTimes(1);
-  expect(mockRetrieve).toHaveBeenCalledWith("cs_test_single");
+  expect(first.status).toBe(410); expect(await first.json()).toMatchObject({ code: "PLAN_RETIRED" });
+  expect((await checkout(checkoutRequest())).status).toBe(410);
+  expect(mockCreate).not.toHaveBeenCalled(); expect(mockRetrieve).not.toHaveBeenCalled();
 });
-it("rejects unowned, incomplete and absent physical results before contacting Stripe", async () => {
-  mockAccess.mockResolvedValueOnce(null);
-  expect((await checkout(checkoutRequest())).status).toBe(404);
-  mockAccess.mockResolvedValueOnce({ task: { ...task, masterAssets: { restored: "master.jpg" } }, mode: "anonymous" });
-  expect((await checkout(checkoutRequest())).status).toBe(404);
-  mockHead.mockRejectedValueOnce(new Error("NoSuchKey"));
-  expect((await checkout(checkoutRequest())).status).toBe(500);
-  expect(mockCreate).not.toHaveBeenCalled();
+it("does not inspect private masters or sell a retired result even if the result is unavailable", async () => {
+  mockAccess.mockResolvedValue(null);
+  expect((await checkout(checkoutRequest())).status).toBe(410);
+  expect(mockHead).not.toHaveBeenCalled(); expect(mockCreate).not.toHaveBeenCalled();
 });
-it("never reuses the first purchaser's checkout for a different authenticated account", async () => {
-  await checkout(checkoutRequest());
-  mockToken.mockResolvedValue({ userId: "other" });
-  const response = await checkout(checkoutRequest());
-  expect(response.status).toBe(409);
-  expect(await response.json()).toMatchObject({ code: "CHECKOUT_PENDING" });
+it("never exposes the first purchaser's historical checkout to a different account", async () => {
+  await seedLegacyCheckout(); mockToken.mockResolvedValue({ userId: "other" });
+  expect((await checkout(checkoutRequest())).status).toBe(410);
+  expect((await status(statusRequest())).status).toBe(404);
   expect(mockCreate).toHaveBeenCalledTimes(1);
 });
 it("settles payment into an actual result grant and reports unlock, not added credits or Professional", async () => {
-  await checkout(checkoutRequest());
+  await seedLegacyCheckout();
   stripeSession = { ...stripeSession, status: "complete", payment_status: "paid" };
   const response = await status(statusRequest());
   const data = await response.json();
@@ -89,7 +84,7 @@ it("settles payment into an actual result grant and reports unlock, not added cr
   expect(await repeat.json()).toMatchObject({ unlocked: true, replayed: true, creditsDebited: 0 });
 });
 it("expires the buyer's unpaid single checkout before a credit unlock can consume the last credit", async () => {
-  await checkout(checkoutRequest());
+  await seedLegacyCheckout();
   const response = await unlock(unlockRequest(), { params: Promise.resolve({ taskId: "photo1" }) });
   expect(await response.json()).toMatchObject({ unlocked: true, creditsDebited: 1 });
   expect(mockExpire).toHaveBeenCalledWith("cs_test_single");
@@ -97,7 +92,7 @@ it("expires the buyer's unpaid single checkout before a credit unlock can consum
   expect(JSON.parse(redis.getString("download:grant:photo1")!).source).toBe("credit");
 });
 it("does not debit a credit when pending checkout is already paid", async () => {
-  await checkout(checkoutRequest());
+  await seedLegacyCheckout();
   stripeSession = { ...stripeSession, status: "complete", payment_status: "paid" };
   const response = await unlock(unlockRequest(), { params: Promise.resolve({ taskId: "photo1" }) });
   expect(await response.json()).toMatchObject({ unlocked: true, creditsDebited: 0 });
@@ -105,7 +100,7 @@ it("does not debit a credit when pending checkout is already paid", async () => 
   expect(JSON.parse(redis.getString("quota:buyer")!).credits).toBe(1);
 });
 it("reports manual refund handling if a confirmed payment cannot be fulfilled", async () => {
-  await checkout(checkoutRequest());
+  await seedLegacyCheckout();
   stripeSession = { ...stripeSession, status: "complete", payment_status: "paid" };
   await redis.eval("return redis.call('DEL', KEYS[1])", ["task:photo1"], []);
   const response = await status(statusRequest());
@@ -123,8 +118,8 @@ it("returns actionable review-needed status without replacing an old unidentifie
   redis.setString("download:pending:photo1", JSON.stringify({ userId: "buyer", taskId: "photo1", ownerUserId: "anon1", orderId: "lost-order", createdAt: "2020-01-01T00:00:00.000Z", params: { mode: "payment" } }));
   const original = redis.getString("download:pending:photo1");
   const response = await checkout(checkoutRequest());
-  expect(response.status).toBe(409);
-  expect(await response.json()).toMatchObject({ code: "CHECKOUT_REVIEW_REQUIRED", supportEmail: "support@oldphotoliveai.com", creditsDebited: 0 });
+  expect(response.status).toBe(410);
+  expect(await response.json()).toMatchObject({ code: "PLAN_RETIRED" });
   const creditResponse = await unlock(unlockRequest(), { params: Promise.resolve({ taskId: "photo1" }) });
   expect(creditResponse.status).toBe(409);
   expect(await creditResponse.json()).toMatchObject({ code: "CHECKOUT_REVIEW_REQUIRED", creditsDebited: 0 });
@@ -133,15 +128,15 @@ it("returns actionable review-needed status without replacing an old unidentifie
   expect(mockExpire).not.toHaveBeenCalled();
   expect(JSON.parse(redis.getString("quota:buyer")!).credits).toBe(1);
 });
-it("maps Stripe's rejection of stale expires_at params to support review rather than creating a new order", async () => {
+it("keeps historical unknown checkout fenced when Stripe rejects its stale expires_at parameters", async () => {
+  await seedLegacyCheckout(false);
   mockCreate.mockRejectedValue({ type: "StripeInvalidRequestError", statusCode: 400, param: "expires_at" });
-  const response = await checkout(checkoutRequest());
-  expect(response.status).toBe(409);
-  expect(await response.json()).toMatchObject({ code: "CHECKOUT_REVIEW_REQUIRED", error: expect.stringContaining("support@oldphotoliveai.com") });
   const pending = redis.getString("download:pending:photo1");
-  expect(pending).toBeDefined();
-  const creditResponse = await unlock(unlockRequest(), { params: Promise.resolve({ taskId: "photo1" }) });
-  expect(creditResponse.status).toBe(409);
+  for (let i = 0; i < 2; i++) {
+    const response = await unlock(unlockRequest(), { params: Promise.resolve({ taskId: "photo1" }) });
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ code: "CHECKOUT_REVIEW_REQUIRED", error: expect.stringContaining("support@oldphotoliveai.com") });
+  }
   expect(redis.getString("download:pending:photo1")).toBe(pending);
   expect(mockCreate.mock.calls[0]).toEqual(mockCreate.mock.calls[1]);
   expect(JSON.parse(redis.getString("quota:buyer")!).credits).toBe(1);

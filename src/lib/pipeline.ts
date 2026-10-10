@@ -1,4 +1,5 @@
 import { recordCompletedGeneration } from "@/lib/conversion-metrics";
+import { reconcileTaskPhotoOrderRefund } from "@/lib/photo-order-refund";
 import { getTaskGenerationTier } from "./task-status";
 import { getUser } from "./redis";
 import {
@@ -349,6 +350,12 @@ export async function executePipeline(
   ) => {
     await updateTaskStatusFenced(taskId, executionToken, status, data, signal);
     if (status === "completed") await recordCompletedGeneration(task);
+    if (status === "failed" && task.purchaseOrderId) {
+      // A refund reservation may only follow the successful fenced failure.
+      // Stripe recovery is bounded and handled after execution / by observers.
+      try { await reconcileTaskPhotoOrderRefund(taskId, { process: false }); }
+      catch { console.error(JSON.stringify({ message: "photo_refund_reservation_failed" })); }
+    }
   };
 
   const user = await getUser(task.userId);
@@ -360,6 +367,7 @@ export async function executePipeline(
       failureCode: "processing_failed",
       failureStage: null,
       violation: false,
+      ...(task.purchaseOrderId ? { deliveryUnrecoverable: true } : {}),
     });
     return;
   }

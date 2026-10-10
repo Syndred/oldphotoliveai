@@ -214,6 +214,13 @@ describe("GET /api/tasks/[taskId]/status", () => {
 });
 
 describe("POST /api/tasks/[taskId]/cancel", () => {
+  it("preserves paid single-photo delivery rather than leaving a cancelled unrefunded order", async () => {
+    mockGetTaskOwnedByUser.mockResolvedValue(makeFakeTask({purchaseOrderId:"order-1"}));
+    const res = await cancelRoute(makePostRequest("task-001","cancel"), routeParams("task-001"));
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({code:"PAID_ORDER_PROCESSING"});
+    expect(mockCancelTask).not.toHaveBeenCalled();
+  });
   it("returns 401 when unauthenticated", async () => {
     mockGetToken.mockResolvedValue(null);
 

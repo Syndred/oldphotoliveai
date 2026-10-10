@@ -38,6 +38,8 @@ export interface PublicTaskStatus {
   downloadUnlocked: boolean;
   attemptCount: number;
   retryAllowed: boolean;
+  paidSingleRun: boolean;
+  refundStatus?: Task["refundStatus"];
   requiresManualReview: boolean;
   errorMessage?: string;
   failureCode?: TaskFailureCode;
@@ -80,14 +82,18 @@ export function toPublicTaskStatus(
     downloadUnlocked: task.downloadPolicy !== "preview_v1" || downloadUnlocked,
     canUpgrade: task.status === "completed" && task.violation !== true && getTaskGenerationTier(task) === "free",
     attemptCount,
+    paidSingleRun: Boolean(task.purchaseOrderId),
+    ...(task.refundStatus ? { refundStatus: task.refundStatus } : {}),
     retryAllowed:
       task.status === "failed" &&
+      !task.refundStatus &&
+      (!task.purchaseOrderId || (attemptCount < 2 && !task.deliveryUnrecoverable)) &&
       task.violation !== true &&
       task.failureCode !== "provider_creation_unknown" &&
       !hasAmbiguousProviderCreation,
     requiresManualReview:
       task.status === "failed" &&
-      (task.failureCode === "provider_creation_unknown" ||
+      (task.refundStatus === "review_required" || task.failureCode === "provider_creation_unknown" ||
         hasAmbiguousProviderCreation),
   };
 

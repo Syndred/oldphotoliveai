@@ -22,8 +22,8 @@ describe('canonical colorizer URLs', () => {
     const colorizer = getToolPage('en', 'colorize-old-photos');
     const restoration = getToolPage('en', 'restore-old-photos');
 
-    expect(colorizer.title).toBe('Colorize Old Photos Online Free – AI Old Photo Colorizer');
-    expect(colorizer.heroTitle).toBe('Colorize Old Photos with AI — Free Online Photo Colorizer');
+    expect(colorizer.title).toBe('Colorize Old Photos Online – AI Old Photo Colorizer');
+    expect(colorizer.heroTitle).toBe('Colorize Old Photos with AI — Online Photo Colorizer');
     expect(colorizer.keywords).toContain('old photo colorizer');
     expect(getToolPagePath('restore-old-photos')).toBe('/restore-old-photos');
     expect(restoration.heroTitle).toBe('Restore Old Photos with AI');

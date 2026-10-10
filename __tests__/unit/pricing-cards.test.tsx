@@ -155,7 +155,7 @@ describe("PricingCards", () => {
     render(<PricingCards />);
     fireEvent.click(screen.getAllByText("Buy Credits")[0]);
     await waitFor(() => expect(mockSignIn).toHaveBeenCalledWith("google", { callbackUrl: "/pricing?plan=starter_pack&resume=1&taskId=photo-1&returnTo=%2Frestore-old-photos" }));
-    expect(mockFetch).toHaveBeenCalledWith("/api/tasks/photo-1/status", expect.any(Object));
+    expect(mockFetch).not.toHaveBeenCalled();
     expect(mockFetch.mock.calls.some(([url]) => url === "/api/stripe/checkout")).toBe(false);
   });
 
@@ -181,7 +181,8 @@ describe("PricingCards", () => {
 
   it("renders free and credit-pack pricing plans", () => {
     render(<PricingCards />);
-    expect(screen.getByTestId("plan-free")).toBeInTheDocument();
+    expect(screen.queryByTestId("plan-free")).not.toBeInTheDocument();
+    expect(screen.getByTestId("plan-single_run")).toBeInTheDocument();
     expect(screen.getByTestId("plan-starter_pack")).toBeInTheDocument();
     expect(screen.getByTestId("plan-family_pack")).toBeInTheDocument();
     expect(screen.getByTestId("plan-archive_pack")).toBeInTheDocument();
@@ -190,7 +191,7 @@ describe("PricingCards", () => {
 
   it("displays correct plan names", () => {
     render(<PricingCards />);
-    expect(screen.getByText("Free")).toBeInTheDocument();
+    expect(screen.getByText("One photo · one selected tool")).toBeInTheDocument();
     expect(screen.getByText("Starter Pack")).toBeInTheDocument();
     expect(screen.getByText("Family Pack")).toBeInTheDocument();
     expect(screen.getByText("Archive Pack")).toBeInTheDocument();
@@ -198,7 +199,7 @@ describe("PricingCards", () => {
 
   it("displays correct prices", () => {
     render(<PricingCards />);
-    expect(screen.getByText("$0")).toBeInTheDocument();
+    expect(screen.getByText("$1.99")).toBeInTheDocument();
     expect(screen.getByText("$4.99")).toBeInTheDocument();
     expect(screen.getByText("$9.99")).toBeInTheDocument();
     expect(screen.getByText("$19.99")).toBeInTheDocument();
@@ -211,8 +212,7 @@ describe("PricingCards", () => {
 
   it("shows Current Plan for free tier (not a button)", () => {
     render(<PricingCards />);
-    const currentPlan = screen.getByText("Current Plan");
-    expect(currentPlan.tagName).toBe("SPAN");
+    expect(screen.queryByText("Current Plan")).not.toBeInTheDocument();
   });
 
   it("shows Current Plan on professional card for professional users", () => {
@@ -307,11 +307,11 @@ describe("PricingCards", () => {
 
   it("displays features for each plan", () => {
     render(<PricingCards />);
-    expect(screen.getByText("1 photo per day")).toBeInTheDocument();
+    expect(screen.queryByText("1 photo per day")).not.toBeInTheDocument();
     expect(screen.getByText("10 paid credits")).toBeInTheDocument();
     expect(screen.getByText("25 paid credits")).toBeInTheDocument();
     expect(screen.getByText("60 paid credits")).toBeInTheDocument();
-    expect(screen.getByText("480p video output")).toBeInTheDocument();
+    expect(screen.queryByText("480p video output")).not.toBeInTheDocument();
     expect(screen.getAllByText("720p HD video")).toHaveLength(3);
   });
 
@@ -420,7 +420,8 @@ describe("PricingPage", () => {
 
   it("renders PricingCards component", () => {
     render(<PricingPage />);
-    expect(screen.getByTestId("plan-free")).toBeInTheDocument();
+    expect(screen.queryByTestId("plan-free")).not.toBeInTheDocument();
+    expect(screen.getByTestId("plan-single_run")).toBeInTheDocument();
     expect(screen.getByTestId("plan-family_pack")).toBeInTheDocument();
   });
 
@@ -610,52 +611,33 @@ describe("PricingPage", () => {
   });
 });
 
-describe("single-result purchasing", () => {
-  beforeEach(() => {
-    jest.clearAllMocks(); mockFetch.mockReset();
-    window.history.replaceState(null, "", "/pricing");
-    mockUseSession.mockReturnValue({ data: null, status: "unauthenticated" });
-  });
-  it("offers preview first without a task and never starts single checkout", () => {
+describe("single photo orders", () => {
+  beforeEach(() => { jest.clearAllMocks(); mockFetch.mockReset(); window.history.replaceState(null, "", "/pricing"); mockUseSession.mockReturnValue({ data: { user: { tier: "free" } }, status: "authenticated" }); });
+  it("requires upload before offering a single-run checkout", () => {
     render(<PricingCards />);
-    expect(screen.getByRole("link", { name: "Preview first — free" })).toHaveAttribute("href", "/#upload-section");
-    expect(screen.queryByRole("button", { name: "Unlock this result — $1.99" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Upload a photo" })).toHaveAttribute("href", "/#upload-section");
+    expect(screen.queryByRole("button", { name: "Pay $1.99 & process photo" })).not.toBeInTheDocument();
     expect(mockFetch).not.toHaveBeenCalled();
   });
-  it.each([
-    { status: "completed", downloadPolicy: "preview_v1", downloadUnlocked: true },
-    { status: "pending", downloadPolicy: "preview_v1", downloadUnlocked: false },
-    { status: "completed", downloadUnlocked: false },
-  ])("never sells an ineligible result: %j", async task => {
-    window.history.replaceState(null, "", "/pricing?taskId=photo-1&plan=single_photo");
-    mockFetch.mockResolvedValue({ ok: true, json: async () => task });
+  it.each(["paid", "refund_pending", "refunded", "review_required"])("does not sell an order again when %s", async status => {
+    window.history.replaceState(null, "", "/pricing?orderId=order-1&plan=single_run");
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({ status, taskId: "photo-1", workflow: "animate" }) });
     render(<PricingCards />);
-    await screen.findByRole("link", { name: "Open your result" });
-    expect(screen.queryByRole("button", { name: "Unlock this result — $1.99" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "View photo status" })).toHaveAttribute("href", "/result/photo-1");
+    expect(screen.queryByRole("button", { name: "Pay $1.99 & process photo" })).not.toBeInTheDocument();
   });
-  it("checks eligibility before offering login with the exact result intent", async () => {
-    window.history.replaceState(null, "", "/pricing?taskId=photo-1&plan=single_photo");
-    mockFetch.mockResolvedValue({ ok: true, json: async () => ({ status: "completed", downloadPolicy: "preview_v1", downloadUnlocked: false }) });
+  it("resumes only after verifying the owned unpaid order", async () => {
+    window.history.replaceState(null, "", "/pricing?orderId=order-1&plan=single_run&resume=1");
+    let confirm!: (value: unknown) => void;
+    mockFetch.mockImplementation((url: string) => url.startsWith("/api/photo-orders/") ? new Promise(resolve => { confirm = resolve; }) : Promise.resolve({ ok: true, json: async () => ({}) }));
     render(<PricingCards />);
-    fireEvent.click(await screen.findByRole("button", { name: "Unlock this result — $1.99" }));
-    await waitFor(() => expect(mockSignIn).toHaveBeenCalledWith("google", { callbackUrl: "/pricing?plan=single_photo&resume=1&taskId=photo-1" }));
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("/api/photo-orders/order-1", expect.any(Object)));
     expect(mockFetch.mock.calls.some(([url]) => url === "/api/stripe/checkout")).toBe(false);
+    await act(async () => confirm({ ok: true, json: async () => ({ status: "unpaid", taskId: "photo-1", workflow: "animate" }) }));
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("/api/stripe/checkout", expect.objectContaining({ body: JSON.stringify({ plan: "single_run", locale: "en", orderId: "order-1" }) })));
+    expect(window.location.search).not.toContain("resume=");
+    expect(mockFetch.mock.calls.filter(([url]) => url === "/api/stripe/checkout")).toHaveLength(1);
   });
-});
-
-it("resumes a single-result checkout only after authenticated eligibility verification", async () => {
-  jest.clearAllMocks(); mockFetch.mockReset();
-  window.history.replaceState(null, "", "/pricing?taskId=photo-1&plan=single_photo&resume=1");
-  mockUseSession.mockReturnValue({ data: { user: { tier: "free" } }, status: "authenticated" });
-  let confirm!: (value: unknown) => void;
-  mockFetch.mockImplementation((url: string) => url.endsWith("/status") ? new Promise(resolve => { confirm = resolve; }) : Promise.resolve({ ok: true, json: async () => ({}) }));
-  render(<PricingCards />);
-  await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("/api/tasks/photo-1/status", expect.any(Object)));
-  expect(mockFetch.mock.calls.some(([url]) => url === "/api/stripe/checkout")).toBe(false);
-  await act(async () => confirm({ ok: true, json: async () => ({ status: "completed", downloadPolicy: "preview_v1", downloadUnlocked: false }) }));
-  await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("/api/stripe/checkout", expect.objectContaining({ body: JSON.stringify({ plan: "single_photo", locale: "en", taskId: "photo-1" }) })));
-  expect(window.location.search).not.toContain("resume=");
-  expect(mockFetch.mock.calls.filter(([url]) => url === "/api/stripe/checkout")).toHaveLength(1);
 });
 
 it("stops repeat checkout attempts and offers support when payment state needs review", async () => {
@@ -671,19 +653,28 @@ it("stops repeat checkout attempts and offers support when payment state needs r
   expect(mockFetch).toHaveBeenCalledTimes(1);
 });
 
-it("puts the single-result offer ahead of the generic pricing hero for task context", async () => {
+it("puts the order purchase ahead of generic pricing information", async () => {
   jest.clearAllMocks(); mockFetch.mockReset();
-  window.history.replaceState(null, "", "/pricing?taskId=photo-1&plan=single_photo");
+  window.history.replaceState(null, "", "/pricing?orderId=order-1&plan=single_run");
   mockUseSession.mockReturnValue({ data: { user: { tier: "free" } }, status: "authenticated" });
-  mockFetch.mockImplementation(async (url: string) => ({ ok: true, json: async () => url.endsWith("/status") ? { status: "completed", workflow: "animate", downloadPolicy: "preview_v1", downloadUnlocked: false } : { tier: "free" } }));
+  mockFetch.mockImplementation(async (url: string) => ({ ok: true, json: async () => url.startsWith("/api/photo-orders/") ? { status: "unpaid", taskId: "photo-1", workflow: "animate" } : { tier: "free" } }));
   render(<PricingPage />);
-  expect(await screen.findByRole("heading", { level: 1, name: "Keep this result" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { level: 1, name: "Process this photo" })).toBeInTheDocument();
   expect(screen.queryByRole("heading", { name: "Pay Once, Restore When You Need" })).not.toBeInTheDocument();
   expect(screen.queryByTestId("current-plan-summary")).not.toBeInTheDocument();
-  const card = screen.getByTestId("plan-single_photo");
-  expect(card).toHaveTextContent("Same result. No preview watermark. No regeneration.");
-  expect(card).toHaveTextContent("Video stays 480p.");
-  expect(card).not.toHaveTextContent("Does not include another generation.");
-  expect(card.compareDocumentPosition(screen.getByTestId("plan-starter_pack")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(await screen.findByRole("button", { name: "Unlock this result — $1.99" })).toBeInTheDocument();
+  const card = screen.getByTestId("plan-single_run");
+  expect(card).toHaveTextContent("$1.99");
+  expect(screen.queryByTestId("plan-starter_pack")).not.toBeInTheDocument();
+  expect(await screen.findByRole("button", { name: "Pay $1.99 & process photo" })).toBeInTheDocument();
+});
+
+it("never sells an expired order and asks for a new upload", async () => {
+  jest.clearAllMocks(); mockFetch.mockReset();
+  window.history.replaceState(null, "", "/pricing?orderId=expired-order&plan=single_run");
+  mockUseSession.mockReturnValue({ data: { user: { tier: "free" } }, status: "authenticated" });
+  mockFetch.mockResolvedValue({ ok: true, json: async () => ({ status: "expired", workflow: "animate" }) });
+  render(<PricingCards />);
+  expect(await screen.findByRole("alert")).toHaveTextContent("has expired");
+  expect(screen.queryByRole("button", { name: "Pay $1.99 & process photo" })).not.toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Upload a photo" })).toHaveAttribute("href", "/#upload-section");
 });

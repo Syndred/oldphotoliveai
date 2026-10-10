@@ -7,7 +7,7 @@ import type { UserTier } from "@/types";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import {
   CREDIT_PACKS,
-  SINGLE_PHOTO,
+  SINGLE_RUN,
   isCreditPackPlan,
   type CreditPackPlan,
   PROFESSIONAL_MONTHLY_DISPLAY_PRICE,
@@ -15,7 +15,7 @@ import {
 
 import { localizePathname } from "@/i18n/routing";
 import { SUPPORT_EMAIL } from "@/lib/site";
-import { getDownloadCopy } from "@/lib/download-copy";
+import { getSingleRunCopy, singleRunWorkflowLabel } from "@/lib/single-run-copy";
 import { getCheckoutCopy } from "@/lib/checkout-copy";
 import { checkoutContext, checkoutLocale, pricingCheckoutPath } from "@/lib/checkout-context";
 
@@ -52,22 +52,6 @@ function parseUserTier(value: unknown): UserTier | null {
 }
 
 const PLANS: PricingPlan[] = [
-  {
-    id: "free",
-    nameKey: "free",
-    badgeKey: "freeBadge",
-    price: "$0",
-    priceNoteKey: "freePriceNote",
-    descKey: "freeDesc",
-    featureKeys: [
-      "freeFeature1",
-      "freeFeature2",
-      "freeFeature3",
-      "freeFeature4",
-    ],
-    ctaKey: "free",
-    highlighted: false,
-  },
   {
     id: "starter_pack",
     nameKey: "starterPack",
@@ -157,31 +141,34 @@ export default function PricingCards({
   const { data: session, status } = useSession();
   const locale = checkoutLocale(useLocale());
   const resumed = useRef(false);
+  const checkoutInFlight = useRef(false);
   const copy = getCheckoutCopy(locale);
-  const downloadCopy = getDownloadCopy(locale);
-  const [singleState, setSingleState] = useState<"none" | "checking" | "eligible" | "unlocked" | "unavailable">("none");
+  const runCopy = getSingleRunCopy(locale);
+  const [singleState, setSingleState] = useState<"none" | "checking" | "eligible" | "unlocked" | "unavailable" | "expired">("none");
   const [singleWorkflow, setSingleWorkflow] = useState<string | undefined>();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [photoContext, setPhotoContext] = useState<{ taskId?: string; returnTo?: string }>({});
+  const [photoContext, setPhotoContext] = useState<{ orderId?: string; taskId?: string; returnTo?: string }>({});
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setSelectedPlan(params.get("plan"));
     setPhotoContext(checkoutContext(params, locale));
   }, [locale]);
+  const [orderTaskId, setOrderTaskId] = useState<string | undefined>();
   useEffect(() => {
-    if (!photoContext.taskId) { setSingleState("none"); return; }
+    if (!photoContext.orderId) { setSingleState("none"); return; }
     const controller = new AbortController();
     setSingleState("checking");
-    fetch(`/api/tasks/${encodeURIComponent(photoContext.taskId)}/status`, { signal: controller.signal, cache: "no-store" })
+    fetch(`/api/photo-orders/${encodeURIComponent(photoContext.orderId)}`, { signal: controller.signal, cache: "no-store" })
       .then(async response => {
         if (!response.ok) throw new Error("unavailable");
         const task = await response.json();
         if (controller.signal.aborted) return;
         setSingleWorkflow(typeof task.workflow === "string" ? task.workflow : undefined);
-        setSingleState(task.downloadUnlocked === true ? "unlocked" : task.status === "completed" && task.downloadPolicy === "preview_v1" ? "eligible" : "unavailable");
+        setOrderTaskId(typeof task.taskId === "string" ? task.taskId : undefined);
+        setSingleState(task.status === "expired" ? "expired" : task.status === "unpaid" ? "eligible" : ["paid", "refund_pending", "refunded", "review_required"].includes(task.status) ? "unlocked" : "unavailable");
       }).catch(() => { if (!controller.signal.aborted) setSingleState("unavailable"); });
     return () => controller.abort();
-  }, [photoContext.taskId, status]);
+  }, [photoContext.orderId, status]);
   const t = useTranslations("pricing");
   const tErrors = useTranslations("errors");
 
@@ -196,8 +183,8 @@ export default function PricingCards({
     if (status !== "authenticated" || resumed.current) return;
     const params = new URLSearchParams(window.location.search);
     const plan = params.get("plan");
-    if (params.get("resume") !== "1" || params.has("cancelled") || params.has("session_id") || !plan || (!isCreditPackPlan(plan) && plan !== "professional" && plan !== "single_photo")) return;
-    if (plan === "single_photo" && singleState !== "eligible") return;
+    if (params.get("resume") !== "1" || params.has("cancelled") || params.has("session_id") || !plan || (!isCreditPackPlan(plan) && plan !== "professional" && plan !== "single_run")) return;
+    if (plan === "single_run" && singleState !== "eligible") return;
     resumed.current = true;
     // Consume the intent before the request so refresh/back never reopens checkout.
     params.delete("resume");
@@ -208,10 +195,10 @@ export default function PricingCards({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, singleState]);
 
-  async function handleCheckout(plan: CreditPackPlan | "professional" | "single_photo") {
-    if (checkoutReview) return;
+  async function handleCheckout(plan: CreditPackPlan | "professional" | "single_run") {
+    if (checkoutReview || checkoutInFlight.current) return;
     const context = checkoutContext(new URLSearchParams(window.location.search), locale);
-    if (plan === "single_photo" && (!context.taskId || singleState !== "eligible")) { setError(downloadCopy.unavailable); return; }
+    if (plan === "single_run" && (!context.orderId || singleState !== "eligible")) { setError(runCopy.unavailable); return; }
     if (status !== "authenticated") {
       setLoadingPlan(plan);
       setError(null);
@@ -226,11 +213,12 @@ export default function PricingCards({
       return;
     }
 
-    if (plan !== "professional" && professionalIncludesCredits) {
+    if (plan !== "professional" && plan !== "single_run" && professionalIncludesCredits) {
       setError(tErrors("professionalAlreadyIncludesCredits"));
       return;
     }
 
+    checkoutInFlight.current = true;
     setLoadingPlan(plan);
     setError(null);
     trackAnalyticsEvent("checkout_started", { plan });
@@ -258,6 +246,7 @@ export default function PricingCards({
       setError(err instanceof Error ? err.message : tErrors("checkoutFailed"));
     } finally {
       setLoadingPlan(null);
+      checkoutInFlight.current = false;
     }
   }
 
@@ -296,26 +285,22 @@ export default function PricingCards({
         <p className="text-sm leading-6 text-[var(--color-text-secondary)]">{copy.photoContext}</p>
         <a className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-white/15 px-4 py-2 text-sm text-[var(--color-text-primary)]" href={photoContext.taskId ? localizePathname(locale, `/result/${photoContext.taskId}`) : `${photoContext.returnTo}?resumeUpload=1#upload-section`}>{copy.backPhoto}</a>
       </div>}
-      <section data-testid="plan-single_photo" className="mb-8 rounded-2xl border border-[var(--color-accent)]/35 bg-[var(--color-accent)]/10 p-5 sm:p-6">
+      <section data-testid="plan-single_run" className="mb-8 rounded-2xl border border-[var(--color-accent)]/35 bg-[var(--color-accent)]/10 p-5 sm:p-6">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="max-w-2xl">
-            <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{downloadCopy.card} <span className="ml-3 text-2xl">{SINGLE_PHOTO.displayPrice}</span></h2>
-            {photoContext.taskId ? <>
-              <p className="mt-3 text-sm leading-6 text-[var(--color-text-secondary)]">{downloadCopy.compactSummary}</p>
-              <p className="mt-2 text-xs leading-5 text-[var(--color-text-secondary)]">{singleWorkflow === "restore" || singleWorkflow === "colorize" ? downloadCopy.compactImage : downloadCopy.compactVideo}</p>
-              <p className="mt-2 text-xs leading-5 text-[var(--color-text-secondary)]">{downloadCopy.compactTerms}</p>
-            </> : <>
-              <p className="mt-3 text-sm leading-6 text-[var(--color-text-secondary)]">{downloadCopy.terms}</p>
-              <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">{downloadCopy.body}</p>
-            </>}
+            <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{runCopy.card}</h2>
+            <p className="mt-3 text-3xl font-bold text-[var(--color-text-primary)]">{SINGLE_RUN.displayPrice} <span className="text-sm font-normal">USD</span></p>
+            <p className="mt-3 text-sm leading-6 text-[var(--color-text-secondary)]">{photoContext.orderId ? singleRunWorkflowLabel(locale, singleWorkflow) : runCopy.summary}</p>
           </div>
-          {singleState === "eligible" && !professionalIncludesCredits ? <button type="button" onClick={() => handleCheckout("single_photo")} disabled={checkoutReview || loadingPlan !== null || status === "loading"} className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-lg bg-[var(--color-accent)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{loadingPlan === "single_photo" ? t("redirecting") : downloadCopy.buy}</button>
-            : singleState === "checking" ? <p role="status" className="text-sm text-[var(--color-text-secondary)]">{downloadCopy.checking}</p>
-            : photoContext.taskId ? <a href={localizePathname(locale, `/result/${photoContext.taskId}`)} className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-lg border border-white/20 px-5 py-3 text-sm font-semibold text-[var(--color-text-primary)]">{downloadCopy.open}</a>
-            : <a href={`${localizePathname(locale, "/")}#upload-section`} className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-lg bg-[var(--color-accent)] px-5 py-3 text-sm font-semibold text-white">{downloadCopy.preview}</a>}
+          {photoContext.orderId && status === "unauthenticated" ? <button type="button" onClick={async () => { try { await signIn("google", { callbackUrl: pricingCheckoutPath(locale, photoContext) }); } catch { setError(tErrors("checkoutFailed")); } }} className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-lg bg-[var(--color-accent)] px-5 py-3 text-sm font-semibold text-white">{copy.login}</button> : singleState === "eligible" ? <button type="button" onClick={() => handleCheckout("single_run")} disabled={checkoutReview || loadingPlan !== null || status === "loading"} className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-lg bg-[var(--color-accent)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{loadingPlan === "single_run" ? t("redirecting") : runCopy.buy}</button>
+            : singleState === "checking" ? <p role="status" className="text-sm text-[var(--color-text-secondary)]">{runCopy.checking}</p>
+            : singleState === "unlocked" && orderTaskId ? <a href={localizePathname(locale, `/result/${orderTaskId}`)} className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-lg border border-white/20 px-5 py-3 text-sm font-semibold text-[var(--color-text-primary)]">{runCopy.open}</a>
+            : <a href={`${localizePathname(locale, "/")}#upload-section`} className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-lg bg-[var(--color-accent)] px-5 py-3 text-sm font-semibold text-white">{runCopy.upload}</a>}
         </div>
+        {(singleState === "unavailable" || singleState === "expired") && <p role="alert" className="mt-4 text-sm leading-6 text-amber-200">{singleState === "expired" ? runCopy.expired : runCopy.unavailable}</p>}
+        <p className="mt-5 text-xs leading-6 text-[var(--color-text-secondary)]">{runCopy.terms} <a className="underline" href={localizePathname(locale, "/terms")}>{t("termsLink")}</a></p>
       </section>
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+      {!photoContext.orderId && <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {PLANS.filter(
           (p) => !p.hiddenUnlessCurrent || p.id === currentPlanId
         ).map((p) => {
@@ -437,7 +422,7 @@ export default function PricingCards({
             </div>
           );
         })}
-      </div>
+      </div>}
 
       {checkoutReview && <div className="mt-5"><a href={`mailto:${SUPPORT_EMAIL}`} className="inline-flex min-h-11 items-center rounded-xl border border-white/20 px-4 py-2 text-sm font-medium text-[var(--color-text-primary)]">{copy.contactSupport} · {SUPPORT_EMAIL}</a></div>}
       {error && (

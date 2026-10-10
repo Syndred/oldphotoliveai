@@ -68,6 +68,12 @@ export interface Task {
   /** Quality purchased when this task was created; independent of later account changes. */
   generationTier?: UserTier;
   upgradeSourceTaskId?: string;
+  /** A paid single-run order. Its entitlement never changes the account tier. */
+  purchaseOrderId?: string;
+  refundStatus?: "pending" | "succeeded" | "review_required";
+  refundRequestedAt?: string;
+  /** Server-confirmed delivery impossibility, not a transient provider error. */
+  deliveryUnrecoverable?: boolean;
   /** Only new free tasks opt in; absent means legacy download rights. */
   downloadPolicy?: "preview_v1";
   /** Private bucket keys. Never serialize these in public task responses. */

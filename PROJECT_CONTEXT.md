@@ -4,7 +4,7 @@
 
 - 老照片修复 / 上色 / 动画化全流程（Replicate + R2 + Redis 队列 Worker）
 - Google 登录、配额/积分、Stripe 支付（含 Professional）
-- 匿名试用、多语言（en/zh/ja/es）、法律页（Terms / Privacy）
+- 单张预付 USD 1.99、多语言（en/zh/ja/es）、法律页（Terms / Privacy）；历史匿名结果仍可访问
 - **内容审核**：默认 Replicate `falcons-ai/nsfw_image_detection`（不依赖 OpenAI 绑卡）；可选 `MODERATION_PROVIDER=openai|auto`
 - Pipeline 在调用 Replicate 前审查原图，生成后审查 restored/colorized 图；违规标记 `task.violation`，用户友好提示且不退款（TOS）
 - **Replicate 月度预算兜底**：Redis `replicate:spend:YYYY-MM` + `REPLICATE_MONTHLY_SPEND_LIMIT_USD`（默认 $50）
@@ -90,10 +90,23 @@ docs/REPLICATE_SECURITY.md     # Replicate 安全配置指南
 - 最终全量回归 85 套 / 762 条通过，typecheck、production build 通过；手机/桌面生产构建模拟流程验收完成。代码 `8794e80` 已在 Vercel Production READY，正式域名游客购买登录跳转、API 权限和管理员统计已核验；未进行真实扣款，不等同于已证明转化率提升。
 
 
-## 2026-10-07 单结果下载实验（代码验收完成，待授权上线）
+## 2026-10-07 单结果下载实验（未上线，已由 10-10 预付方案替代）
 
 - 分支 `codex/single-result-unlock`：新免费任务改为带水印预览；USD 1.99 / 1 积分解锁本次同一成品，不重新生成。旧任务与既有付费权益保留。
 - 无水印母版使用独立私有 R2 桶，图片/视频预览真实写入水印。新增单张 Checkout、永久下载授权、恢复/删除竞态保护及转化统计。
 - 最终 92 套 / 839 条测试、typecheck、生产构建通过；最终构建手机/桌面模拟流程已验收。没有真实扣款、没有生产开启。
 - 已创建 `oldphotoliveai-private-results`，但原 S3 密钥访问新桶 403。等待用户登录 Cloudflare，并确认创建仅限新桶的专用读写密钥及保存到 Vercel。不得直接开启实验或发布不匹配的价格文案。
 - 完整启用清单、回退边界与交接见 `docs/single-result-experiment.md`；不确定支付恢复见 `docs/SINGLE_RESULT_CHECKOUT_RECOVERY.md`。
+
+
+## 2026-10-10 单张预付方案（用户已授权上线）
+
+- 取消新增匿名/登录免费生成；后端返回 `402 PAYMENT_REQUIRED`，旧免费额度记录不再代表可生成权益。
+- 上传照片并登录后，USD 1.99 购买本张照片的当前功能（修复/上色/动态化/完整流程）；付款确认后生成，完整无水印结果，不订阅。
+- `single_run` 独立订单：固定原图与功能，付款时原子写入唯一 paid task / 队列 / 历史 / 回执，不增加积分或会员；原积分与 Professional 权益保留。
+- 客户端跨登录保存上传意图，使用最新服务端 quota 判断旧积分权益；重复订单/付款未知响应恢复原 Stripe 幂等键，避免重复扣款。
+- 确证技术失败可免费重试一次；第二次确证失败后登记退款，明确区分处理中、已发出、需支持核对。违规内容不自动退款，provider 创建不明不盲目再次调用。
+- 已付款单张任务不能取消或在交付/退款未解决时删除；弃付订单及临时原图超过7天后按原子围栏安全清理，保留支付未决证据及已引用原图。
+- 新方案走现有付费存储，不需要新私有桶；`DOWNLOAD_PREVIEW_ENABLED` 未启用，旧单结果试验被替代，不再销售新 `single_photo`。
+- 四语种页面、FAQ、条款与结构化价格同步；Chinese handoff见 `docs/paid-first-release.md`，恢复手册见 `docs/PHOTO_ORDER_RECOVERY.md`。
+- 验收与生产部署结果将在正式域名校验后补齐；真实 Stripe 扣款和新订单成品交付须独立证明，Checkout 创建本身不是成交。

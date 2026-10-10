@@ -7,11 +7,12 @@ import "@testing-library/jest-dom";
 
 const mockSignIn = jest.fn();
 let mockSessionStatus = "authenticated";
+let mockTier = "pay_as_you_go";
 const mockUseLocale = jest.fn();
 
 jest.mock("next-auth/react", () => ({
   useSession: () => ({
-    data: mockSessionStatus === "authenticated" ? { user: { name: "Test" } } : null,
+    data: mockSessionStatus === "authenticated" ? { user: { id: "user-test", name: "Test", tier: mockTier } } : null,
     status: mockSessionStatus,
   }),
   signIn: (...args: unknown[]) => mockSignIn(...args),
@@ -118,7 +119,7 @@ jest.mock("@/components/UploadZone", () => {
       <div data-testid="upload-zone" data-disabled={disabled}>
         <button
           data-testid="trigger-upload"
-          onClick={() => onUpload("https://cdn.example.com/test.jpg")}
+          onClick={() => onUpload("uploads/test-photo/original.jpg")}
           disabled={disabled}
         >
           Upload
@@ -153,6 +154,9 @@ function getRequestUrl(input: unknown): string {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  sessionStorage.clear();
+  window.history.replaceState(null, "", "/");
+  mockTier = "pay_as_you_go";
   __resetI18nNavigationMocks();
   __setMockLocale("en");
   __setMockPathname("/");
@@ -160,6 +164,8 @@ beforeEach(() => {
   mockSessionStatus = "authenticated";
   global.fetch = jest.fn(async (input: unknown) => {
     const url = getRequestUrl(input);
+    if (url.endsWith("/api/quota")) return { ok: true, json: async () => ({ tier: mockTier }) };
+    if (url.endsWith("/api/photo-orders")) return { ok: true, json: async () => ({ orderId: "order-123", taskId: "reserved-task", status: "unpaid" }) };
     if (url.endsWith("/api/tasks")) {
       return { ok: true, json: async () => ({ taskId: "task-123" }) };
     }
@@ -175,7 +181,7 @@ describe("HomePage", () => {
     fireEvent.click(screen.getByTestId("trigger-upload"));
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith("/api/tasks", expect.objectContaining({
-        body: JSON.stringify({ imageKey: "https://cdn.example.com/test.jpg", workflow: "full" }),
+        body: JSON.stringify({ imageKey: "uploads/test-photo/original.jpg", workflow: "full" }),
       }));
     });
   });
@@ -196,7 +202,7 @@ describe("HomePage", () => {
     expect(screen.getByRole("navigation", {
       name: "OldPhotoLiveAI tool navigation",
     })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Free Quota & Plans" })).toHaveAttribute("href", "/pricing");
+    expect(screen.getByRole("link", { name: "Photo Pricing & Credit Packs" })).toHaveAttribute("href", "/pricing");
     expect(screen.getByRole("link", { name: "AI Photo Colorizer" })).toHaveAttribute("href", "/colorize-old-photos");
     expect(
       screen.getAllByRole("link", { name: "Restore old photos" })[0]
@@ -232,7 +238,7 @@ describe("HomePage", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          imageKey: "https://cdn.example.com/test.jpg",
+          imageKey: "uploads/test-photo/original.jpg",
           workflow: "colorize",
         }),
       });
@@ -247,6 +253,7 @@ describe("HomePage", () => {
     let resolveTask!: (value: unknown) => void;
     (global.fetch as jest.Mock).mockImplementation((input: unknown) => {
       const url = getRequestUrl(input);
+      if (url.endsWith("/api/quota")) return Promise.resolve({ ok: true, json: async () => ({ tier: mockTier }) });
       if (url.endsWith("/api/tasks")) {
         return new Promise((resolve) => {
           resolveTask = resolve;
@@ -276,6 +283,7 @@ describe("HomePage", () => {
   it("shows an API error when task creation fails", async () => {
     (global.fetch as jest.Mock).mockImplementation(async (input: unknown) => {
       const url = getRequestUrl(input);
+      if (url.endsWith("/api/quota")) return Promise.resolve({ ok: true, json: async () => ({ tier: mockTier }) });
       if (url.endsWith("/api/tasks")) {
         return {
           ok: false,
@@ -299,6 +307,7 @@ describe("HomePage", () => {
   it("shows a thrown error when fetch rejects", async () => {
     (global.fetch as jest.Mock).mockImplementation((input: unknown) => {
       const url = getRequestUrl(input);
+      if (url.endsWith("/api/quota")) return Promise.resolve({ ok: true, json: async () => ({ tier: mockTier }) });
       if (url.endsWith("/api/tasks")) {
         return Promise.reject(new Error("Network error"));
       }
@@ -319,18 +328,32 @@ describe("HomePage", () => {
     fireEvent.click(screen.getByTestId("trigger-upload"));
 
     expect(mockSignIn).toHaveBeenCalledWith("google", {
-      callbackUrl: "/",
+      callbackUrl: "/?resumeUpload=1#upload-section",
     });
     expect(global.fetch).not.toHaveBeenCalled();
+    const saved = JSON.parse(sessionStorage.getItem("opla:pending-upload:v1") || "null");
+    expect(saved).toMatchObject({ imageKey: "uploads/test-photo/original.jpg", workflow: "colorize", pathname: "/", userId: "" });
+    expect(mockSignIn.mock.calls[0][1].callbackUrl).not.toContain("original.jpg");
   });
 
-  it("shows the login prompt when unauthenticated", () => {
+  it("lets guests upload before login and discloses payment before processing", () => {
     mockSessionStatus = "unauthenticated";
     render(<HomePage />);
 
-    expect(
-      screen.getByText("Sign in to start restoring your photos")
-    ).toBeInTheDocument();
-    expect(screen.getByText("Sign in with Google")).toBeInTheDocument();
+    expect(screen.getByText(/Upload your photo, sign in, then pay \$1.99/)).toBeInTheDocument();
+    expect(screen.getByTestId("trigger-upload")).toBeEnabled();
+    expect(mockSignIn).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
   });
+});
+
+it.each(["en", "zh"] as const)("creates an unpaid order for a %s homepage without a paid allowance", async locale => {
+  mockTier = "free";
+  mockUseLocale.mockReturnValue(locale);
+  __setMockLocale(locale);
+  render(<HomePageView locale={locale} />);
+  fireEvent.click(screen.getByTestId("trigger-upload"));
+  await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/photo-orders", expect.objectContaining({ body: JSON.stringify({ imageKey: "uploads/test-photo/original.jpg", workflow: locale === "en" ? "colorize" : "full", locale }) })));
+  expect(mockRouterPush).toHaveBeenCalledWith(`${locale === "en" ? "" : `/${locale}`}/pricing?orderId=order-123&plan=single_run`);
+  expect((global.fetch as jest.Mock).mock.calls.some(([url]) => url === "/api/tasks")).toBe(false);
 });

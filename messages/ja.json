@@ -62,11 +62,11 @@
   "pricing": {
     "eyebrow": "一回払いのクレジットパック",
     "title": "必要なときだけ購入して写真を修復",
-    "subtitle": "まず無料でプレビュー。同じ仕上がりを$1.99またはクレジットで解除できます。任意のHD再生成は別の仕上がりになる場合があります。",
-    "valueProp1": "毎日の無料プレビュー",
-    "valueProp2": "同じ仕上がりをダウンロード",
-    "valueProp3": "クレジットは 1 年有効",
-    "free": "無料",
+    "subtitle": "写真1枚につき生成前に$1.99を支払うか、複数の写真にクレジットパックをご利用ください。透かしなしの完全な結果。定期購入は不要です。",
+    "valueProp1": "写真1枚$1.99から",
+    "valueProp2": "処理前にお支払い",
+    "valueProp3": "透かし・定期購入なし",
+    "free": "写真ごとのお支払い",
     "payAsYouGo": "クレジット",
     "professional": "プロ",
     "starterPack": "スターターパック",
@@ -88,29 +88,29 @@
     "creditPackPeriod": "/ {count} クレジット",
     "payAsYouGoPeriod": "/ {count} クレジット",
     "professionalPeriod": "/ 月",
-    "freePriceNote": "1日1回の透かし付きプレビュー。新しいプレビューのダウンロードには解除が必要です。",
+    "freePriceNote": "写真1枚$1.99から",
     "starterPackPriceNote": "重要な写真を試しやすい、約 $0.50/クレジット。",
     "familyPackPriceNote": "小さな家族アルバム向け、約 $0.40/クレジット。",
     "archivePackPriceNote": "大きめのまとめ処理向け、約 $0.33/クレジット。",
     "professionalPriceNote": "アルバム、まとめ処理、継続利用向けの月額プランです。",
-    "freeDesc": "仕上がりを確認してからダウンロードを購入できます。",
+    "freeDesc": "写真1枚$1.99から",
     "starterPackDesc": "初回購入しやすい低リスクなパックです。",
     "familyPackDesc": "記念写真やギフト用のセットに十分な枚数です。",
     "archivePackDesc": "より低い単価で多くの古い写真を処理できます。",
     "professionalDesc": "優先処理で多くの家族写真を仕上げられます。",
-    "freeFeature1": "1日1回の無料プレビュー",
-    "freeFeature2": "透かし付き画像プレビュー",
-    "freeFeature3": "480p動画プレビュー",
-    "freeFeature4": "$1.99から今回の結果を解除",
-    "starterPackFeature1": "10クレジット：解除または新規生成",
+    "freeFeature1": "写真1枚$1.99から",
+    "freeFeature2": "写真1枚$1.99から",
+    "freeFeature3": "写真1枚$1.99から",
+    "freeFeature4": "写真1枚$1.99から",
+    "starterPackFeature1": "写真処理10クレジット",
     "starterPackFeature2": "新規生成：画像は最大2K",
     "starterPackFeature3": "新規生成：720p HD動画",
     "starterPackFeature4": "透かしなしダウンロード",
-    "familyPackFeature1": "25クレジット：解除または新規生成",
+    "familyPackFeature1": "写真処理25クレジット",
     "familyPackFeature2": "新規生成：画像は最大2K",
     "familyPackFeature3": "新規生成：720p HD動画",
     "familyPackFeature4": "透かしなしダウンロード",
-    "archivePackFeature1": "60クレジット：解除または新規生成",
+    "archivePackFeature1": "写真処理60クレジット",
     "archivePackFeature2": "新規生成：画像は最大2K",
     "archivePackFeature3": "新規生成：720p HD動画",
     "archivePackFeature4": "透かしなしダウンロード",
@@ -123,7 +123,8 @@
     "proFeature3": "1080p プレミアム動画",
     "proFeature4": "透かしなしダウンロード",
     "proFeature5": "大量処理の優先キュー",
-    "buyPack": "クレジットを購入"
+    "buyPack": "クレジットを購入",
+    "termsLink": "利用規約"
   },
   "history": {
     "title": "処理履歴",
@@ -157,7 +158,7 @@
     "uploadStorageNetworkError": "一時的にストレージサービスへ接続できません。時間をおいて再度お試しください。",
     "uploadSupportHint": "参照: {requestId} ({code})",
     "uploadCancelled": "アップロードはキャンセルされました。",
-    "quotaExceeded": "無料プランの 1 日あたりの上限に達しました。アップグレードするか、明日もう一度お試しください。",
+    "quotaExceeded": "処理前のお支払いが必要です。写真1枚$1.99またはクレジットパックをご利用ください。",
     "creditsExpired": "クレジットの有効期限が切れています。再度購入してください。",
     "professionalAlreadyIncludesCredits": "Professional プランには無制限の修復が含まれているため、追加クレジットは不要です。",
     "rateLimited": "リクエストが多すぎます。時間をおいて再度お試しください。",
@@ -184,7 +185,8 @@
     "creationAllowanceMayBeUsed": "利用枠が消費された可能性があります。まず同じアップロード済み写真で再試行してください。既存の結果がある場合は、追加消費なしで再表示されます。",
     "retrySamePhoto": "同じ写真で再試行",
     "taskIdsRequired": "少なくとも 1 件のタスクを選択してください。",
-    "taskBatchTooLarge": "一度に削除できるのは最大 50 件までです。"
+    "taskBatchTooLarge": "一度に削除できるのは最大 50 件までです。",
+    "paymentRequired": "処理前のお支払いが必要です。写真1枚$1.99またはクレジットパックをご利用ください。"
   },
   "auth": {
     "signInWith": "Google でログイン",
@@ -200,10 +202,10 @@
       "title": "OldPhotoLive AIで古い写真を修復・カラー化・アニメーション化",
       "subtitle": "古い写真をアップロードし、傷の修復、白黒写真のカラー化、人物ポートレートの短い動画化から必要な結果を選べます。",
       "signal1": "修復だけ、カラー化だけ、動画化だけも可能",
-      "signal2": "毎日無料で試用",
+      "signal2": "写真1枚$1.99から",
       "signal3": "数分で結果を生成",
-      "signal4": "有料パックでHD出力",
-      "cta": "無料で試す"
+      "signal4": "透かしなし",
+      "cta": "写真をアップロード"
     },
     "showcase": {
       "title": "シーン別の実例",
@@ -382,7 +384,7 @@
         },
         "payments": {
           "title": "7. 支払い、クレジット、サブスクリプション",
-          "body": "有料プラン、クレジット、サブスクリプションは Stripe を通じて処理されます。従量課金クレジットは現在固定パックで販売され、購入時に示される期間の終了後に失効する場合があります。Professional サブスクリプションは、更新前に解約されない限り、チェックアウト時に選択した課金周期で自動更新されます。法令で求められる場合を除き、料金は返金不可であり、適用される税金、チャージバック、未払い金の責任は利用者が負います。"
+          "body": "有料プラン、クレジット、サブスクリプションは Stripe を通じて処理されます。従量課金クレジットは現在固定パックで販売され、購入時に示される期間の終了後に失効する場合があります。Professional サブスクリプションは、更新前に解約されない限り、チェックアウト時に選択した課金周期で自動更新されます。法令で求められる場合、または下記の写真1枚の技術的失敗に関する返金方針が適用される場合を除き、料金は返金不可であり、適用される税金、チャージバック、未払い金の責任は利用者が負います。 写真1枚の購入は、確認された技術的な失敗後に1回無料で再試行できます。結果を提供できないことが確認された場合は購入代金を返金します。コンテンツ違反は返金対象外です。提供状況が不明な場合はサポートが確認します。"
         },
         "termination": {
           "title": "8. 停止および終了",

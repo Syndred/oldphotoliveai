@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import CheckoutReturn from "@/components/CheckoutReturn";
 import PricingCards from "@/components/PricingCards";
 import { safeCheckoutTaskId } from "@/lib/checkout-context";
-import { getDownloadCopy } from "@/lib/download-copy";
+import { getSingleRunCopy } from "@/lib/single-run-copy";
 import type { QuotaInfo, SubscriptionStatus, UserTier } from "@/types";
 
 function parseUserTier(value: unknown): UserTier | null {
@@ -25,9 +25,9 @@ export default function PricingPage() {
   const { data: session, status } = useSession();
   const locale = useLocale();
   const t = useTranslations("pricing");
-  const downloadCopy = getDownloadCopy(locale);
+  const downloadCopy = getSingleRunCopy(locale);
   const [contextTaskId, setContextTaskId] = useState<string | undefined>();
-  useEffect(() => { setContextTaskId(safeCheckoutTaskId(new URLSearchParams(window.location.search).get("taskId"))); }, []);
+  useEffect(() => { setContextTaskId(safeCheckoutTaskId(new URLSearchParams(window.location.search).get("orderId") || new URLSearchParams(window.location.search).get("taskId"))); }, []);
   const tQuota = useTranslations("quota");
   const [paymentRevision, setPaymentRevision] = useState(0);
   const [quota, setQuota] = useState<QuotaInfo | null>(null);

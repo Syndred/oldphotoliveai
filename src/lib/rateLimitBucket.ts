@@ -29,6 +29,9 @@ export function getRateLimitBucket(
   if (pathname === "/api/tasks") {
     return method === "POST" ? "tasks:create" : "tasks";
   }
+  if (pathname.startsWith("/api/photo-orders")) {
+    return method === "POST" ? "photo-orders:create" : "photo-orders:read";
+  }
 
   if (pathname.startsWith("/api/tasks/")) {
     if (pathname.endsWith("/stream")) {

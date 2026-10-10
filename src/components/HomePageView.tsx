@@ -20,7 +20,7 @@ interface HomePageViewProps {
 
 const HOME_TOOL_NAV_LINKS = [
   { href: "/colorize-old-photos", label: "AI Photo Colorizer" },
-  { href: "/pricing", label: "Free Quota & Plans" },
+  { href: "/pricing", label: "Photo Pricing & Credit Packs" },
   { href: "/blog", label: "Photo Guides" },
 ] as const;
 
@@ -41,7 +41,7 @@ export default function HomePageView({
       operatingSystem: "Web",
       offers: {
         "@type": "Offer",
-        price: "0.00",
+        price: "1.99",
         priceCurrency: "USD",
       },
       featureList: [

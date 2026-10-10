@@ -5,10 +5,10 @@ import messages from "@/../messages/en.json";
 describe("colorizer-focused homepage", () => {
   it("owns the broad photo-colorization query", () => {
     expect(PAGE_SEO_COPY.en.home.title).toBe(
-      "Colorize Photo Online Free – AI Photo Colorizer"
+      "Colorize Photo Online – AI Photo Colorizer"
     );
     expect(messages.landing.hero.title).toBe("Photo Colorization with AI");
-    expect(PAGE_SEO_COPY.en.home.description).toContain("daily free account quota");
+    expect(PAGE_SEO_COPY.en.home.description).toContain("pay $1.99 before processing");
   });
 
   it("links colorization to the adjacent restoration and animation tools", () => {
@@ -21,7 +21,9 @@ describe("colorizer-focused homepage", () => {
 
   it("provides factual colorization FAQs", () => {
     expect(HOME_SEO_CONTENT.en.faqItems).toHaveLength(8);
-    expect(HOME_SEO_CONTENT.en.faqItems[0].answer).toContain("daily free quota");
+    expect(HOME_SEO_CONTENT.en.faqItems[0].answer).toContain("There is no free generation.");
+    expect(HOME_SEO_CONTENT.en.faqItems[0].answer).toContain("pay $1.99 before processing");
+    expect(HOME_SEO_CONTENT.en.faqItems[0].answer).toContain("no watermark");
     expect(HOME_SEO_CONTENT.en.faqItems[1].answer).toContain("estimate plausible colors");
   });
 });

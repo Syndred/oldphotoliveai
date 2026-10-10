@@ -3,11 +3,13 @@ import { v4 as uuidv4 } from "uuid";
 import { getRedisClient } from "@/lib/redis";
 import { PRIORITY_WEIGHTS, STATUS_PROGRESS_MAP } from "@/types";
 import type { Task, TaskPriority, TaskWorkflow, User } from "@/types";
+import { uploadReceiptKey } from "@/lib/upload-receipt";
 
 export type TaskCreationRejectionCode =
   | "DAILY_QUOTA_EXHAUSTED"
   | "NO_CREDITS"
   | "PAYMENT_REQUIRED"
+  | "UPLOAD_UNAVAILABLE"
   | "QUOTA_NOT_INITIALIZED"
   | "ANONYMOUS_TRIAL_USED";
 
@@ -31,8 +33,8 @@ local allowedZset = function(key)
   return t == 'none' or t == 'zset'
 end
 if not allowedString(KEYS[1]) or not allowedString(KEYS[2]) or
-   not allowedString(KEYS[5]) or not allowedZset(KEYS[3]) or
-   not allowedZset(KEYS[4]) then
+   not allowedString(KEYS[5]) or not allowedString(KEYS[6]) or not allowedZset(KEYS[3]) or
+   not allowedZset(KEYS[4]) or not allowedZset(KEYS[7]) then
   return {'ERROR', 'INTERNAL_KEY_TYPE'}
 end
 
@@ -44,6 +46,16 @@ end
 
 local tier = ARGV[5]
 if tier == 'free' then return {'REJECTED', 'PAYMENT_REQUIRED', '0'} end
+-- Temporary-upload cleanup must not race a paid credit generation.
+if ARGV[7] ~= 'upgrade' then
+  local uploadedRaw = redis.call('GET', KEYS[6])
+  if not uploadedRaw then return {'REJECTED', 'UPLOAD_UNAVAILABLE', '0'} end
+  local uploaded = cjson.decode(uploadedRaw)
+  local requested = cjson.decode(ARGV[2])
+  if uploaded.cleanupPending == true or uploaded.imageKey ~= requested.originalImageKey then
+    return {'REJECTED', 'UPLOAD_UNAVAILABLE', '0'}
+  end
+end
 local remaining = -1
 local quotaJson = redis.call('GET', KEYS[1])
 local quota = nil
@@ -81,6 +93,11 @@ end
 redis.call('SET', KEYS[2], ARGV[2])
 redis.call('ZADD', KEYS[3], ARGV[3], ARGV[1])
 redis.call('ZADD', KEYS[4], ARGV[4], ARGV[1])
+if ARGV[7] ~= 'upgrade' then
+  local requested = cjson.decode(ARGV[2])
+  redis.call('ZREM', KEYS[7], requested.originalImageKey)
+  redis.call('EXPIRE', KEYS[6], 604800)
+end
 if ARGV[7] == 'upgrade' then
   redis.call('SET', KEYS[5], ARGV[1])
 else
@@ -178,6 +195,8 @@ export async function createAuthenticatedTaskAtomic(input: {
     `user:${input.user.id}:tasks`,
     "queue:tasks",
     `${input.upgradeSourceTaskId ? "task:upgrade" : "task:create"}:${digest}`,
+    uploadReceiptKey(input.imageKey),
+    "upload:cleanup",
   ], [
     task.id,
     JSON.stringify(task),
@@ -211,6 +230,7 @@ export async function createAnonymousTaskAtomic(_input: {
   imageKey: string;
   now?: Date;
 }): Promise<TaskCreationResult> {
+  void _input;
   return { outcome: "rejected", code: "PAYMENT_REQUIRED", remaining: 0 };
 }
 

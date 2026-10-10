@@ -55,7 +55,16 @@ export const SINGLE_PHOTO = {
   unitAmount: 199,
   currency: "usd",
 } as const;
-export type CheckoutPlan = CreditPackPlan | "professional" | typeof SINGLE_PHOTO.plan;
+export type CheckoutPlan = CreditPackPlan | "professional" | typeof SINGLE_PHOTO.plan | "single_run";
 export function isCheckoutPlan(value: string): value is CheckoutPlan {
-  return isCreditPackPlan(value) || value === "professional" || value === SINGLE_PHOTO.plan;
+  return isCreditPackPlan(value) || value === "professional" || value === SINGLE_PHOTO.plan || value === "single_run";
 }
+
+/** Prepaid processing of one uploaded photo using its selected workflow. */
+export const SINGLE_RUN = {
+  plan: "single_run",
+  name: "OldPhotoLive AI — Process One Photo",
+  displayPrice: "$1.99",
+  unitAmount: 199,
+  currency: "usd",
+} as const;

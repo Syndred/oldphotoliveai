@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
 import UploadZone from "@/components/UploadZone";
@@ -11,7 +11,7 @@ import { getContentSafetyCopy } from "@/lib/content-safety";
 import type { TaskWorkflow } from "@/types";
 import { classifyTaskCreationResponse } from "@/lib/task-create-client";
 import { clearPendingUpload, readPendingUpload, savePendingUpload } from "@/lib/pending-upload";
-import { getDownloadCopy } from "@/lib/download-copy";
+import { getSingleRunCopy } from "@/lib/single-run-copy";
 import { getConversionCopy } from "@/lib/conversion-copy";
 
 interface UploadSectionProps {
@@ -46,20 +46,15 @@ export default function UploadSection({
   const createInFlightRef = useRef(false);
   const locale = useLocale() as Locale;
   const t = useTranslations("upload");
-  const tAuth = useTranslations("auth");
   const tErrors = useTranslations("errors");
   const contentSafety = getContentSafetyCopy(locale);
   const localizedPathname = localizePathname(locale, pathname);
   const isEmbedded = variant === "embedded";
   const copy = getConversionCopy(locale);
-  const downloadCopy = getDownloadCopy(locale);
+  const downloadCopy = getSingleRunCopy(locale);
   const accountTier = (session?.user as Record<string, unknown> | undefined)?.tier;
 
-  useEffect(() => {
-    if (status !== "authenticated") return;
-    const pending = readPendingUpload(userId, localizedPathname, workflow);
-    setSavedImageKey(pending?.imageKey ?? null);
-  }, [status, userId, localizedPathname, workflow]);
+
 
   const containerClasses = isEmbedded
     ? "flex h-full w-full flex-col rounded-[22px] border border-white/10 bg-white/[0.045] p-4 shadow-[0_18px_44px_rgba(0,0,0,0.22)] backdrop-blur-sm sm:p-5"
@@ -69,13 +64,20 @@ export default function UploadSection({
     ? `w-full ${className}`.trim()
     : `px-3 py-8 sm:px-4 sm:py-14 ${className}`.trim();
 
-  async function handleUpload(imageKey: string) {
-    // If not logged in, redirect to login
+  const handleUpload = useCallback(async (imageKey: string) => {
+    if (createInFlightRef.current) return;
+    // Retain the uploaded source before leaving for authentication.
     if (status !== "authenticated") {
       trackAnalyticsEvent("sign_in_prompted_upload", {
         source: analyticsSource,
       });
-      signIn("google", { callbackUrl: localizedPathname });
+      savePendingUpload({ imageKey, workflow, pathname: localizedPathname, userId: "" });
+      setSavedImageKey(imageKey);
+      createInFlightRef.current = true;
+      setIsCreating(true);
+      try { await signIn("google", { callbackUrl: `${localizedPathname}?resumeUpload=1#upload-section` }); }
+      catch { setError(tErrors("taskCreateFailed")); }
+      finally { setIsCreating(false); createInFlightRef.current = false; }
       return;
     }
 
@@ -93,19 +95,25 @@ export default function UploadSection({
     setIsCreating(true);
     setError("");
 
-    let responseAllowance: boolean | null = null;
+    let responseAllowance: boolean | null = false;
     try {
-      const res = await fetch("/api/tasks", {
+      // Account entitlements can change after checkout without a new login session.
+      const quotaResponse = await fetch("/api/quota", { cache: "no-store" });
+      const latestQuota = await quotaResponse.json().catch(() => null);
+      if (!quotaResponse.ok || !["free", "professional", "pay_as_you_go"].includes(latestQuota?.tier)) throw new Error(tErrors("taskCreateFailed"));
+      const singleRun = latestQuota.tier !== "professional" && latestQuota.tier !== "pay_as_you_go";
+      responseAllowance = singleRun ? false : null;
+      const res = await fetch(singleRun ? "/api/photo-orders" : "/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageKey, workflow }),
+        body: JSON.stringify({ imageKey, workflow, ...(singleRun ? { locale } : {}) }),
       });
 
       const data = await res.json().catch(() => null);
       responseAllowance =
         typeof data?.allowanceConsumed === "boolean"
           ? data.allowanceConsumed
-          : null;
+          : singleRun ? false : null;
       if (!res.ok) {
         const failure = classifyTaskCreationResponse(res.status, data);
         trackAnalyticsEvent(
@@ -119,7 +127,7 @@ export default function UploadSection({
           }
         );
         setError(data?.error || tErrors("taskCreateFailed"));
-        setAllowanceConsumed(failure.allowanceConsumed);
+        setAllowanceConsumed(singleRun ? false : failure.allowanceConsumed);
         setRetryImageKey(failure.retryable ? imageKey : null);
         if (failure.failureCode === "daily_quota_exhausted" || failure.failureCode === "no_credits") {
           setQuotaExhausted(true);
@@ -130,6 +138,13 @@ export default function UploadSection({
         return;
       }
 
+      if (singleRun) {
+        if (typeof data?.orderId !== "string" || !data.orderId) throw new Error(tErrors("taskCreateFailed"));
+        trackAnalyticsEvent("photo_order_created", { workflow, source: analyticsSource, plan: "single_run" });
+        clearPendingUpload(); setSavedImageKey(null);
+        router.push(`/pricing?orderId=${encodeURIComponent(data.orderId)}&plan=single_run`);
+        return;
+      }
       const taskId = typeof data?.taskId === "string" ? data.taskId : "";
       if (!taskId) throw new Error(tErrors("taskCreateFailed"));
       trackAnalyticsEvent("task_create_succeeded", {
@@ -160,7 +175,19 @@ export default function UploadSection({
       createInFlightRef.current = false;
       setIsCreating(false);
     }
-  }
+  }, [analyticsSource, locale, localizedPathname, router, status, tErrors, userId, workflow]);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    const pending = readPendingUpload(userId, localizedPathname, workflow);
+    setSavedImageKey(pending?.imageKey ?? null);
+    const params = new URLSearchParams(window.location.search);
+    if (pending && params.get("resumeUpload") === "1") {
+      params.delete("resumeUpload");
+      window.history.replaceState(window.history.state, "", `${window.location.pathname}${params.size ? `?${params}` : ""}${window.location.hash}`);
+      void handleUpload(pending.imageKey);
+    }
+  }, [status, userId, localizedPathname, workflow, handleUpload]);
 
   const content = (
     <div className={containerClasses}>
@@ -174,24 +201,6 @@ export default function UploadSection({
           </p>
         </>
       ) : null}
-
-      {/* Login prompt for unauthenticated users */}
-      {status !== "authenticated" && status !== "loading" && (
-        <div className="mb-4 flex flex-col items-center justify-between gap-3 rounded-xl border border-[var(--color-accent)]/25 bg-[var(--color-accent)]/10 p-4 text-center sm:flex-row sm:text-left">
-          <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
-            {tAuth("signInPrompt")}
-          </p>
-          <button
-            type="button"
-            onClick={() =>
-              signIn("google", { callbackUrl: localizedPathname })
-            }
-            className="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-4 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 sm:w-auto sm:py-2"
-          >
-            {tAuth("signInWith")}
-          </button>
-        </div>
-      )}
 
       {savedImageKey && !quotaExhausted && (
         <div className="mb-5 rounded-xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/10 p-4 sm:p-5">
@@ -208,7 +217,7 @@ export default function UploadSection({
 
       <UploadZone
         onUpload={handleUpload}
-        disabled={isCreating}
+        disabled={isCreating || status === "loading"}
         compact={isEmbedded}
         className={isEmbedded ? "flex-1" : ""}
       />
@@ -246,7 +255,7 @@ export default function UploadSection({
           <h3 className="font-semibold text-[var(--color-text-primary)]">{copy.quotaTitle}</h3>
           <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">{copy.quotaBody}</p>
           <Link href={`/pricing?plan=starter_pack&returnTo=${encodeURIComponent(localizedPathname)}`} onClick={() => trackAnalyticsEvent("upgrade_clicked", { source: "quota_exhausted", workflow, plan: "starter_pack" })} className="mt-4 inline-flex min-h-[44px] w-full items-center justify-center rounded-lg bg-gradient-to-r from-[var(--color-gradient-from)] to-[var(--color-gradient-to)] px-5 py-3 text-center text-sm font-semibold text-white sm:w-auto">{copy.buyCredits}</Link>
-          <p className="mt-3 text-xs leading-5 text-[var(--color-text-secondary)]">{copy.tomorrow}</p>
+
         </div>
       )}
 

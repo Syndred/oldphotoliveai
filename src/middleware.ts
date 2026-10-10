@@ -19,6 +19,7 @@ import {
 const PROTECTED_API_ROUTES = [
   "/api/upload",
   "/api/tasks",
+  "/api/photo-orders",
   "/api/quota",
   "/api/history",
   "/api/stripe/checkout",

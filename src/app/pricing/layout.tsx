@@ -4,7 +4,7 @@ import { buildPageMetadata } from "@/lib/seo";
 export const metadata: Metadata = buildPageMetadata({
   title: "Pricing",
   description:
-    "Preview AI photo restoration, colorization, and animation for free. Unlock the same result for $1.99 or use credits. Optional HD regeneration is separate.",
+    "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
   path: "/pricing",
   keywords: [
     "ai photo restoration pricing",

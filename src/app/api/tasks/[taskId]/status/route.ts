@@ -1,13 +1,14 @@
 // Task Status Query API Route
 // Requirements: 4.3, 18.5
 
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { getExistingTaskUpgrade } from "@/lib/task-creation";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 import { getAccessibleTask } from "@/lib/task-access";
 import { toPublicTaskStatus } from "@/lib/task-status";
 import { schedulePipelineWakeupForStatus } from "@/lib/worker-wakeup";
+import { needsPhotoOrderRefundRecovery, reconcileTaskPhotoOrderRefund } from "@/lib/photo-order-refund";
 
 export async function GET(request: NextRequest, props: { params: Promise<{ taskId: string }> }) {
   const params = await props.params;
@@ -24,6 +25,12 @@ export async function GET(request: NextRequest, props: { params: Promise<{ taskI
       );
     }
     schedulePipelineWakeupForStatus(accessibleTask.task.status);
+    if (needsPhotoOrderRefundRecovery(accessibleTask.task)) {
+      after(async () => {
+        try { await reconcileTaskPhotoOrderRefund(taskId); }
+        catch { console.error(JSON.stringify({ message: "photo_refund_status_recovery_failed" })); }
+      });
+    }
     const publicStatus = toPublicTaskStatus(accessibleTask.task, accessibleTask.mode, accessibleTask.downloadUnlocked);
     if (publicStatus.canUpgrade) {
       const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });

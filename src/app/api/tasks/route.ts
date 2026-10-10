@@ -25,6 +25,7 @@ function parseTaskWorkflow(value: unknown): TaskWorkflow {
 }
 
 function resolveQuotaErrorKey(code: string): string {
+  if (code === "UPLOAD_UNAVAILABLE") return "taskCreateFailed";
   if (code === "PAYMENT_REQUIRED") return "paymentRequired";
   if (code === "NO_CREDITS") {
     return "creditsExpired";
@@ -141,10 +142,10 @@ export async function POST(request: NextRequest) {
         {
           error: getErrorMessage(errorKey, locale),
           code: creation.code,
-          stage: "authorization",
+          stage: creation.code === "UPLOAD_UNAVAILABLE" ? "validation" : "authorization",
           allowanceConsumed: false,
         },
-        { status: creation.code === "PAYMENT_REQUIRED" ? 402 : 403 }
+        { status: creation.code === "UPLOAD_UNAVAILABLE" ? 400 : creation.code === "PAYMENT_REQUIRED" ? 402 : 403 }
       );
     }
 

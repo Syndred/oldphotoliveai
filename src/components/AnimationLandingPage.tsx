@@ -66,7 +66,7 @@ export default function AnimationLandingPage({
       operatingSystem: "Web",
       offers: {
         "@type": "Offer",
-        price: "0.00",
+        price: "1.99",
         priceCurrency: "USD",
       },
         },

@@ -5,7 +5,7 @@ export const BUSINESS_OPERATOR = "Syndred Young";
 export const BUSINESS_ADDRESS =
   "Yifu Building, Area 45, Bao'an District, Shenzhen, Guangdong Province, China";
 export const SITE_DESCRIPTION =
-  "Colorize photos with our AI photo colorizer. Add color to black-and-white pictures, restore old photos, and prepare portraits for animation.";
+  "Restore, colorize, and animate old photos with AI. Process one photo from $1.99 before generation, with a complete watermark-free result and no subscription.";
 export const SITE_TAGLINE =
   "AI photo restoration, colorization, and animation for old family photos.";
 export const DEFAULT_OG_IMAGE = "/opengraph-image";

@@ -139,9 +139,9 @@ const TOOL_PAGE_TRANSLATIONS: Record<
 const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
   "restore-old-photos": {
     slug: "restore-old-photos",
-    title: "Restore Old Photos Online Free – AI Photo Restoration",
+    title: "Restore Old Photos Online – AI Photo Restoration",
     description:
-      "Restore old damaged photos online with AI. Remove scratches, tears, and fading, recover facial details, and try old photo restoration for free.",
+      "Restore old damaged photos online with AI. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
     keywords: [
       "restore old photos",
       "old photo restoration",
@@ -210,7 +210,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     ],
     pricingTitle: "Choose the plan that fits your archive",
     pricingBody:
-      "Sign in to use one free photo-processing allowance per day, shared across restoration, colorization, and animation. New free results are watermarked previews. Unlock the same generated images and video for $1.99 or 1 credit, without increasing resolution. Optional higher-resolution regeneration creates a new result. Earlier results keep their existing download access.",
+      "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required. Earlier results keep their existing download access.",
     faqTitle: "Questions about restoring old photos",
     faqs: [
       {
@@ -254,8 +254,8 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
   },
   "colorize-old-photos": {
   "slug": "colorize-old-photos",
-  "title": "Colorize Old Photos Online Free – AI Old Photo Colorizer",
-  "description": "Colorize old photos online with an AI photo colorizer. Upload a black-and-white image and preview it free after sign-in. Unlock the same result for $1.99 or 1 credit to download it.",
+  "title": "Colorize Old Photos Online – AI Old Photo Colorizer",
+  "description": "Colorize old photos online with an AI photo colorizer. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
   "keywords": [
     "colorize old photos",
     "old photo colorizer",
@@ -266,12 +266,12 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
   "cardTitle": "Colorize old photos",
   "cardDescription": "Add AI-estimated color to black-and-white family photographs and compare the result with your original.",
   "eyebrow": "AI colorization",
-  "heroTitle": "Colorize Old Photos with AI — Free Online Photo Colorizer",
-  "heroDescription": "Colorize old photos with AI using a free online photo colorizer designed for black-and-white family portraits, scanned prints, and everyday snapshots. Upload a clear image, let the workflow restore it and add estimated colors, then unlock the same colorized result for $1.99 or 1 credit to download it. You do not need to paint individual areas or choose colors for every face, garment, and background. Start with a scan that keeps the whole photograph visible, and avoid glare, heavy compression, or filters that hide detail. The AI uses visual patterns to suggest plausible colors; it cannot know the exact shades that were present when the photograph was taken. Keep your original file and compare the result before adding it to an album, genealogy project, or family keepsake. Sign in with Google to use your available daily free quota. Processing time and results vary with image quality and demand, and export options depend on your plan and remaining allowance.",
+  "heroTitle": "Colorize Old Photos with AI — Online Photo Colorizer",
+  "heroDescription": "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required. You do not need to paint individual areas or choose colors for every face, garment, and background. Start with a scan that keeps the whole photograph visible, and avoid glare, heavy compression, or filters that hide detail. The AI uses visual patterns to suggest plausible colors; it cannot know the exact shades that were present when the photograph was taken. Keep your original file and compare the result before adding it to an album, genealogy project, or family keepsake. Processing time and results vary with image quality and demand, and export options depend on your plan and remaining allowance.",
   "heroHighlights": [
     "Upload a black-and-white photo",
     "Review AI-estimated colors against your original",
-    "Sign in to use your daily free quota"
+    "Upload, sign in, then pay $1.99 to process"
   ],
   "primaryCtaLabel": "Colorize a photo now",
   "uploadTitle": "Upload a photo to colorize",
@@ -306,8 +306,8 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
       "body": "A colorized photograph can offer a new way to view a family memory, but it should not replace the source in an archive. Label shared copies as AI-colorized, especially in genealogy records or historical projects. Use dated reference photographs or family knowledge to judge whether suggested colors are plausible."
     }
   ],
-  "pricingTitle": "Daily free quota and sign-in requirements",
-  "pricingBody": "Sign in with Google to create or access your account before starting colorization on this page. Free accounts receive one photo-processing allowance per day, shared across the supported workflows; a previous task may already have used it. Check your remaining quota before uploading. New free results require a $1.99 or 1-credit unlock to download the same result without the preview watermark. Paid generations already include downloads. Free use is limited, not unlimited.",
+  "pricingTitle": "Photo pricing and sign-in requirements",
+  "pricingBody": "Sign in with Google to create or access your account before starting colorization on this page. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required. Paid generations already include downloads.",
   "faqTitle": "FAQ: Colorize old photos online",
   "faqs": [
     {
@@ -316,7 +316,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     },
     {
       "question": "What is the best AI photo colorizer free option for my photo?",
-      "answer": "There is no single best option for every photograph. Use the available free quota to evaluate your own scan, checking facial detail, plausible colors, and export limits. OldPhotoLive AI offers one daily photo-processing allowance for free accounts after sign-in; paid options are available if you need more."
+      "answer": "There is no single best option for every photograph. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required."
     },
     {
       "question": "Can I colorize old photos online without installing software?",
@@ -328,7 +328,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     },
     {
       "question": "Can I download my colorized photo?",
-      "answer": "Yes. New free results are watermarked previews. Unlock the same result for $1.99 or 1 credit to download it without the preview watermark. This does not increase resolution. Previously paid generations already include downloads, and earlier results retain their download access."
+      "answer": "There is no free generation. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required. Previously paid generations already include downloads, and earlier results retain their download access."
     },
     {
       "question": "Does this tool repair damaged photos before colorization?",
@@ -336,7 +336,7 @@ const TOOL_PAGES_EN: Record<ToolPageSlug, ToolPageDocument> = {
     },
     {
       "question": "Do I need to register, and is colorization unlimited?",
-      "answer": "You need to sign in with Google to create or access an account on this page. Free accounts have one daily photo-processing allowance shared across workflows, so previous use can exhaust it. Additional processing requires an available paid allowance; the free tier is not unlimited."
+      "answer": "You need to sign in with Google to create or access an account on this page. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required."
     }
   ],
   "relatedTitle": "More old-photo workflows",

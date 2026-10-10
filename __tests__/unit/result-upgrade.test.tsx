@@ -83,5 +83,23 @@ it.each([false, true])("gates new preview downloads and keeps HD remaking second
   await screen.findByTestId("video");
   await waitFor(() => expect(Boolean(screen.queryByRole("link", { name: "downloadVideo" }))).toBe(unlocked));
   expect(Boolean(screen.queryByText("Optional: create a new HD version"))).toBe(unlocked);
-  if (!unlocked) expect(screen.getByRole("link", { name: "Unlock this result — $1.99" })).toBeInTheDocument();
+  if (!unlocked) expect(screen.getByRole("link", { name: "Upload a photo" })).toBeInTheDocument();
+});
+
+it("refreshes a paid failure while refund registration is still catching up", async () => {
+  let refunded = false;
+  mockFetch.mockImplementation(async (url: string) => ({ ok: true, json: async () => url === "/api/quota" ? quota : { status: "failed", workflow: "animate", paidSingleRun: true, attemptCount: 2, retryAllowed: false, errorMessage: "Processing failed", ...(refunded ? { refundStatus: "succeeded" } : {}) } }));
+  render(<ResultPage />);
+  const refresh = await screen.findByRole("button", { name: "Check again" });
+  expect(screen.queryByRole("button", { name: "retry" })).not.toBeInTheDocument();
+  refunded = true;
+  fireEvent.click(refresh);
+  expect(await screen.findByText(/Your refund has been issued/)).toHaveTextContent("Your bank may take additional time");
+});
+it("explains the first technical retry without promising a completed refund", async () => {
+  mockFetch.mockImplementation(async (url: string) => ({ ok: true, json: async () => url === "/api/quota" ? quota : { status: "failed", workflow: "animate", paidSingleRun: true, attemptCount: 1, retryAllowed: true, errorMessage: "Processing failed" } }));
+  render(<ResultPage />);
+  expect(await screen.findByText(/retry this photo once at no additional charge/)).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "retry" })).toBeInTheDocument();
+  expect(screen.queryByText(/refund has been issued/)).not.toBeInTheDocument();
 });

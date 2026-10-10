@@ -93,12 +93,12 @@ describe("POST /api/tasks", () => {
   });
 
   it.each([
-    ["DAILY_QUOTA_EXHAUSTED", "Daily free quota used up. Upgrade or try again tomorrow."],
+    ["PAYMENT_REQUIRED", "Payment is required before processing. Choose one photo for $1.99 or use a credit pack."],
     ["NO_CREDITS", "Credits have expired. Please purchase again."],
   ])("classifies %s as an expected refusal", async (code, message) => {
     mockCreateAuthenticatedTaskAtomic.mockResolvedValue({ outcome: "rejected", code, remaining: 0 });
     const res = await POST(makeRequest({ imageKey: task.originalImageKey }));
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(code === "PAYMENT_REQUIRED" ? 402 : 403);
     await expect(res.json()).resolves.toMatchObject({ error: message, code, stage: "authorization", allowanceConsumed: false });
   });
 

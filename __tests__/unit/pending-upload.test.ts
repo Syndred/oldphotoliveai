@@ -19,3 +19,11 @@ it("expires stored uploads after one day and tolerates unavailable storage", () 
   expect(readPendingUpload("owner", "/", "full")).toBeNull();
   jest.restoreAllMocks();
 });
+
+it("adopts a guest upload once while preserving account isolation", () => {
+  savePendingUpload({ userId: "", imageKey: "uploads/guest.jpg", pathname: "/animate", workflow: "animate" });
+  expect(readPendingUpload("", "/animate", "animate")).toBeNull();
+  expect(readPendingUpload("owner", "/animate", "restore")).toBeNull();
+  expect(readPendingUpload("owner", "/animate", "animate")?.userId).toBe("owner");
+  expect(readPendingUpload("other", "/animate", "animate")).toBeNull();
+});

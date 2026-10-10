@@ -33,6 +33,9 @@ export async function POST(request: NextRequest, props: { params: Promise<{ task
       );
     }
 
+    if (task.purchaseOrderId) {
+      return NextResponse.json({ code: "PAID_ORDER_PROCESSING", error: getErrorMessage("cannotCancel", locale) }, { status: 409 });
+    }
     const cancelled = await cancelTask(taskId);
     if (!cancelled) {
       return NextResponse.json(

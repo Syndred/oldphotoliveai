@@ -23,7 +23,7 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
     contentTitle: "Colorize black-and-white photos online",
     sectionTitles: ["One-click AI photo colorizer", "Turn black-and-white photos into color", "Old photo restoration before colorization"],
     contentParagraphs: [
-      "Photo colorization adds AI-estimated color without making you paint each area by hand. Upload a clear black-and-white picture, choose colorization, and let the photo colorizer generate a color version to compare with the original. Sign in to use your daily free quota; additional processing and export options depend on your plan.",
+      "Photo colorization adds AI-estimated color without making you paint each area by hand. Upload a clear black-and-white picture, choose colorization, and let the photo colorizer generate a color version to compare with the original. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
       "Turn black-and-white photos into color for an album, creative project, or personal keepsake. AI estimates colors from visible patterns, so skin tones, clothing, objects, and backgrounds may differ from their real colors. Keep the original image alongside the colorized copy.",
       "Old photo restoration can help when fading, scratches, or low contrast obscure details before colorization. Use the dedicated restoration tool for damaged prints, then return to colorize the cleaner image. A well-lit scan without glare gives the AI more detail to work with; severe damage may still need manual editing.",
     ],
@@ -35,7 +35,7 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
       {
         question: "Can I colorize black and white photos for free?",
         answer:
-          "Yes. You can start with a free account and use your daily free quota to try AI colorization before choosing a paid plan for more credits, HD exports, and watermark-free results.",
+          "There is no free generation. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
       },
       {
         question: "How does an AI photo colorizer choose colors?",
@@ -70,7 +70,7 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
       {
         question: "What do paid plans unlock?",
         answer:
-          "Paid plans add more processing capacity, higher-resolution exports, HD or premium video output, and watermark-free results depending on the plan you choose.",
+          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
       },
     ],
   },
@@ -90,7 +90,7 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
       {
         question: "可以免费给黑白照片上色吗？",
         answer:
-          "可以。你可以先用免费账户和每日免费额度体验 AI 上色，再根据需要升级到更多积分、高清导出和无水印结果。",
+          "上传照片并登录后，先支付 $1.99 再开始所选功能的处理，交付完整无水印结果，无需订阅。已有积分或专业版权益仍可使用。",
       },
       {
         question: "在线修复旧照片的最佳方式是什么？",
@@ -145,7 +145,7 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
       {
         question: "¿Puedo colorizar fotos en blanco y negro gratis?",
         answer:
-          "Sí. Puedes empezar con una cuenta gratuita y usar tu cuota diaria para probar la colorización antes de elegir un plan de pago.",
+          "Sube una foto, inicia sesión y paga $1.99 antes de procesarla con la herramienta seleccionada. Resultado completo sin marca de agua ni suscripción. También puedes usar tus créditos o plan profesional.",
       },
       {
         question: "¿Cuál es la mejor forma de restaurar fotos antiguas online?",
@@ -200,7 +200,7 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
       {
         question: "白黒写真を無料でカラー化できますか？",
         answer:
-          "はい。無料アカウントの毎日使える枠で AI カラー化を試し、必要に応じて有料プランにアップグレードできます。",
+          "写真をアップロードしてログイン後、選択した機能の処理前に$1.99を支払います。透かしなしの完全な結果で、定期購入は不要です。既存のクレジットやプロプランも利用できます。",
       },
       {
         question: "古い写真をオンラインで修復する最適な方法は？",

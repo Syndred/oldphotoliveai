@@ -1,5 +1,8 @@
 "use client";
 
+import { getCheckoutCopy } from "@/lib/checkout-copy";
+import { getSingleRunCopy } from "@/lib/single-run-copy";
+import { SUPPORT_EMAIL } from "@/lib/site";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -90,7 +93,14 @@ export default function ResultPage() {
   const [canUpgrade, setCanUpgrade] = useState(false);
   const [previewPolicy, setPreviewPolicy] = useState(false);
   const [downloadUnlocked, setDownloadUnlocked] = useState(false);
-  const downloadCopy = getDownloadCopy(useLocale());
+  const locale = useLocale();
+  const downloadCopy = getDownloadCopy(locale);
+  const runCopy = getSingleRunCopy(locale);
+  const checkoutCopy = getCheckoutCopy(locale);
+  const [refreshingPayment, setRefreshingPayment] = useState(false);
+  const [paidSingleRun, setPaidSingleRun] = useState(false);
+  const [refundStatus, setRefundStatus] = useState<string | undefined>();
+  const [manualReview, setManualReview] = useState(false);
   const [existingUpgradeTaskId, setExistingUpgradeTaskId] = useState<string | undefined>();
   const [initialLoading, setInitialLoading] = useState(true);
   const [needsPolling, setNeedsPolling] = useState(false);
@@ -112,6 +122,9 @@ export default function ResultPage() {
       const context = readTaskContext(data, taskContextRef.current);
       taskContextRef.current = context;
       setRetryAllowed(context.retryAllowed);
+      setPaidSingleRun(data.paidSingleRun === true);
+      setRefundStatus(typeof data.refundStatus === "string" ? data.refundStatus : undefined);
+      setManualReview(data.requiresManualReview === true);
       setCanUpgrade(data.canUpgrade === true);
       setPreviewPolicy(data.downloadPolicy === "preview_v1");
       setDownloadUnlocked(data.downloadUnlocked === true);
@@ -158,6 +171,7 @@ export default function ResultPage() {
     setCanUpgrade(false);
     setPreviewPolicy(false);
     setDownloadUnlocked(false);
+    setPaidSingleRun(false); setRefundStatus(undefined); setManualReview(false);
     setExistingUpgradeTaskId(undefined);
     setInitialLoading(true);
     setNeedsPolling(false);
@@ -371,6 +385,13 @@ export default function ResultPage() {
               {tResult("failed")}
             </h2>
             <p className="mb-6 text-sm text-[var(--color-text-secondary)]">{error}</p>
+            {paidSingleRun && <div className="mb-5 space-y-4 text-sm leading-6 text-[var(--color-text-secondary)]">
+              {refundStatus === "pending" ? <p>{runCopy.refundPending}</p> : refundStatus === "succeeded" ? <p>{runCopy.refunded}</p> : refundStatus === "review_required" || manualReview ? <><p>{runCopy.review}</p><a href={`mailto:${SUPPORT_EMAIL}`} className="inline-flex min-h-11 items-center rounded-lg border border-white/20 px-4 py-2">{SUPPORT_EMAIL}</a></> : retryAllowed ? <p>{runCopy.retry}</p> : null}
+              {!retryAllowed && <button type="button" disabled={refreshingPayment} onClick={async () => {
+                setRefreshingPayment(true);
+                try { const response = await fetch(`/api/tasks/${encodeURIComponent(taskId)}/status`, { cache: "no-store" }); if (response.ok) handleTaskStatus(await response.json()); } catch { /* Keep the last confirmed payment status and allow another check. */ } finally { setRefreshingPayment(false); }
+              }} className="min-h-11 rounded-lg border border-white/20 px-4 py-2 disabled:opacity-50">{checkoutCopy.retry}</button>}
+            </div>}
             {retryAllowed && (
               <button
                 onClick={handleRetry}

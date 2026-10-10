@@ -31,7 +31,7 @@ local ok, task = pcall(cjson.decode, raw)
 if not ok or type(task) ~= 'table' then
   return 'INVALID_TASK'
 end
-if task.status == 'completed' or task.status == 'failed' or task.status == 'cancelled' then
+if type(task.refundStatus) == 'string' or task.status == 'completed' or task.status == 'failed' or task.status == 'cancelled' then
   return 'TERMINAL'
 end
 task.executionToken = ARGV[1]
@@ -52,7 +52,7 @@ end
 if task.executionToken ~= ARGV[1] then
   return 'STALE'
 end
-if task.status == 'completed' or task.status == 'failed' or task.status == 'cancelled' then
+if type(task.refundStatus) == 'string' or task.status == 'completed' or task.status == 'failed' or task.status == 'cancelled' then
   return 'TERMINAL'
 end
 local replacementOk, replacement = pcall(cjson.decode, ARGV[2])
@@ -117,7 +117,7 @@ export async function getTaskForExecution(
   const task = await getRedisClient().get<Task>(taskKey(taskId));
   assertSignal(taskId, signal);
   if (!task) throw new Error(`Task not found: ${taskId}`);
-  if (task.executionToken !== executionToken) {
+  if (task.refundStatus || task.executionToken !== executionToken) {
     throw new WorkerOwnershipLostError(taskId);
   }
   return task;

@@ -14,31 +14,11 @@ import {
 import type { Locale } from "@/i18n/routing";
 
 const FAQS = [
-  {
-    question: "Can I turn an old photo into a video without login?",
-    answer:
-      "Yes. Upload one old photo and OldPhotoLive AI will create a free watermarked video preview without asking you to create an account first.",
-  },
-  {
-    question: "Is the no-login old photo to video AI preview free?",
-    answer:
-      "The no-login preview is free for one experience. It is designed as a lightweight sample with lower resolution and an OldPhotoLive AI watermark.",
-  },
-  {
-    question: "What happens after my free no-login preview?",
-    answer:
-      "After the preview is ready, sign in to unlock that same result for $1.99 or 1 credit. The video remains 480p. HD regeneration is optional and creates a new version.",
-  },
-  {
-    question: "What type of old photo works best?",
-    answer:
-      "Clear portrait photos, scanned family prints, wedding photos, memorial pictures, and vintage studio portraits usually work best. Avoid tiny, blurry, or heavily cropped faces.",
-  },
-  {
-    question: "Will my free preview include a watermark?",
-    answer:
-      "Yes. The no-login version provides a watermarked 480p preview. After sign-in, $1.99 or 1 credit unlocks the same result without the preview watermark. Registration alone does not unlock downloads or HD.",
-  },
+  { question: "Can I upload a photo without login?", answer: "Yes. Choose and upload your photo first. Then sign in with Google and pay $1.99 before animation begins. Your upload is kept through sign-in." },
+  { question: "Is photo animation free?", answer: "No. One photo with the selected tool costs $1.99, paid before processing. There is no subscription, and the complete result has no watermark." },
+  { question: "What if processing fails?", answer: "A confirmed technical failure includes one free retry. If we confirm that the result cannot be delivered, we refund that purchase. Content violations follow our Terms; uncertain delivery needs support review." },
+  { question: "What type of old photo works best?", answer: "Clear portraits, scanned family prints, wedding photos, and vintage studio portraits work best. Avoid tiny, blurry, or heavily cropped faces." },
+  { question: "Can I download the video?", answer: "Yes. The completed paid result includes a watermark-free video download. Keep your original photo as well." },
 ];
 
 const RELATED_TOOLS = [
@@ -56,9 +36,9 @@ const RELATED_TOOLS = [
   },
   {
     href: "/animate-free",
-    title: "Animate old photos with AI free",
+    title: "Animate old photos with AI",
     body:
-      "Start a free AI animation preview from a clear old family portrait.",
+      "Animate a clear family portrait for $1.99, with no subscription.",
   },
   {
     href: "/bring-to-life",
@@ -84,15 +64,15 @@ export default function NoLoginToolPage({ locale }: NoLoginToolPageProps) {
     buildBreadcrumbJsonLd(
       [
         { name: "Home", path: "/" },
-        { name: "Old Photo to Video AI Free Without Login", path: "/no-login" },
+        { name: "Upload an Old Photo Before Login", path: "/no-login" },
       ],
       locale
     ),
     buildFaqJsonLd(FAQS),
     buildSoftwareApplicationJsonLd({
-      name: "Old Photo to Video AI Free Without Login",
+      name: "Upload an Old Photo Before Login",
       description:
-        "Turn old photos into videos with AI free without login. No sign-up needed for one watermarked preview.",
+        "Upload a photo before login. Then sign in and pay $1.99 for a complete AI animation without a watermark.",
       path: "/no-login",
       locale,
       keywords: [
@@ -118,22 +98,22 @@ export default function NoLoginToolPage({ locale }: NoLoginToolPageProps) {
             <div className="grid items-stretch gap-8 lg:grid-cols-[0.9fr,1.1fr]">
               <div className="flex h-full flex-col">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
-                  No-login AI animation
+                  Upload before login
                 </p>
                 <h1 className="mt-4 text-3xl font-bold leading-tight text-[var(--color-text-primary)] sm:text-5xl">
-                  Old Photo to Video AI Free Without Login
+                  Turn an Old Photo into a Video
                 </h1>
                 <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
-                  Upload an old family photo and turn it into a short AI video
-                  preview online. No account needed, no sign-up wall before the
-                  first result, and no software to install.
+                  Upload an old family photo first. Then sign in and pay $1.99 to
+                  create a short AI video without a watermark. No subscription
+                  or software installation needed.
                 </p>
 
                 <div className="mt-6 grid gap-3">
                   {[
-                    "No account needed: upload a photo and start the animation directly.",
-                    "Instant result flow: stay on the page while your preview task is created.",
-                    "Free preview terms: one watermarked, lower-resolution video experience.",
+                    "Choose and upload your photo before signing in.",
+                    "Your photo stays selected through Google sign-in.",
+                    "One photo, one selected tool: $1.99 before processing, no watermark.",
                   ].map((highlight) => (
                     <div
                       key={highlight}
@@ -149,7 +129,7 @@ export default function NoLoginToolPage({ locale }: NoLoginToolPageProps) {
                     href="#upload-section"
                     className="inline-flex min-h-[44px] items-center rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent)]/90"
                   >
-                    Try free without login
+                    Upload your photo
                   </a>
                   <a
                     href="#examples"
@@ -196,7 +176,7 @@ export default function NoLoginToolPage({ locale }: NoLoginToolPageProps) {
                     Preview example {index + 1}
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
-                    A watermarked AI video preview from an old portrait photo.
+                    An example AI animation from an old portrait photo.
                   </p>
                 </article>
               ))}
@@ -208,7 +188,7 @@ export default function NoLoginToolPage({ locale }: NoLoginToolPageProps) {
           <div className="mx-auto max-w-6xl">
             <div className="max-w-3xl">
               <h2 className="text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">
-                How the free no-login version works
+                How photo processing works
               </h2>
             </div>
             <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -219,14 +199,14 @@ export default function NoLoginToolPage({ locale }: NoLoginToolPageProps) {
                     "Choose a clear portrait, scanned family print, or vintage photo. JPG, PNG, and WebP uploads are supported.",
                 },
                 {
-                  title: "AI creates a preview",
+                  title: "Sign in and pay $1.99",
                   body:
-                    "OldPhotoLive AI restores the source enough for animation, then generates a short watermarked video preview.",
+                    "Confirm your photo order and pay once. Animation starts after payment is confirmed.",
                 },
                 {
-                  title: "Upgrade only after seeing it",
+                  title: "Download your completed video",
                   body:
-                    "After the preview, sign in to unlock the same generated images and video for $1.99 or 1 credit. No regeneration or resolution increase is included.",
+                    "Follow progress on the photo page, then download your completed result without a watermark.",
                 },
               ].map((step) => (
                 <article

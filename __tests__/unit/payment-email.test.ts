@@ -32,3 +32,11 @@ it("preserves existing credit-pack success wording", async () => {
   await sendPaymentEmail({ to: "recipient@example.com", type: "payment_success", plan: "starter_pack" });
   expect(JSON.parse(fetchMock.mock.calls[0][1].body).html).toContain("Your Starter Pack access has been activated");
 });
+
+it("confirms a prepaid processing order without promising a finished download or floating credits", async () => {
+  await sendPaymentEmail({ to: "recipient@example.com", type: "payment_success", plan: "single_run" });
+  const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+  expect(body.html).toContain("Single Photo Processing");
+  expect(body.html).toContain("submitted for processing");
+  expect(body.html).not.toMatch(/single_run|credits|Professional|you can now download/);
+});

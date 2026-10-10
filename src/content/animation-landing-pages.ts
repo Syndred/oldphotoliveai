@@ -33,29 +33,29 @@ export const ANIMATION_LANDING_PAGES: Record<
   "animate-free": {
     slug: "animate-free",
     path: "/animate-free",
-    title: "Animate Old Photos with AI Free - Bring Photos to Life | OldPhotoLiveAI",
+    title: "Animate Old Photos with AI - Bring Photos to Life | OldPhotoLiveAI",
     description:
-      "Animate an old photo with AI after sign-in using your daily free account quota. Upload a clear portrait and review a watermarked 480p preview.",
+      "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
     keywords: [
       "animate photos online free",
     ],
-    cardTitle: "Free AI photo animation",
+    cardTitle: "AI photo animation from $1.99",
     cardDescription:
       "Create a subtle animated preview from a clear family portrait with AI.",
-    eyebrow: "Free AI animation",
-    h1: "Animate Old Photos with AI Free",
+    eyebrow: "AI animation from $1.99",
+    h1: "Animate Old Photos with AI",
     heroDescription:
-      "Turn a still family portrait into a short video after sign-in. The daily free account quota provides a watermarked 480p preview; start with a clear photo and keep the movement natural.",
+      "Turn a still family portrait into a short video after sign-in. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
     highlights: [
       "Use one old portrait as the source for a short AI video preview.",
       "Gentle motion works best for faces, memorial photos, and family archives.",
-      "See the result before paying $1.99 or 1 credit to download the same result without the preview watermark. Optional HD regeneration is separate.",
+      "Upload a photo, sign in, and pay $1.99 before processing. Your selected tool delivers the complete result without a watermark. No subscription is required.",
     ],
     benefits: [
       {
-        title: "Start with a free preview",
+        title: "Start with one photo for $1.99",
         body:
-          "Check the face, framing, and motion for free. Pay $1.99 or 1 credit only if you want to download the same result without the preview watermark. A new HD version is a separate generation.",
+          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
       },
       {
         title: "Keep memories recognizable",
@@ -70,9 +70,9 @@ export const ANIMATION_LANDING_PAGES: Record<
     ],
     guideSections: [
       {
-        title: "What free AI photo animation is good for",
+        title: "What AI photo animation is good for",
         body:
-          "Free AI photo animation is a practical way to test a memorial portrait, a wedding photo, or a page from a family album before planning a bigger project. A short preview can show a slight head movement, a natural facial expression, or gentle depth in the scene. It is most useful when you want a shareable first version without installing editing software or learning a timeline editor.",
+          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required. A short preview can show a slight head movement, a natural facial expression, or gentle depth in the scene. It is most useful when you want a shareable first version without installing editing software or learning a timeline editor.",
       },
       {
         title: "Choose an old photo that will animate well",
@@ -82,15 +82,15 @@ export const ANIMATION_LANDING_PAGES: Record<
       {
         title: "Use a preview before committing to an export",
         body:
-          "Watch the first video all the way through and check that the face stays stable, the framing does not jump, and the movement matches the tone of the image. A free preview is not a replacement for an archival master, but it is the right way to decide whether to create an HD export. Keep the original scan even after you download an animated copy.",
+          "Watch the first video all the way through and check that the face stays stable, the framing does not jump, and the movement matches the tone of the image. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required. Keep the original scan even after you download an animated copy.",
       },
     ],
-    faqTitle: "Free AI photo animation questions",
+    faqTitle: "AI photo animation pricing questions",
     faqs: [
       {
         question: "Can I animate old photos with AI for free?",
         answer:
-          "Yes. Sign in for your daily watermarked 480p preview. Downloading that same result costs $1.99 or 1 credit; it does not increase resolution. An HD remake is optional and may change the result.",
+          "There is no free generation. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
       },
       {
         question: "What old photos work best for animation?",
@@ -119,7 +119,7 @@ export const ANIMATION_LANDING_PAGES: Record<
     path: "/bring-to-life",
     title: "Bring Old Photos to Life with AI | OldPhotoLive AI",
     description:
-      "Bring old photos to life with AI free online. Turn a family portrait into a short, natural video and share a memory in a new way.",
+      "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required. Turn a family portrait into a short, natural video and share a memory in a new way.",
     keywords: [
       "bring old photos to life",
       "bring family photos to life",
@@ -176,7 +176,7 @@ export const ANIMATION_LANDING_PAGES: Record<
       {
         question: "Can AI bring old photos to life for free?",
         answer:
-          "The animation tool provides one daily watermarked 480p preview after sign-in. Unlock the same result for $1.99 or 1 credit to download it. Optional HD regeneration creates a new version.",
+          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
       },
       {
         question: "Is AI animation suitable for memorial photos?",
@@ -205,7 +205,7 @@ export const ANIMATION_LANDING_PAGES: Record<
     path: "/to-video",
     title: "Photo to Video AI for Old Photos | OldPhotoLive AI",
     description:
-      "Use photo to video AI for an old portrait. Sign in, upload a clear image, and use your shared daily free quota for a watermarked 480p preview.",
+      "Use photo to video AI for an old portrait. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
     keywords: [
       "photo to video AI",
       "old photo to video AI free online",
@@ -222,7 +222,7 @@ export const ANIMATION_LANDING_PAGES: Record<
     highlights: [
       "Upload a still photo and receive a short video without editing software.",
       "Portraits with a centered, visible face are the most reliable input.",
-      "Preview for free, then unlock the same result for $1.99 or 1 credit. HD regeneration is separate.",
+      "Upload a photo, sign in, and pay $1.99 before processing. Your selected tool delivers the complete result without a watermark. No subscription is required.",
     ],
     benefits: [
       {
@@ -263,7 +263,7 @@ export const ANIMATION_LANDING_PAGES: Record<
       {
         question: "Can I convert an old photo to video with AI for free?",
         answer:
-          "Yes. Sign in for your daily watermarked 480p preview. Unlock the same result for $1.99 or 1 credit if you want to download it. An HD remake is optional and generates a new version.",
+          "There is no free generation. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
       },
       {
         question: "Do I need to install an app?",
@@ -292,7 +292,7 @@ export const ANIMATION_LANDING_PAGES: Record<
     path: "/animate",
     title: "Animate Old Photos with AI – Online Photo Animation",
     description:
-      "Animate old photos with AI after sign-in. Use your shared daily free quota for a watermarked 480p preview, then review the motion before exporting.",
+      "Animate old photos with AI after sign-in. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
     keywords: [
       "animate old photos",
       "animate photos",
@@ -306,7 +306,7 @@ export const ANIMATION_LANDING_PAGES: Record<
     eyebrow: "AI photo animation",
     h1: "Animate Old Photos with AI",
     heroDescription:
-      "Animate old photos online with AI and turn a familiar portrait into a short, natural-motion clip. Sign in to use the shared daily free quota for a watermarked 480p preview, then let the result guide the final export.",
+      "Animate old photos online with AI and turn a familiar portrait into a short, natural-motion clip. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
     highlights: [
       "Animate a vintage portrait from a single uploaded photo.",
       "Use short, natural motion that suits family memories and archives.",
@@ -351,7 +351,7 @@ export const ANIMATION_LANDING_PAGES: Record<
       {
         question: "How do I animate old photos with AI?",
         answer:
-          "Sign in, upload a clear old portrait, and use your available daily quota to generate a watermarked 480p preview. Review the short animation before choosing an export.",
+          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required. Review the short animation before choosing an export.",
       },
       {
         question: "How can I bring old photos to life?",

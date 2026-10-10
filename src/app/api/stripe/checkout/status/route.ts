@@ -1,3 +1,4 @@
+import { schedulePipelineWakeupForStatus } from "@/lib/worker-wakeup";
 import { createHash } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
@@ -18,7 +19,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Not found" }, { status: 404, headers });
     }
     if (session.payment_status !== "paid") return NextResponse.json({ status: "pending" }, { headers });
-    if (session.metadata.plan === "single_photo") await fulfillPaidCheckout(session);
+    if (session.metadata.plan === "single_photo" || session.metadata.plan === "single_run") await fulfillPaidCheckout(session);
+    if (session.metadata.plan === "single_run") schedulePipelineWakeupForStatus("pending");
     const receipt = await getCheckoutReceipt(sessionId);
     if (!receipt && session.metadata.plan === "single_photo") {
       const refund = await getCheckoutRefundRequired(sessionId);
@@ -38,6 +40,7 @@ export async function GET(request: NextRequest) {
       fulfilledAt: receipt.fulfilledAt,
       locale: receipt.locale,
       taskId: receipt.taskId,
+      orderId: receipt.orderId,
       returnTo: receipt.returnTo,
     }, { headers });
   } catch {

@@ -12,6 +12,10 @@ import { checkImage, CONTENT_REJECTED_MESSAGE } from "@/lib/moderation";
 import type { Task, User } from "@/types";
 
 const mockUuidV4 = jest.fn();
+const mockReconcilePhotoRefund = jest.fn();
+jest.mock("@/lib/photo-order-refund", () => ({
+  reconcileTaskPhotoOrderRefund: (...args: unknown[]) => mockReconcilePhotoRefund(...args),
+}));
 
 // ── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -162,6 +166,7 @@ function setupSuccessfulPipeline(taskOverrides?: Partial<Task>) {
 // ── Setup / Teardown ────────────────────────────────────────────────────────
 
 beforeEach(() => {
+  mockReconcilePhotoRefund.mockReset().mockResolvedValue(undefined);
   mockGetTask.mockReset();
   mockUpdateTaskStatus.mockReset();
   mockGetUser.mockReset();
@@ -173,6 +178,32 @@ beforeEach(() => {
   mockFetch.mockReset();
   mockUuidV4.mockReset().mockReturnValue(ASSET_UUID);
   mockCheckImage.mockReset().mockResolvedValue({ passed: true });
+});
+
+describe("paid order failure fencing", () => {
+  it("reserves refund recovery only after the failed task write succeeds", async () => {
+    setupSuccessfulPipeline();
+    const current = await mockGetTask(TASK_ID);
+    mockGetTask.mockResolvedValue({ ...current!, purchaseOrderId: "order-paid", generationTier: "pay_as_you_go", attemptCount: 2 });
+    mockRunModel.mockReset().mockRejectedValue(new Error("definitive generation failure"));
+    await executePipeline(TASK_ID, EXECUTION);
+    const failedIndex = mockUpdateTaskStatus.mock.calls.findIndex(call => call[1] === "failed");
+    expect(failedIndex).toBeGreaterThanOrEqual(0);
+    expect(mockReconcilePhotoRefund).toHaveBeenCalledWith(TASK_ID, { process: false });
+    expect(mockReconcilePhotoRefund.mock.invocationCallOrder[0]).toBeGreaterThan(mockUpdateTaskStatus.mock.invocationCallOrder[failedIndex]);
+  });
+
+  it("does not reserve a refund when a stale worker could not persist failure", async () => {
+    setupSuccessfulPipeline();
+    const current = await mockGetTask(TASK_ID);
+    mockGetTask.mockResolvedValue({ ...current!, purchaseOrderId: "order-paid", generationTier: "pay_as_you_go", attemptCount: 2 });
+    mockRunModel.mockReset().mockRejectedValue(new Error("generation failure"));
+    mockUpdateTaskStatus.mockImplementation(async (_id, status) => {
+      if (status === "failed") throw new Error("execution fence rejected");
+    });
+    await expect(executePipeline(TASK_ID, EXECUTION)).rejects.toThrow("execution fence rejected");
+    expect(mockReconcilePhotoRefund).not.toHaveBeenCalled();
+  });
 });
 
 // ── Tests ───────────────────────────────────────────────────────────────────
