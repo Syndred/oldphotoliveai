@@ -8,6 +8,8 @@ import { isSafeTaskStorageKey } from "@/lib/validation";
 import type { TaskWorkflow } from "@/types";
 import { getRequestLocale, getErrorMessage } from "@/lib/i18n-api";
 import { createAuthenticatedTaskAtomic } from "@/lib/task-creation";
+import { isUploadOwned } from "@/lib/upload-receipt";
+import { getAnonymousVisitorId } from "@/lib/anonymous";
 
 const TASK_WORKFLOWS: readonly TaskWorkflow[] = [
   "full",
@@ -23,6 +25,7 @@ function parseTaskWorkflow(value: unknown): TaskWorkflow {
 }
 
 function resolveQuotaErrorKey(code: string): string {
+  if (code === "PAYMENT_REQUIRED") return "paymentRequired";
   if (code === "NO_CREDITS") {
     return "creditsExpired";
   }
@@ -68,7 +71,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { imageKey, workflow: requestedWorkflow } = body as {
+    const { imageKey, workflow: requestedWorkflow } = (body && typeof body === "object" ? body : {}) as {
       imageKey?: string;
       workflow?: unknown;
     };
@@ -113,6 +116,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (user.tier === "free") {
+      return NextResponse.json({
+        error: getErrorMessage("paymentRequired", locale),
+        code: "PAYMENT_REQUIRED", stage: "authorization", allowanceConsumed: false,
+      }, { status: 402 });
+    }
+    if (!await isUploadOwned(normalizedImageKey, { userId, visitorId: getAnonymousVisitorId(request) })) {
+      return NextResponse.json({
+        error: getErrorMessage("taskCreateFailed", locale),
+        code: "INVALID_INPUT", stage: "validation", allowanceConsumed: false,
+      }, { status: 400 });
+    }
+
     // 5. Commit allowance, task record, history, queue and replay marker together.
     const creation = await createAuthenticatedTaskAtomic({
       user,
@@ -128,7 +144,7 @@ export async function POST(request: NextRequest) {
           stage: "authorization",
           allowanceConsumed: false,
         },
-        { status: 403 }
+        { status: creation.code === "PAYMENT_REQUIRED" ? 402 : 403 }
       );
     }
 

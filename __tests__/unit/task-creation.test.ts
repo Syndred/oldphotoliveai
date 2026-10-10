@@ -38,7 +38,7 @@ describe("atomic task creation", () => {
     mockEval.mockResolvedValue(["CREATED", "task-fixed-id", "0"]);
 
     const result = await createAuthenticatedTaskAtomic({
-      user,
+      user: { ...user, tier: "pay_as_you_go" },
       imageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
       workflow: "colorize",
       now: new Date("2026-09-15T00:00:00.000Z"),
@@ -60,7 +60,7 @@ describe("atomic task creation", () => {
     mockEval.mockResolvedValue(["EXISTING", "task-existing", "0"]);
 
     const result = await createAuthenticatedTaskAtomic({
-      user,
+      user: { ...user, tier: "pay_as_you_go" },
       imageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
       workflow: "full",
     });
@@ -68,64 +68,10 @@ describe("atomic task creation", () => {
     expect(result).toEqual({ outcome: "existing", taskId: "task-existing", remaining: 0 });
   });
 
-  it("classifies exhausted free quota without writing a task", async () => {
-    mockEval.mockResolvedValue(["REJECTED", "DAILY_QUOTA_EXHAUSTED", "0"]);
-
-    const result = await createAuthenticatedTaskAtomic({
-      user,
-      imageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
-      workflow: "full",
-    });
-
-    expect(result).toEqual({
-      outcome: "rejected",
-      code: "DAILY_QUOTA_EXHAUSTED",
-      remaining: 0,
-    });
-  });
-
-  it("creates an anonymous user, task, trial and queue entry atomically", async () => {
-    mockEval.mockResolvedValue(["CREATED", "task-fixed-id"]);
-
-    const result = await createAnonymousTaskAtomic({
-      visitorId: "visitor-1",
-      imageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
-      now: new Date("2026-09-15T00:00:00.000Z"),
-    });
-
-    expect(result).toMatchObject({ outcome: "created", task: { id: "task-fixed-id" } });
-    expect(mockEval).toHaveBeenCalledTimes(1);
-    const [, keys, args] = mockEval.mock.calls[0] as [string, string[], string[]];
-    expect(keys).toEqual(expect.arrayContaining(["anonymous:visitor-1:trial", "queue:tasks"]));
-    expect(args[5]).toMatch(/^task-fixed-id\|[a-f0-9]{64}$/);
-    expect(args[6]).toMatch(/^[a-f0-9]{64}$/);
-    expect(args.join(" ")).not.toContain("person@example.com");
-  });
-
-  it("recovers the existing anonymous task for a repeated request", async () => {
-    mockEval.mockResolvedValue(["EXISTING", "task-existing"]);
-
-    await expect(
-      createAnonymousTaskAtomic({
-        visitorId: "visitor-1",
-        imageKey: "tasks/123e4567-e89b-12d3-a456-426614174000/original.jpg",
-      })
-    ).resolves.toEqual({ outcome: "existing", taskId: "task-existing" });
-  });
-
-  it("rejects a different upload after the anonymous trial is consumed", async () => {
-    mockEval.mockResolvedValue(["REJECTED", "ANONYMOUS_TRIAL_USED"]);
-
-    await expect(
-      createAnonymousTaskAtomic({
-        visitorId: "visitor-1",
-        imageKey: "tasks/123e4567-e89b-12d3-a456-426614174999/original.jpg",
-      })
-    ).resolves.toEqual({
-      outcome: "rejected",
-      code: "ANONYMOUS_TRIAL_USED",
-      remaining: 0,
-    });
+  it("rejects free and anonymous creation without touching quota, queue or provider", async () => {
+    expect(await createAuthenticatedTaskAtomic({user,imageKey:"source",workflow:"full"})).toEqual({outcome:"rejected",code:"PAYMENT_REQUIRED",remaining:0});
+    expect(await createAnonymousTaskAtomic({visitorId:"visitor",imageKey:"source"})).toEqual({outcome:"rejected",code:"PAYMENT_REQUIRED",remaining:0});
+    expect(mockEval).not.toHaveBeenCalled();
   });
 });
 
@@ -142,26 +88,15 @@ it("snapshots purchased quality and keys upgrade replay by source instead of tem
 });
 
 
-describe("preview policy rollout", () => {
+it("a stale preview feature flag cannot grant new free generations", async () => {
   const oldFlag = process.env.DOWNLOAD_PREVIEW_ENABLED;
-  afterEach(() => {
-    if (oldFlag === undefined) delete process.env.DOWNLOAD_PREVIEW_ENABLED;
-    else process.env.DOWNLOAD_PREVIEW_ENABLED = oldFlag;
-  });
-  it("stamps only new free tasks after explicit feature enablement", async () => {
+  try {
     process.env.DOWNLOAD_PREVIEW_ENABLED = "true";
-    mockEval.mockResolvedValue(["CREATED", "task-fixed-id", "0"]);
-    const free = await createAuthenticatedTaskAtomic({ user, imageKey: "source", workflow: "restore" });
-    const paid = await createAuthenticatedTaskAtomic({ user: { ...user, tier: "pay_as_you_go" }, imageKey: "source", workflow: "restore" });
-    expect(free).toMatchObject({ task: { downloadPolicy: "preview_v1" } });
-    expect(paid.outcome === "created" && paid.task.downloadPolicy).toBeUndefined();
-    const anonymous = await createAnonymousTaskAtomic({ visitorId: "visitor", imageKey: "source" });
-    expect(anonymous).toMatchObject({ task: { downloadPolicy: "preview_v1" } });
-  });
-  it("preserves legacy creation when the feature flag is absent", async () => {
-    delete process.env.DOWNLOAD_PREVIEW_ENABLED;
-    mockEval.mockResolvedValue(["CREATED", "task-fixed-id", "0"]);
-    const result = await createAuthenticatedTaskAtomic({ user, imageKey: "source", workflow: "restore" });
-    expect(result.outcome === "created" && result.task.downloadPolicy).toBeUndefined();
-  });
+    expect(await createAuthenticatedTaskAtomic({user,imageKey:"source",workflow:"restore"})).toMatchObject({outcome:"rejected",code:"PAYMENT_REQUIRED"});
+    expect(await createAnonymousTaskAtomic({visitorId:"visitor",imageKey:"source"})).toMatchObject({outcome:"rejected",code:"PAYMENT_REQUIRED"});
+    expect(mockEval).not.toHaveBeenCalled();
+  } finally {
+    if(oldFlag === undefined) delete process.env.DOWNLOAD_PREVIEW_ENABLED;
+    else process.env.DOWNLOAD_PREVIEW_ENABLED = oldFlag;
+  }
 });

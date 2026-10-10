@@ -74,7 +74,7 @@ describe("GET /api/quota", () => {
     expect(res.status).toBe(404);
   });
 
-  it("keeps free tier quota as-is", async () => {
+  it("hides the withdrawn free generation allowance even for legacy records", async () => {
     mockGetUser.mockResolvedValue(makeUser({ tier: "free" }));
     mockGetQuotaInfo.mockResolvedValue(
       makeQuota({
@@ -89,8 +89,8 @@ describe("GET /api/quota", () => {
 
     expect(res.status).toBe(200);
     expect(body.tier).toBe("free");
-    expect(body.remaining).toBe(1);
-    expect(body.dailyLimit).toBe(1);
+    expect(body.remaining).toBe(0);
+    expect(body.dailyLimit).toBe(0);
   });
 
   it("normalizes stale pay_as_you_go quota from user tier", async () => {

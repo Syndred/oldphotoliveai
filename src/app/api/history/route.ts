@@ -124,6 +124,12 @@ export async function DELETE(request: NextRequest) {
           results.push({ id: taskId, deleted: false });
           continue;
         }
+        // Preserve paid delivery/refund evidence until the order is resolved.
+        if (task.purchaseOrderId && task.status !== "completed" &&
+            task.refundStatus !== "succeeded" && !task.violation) {
+          results.push({ id: taskId, deleted: false });
+          continue;
+        }
         if (task.downloadPolicy === "preview_v1") {
           downloadDeletionClaimed = await beginTaskDownloadDeletion(taskId);
           if (!downloadDeletionClaimed) {

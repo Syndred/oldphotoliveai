@@ -1,7 +1,6 @@
 import { createHash } from "crypto";
 import { v4 as uuidv4 } from "uuid";
 import { getRedisClient } from "@/lib/redis";
-import { buildAnonymousUserId } from "@/lib/anonymous";
 import { PRIORITY_WEIGHTS, STATUS_PROGRESS_MAP } from "@/types";
 import type { Task, TaskPriority, TaskWorkflow, User } from "@/types";
 
@@ -44,6 +43,7 @@ if existing and (ARGV[7] ~= 'upgrade' or redis.call('GET', 'task:' .. existing))
 end
 
 local tier = ARGV[5]
+if tier == 'free' then return {'REJECTED', 'PAYMENT_REQUIRED', '0'} end
 local remaining = -1
 local quotaJson = redis.call('GET', KEYS[1])
 local quota = nil
@@ -75,14 +75,7 @@ if tier == 'pay_as_you_go' then
   quota.credits = credits - 1
   remaining = quota.credits
   redis.call('SET', KEYS[1], cjson.encode(quota))
-elseif tier == 'free' then
-  local available = tonumber(quota.remaining) or 0
-  if available <= 0 then
-    return {'REJECTED', 'DAILY_QUOTA_EXHAUSTED', '0'}
-  end
-  quota.remaining = available - 1
-  remaining = quota.remaining
-  redis.call('SET', KEYS[1], cjson.encode(quota))
+
 end
 
 redis.call('SET', KEYS[2], ARGV[2])
@@ -96,45 +89,7 @@ end
 return {'CREATED', ARGV[1], tostring(remaining)}
 `;
 
-const ANONYMOUS_CREATE_SCRIPT = `
-local allowedString = function(key)
-  local t = redis.call('TYPE', key).ok
-  return t == 'none' or t == 'string'
-end
-local allowedZset = function(key)
-  local t = redis.call('TYPE', key).ok
-  return t == 'none' or t == 'zset'
-end
-if not allowedString(KEYS[1]) or not allowedString(KEYS[2]) or
-   not allowedString(KEYS[3]) or not allowedZset(KEYS[4]) or
-   not allowedZset(KEYS[5]) then
-  return {'ERROR', 'INTERNAL_KEY_TYPE'}
-end
-
-local existing = redis.call('GET', KEYS[1])
-if existing then
-  local separator = string.find(existing, '|', 1, true)
-  if separator then
-    local existingTaskId = string.sub(existing, 1, separator - 1)
-    local existingDigest = string.sub(existing, separator + 1)
-    if existingDigest == ARGV[7] then
-      return {'EXISTING', existingTaskId}
-    end
-  end
-  return {'REJECTED', 'ANONYMOUS_TRIAL_USED'}
-end
-
-if redis.call('EXISTS', KEYS[2]) == 0 then
-  redis.call('SET', KEYS[2], ARGV[3])
-end
-redis.call('SET', KEYS[3], ARGV[2])
-redis.call('ZADD', KEYS[4], ARGV[4], ARGV[1])
-redis.call('ZADD', KEYS[5], ARGV[5], ARGV[1])
-redis.call('SET', KEYS[1], ARGV[6])
-return {'CREATED', ARGV[1]}
-`;
-
-function buildTask(
+export function buildTask(
   userId: string,
   imageKey: string,
   priority: TaskPriority,
@@ -203,7 +158,7 @@ export async function createAuthenticatedTaskAtomic(input: {
   upgradeSourceTaskId?: string;
   now?: Date;
 }): Promise<TaskCreationResult> {
-  if (input.upgradeSourceTaskId && input.user.tier === "free") {
+  if (input.user.tier === "free") {
     return { outcome: "rejected", code: "PAYMENT_REQUIRED", remaining: 0 };
   }
   const now = input.now ?? new Date();
@@ -214,7 +169,6 @@ export async function createAuthenticatedTaskAtomic(input: {
       : "normal");
   const task = buildTask(input.user.id, input.imageKey, priority, input.workflow, now);
   task.generationTier = input.user.tier;
-  if (input.user.tier === "free" && process.env.DOWNLOAD_PREVIEW_ENABLED === "true") task.downloadPolicy = "preview_v1";
   task.upgradeSourceTaskId = input.upgradeSourceTaskId;
   const digest = dedupeDigest(input.user.id, input.upgradeSourceTaskId ?? input.imageKey, input.workflow);
   const redis = getRedisClient();
@@ -251,54 +205,13 @@ export async function createAuthenticatedTaskAtomic(input: {
   throw new Error(`Atomic task creation failed: ${values[1] || "UNKNOWN"}`);
 }
 
-export async function createAnonymousTaskAtomic(input: {
+/** Retained for callers from older clients; no new anonymous generation is allowed. */
+export async function createAnonymousTaskAtomic(_input: {
   visitorId: string;
   imageKey: string;
   now?: Date;
 }): Promise<TaskCreationResult> {
-  const now = input.now ?? new Date();
-  const userId = buildAnonymousUserId(input.visitorId);
-  const task = buildTask(userId, input.imageKey, "normal", "animate", now);
-  task.generationTier = "free";
-  if (process.env.DOWNLOAD_PREVIEW_ENABLED === "true") task.downloadPolicy = "preview_v1";
-  const anonymousUser: User = {
-    id: userId,
-    googleId: userId,
-    email: `${input.visitorId}@anonymous.oldphotoliveai.local`,
-    name: "Anonymous visitor",
-    avatarUrl: null,
-    tier: "free",
-    createdAt: now.toISOString(),
-    updatedAt: now.toISOString(),
-  };
-  const redis = getRedisClient();
-  const imageDigest = createHash("sha256").update(input.imageKey).digest("hex");
-  const trialRecord = `${task.id}|${imageDigest}`;
-  const result = await redis.eval(ANONYMOUS_CREATE_SCRIPT, [
-    `anonymous:${input.visitorId}:trial`,
-    `user:${userId}`,
-    `task:${task.id}`,
-    `user:${userId}:tasks`,
-    "queue:tasks",
-  ], [
-    task.id,
-    JSON.stringify(task),
-    JSON.stringify(anonymousUser),
-    String(now.getTime()),
-    String(PRIORITY_WEIGHTS.normal + now.getTime()),
-    trialRecord,
-    imageDigest,
-  ]) as unknown;
-
-  const values = Array.isArray(result) ? result.map(String) : [];
-  if (values[0] === "CREATED") return { outcome: "created", task };
-  if (values[0] === "EXISTING") {
-    return { outcome: "existing", taskId: values[1] };
-  }
-  if (values[0] === "REJECTED") {
-    return { outcome: "rejected", code: "ANONYMOUS_TRIAL_USED", remaining: 0 };
-  }
-  throw new Error(`Atomic anonymous task creation failed: ${values[1] || "UNKNOWN"}`);
+  return { outcome: "rejected", code: "PAYMENT_REQUIRED", remaining: 0 };
 }
 
-export { AUTHENTICATED_CREATE_SCRIPT, ANONYMOUS_CREATE_SCRIPT };
+export { AUTHENTICATED_CREATE_SCRIPT };

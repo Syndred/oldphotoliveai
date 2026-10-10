@@ -139,6 +139,21 @@ describe("GET /api/history", () => {
 });
 
 describe("DELETE /api/history", () => {
+  it.each(["pending", "restoring", "failed"] as const)("retains an unresolved paid order in %s", async status => {
+    mockGetToken.mockResolvedValue({userId:"user-001"});
+    mockGetTaskOwnedByUser.mockResolvedValue(makeFakeTask({status,purchaseOrderId:"order-1"}));
+    const res = await DELETE(makeDeleteRequest(["task-001"]));
+    expect((await res.json()).results).toEqual([{id:"task-001",deleted:false}]);
+    expect(mockDeleteTaskFiles).not.toHaveBeenCalled();
+    expect(mockDeleteTask).not.toHaveBeenCalled();
+  });
+  it("permits deleting a failed paid result after refund confirmation", async () => {
+    mockGetToken.mockResolvedValue({userId:"user-001"});
+    mockGetTaskOwnedByUser.mockResolvedValue(makeFakeTask({status:"failed",purchaseOrderId:"order-1",refundStatus:"succeeded"}));
+    mockDeleteTask.mockResolvedValue(true);
+    const res = await DELETE(makeDeleteRequest(["task-001"]));
+    expect((await res.json()).results[0].deleted).toBe(true);
+  });
   it("does not remove either bucket while a single-result payment is pending", async () => {
     mockGetToken.mockResolvedValue({ userId: "user-001" });
     mockGetTaskOwnedByUser.mockResolvedValue(makeFakeTask({ downloadPolicy: "preview_v1", masterAssets: { restored: "master.jpg" } }));

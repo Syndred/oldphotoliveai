@@ -11,6 +11,7 @@ export interface TaskCreationFailure {
     | "anonymous_trial_used"
     | "daily_quota_exhausted"
     | "no_credits"
+    | "payment_required"
     | "quota_not_initialized"
     | "invalid_input"
     | "rate_limited"
@@ -26,6 +27,7 @@ const REJECTION_CODES = new Map<string, TaskCreationFailure["failureCode"]>([
   ["ANONYMOUS_TRIAL_USED", "anonymous_trial_used"],
   ["DAILY_QUOTA_EXHAUSTED", "daily_quota_exhausted"],
   ["NO_CREDITS", "no_credits"],
+  ["PAYMENT_REQUIRED", "payment_required"],
   ["QUOTA_NOT_INITIALIZED", "quota_not_initialized"],
 ]);
 

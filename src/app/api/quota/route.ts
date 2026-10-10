@@ -52,6 +52,9 @@ export async function GET(request: NextRequest) {
           : {
               ...quota,
               tier: "free" as const,
+              remaining: 0,
+              dailyLimit: 0,
+              resetAt: null,
             };
 
     return NextResponse.json(normalizedQuota, { status: 200 });

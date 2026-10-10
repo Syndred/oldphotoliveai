@@ -5,19 +5,20 @@ import { NextRequest } from "next/server";
 
 const mockUploadToR2 = jest.fn().mockResolvedValue("tasks/uuid/photo.jpg");
 const mockGetToken = jest.fn();
-const mockGetAnonymousTrialTaskId = jest.fn();
+const mockRegister = jest.fn().mockResolvedValue(undefined);
+const mockDelete = jest.fn().mockResolvedValue(undefined);
 
 jest.mock("@/lib/r2", () => ({
   uploadToR2: (...args: unknown[]) => mockUploadToR2(...args),
+  deleteFromR2: (...args: unknown[]) => mockDelete(...args),
 }));
 
 jest.mock("next-auth/jwt", () => ({
   getToken: (...args: unknown[]) => mockGetToken(...args),
 }));
 
-jest.mock("@/lib/redis", () => ({
-  getAnonymousTrialTaskId: (...args: unknown[]) =>
-    mockGetAnonymousTrialTaskId(...args),
+jest.mock("@/lib/upload-receipt", () => ({
+  registerUploadedPhoto: (...args: unknown[]) => mockRegister(...args),
 }));
 
 jest.mock("@/lib/config", () => ({
@@ -66,25 +67,22 @@ function createNamedError(name: string, message: string): Error {
 beforeEach(() => {
   mockUploadToR2.mockReset().mockResolvedValue("tasks/uuid/photo.jpg");
   mockGetToken.mockReset().mockResolvedValue({ userId: "signed-user" });
-  mockGetAnonymousTrialTaskId.mockReset().mockResolvedValue(null);
+  mockRegister.mockReset().mockResolvedValue(undefined);
+  mockDelete.mockClear();
 });
 
 describe("POST /api/upload", () => {
-  it("rejects a repeated anonymous trial before uploading another file", async () => {
+  it("binds guest uploads to the visitor so payment can resume after login", async () => {
     mockGetToken.mockResolvedValue(null);
-    mockGetAnonymousTrialTaskId.mockResolvedValue("task-existing");
-    const file = createTestFile("photo.jpg", "image/jpeg", 1024);
-    const req = createFileRequest(file, "opla_anon_visitor=visitor-001");
-
-    const res = await POST(req);
-    const body = await res.json();
-
-    expect(res.status).toBe(403);
-    expect(body).toMatchObject({
-      code: "ANONYMOUS_TRIAL_USED",
-      taskId: "task-existing",
-    });
-    expect(mockUploadToR2).not.toHaveBeenCalled();
+    const res = await POST(createFileRequest(createTestFile("photo.jpg", "image/jpeg", 1024), "opla_anon_visitor=visitor-001"));
+    expect(res.status).toBe(200);
+    expect(mockRegister).toHaveBeenCalledWith(expect.any(String), {userId:undefined,visitorId:"visitor-001"});
+  });
+  it("removes a stored object if its ownership receipt cannot be persisted", async () => {
+    mockRegister.mockRejectedValue(new Error("receipt unavailable"));
+    const res = await POST(createFileRequest(createTestFile("photo.jpg", "image/jpeg", 1024)));
+    expect(res.status).toBe(500);
+    expect(mockDelete).toHaveBeenCalledWith(expect.any(String));
   });
 
   it("returns 400 when no file is provided", async () => {

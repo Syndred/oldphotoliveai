@@ -4,6 +4,7 @@ import type { Task, User } from "@/types";
 const mockGetToken = jest.fn();
 const mockGetUser = jest.fn<Promise<User | null>, [string]>();
 const mockCreateAuthenticatedTaskAtomic = jest.fn();
+const mockOwned = jest.fn();
 
 jest.mock("next-auth/jwt", () => ({ getToken: (...args: unknown[]) => mockGetToken(...args) }));
 jest.mock("@/lib/redis", () => ({ getUser: (id: string) => mockGetUser(id) }));
@@ -11,6 +12,7 @@ jest.mock("@/lib/task-creation", () => ({
   createAuthenticatedTaskAtomic: (...args: unknown[]) => mockCreateAuthenticatedTaskAtomic(args[0]),
 }));
 
+jest.mock("@/lib/upload-receipt", () => ({ isUploadOwned: (...args: unknown[]) => mockOwned(...args) }));
 const mockWorkerFetch = jest.fn().mockResolvedValue(undefined);
 global.fetch = mockWorkerFetch as unknown as typeof fetch;
 
@@ -18,7 +20,7 @@ import { POST } from "@/app/api/tasks/route";
 
 const user: User = {
   id: "user-1", googleId: "google-1", email: "person@example.com", name: "Person",
-  avatarUrl: null, tier: "free", createdAt: "2026-09-15T00:00:00.000Z", updatedAt: "2026-09-15T00:00:00.000Z",
+  avatarUrl: null, tier: "pay_as_you_go", createdAt: "2026-09-15T00:00:00.000Z", updatedAt: "2026-09-15T00:00:00.000Z",
 };
 const task: Task = {
   id: "task-1", userId: user.id, status: "pending", priority: "normal", workflow: "full",
@@ -38,6 +40,7 @@ function makeRequest(body: unknown, raw = false): NextRequest {
 beforeEach(() => {
   mockGetToken.mockReset().mockResolvedValue({ userId: user.id });
   mockGetUser.mockReset().mockResolvedValue(user);
+  mockOwned.mockReset().mockResolvedValue(true);
   mockCreateAuthenticatedTaskAtomic.mockReset().mockResolvedValue({ outcome: "created", task, remaining: 0 });
   mockWorkerFetch.mockReset().mockResolvedValue(undefined);
   jest.spyOn(console, "error").mockImplementation(() => {});
@@ -60,6 +63,19 @@ describe("POST /api/tasks", () => {
     expect((await POST(makeRequest("{bad", true))).status).toBe(400);
   });
 
+  it("blocks free generation before consuming allowance or starting a worker", async () => {
+    mockGetUser.mockResolvedValue({...user,tier:"free"});
+    const res = await POST(makeRequest({imageKey:task.originalImageKey}));
+    expect(res.status).toBe(402);
+    expect(await res.json()).toMatchObject({code:"PAYMENT_REQUIRED",allowanceConsumed:false});
+    expect(mockCreateAuthenticatedTaskAtomic).not.toHaveBeenCalled();
+    expect(mockWorkerFetch).not.toHaveBeenCalled();
+  });
+  it("rejects an image belonging to another account", async () => {
+    mockOwned.mockResolvedValue(false);
+    expect((await POST(makeRequest({imageKey:task.originalImageKey}))).status).toBe(400);
+    expect(mockCreateAuthenticatedTaskAtomic).not.toHaveBeenCalled();
+  });
   it("creates a task with normalized input and workflow", async () => {
     const res = await POST(makeRequest({ imageKey: `  ${task.originalImageKey}  `, workflow: "colorize" }));
     expect(res.status).toBe(201);
