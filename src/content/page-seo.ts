@@ -19,14 +19,14 @@ interface SeoDictionary {
 export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
   en: {
     home: {
-      title: "Colorize Photo Online – AI Photo Colorizer",
+      title: "OldPhotoLive AI – AI Photo Restoration, Colorization & Animation",
       description:
-        "Colorize a photo online with AI. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+        "Restore damaged photos, colorize black-and-white prints, and animate old portraits with AI. One photo from $1.99, watermark-free result, no subscription.",
     },
     pricing: {
-      title: "Pricing",
+      title: "Pricing – One Photo from $1.99, No Subscription | OldPhotoLive AI",
       description:
-        "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+        "One photo from $1.99 — upload, pay per photo, get a complete watermark-free result. No subscription. Retry at no extra cost if processing fails.",
     },
     login: {
       title: "Sign In",
@@ -60,14 +60,14 @@ export const PAGE_SEO_COPY: Record<Locale, SeoDictionary> = {
   },
   zh: {
     home: {
-      title: "老照片修复与上色",
+      title: "老照片修复与上色 - OldPhotoLive AI",
       description:
-        "上传照片并登录后，先支付 $1.99 再开始所选功能的处理，交付完整无水印结果，无需订阅。已有积分或专业版权益仍可使用。",
+        "AI 修复破损老照片、为黑白照片上色、让老照片动起来。单张 $1.99，交付完整无水印结果，无需订阅。",
     },
     pricing: {
-      title: "价格",
+      title: "价格 – 单张 $1.99，无需订阅 | OldPhotoLive AI",
       description:
-        "上传照片并登录后，先支付 $1.99 再开始所选功能的处理，交付完整无水印结果，无需订阅。已有积分或专业版权益仍可使用。",
+        "单张 $1.99，上传后按张付款，获得完整无水印结果，无需订阅。确认技术失败可免额外费用重试一次；确认无法交付时退款。",
     },
     login: {
       title: "登录",

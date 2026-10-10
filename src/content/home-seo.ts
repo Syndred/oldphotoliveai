@@ -19,13 +19,17 @@ interface HomeSeoContent {
 
 export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
   en: {
-    contentEyebrow: "AI photo colorizer",
-    contentTitle: "Colorize black-and-white photos online",
-    sectionTitles: ["One-click AI photo colorizer", "Turn black-and-white photos into color", "Old photo restoration before colorization"],
+    contentEyebrow: "AI tools for old family photos",
+    contentTitle: "Restore, colorize, or animate the photo that matters to you",
+    sectionTitles: [
+      "Repair a damaged print",
+      "Add color to a black-and-white memory",
+      "Create subtle motion from a portrait"
+    ],
     contentParagraphs: [
-      "Photo colorization adds AI-estimated color without making you paint each area by hand. Upload a clear black-and-white picture, choose colorization, and let the photo colorizer generate a color version to compare with the original. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
-      "Turn black-and-white photos into color for an album, creative project, or personal keepsake. AI estimates colors from visible patterns, so skin tones, clothing, objects, and backgrounds may differ from their real colors. Keep the original image alongside the colorized copy.",
-      "Old photo restoration can help when fading, scratches, or low contrast obscure details before colorization. Use the dedicated restoration tool for damaged prints, then return to colorize the cleaner image. A well-lit scan without glare gives the AI more detail to work with; severe damage may still need manual editing.",
+      "OldPhotoLive AI brings photo restoration, colorization, and animation into one place. Choose restoration for faded prints and common scratches, colorization for black-and-white photos, or animation for a clear portrait. Start with the clearest scan available and select the tool that matches your goal.",
+      "AI can suggest plausible color, improve contrast, and rebuild small damaged areas, but it cannot guarantee missing details or historical accuracy. Keep the original scan alongside every enhanced copy and compare faces, clothing, and backgrounds before sharing.",
+      "For a family album, genealogy project, or memorial, a small change is often enough. Repair visible damage, add restrained color, or turn a recognizable face into a short video. One photo starts at $1.99, with a complete watermark-free result and no subscription."
     ],
     colorizeCta: "Colorize old photos",
     restoreCta: "Restore old photos",
@@ -33,46 +37,38 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
     repairCta: "Repair damaged photos",
     faqItems: [
       {
-        question: "Can I colorize black and white photos for free?",
-        answer:
-          "There is no free generation. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+        question: "How much does one photo cost?",
+        answer: "A single-photo order costs $1.99 for the uploaded photo and selected tool. Pay before processing and download the complete result without a watermark. No subscription is required."
       },
       {
-        question: "How does an AI photo colorizer choose colors?",
-        answer:
-          "The model uses visual patterns in faces, clothing, objects, and backgrounds to estimate plausible colors. It does not recover hidden color data from the black-and-white source.",
+        question: "Which tool should I choose for an old photo?",
+        answer: "Choose restoration for fading, scratches, and low contrast; colorization for a black-and-white source; or animation for a clear portrait. Each workflow is available separately, and the full workflow combines all three."
       },
       {
-        question: "Will AI reproduce the exact original colors?",
-        answer:
-          "No. Several real colors can produce the same gray tone, so the result is an interpretation. Compare important details with dated references and keep the original image.",
+        question: "Will AI reproduce the exact original colors and details?",
+        answer: "No. AI estimates plausible colors and missing detail from the visible image. Use dated references when accuracy matters and preserve the original scan as the historical record."
       },
       {
-        question: "What image gives the best colorization result?",
-        answer:
-          "Use a clear scan or photo with even lighting, visible details, and minimal glare. Heavy compression, tiny faces, and missing areas give the model less information.",
+        question: "What image gives the best result?",
+        answer: "Use a clear scan or photo with even lighting, visible faces, and minimal glare. Heavy compression, tiny faces, and large missing areas give the model less information."
       },
       {
-        question: "Can I colorize faded or damaged photos?",
-        answer:
-          "Yes, but restore fading, scratches, and low contrast first when damage hides important details. Then colorize the cleaner copy and compare it with the source.",
+        question: "Can I restore a damaged photo before adding color or motion?",
+        answer: "Yes. Restoration can provide a cleaner source for colorization or animation. Review each result and keep separate copies so you can compare changes with the source."
       },
       {
         question: "Are uploaded family photos private?",
-        answer:
-          "Your photos are processed securely and remain tied to your account history. They are not published as public examples unless you explicitly share them elsewhere.",
+        answer: "Photos are processed by the providers needed to run the service and can remain in your account history under our retention practices. We do not publish them as public examples without permission. See the Privacy Policy for details."
       },
       {
-        question: "Can I download the colorized photo?",
-        answer:
-          "Yes. Completed results can be downloaded from the result page. Resolution and watermark options depend on the account plan and available allowance.",
+        question: "Can I download the completed result?",
+        answer: "Yes. A completed single-photo order includes the complete image or video for its selected workflow, without a watermark. Download it from the result page and keep your original scan too."
       },
       {
-        question: "What do paid plans unlock?",
-        answer:
-          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
-      },
-    ],
+        question: "What happens if processing fails?",
+        answer: "A confirmed technical failure includes one retry at no extra cost. If we confirm that we cannot deliver the result, we refund that purchase. Content-policy violations are excluded; uncertain delivery is reviewed by support."
+      }
+    ]
   },
   zh: {
     contentEyebrow: "AI 旧照片工具",
@@ -88,7 +84,7 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
     repairCta: "修补破损照片",
     faqItems: [
       {
-        question: "可以免费给黑白照片上色吗？",
+        question: "处理一张照片需要多少钱？",
         answer:
           "上传照片并登录后，先支付 $1.99 再开始所选功能的处理，交付完整无水印结果，无需订阅。已有积分或专业版权益仍可使用。",
       },
@@ -125,7 +121,7 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
       {
         question: "付费方案解锁什么？",
         answer:
-          "付费方案会提供更多处理额度、更高分辨率导出、高清或高级视频输出，以及按方案提供的无水印结果。",
+          "单张订单包含当前所选功能的完整无水印结果。确认技术失败可免额外费用重试一次；确认无法交付时退款。",
       },
     ],
   },
@@ -143,7 +139,7 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
     repairCta: "Reparar fotos dañadas",
     faqItems: [
       {
-        question: "¿Puedo colorizar fotos en blanco y negro gratis?",
+        question: "¿Cuánto cuesta procesar una foto?",
         answer:
           "Sube una foto, inicia sesión y paga $1.99 antes de procesarla con la herramienta seleccionada. Resultado completo sin marca de agua ni suscripción. También puedes usar tus créditos o plan profesional.",
       },
@@ -198,7 +194,7 @@ export const HOME_SEO_CONTENT: Record<Locale, HomeSeoContent> = {
     repairCta: "傷んだ写真を補修",
     faqItems: [
       {
-        question: "白黒写真を無料でカラー化できますか？",
+        question: "写真1枚の処理料金はいくらですか？",
         answer:
           "写真をアップロードしてログイン後、選択した機能の処理前に$1.99を支払います。透かしなしの完全な結果で、定期購入は不要です。既存のクレジットやプロプランも利用できます。",
       },

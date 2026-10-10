@@ -37,17 +37,17 @@ export const ANIMATION_LANDING_PAGES: Record<
     description:
       "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
     keywords: [
-      "animate photos online free",
+      "animate photos online",
     ],
     cardTitle: "AI photo animation from $1.99",
     cardDescription:
-      "Create a subtle animated preview from a clear family portrait with AI.",
+      "Create a subtle animated video from a clear family portrait with AI.",
     eyebrow: "AI animation from $1.99",
     h1: "Animate Old Photos with AI",
     heroDescription:
       "Turn a still family portrait into a short video after sign-in. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
     highlights: [
-      "Use one old portrait as the source for a short AI video preview.",
+      "Use one old portrait as the source for a short AI video.",
       "Gentle motion works best for faces, memorial photos, and family archives.",
       "Upload a photo, sign in, and pay $1.99 before processing. Your selected tool delivers the complete result without a watermark. No subscription is required.",
     ],
@@ -72,7 +72,7 @@ export const ANIMATION_LANDING_PAGES: Record<
       {
         title: "What AI photo animation is good for",
         body:
-          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required. A short preview can show a slight head movement, a natural facial expression, or gentle depth in the scene. It is most useful when you want a shareable first version without installing editing software or learning a timeline editor.",
+          "A short video can show a slight head movement, a natural facial expression, or gentle depth in the scene. It is most useful when you want a shareable first version without installing editing software or learning a timeline editor.",
       },
       {
         title: "Choose an old photo that will animate well",
@@ -80,17 +80,17 @@ export const ANIMATION_LANDING_PAGES: Record<
           "Use a portrait with one clearly visible face, even lighting, and enough room around the subject. Scans are usually better than compressed copies from a messaging app. If the print has deep scratches, harsh glare, or a very small face, restore it first. The source image controls the result more than any prompt: the clearer the eyes, mouth, and outline, the more believable the video can feel.",
       },
       {
-        title: "Use a preview before committing to an export",
+        title: "Review the completed video before sharing",
         body:
-          "Watch the first video all the way through and check that the face stays stable, the framing does not jump, and the movement matches the tone of the image. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required. Keep the original scan even after you download an animated copy.",
+          "Watch the completed video all the way through and check that the face stays stable, the framing does not jump, and the movement matches the tone of the image. Keep the original scan even after you download an animated copy.",
       },
     ],
     faqTitle: "AI photo animation pricing questions",
     faqs: [
       {
-        question: "Can I animate old photos with AI for free?",
+        question: "How much does AI photo animation cost?",
         answer:
-          "There is no free generation. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
       },
       {
         question: "What old photos work best for animation?",
@@ -135,7 +135,7 @@ export const ANIMATION_LANDING_PAGES: Record<
     highlights: [
       "Create a respectful short video from one family portrait.",
       "Use the result in memorials, family stories, and genealogy projects.",
-      "Try the motion first, then choose a higher-quality version when it feels right.",
+      "The completed order includes a watermark-free video for sharing.",
     ],
     benefits: [
       {
@@ -174,7 +174,7 @@ export const ANIMATION_LANDING_PAGES: Record<
     faqTitle: "Questions about bringing old photos to life",
     faqs: [
       {
-        question: "Can AI bring old photos to life for free?",
+        question: "How much does it cost to bring an old photo to life?",
         answer:
           "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
       },
@@ -208,9 +208,9 @@ export const ANIMATION_LANDING_PAGES: Record<
       "Use photo to video AI for an old portrait. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
     keywords: [
       "photo to video AI",
-      "old photo to video AI free online",
+      "old photo to video AI online",
       "convert old photo to video AI",
-      "photo to video AI free",
+      "photo to video AI pricing",
     ],
     cardTitle: "Old photo to video",
     cardDescription:
@@ -218,7 +218,7 @@ export const ANIMATION_LANDING_PAGES: Record<
     eyebrow: "Photo-to-video AI",
     h1: "Turn an Old Photo into Video with AI",
     heroDescription:
-      "Convert an old photo to a short video online with AI. Upload a portrait, review the generated motion, and use the preview to decide whether to export a higher-quality version.",
+      "Convert a clear old portrait to a short video online with AI. Pay for the selected workflow before processing, then review and download the completed watermark-free clip.",
     highlights: [
       "Upload a still photo and receive a short video without editing software.",
       "Portraits with a centered, visible face are the most reliable input.",
@@ -236,9 +236,9 @@ export const ANIMATION_LANDING_PAGES: Record<
           "Older prints can become video sources when the main face is readable and the image has enough detail to guide the movement.",
       },
       {
-        title: "Preview before you need more output",
+        title: "Review before sharing",
         body:
-          "A short preview makes it easier to judge whether the source, crop, and animation are suitable for a final shareable export.",
+          "Review the complete clip for stable facial details, smooth motion, and consistent framing before sharing it with your family.",
       },
     ],
     guideSections: [
@@ -261,9 +261,9 @@ export const ANIMATION_LANDING_PAGES: Record<
     faqTitle: "Old photo to video AI questions",
     faqs: [
       {
-        question: "Can I convert an old photo to video with AI for free?",
+        question: "How much does converting an old photo to video cost?",
         answer:
-          "There is no free generation. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
       },
       {
         question: "Do I need to install an app?",
@@ -338,7 +338,7 @@ export const ANIMATION_LANDING_PAGES: Record<
       {
         title: "From scan to animated portrait",
         body:
-          "Use a flat scan when available, because it avoids glare and preserves more original texture. Make sure the face is large enough to read clearly, then upload the image to generate a preview. If the portrait is damaged, restore it before animation. If it is black and white, you can choose to colorize it first, but color is optional: a well-restored monochrome image can also create a strong animation.",
+          "Use a flat scan when available, because it avoids glare and preserves more original texture. Make sure the face is large enough to read clearly, then upload the image to generate a short video. If the portrait is damaged, restore it before animation. If it is black and white, you can choose to colorize it first, but color is optional: a well-restored monochrome image can also create a strong animation.",
       },
       {
         title: "When a subtle animation is the better choice",
@@ -351,7 +351,7 @@ export const ANIMATION_LANDING_PAGES: Record<
       {
         question: "How do I animate old photos with AI?",
         answer:
-          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required. Review the short animation before choosing an export.",
+          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required. Review and download the completed short animation.",
       },
       {
         question: "How can I bring old photos to life?",

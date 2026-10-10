@@ -56,7 +56,7 @@ type BlogPostCopy = Omit<
 const COLORIZE_GUIDE_BASE: BlogPostBase = {
   slug: "how-to-colorize-black-and-white-photos-for-free",
   publishedAt: "2026-07-22T00:00:00.000Z",
-  updatedAt: "2026-07-22T00:00:00.000Z",
+  updatedAt: "2026-10-10T00:00:00.000Z",
   primaryToolPath: "/colorize-old-photos",
   secondaryToolPath: "/restore-old-photos",
 };
@@ -139,15 +139,15 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
   en: {
     title: "How to Colorize Black and White Photos with AI",
     description:
-      "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+      "Learn how to prepare a scan, restore damaged areas, and colorize black-and-white photos with AI. Compare plausible colors with the original and preserve both copies.",
     excerpt:
-      "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+      "A practical guide to scanning family prints, preparing damaged photos, and reviewing AI-estimated colors before sharing.",
     eyebrow: "AI photo colorization guide",
     readingTime: "8 min read",
     keywords: [
-      "how to colorize black and white photos for free",
-      "colorize black and white photos online free",
-      "turn black and white photo into color online free",
+      "how to colorize black and white photos with AI",
+      "colorize black and white photos online",
+      "turn black and white photo into color online",
       "AI photo colorizer",
       "restore old family photos",
     ],
@@ -180,7 +180,7 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
       {
         heading: "Step 3: Use an AI colorizer and compare the result",
         body: [
-          "Once the image is ready, upload it to an AI photo colorizer. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+          "Once the image is ready, upload it to the colorization tool. For a single-photo order, sign in and pay $1.99 before processing. The completed color image includes a watermark-free download without a subscription.",
           "After processing, compare the colorized version with the original black and white photo. Look at faces first. Natural skin tones are usually the strongest sign of a good result.",
         ],
       },
@@ -201,16 +201,16 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
       {
         heading: "Choosing one photo or a credit pack",
         body: [
-          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
-          "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+          "A single-photo order covers one uploaded photo and the selected workflow. It suits a keepsake, gift, or first family scan that you want to finish without a recurring plan.",
+          "For a larger album, compare the credit packs on the pricing page and check the included processing allowance before buying. Each additional restoration, colorization, or animation workflow uses the allowance shown at checkout.",
         ],
       },
     ],
     faqs: [
       {
-        question: "Can I colorize black and white photos for free?",
+        question: "How much does AI photo colorization cost?",
         answer:
-          "There is no free generation. Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
+          "A single-photo colorization order costs $1.99 and includes the complete watermark-free result. Confirmed technical failures include one retry at no extra cost; if we confirm delivery is impossible, we refund the purchase.",
       },
       {
         question: "Should I restore an old photo before colorizing it?",
@@ -238,8 +238,8 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
     eyebrow: "AI 黑白照片上色指南",
     readingTime: "约 8 分钟阅读",
     keywords: [
-      "如何免费给黑白照片上色",
-      "黑白照片在线上色免费",
+      "如何给黑白照片上色",
+      "黑白照片在线上色",
       "AI 照片上色工具",
       "修复家庭老照片",
       "旧照片上色教程",
@@ -281,13 +281,13 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
         heading: "AI 照片上色与单张付费处理",
         body: [
           "上传照片并登录后，先支付 $1.99 再开始所选功能的处理，交付完整无水印结果，无需订阅。已有积分或专业版权益仍可使用。",
-          "如果你要批量整理家族照片、需要高清下载、无水印结果，或者还要把人像做成动态视频，那么选择合适的付费点数包会更省时间。",
+          "如果要处理整本相册，可以对比价格页的积分包和包含的处理额度；单张订单已包含当前所选功能的完整无水印结果，无需再购买下载。",
         ],
       },
     ],
     faqs: [
       {
-        question: "黑白照片可以免费用 AI 上色吗？",
+        question: "AI 黑白照片上色需要多少钱？",
         answer:
           "上传照片并登录后，先支付 $1.99 再开始所选功能的处理，交付完整无水印结果，无需订阅。已有积分或专业版权益仍可使用。",
       },
@@ -317,8 +317,8 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
     eyebrow: "Guia de colorizacion con IA",
     readingTime: "8 min de lectura",
     keywords: [
-      "como colorear fotos en blanco y negro gratis",
-      "colorear fotos blanco y negro online gratis",
+      "como colorear fotos en blanco y negro con IA",
+      "colorear fotos blanco y negro online",
       "colorizador de fotos con IA",
       "restaurar fotos familiares antiguas",
       "convertir foto blanco y negro a color",
@@ -366,7 +366,7 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
     ],
     faqs: [
       {
-        question: "Puedo colorear fotos en blanco y negro gratis?",
+        question: "¿Cuánto cuesta colorear una foto en blanco y negro?",
         answer:
           "Sube una foto, inicia sesión y paga $1.99 antes de procesarla con la herramienta seleccionada. Resultado completo sin marca de agua ni suscripción. También puedes usar tus créditos o plan profesional.",
       },
@@ -396,7 +396,7 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
     eyebrow: "AI 写真カラー化ガイド",
     readingTime: "約 8 分",
     keywords: [
-      "白黒写真 無料 カラー化",
+      "白黒写真 AI 上色",
       "白黒写真 AI カラー化",
       "古い写真 カラー化 オンライン",
       "AI 写真カラー化ツール",
@@ -445,7 +445,7 @@ const COLORIZE_GUIDE_COPY: Record<Locale, BlogPostCopy> = {
     ],
     faqs: [
       {
-        question: "白黒写真を無料でカラー化できますか？",
+        question: "白黒写真のカラー化料金はいくらですか？",
         answer:
           "写真をアップロードしてログイン後、選択した機能の処理前に$1.99を支払います。透かしなしの完全な結果で、定期購入は不要です。既存のクレジットやプロプランも利用できます。",
       },

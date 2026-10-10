@@ -1,17 +1,23 @@
 import { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo";
+import { PAGE_SEO_COPY } from "@/content/page-seo";
 
-export const metadata: Metadata = buildPageMetadata({
-  title: "Pricing",
-  description:
-    "Upload your photo, sign in, and pay $1.99 before processing with your selected tool. The complete paid-quality result has no watermark. No subscription is required.",
-  path: "/pricing",
-  keywords: [
-    "ai photo restoration pricing",
-    "old photo restoration online pricing",
-    "restore old photos online",
-  ],
-});
+const pricingSeo = PAGE_SEO_COPY.en.pricing;
+
+export const metadata: Metadata = {
+  ...buildPageMetadata({
+    title: pricingSeo.title,
+    description: pricingSeo.description,
+    path: "/pricing",
+    keywords: [
+      "ai photo restoration pricing",
+      "old photo restoration online pricing",
+      "restore old photos online",
+      "photo restoration cost",
+    ],
+  }),
+  title: { absolute: pricingSeo.title },
+};
 
 export default function PricingLayout({
   children,

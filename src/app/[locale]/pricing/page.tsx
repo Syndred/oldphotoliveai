@@ -15,7 +15,7 @@ export async function generateMetadata(props: LocalizedPricingPageProps): Promis
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as Locale;
   const seo = PAGE_SEO_COPY[locale].pricing;
 
-  return buildLocalizedPageMetadata({
+  const metadata = buildLocalizedPageMetadata({
     locale,
     title: seo.title,
     description: seo.description,
@@ -24,8 +24,10 @@ export async function generateMetadata(props: LocalizedPricingPageProps): Promis
       "ai photo restoration pricing",
       "old photo restoration online pricing",
       "restore old photos online",
+      "photo restoration cost",
     ],
   });
+  return { ...metadata, title: { absolute: seo.title } };
 }
 
 export default function LocalizedPricingPage() {

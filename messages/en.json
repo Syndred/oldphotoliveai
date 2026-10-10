@@ -78,30 +78,22 @@
     "buyCredits": "Buy Credits",
     "includedInProfessional": "Included in Professional",
     "manageSubscription": "Manage Subscription",
-    "scheduledCancellation": "Scheduled to downgrade to Free on {date} at period end.",
+    "scheduledCancellation": "Your subscription ends on {date}. You can then pay per photo.",
     "redirecting": "Redirecting...",
-    "freeBadge": "Start here",
     "starterPackBadge": "Try a few",
     "familyPackBadge": "Most popular",
     "archivePackBadge": "Best value",
     "professionalBadge": "Best for archives",
     "creditPackPeriod": "/ {count} {count, plural, one {credit} other {credits}}",
-    "payAsYouGoPeriod": "/ {count} {count, plural, one {credit} other {credits}}",
     "professionalPeriod": "/ month",
-    "freePriceNote": "One photo from $1.99",
     "starterPackPriceNote": "About $0.50 per credit for trying key photos.",
     "familyPackPriceNote": "About $0.40 per credit for a small family album.",
     "archivePackPriceNote": "About $0.33 per credit for larger batches.",
     "professionalPriceNote": "Monthly plan for albums, batches, and client work.",
-    "freeDesc": "One photo from $1.99",
     "starterPackDesc": "A low-risk pack for first purchases.",
     "familyPackDesc": "Enough credits for a keepsake set or gift.",
     "archivePackDesc": "Process a larger batch at a lower per-credit cost.",
     "professionalDesc": "Process more family photos with priority output.",
-    "freeFeature1": "One photo from $1.99",
-    "freeFeature2": "One photo from $1.99",
-    "freeFeature3": "One photo from $1.99",
-    "freeFeature4": "One photo from $1.99",
     "starterPackFeature1": "10 credits for photo processing",
     "starterPackFeature2": "New generations: images up to 2K",
     "starterPackFeature3": "New generations: 720p HD video",
@@ -199,9 +191,9 @@
   },
   "landing": {
     "hero": {
-      "title": "Photo Colorization with AI",
-      "subtitle": "Process one photo for $1.99 before generation, or use a credit pack for more photos. Complete results without watermarks; no subscription required.",
-      "signal1": "AI black-and-white photo colorizer",
+      "title": "Restore, Colorize & Animate Old Photos with AI",
+      "subtitle": "Preserve a family memory with AI restoration, colorization, or animation. One photo from $1.99, a complete result without a watermark, and no subscription.",
+      "signal1": "Restoration, colorization & animation",
       "signal2": "One photo from $1.99",
       "signal3": "Results in minutes",
       "signal4": "No watermark",
@@ -236,7 +228,7 @@
     },
     "features": {
       "title": "Powerful AI Features",
-      "subtitle": "Colorize black-and-white pictures and improve damaged scans",
+      "subtitle": "Repair damaged scans, add color, and create subtle portrait motion",
       "restoration": {
         "title": "Photo Restoration",
         "description": "Remove scratches, fix damage, and enhance clarity with AI-powered restoration"
@@ -252,18 +244,18 @@
     },
     "howItWorks": {
       "title": "How It Works",
-      "subtitle": "Three simple steps to colorize old photos",
+      "subtitle": "Choose the right tool for your old photo",
       "step1": {
         "title": "Upload",
-        "description": "Sign in and upload a clear black-and-white photo"
+        "description": "Upload a clear scan and choose restoration, colorization, or animation"
       },
       "step2": {
         "title": "AI Processing",
-        "description": "The homepage photo colorizer adds AI-estimated colors to your image"
+        "description": "Sign in, pay for this photo, and follow the AI processing progress"
       },
       "step3": {
         "title": "Download",
-        "description": "Compare the colorized photo with your original and download the result"
+        "description": "Compare your result with the original and download the complete output"
       }
     },
     "faq": {
@@ -400,7 +392,7 @@
         },
         "payments": {
           "title": "7. Payments, Credits, and Subscriptions",
-          "body": "Paid plans, credits, and subscriptions are processed by Stripe. Pay-as-you-go credits are currently sold in fixed packs and may expire after the period disclosed at purchase. Professional subscriptions renew automatically according to the billing cycle you choose at checkout unless canceled before renewal. Except where required by law or under the single-photo technical-failure policy below, fees are non-refundable, and you are responsible for applicable taxes, chargebacks, and unpaid amounts. For a single-photo purchase, a confirmed technical failure includes one free retry. If we confirm we cannot deliver the result, we refund that purchase. Content-policy violations remain non-refundable. Uncertain delivery is reviewed by support."
+          "body": "Paid plans, credits, and subscriptions are processed by Stripe. Pay-as-you-go credits are currently sold in fixed packs and may expire after the period disclosed at purchase. Professional subscriptions renew automatically according to the billing cycle you choose at checkout unless canceled before renewal. Except where required by law or under the single-photo technical-failure policy below, fees are non-refundable, and you are responsible for applicable taxes, chargebacks, and unpaid amounts. For a single-photo purchase, a confirmed technical failure includes one retry at no extra cost. If we confirm we cannot deliver the result, we refund that purchase. Content-policy violations remain non-refundable. Uncertain delivery is reviewed by support."
         },
         "termination": {
           "title": "8. Suspension and Termination",
